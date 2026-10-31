@@ -201,7 +201,7 @@ select option, select optgroup { background: var(--menu); color: var(--ink); }
 .wordmark {
   margin: 20px 0 0;
   padding-right: .06em;
-  font: italic 800 clamp(66px, 15.5vw, 136px)/.8 var(--display);
+  font: italic 800 clamp(44px, 15.5vw, 136px)/.8 var(--display);
   letter-spacing: .005em;
   text-transform: uppercase;
   color: var(--ink);
@@ -382,6 +382,11 @@ select option, select optgroup { background: var(--menu); color: var(--ink); }
   .course.two { grid-template-columns: 22px 26px minmax(0, 1fr); }
   .course.two .codes { grid-column: 3; justify-content: flex-start; }
 }
+/* On phones the classic courses' single code moves under the name too, so names and record buttons don't wrap */
+@media (max-width: 520px) {
+  .course { grid-template-columns: 22px 26px minmax(0, 1fr); }
+  .course .codes { grid-column: 3; justify-content: flex-start; }
+}
 .code {
   display: inline-flex;
   align-items: center;
@@ -437,6 +442,7 @@ select option, select optgroup { background: var(--menu); color: var(--ink); }
 .rec .i-trophy { color: var(--gold); }
 .rec-time { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
 .rec-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rec-none { white-space: nowrap; }
 .rec .chev { color: var(--ink-3); transition: transform .2s ease; }
 .rec[aria-expanded="true"] .chev { transform: rotate(180deg); }
 .course-board {
@@ -1095,7 +1101,7 @@ a.link-copy { text-decoration: none; }
     const open = openCourse === c.n;
     const body = r
       ? `${icon("trophy", "icon i-trophy")}<span class="rec-time">${esc(r.time)}</span><span class="rec-name">${esc(r.name)}</span>`
-      : `<span>${esc(t("lb.noTimes"))}</span>`;
+      : `<span class="rec-none">${esc(t("lb.noTimes"))}</span>`;
     return `<button class="rec" type="button" data-course="${c.n}" aria-expanded="${open}" aria-controls="board-${c.n}" aria-label="${label}">${body}${icon("chev", "icon chev")}</button>`;
   }
   function boardHtml(c) {
