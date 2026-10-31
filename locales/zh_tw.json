@@ -85,8 +85,6 @@
   "lb.empty": "這個關卡還沒有成績。提交一次跑圖，拿下第一名吧。",
   "dc.voice": "{channel} · {count} 人在語音中",
   "dc.voiceMore": "另外 {count} 個",
-  "src.versions": "最新 {latest} · 測試版 {beta}",
-  "src.latestOnly": "最新 {latest}",
   "nf.title": "衝出賽道",
   "nf.text": "此頁面不存在。連結可能有錯字，或頁面已被移動。",
   "nf.home": "返回首頁",

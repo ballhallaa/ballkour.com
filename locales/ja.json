@@ -85,8 +85,6 @@
   "lb.empty": "このコースにはまだ記録がありません。記録を提出して1位を獲りましょう。",
   "dc.voice": "{channel} · ボイス{count}人",
   "dc.voiceMore": "ほか{count}件",
-  "src.versions": "最新 {latest} · ベータ {beta}",
-  "src.latestOnly": "最新 {latest}",
   "nf.title": "コースアウト",
   "nf.text": "このページは存在しません。リンクに入力ミスがあるか、ページが移動した可能性があります。",
   "nf.home": "ホームページに戻る",

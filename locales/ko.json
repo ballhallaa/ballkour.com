@@ -85,8 +85,6 @@
   "lb.empty": "아직 이 코스에 기록이 없습니다. 기록을 제출하고 1위를 차지하세요.",
   "dc.voice": "{channel} · 음성 {count}명",
   "dc.voiceMore": "+{count}개 더 보기",
-  "src.versions": "최신 {latest} · 베타 {beta}",
-  "src.latestOnly": "최신 {latest}",
   "nf.title": "코스 이탈",
   "nf.text": "이 페이지는 존재하지 않습니다. 링크에 오타가 있거나 페이지가 이동했을 수 있습니다.",
   "nf.home": "홈페이지로 돌아가기",

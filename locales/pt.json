@@ -85,8 +85,6 @@
   "lb.empty": "Ainda não há tempos nesta classificação. Envie uma corrida e fique com o primeiro lugar.",
   "dc.voice": "{channel} · {count} na voz",
   "dc.voiceMore": "+{count} mais",
-  "src.versions": "Atual {latest} · Beta {beta}",
-  "src.latestOnly": "Atual {latest}",
   "nf.title": "Fora do percurso",
   "nf.text": "Esta página não existe. O link pode ter um erro de digitação, ou a página pode ter sido movida.",
   "nf.home": "Voltar à página inicial",

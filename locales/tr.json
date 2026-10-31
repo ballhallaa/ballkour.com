@@ -85,8 +85,6 @@
   "lb.empty": "Bu tabloda henüz süre yok. Bir koşu gönder ve birinciliği kap.",
   "dc.voice": "{channel} · sesli kanalda {count}",
   "dc.voiceMore": "+{count} daha",
-  "src.versions": "Güncel {latest} · Beta {beta}",
-  "src.latestOnly": "Güncel {latest}",
   "nf.title": "Parkurun dışında",
   "nf.text": "Bu sayfa yok. Bağlantıda bir yazım hatası olabilir ya da sayfa taşınmış olabilir.",
   "nf.home": "Ana sayfaya dön",
