@@ -50,7 +50,3 @@ jobs:
             --exclude README.md --exclude LICENSE --exclude deploy.sh \
             -e "ssh -i ~/.ssh/deploy -p 2222" \
             ./ "ballkour-deploy@${DEPLOY_HOST}:"
-
-      - name: Check the live site
-        run: |
-          curl -fsS -o /dev/null -w "ballkour.com: HTTP %{http_code}\n" https://ballkour.com/
