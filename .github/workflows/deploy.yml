@@ -1,0 +1,56 @@
+name: Deploy
+
+# Every push to main (your own commits and merged Weblate pull requests) goes live.
+# Run it by hand from the Actions tab with "Run workflow".
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# One deploy at a time; a newer push waits for the running one instead of cancelling it
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check that locales/en.json matches index.html
+        run: |
+          python3 tools/extract-en.py
+          if ! git diff --quiet -- locales/en.json; then
+            echo "::error::locales/en.json is out of date. Run 'python3 tools/extract-en.py' and commit it."
+            git diff -- locales/en.json
+            exit 1
+          fi
+
+      - name: Set up SSH
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy
+          chmod 600 ~/.ssh/deploy
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      # The deploy key can only run rsync into /var/www/ballkour.com, so the target path is empty
+      - name: Upload the site
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          rsync -rlz --checksum --delete --itemize-changes --chmod=D755,F644 \
+            --exclude '.git*' --exclude '.github/' --exclude tools/ \
+            --exclude README.md --exclude LICENSE --exclude deploy.sh \
+            -e "ssh -i ~/.ssh/deploy -p 2222" \
+            ./ "ballkour-deploy@${DEPLOY_HOST}:"
+
+      - name: Check the live site
+        run: |
+          curl -fsS -o /dev/null -w "ballkour.com: HTTP %{http_code}\n" https://ballkour.com/

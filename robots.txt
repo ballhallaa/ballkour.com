@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ballkour.com/sitemap.xml
