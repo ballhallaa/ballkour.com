@@ -43,7 +43,7 @@
   "dc.text": "Zgłaszaj przejścia do tabeli wyników, odkrywaj nowe trasy i otrzymuj powiadomienia o aktualizacjach.",
   "dc.copyLink": "Kopiuj link",
   "tr.title": "Tłumaczenia",
-  "tr.text": "Ta strona i Ballkour (w wersjach beta) są przetłumaczone na 13 języków w Weblate. Osoby biegle władające językiem serdecznie zapraszamy do sprawdzania i poprawiania tłumaczeń.",
+  "tr.intro": "Ta strona i Ballkour (w wersjach beta) są przetłumaczone na 13 języków w Weblate. Osoby biegle władające językiem serdecznie zapraszamy do sprawdzania i poprawiania tłumaczeń.",
   "tr.fix.title": "Znalazłeś błąd w tłumaczeniu?",
   "tr.fix.sub": "Popraw go w Weblate",
   "src.title": "Kod źródłowy",

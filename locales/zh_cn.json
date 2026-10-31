@@ -43,7 +43,7 @@
   "dc.text": "提交成绩上排行榜、发现新关卡，并接收更新通知。",
   "dc.copyLink": "复制链接",
   "tr.title": "翻译",
-  "tr.text": "本网站和 Ballkour（测试版）已在 Weblate 上翻译成 13 种语言。欢迎精通该语言的人在那里审校和改进翻译。",
+  "tr.intro": "本网站和 Ballkour（测试版）已在 Weblate 上翻译成 13 种语言。欢迎精通该语言的人在那里审校和改进翻译。",
   "tr.fix.title": "发现翻译错误？",
   "tr.fix.sub": "在 Weblate 上修正",
   "src.title": "源代码",

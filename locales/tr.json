@@ -43,7 +43,7 @@
   "dc.text": "Skor tablosu için koşu gönder, yeni parkurlar bul ve güncellemelerden haberdar ol.",
   "dc.copyLink": "Bağlantıyı kopyala",
   "tr.title": "Çeviriler",
-  "tr.text": "Bu site ve Ballkour (beta sürümlerinde) Weblate’te 13 dile çevrildi. Dili akıcı konuşan herkes çevirileri orada inceleyip geliştirmeye davetlidir.",
+  "tr.intro": "Bu site ve Ballkour (beta sürümlerinde) Weblate’te 13 dile çevrildi. Dili akıcı konuşan herkes çevirileri orada inceleyip geliştirmeye davetlidir.",
   "tr.fix.title": "Bir çeviri hatası mı buldun?",
   "tr.fix.sub": "Weblate’te düzelt",
   "src.title": "Kaynak kod",
