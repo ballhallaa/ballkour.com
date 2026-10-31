@@ -43,7 +43,7 @@
   "dc.text": "Envoyez vos parties pour le classement, trouvez de nouveaux parcours et soyez averti des mises à jour.",
   "dc.copyLink": "Copier le lien",
   "tr.title": "Traductions",
-  "tr.text": "Ce site et Ballkour (dans les versions bêta) sont traduits en 13 langues sur Weblate. Les personnes qui parlent couramment la langue sont les bienvenues pour y relire et améliorer les traductions.",
+  "tr.intro": "Ce site et Ballkour (dans les versions bêta) sont traduits en 13 langues sur Weblate. Les personnes qui parlent couramment la langue sont les bienvenues pour y relire et améliorer les traductions.",
   "tr.fix.title": "Vous avez trouvé une erreur de traduction ?",
   "tr.fix.sub": "Corrigez-la sur Weblate",
   "src.title": "Code source",
