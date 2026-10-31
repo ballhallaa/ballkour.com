@@ -84,6 +84,7 @@
   "lb.watch": "Guarda la run di {player} in {time}",
   "lb.empty": "Ancora nessun tempo in questa classifica. Invia una run e prenditi il primo posto.",
   "dc.voice": "{channel} · {count} in vocale",
+  "dc.voiceMore": "+{count} altri",
   "src.versions": "Attuale {latest} · Beta {beta}",
   "src.latestOnly": "Attuale {latest}",
   "nf.title": "Fuori percorso",

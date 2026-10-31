@@ -84,6 +84,7 @@
   "lb.watch": "Watch the {time} run by {player}",
   "lb.empty": "No times on this board yet. Submit a run and take first place.",
   "dc.voice": "{channel} · {count} in voice",
+  "dc.voiceMore": "+{count} more",
   "src.versions": "Latest {latest} · Beta {beta}",
   "src.latestOnly": "Latest {latest}",
   "nf.title": "Off the course",

@@ -84,6 +84,7 @@
   "lb.watch": "觀看 {player} 的 {time} 跑圖",
   "lb.empty": "這個關卡還沒有成績。提交一次跑圖，拿下第一名吧。",
   "dc.voice": "{channel} · {count} 人在語音中",
+  "dc.voiceMore": "另外 {count} 個",
   "src.versions": "最新 {latest} · 測試版 {beta}",
   "src.latestOnly": "最新 {latest}",
   "nf.title": "衝出賽道",

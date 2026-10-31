@@ -84,6 +84,7 @@
   "lb.watch": "Ver la carrera de {player} en {time}",
   "lb.empty": "Aún no hay tiempos en esta clasificación. Envía una carrera y quédate con el primer puesto.",
   "dc.voice": "{channel} · {count} en voz",
+  "dc.voiceMore": "+{count} más",
   "src.versions": "Actual {latest} · Beta {beta}",
   "src.latestOnly": "Actual {latest}",
   "nf.title": "Fuera del recorrido",

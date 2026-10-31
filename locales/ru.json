@@ -84,6 +84,7 @@
   "lb.watch": "Смотреть забег {player} за {time}",
   "lb.empty": "На этой трассе пока нет результатов. Отправьте забег и займите первое место.",
   "dc.voice": "{channel} · в голосовом: {count}",
+  "dc.voiceMore": "ещё {count}",
   "src.versions": "Текущая {latest} · Бета {beta}",
   "src.latestOnly": "Текущая {latest}",
   "nf.title": "Сошли с трассы",

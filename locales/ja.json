@@ -84,6 +84,7 @@
   "lb.watch": "{player}の{time}のプレイを見る",
   "lb.empty": "このコースにはまだ記録がありません。記録を提出して1位を獲りましょう。",
   "dc.voice": "{channel} · ボイス{count}人",
+  "dc.voiceMore": "ほか{count}件",
   "src.versions": "最新 {latest} · ベータ {beta}",
   "src.latestOnly": "最新 {latest}",
   "nf.title": "コースアウト",
