@@ -84,6 +84,7 @@
   "lb.watch": "Voir la partie de {player} en {time}",
   "lb.empty": "Aucun temps pour l’instant. Envoyez une partie et prenez la première place.",
   "dc.voice": "{channel} · {count} en vocal",
+  "dc.voiceMore": "+{count} autres",
   "src.versions": "Actuel {latest} · Bêta {beta}",
   "src.latestOnly": "Actuel {latest}",
   "nf.title": "Hors parcours",

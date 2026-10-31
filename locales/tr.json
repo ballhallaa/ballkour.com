@@ -84,6 +84,7 @@
   "lb.watch": "{player} oyuncusunun {time} koşusunu izle",
   "lb.empty": "Bu tabloda henüz süre yok. Bir koşu gönder ve birinciliği kap.",
   "dc.voice": "{channel} · sesli kanalda {count}",
+  "dc.voiceMore": "+{count} daha",
   "src.versions": "Güncel {latest} · Beta {beta}",
   "src.latestOnly": "Güncel {latest}",
   "nf.title": "Parkurun dışında",

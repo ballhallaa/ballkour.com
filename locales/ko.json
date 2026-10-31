@@ -84,6 +84,7 @@
   "lb.watch": "{player}의 {time} 플레이 보기",
   "lb.empty": "아직 이 코스에 기록이 없습니다. 기록을 제출하고 1위를 차지하세요.",
   "dc.voice": "{channel} · 음성 {count}명",
+  "dc.voiceMore": "+{count}개 더 보기",
   "src.versions": "최신 {latest} · 베타 {beta}",
   "src.latestOnly": "최신 {latest}",
   "nf.title": "코스 이탈",

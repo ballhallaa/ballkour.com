@@ -84,6 +84,7 @@
   "lb.watch": "ดูการวิ่ง {time} ของ {player}",
   "lb.empty": "ยังไม่มีเวลาในกระดานนี้ ส่งผลการวิ่งแล้วคว้าอันดับหนึ่งไปเลย",
   "dc.voice": "{channel} · ในห้องเสียง {count} คน",
+  "dc.voiceMore": "อีก {count} ช่อง",
   "src.versions": "ล่าสุด {latest} · เบตา {beta}",
   "src.latestOnly": "ล่าสุด {latest}",
   "nf.title": "หลุดคอร์ส",
