@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Rebuild locales/en.json (Weblate's source file) from the English text in index.html.
+"""Rebuild locales/en.json (Weblate's source file) from the English text in the site's pages.
 
 Run from the website folder after changing any English text:
-    python3 tools/extract-en.py            # reads index.html
-    python3 tools/extract-en.py page.html  # or another file
+    python3 tools/extract-en.py              # reads index.html and 404.html
+    python3 tools/extract-en.py page.html    # or other files
 """
 import html
 import json
@@ -12,8 +12,7 @@ import re
 import sys
 
 root = pathlib.Path(__file__).resolve().parent.parent
-src = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else root / "index.html"
-text = src.read_text(encoding="utf-8")
+sources = [pathlib.Path(a) for a in sys.argv[1:]] or [root / "index.html", root / "404.html"]
 strings = {}
 
 
@@ -24,25 +23,29 @@ def add(key, value):
     strings.setdefault(key, value)
 
 
-# Plain text: <tag data-i18n="key">Text</tag>
-for m in re.finditer(r'<(\w+)\b[^>]*\bdata-i18n="([^"]+)"[^>]*>(.*?)</\1>', text, re.S):
-    add(m.group(2), html.unescape(re.sub(r"<[^>]+>", "", m.group(3))))
-# Text with <b>/<code>: <tag data-i18n-html="key">Text <b>bold</b></tag>
-for m in re.finditer(r'<(\w+)\b[^>]*\bdata-i18n-html="([^"]+)"[^>]*>(.*?)</\1>', text, re.S):
-    add(m.group(2), m.group(3))
-# Attributes: data-i18n-aria="key" aria-label="..." and data-i18n-alt="key" alt="..."
-for m in re.finditer(r"<[^>]*>", text):
-    tag = m.group(0)
-    for kind, attr in (("aria", "aria-label"), ("alt", "alt")):
-        k = re.search(rf'\bdata-i18n-{kind}="([^"]+)"', tag)
-        v = re.search(rf'\s{attr}="([^"]*)"', tag)
-        if k and v:
-            add(k.group(1), html.unescape(v.group(1)))
-# Strings the script builds
-dyn = re.search(r'<script type="application/json" id="i18n-dynamic">(.*?)</script>', text, re.S)
-if dyn:
-    for k, v in json.loads(dyn.group(1)).items():
-        add(k, v)
+for src in sources:
+    if not src.exists():
+        continue
+    text = src.read_text(encoding="utf-8")
+    # Plain text: <tag data-i18n="key">Text</tag>
+    for m in re.finditer(r'<(\w+)\b[^>]*\bdata-i18n="([^"]+)"[^>]*>(.*?)</\1>', text, re.S):
+        add(m.group(2), html.unescape(re.sub(r"<[^>]+>", "", m.group(3))))
+    # Text with <b>/<code>: <tag data-i18n-html="key">Text <b>bold</b></tag>
+    for m in re.finditer(r'<(\w+)\b[^>]*\bdata-i18n-html="([^"]+)"[^>]*>(.*?)</\1>', text, re.S):
+        add(m.group(2), m.group(3))
+    # Attributes: data-i18n-aria="key" aria-label="..." and data-i18n-alt="key" alt="..."
+    for m in re.finditer(r"<[^>]*>", text):
+        tag = m.group(0)
+        for kind, attr in (("aria", "aria-label"), ("alt", "alt")):
+            k = re.search(rf'\bdata-i18n-{kind}="([^"]+)"', tag)
+            v = re.search(rf'\s{attr}="([^"]*)"', tag)
+            if k and v:
+                add(k.group(1), html.unescape(v.group(1)))
+    # Strings the script builds
+    dyn = re.search(r'<script type="application/json" id="i18n-dynamic">(.*?)</script>', text, re.S)
+    if dyn:
+        for k, v in json.loads(dyn.group(1)).items():
+            add(k, v)
 
 out = root / "locales" / "en.json"
 out.parent.mkdir(exist_ok=True)
