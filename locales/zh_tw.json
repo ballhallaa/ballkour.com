@@ -40,7 +40,7 @@
   "f.scorecards.title": "計分卡",
   "f.scorecards.text": "即時查看每位玩家的檢查點、時間和失誤，並顯示大廳前三名。",
   "dc.title": "Discord",
-  "dc.text": "提交成績上排行榜、發掘新關卡，並接收更新通知。",
+  "dc.blurb": "提交成績上排行榜、接收更新通知，還能結識其他破壞球玩家！",
   "dc.copyLink": "複製連結",
   "tr.title": "翻譯",
   "tr.intro": "本網站和 Ballkour（測試版）已在 Weblate 上翻譯成 13 種語言。歡迎精通該語言的人在那裡校對並改進翻譯。",

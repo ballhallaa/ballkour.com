@@ -40,7 +40,7 @@
   "f.scorecards.title": "Karty wyników",
   "f.scorecards.text": "Na żywo widzisz punkt kontrolny, czas i błędy każdego gracza, razem z top 3 lobby.",
   "dc.title": "Discord",
-  "dc.text": "Zgłaszaj przejścia do tabeli wyników, odkrywaj nowe trasy i otrzymuj powiadomienia o aktualizacjach.",
+  "dc.blurb": "Zgłaszaj przejścia do tabeli wyników, otrzymuj powiadomienia o aktualizacjach i poznaj innych graczy Balla!",
   "dc.copyLink": "Kopiuj link",
   "tr.title": "Tłumaczenia",
   "tr.intro": "Ta strona i Ballkour (w wersjach beta) są przetłumaczone na 13 języków w Weblate. Osoby biegle władające językiem serdecznie zapraszamy do sprawdzania i poprawiania tłumaczeń.",
