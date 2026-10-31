@@ -58,6 +58,7 @@
   "foot.contact": "有問題或回饋？",
   "foot.copyDiscord": "複製 Discord 使用者名稱",
   "foot.copyEmail": "複製電子郵件地址",
+  "foot.writeEmail": "寫電子郵件",
   "foot.disclaimer": "Ballkour 是粉絲製作的鬥陣特攻工作坊模式，與 Blizzard Entertainment 無關。",
   "steps.1": "在鬥陣特攻中開啟<b>開始遊戲 → 更多 → 自訂對戰 → 建立</b>。",
   "steps.2": "前往<b>設定 → 匯入代碼</b>（在「摘要」下），然後貼上代碼（例如 <code>59W28</code>）。",

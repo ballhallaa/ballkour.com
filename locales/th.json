@@ -58,6 +58,7 @@
   "foot.contact": "มีคำถามหรือข้อเสนอแนะ?",
   "foot.copyDiscord": "คัดลอกชื่อผู้ใช้ Discord",
   "foot.copyEmail": "คัดลอกที่อยู่อีเมล",
+  "foot.writeEmail": "เขียนอีเมล",
   "foot.disclaimer": "Ballkour เป็นโหมด Workshop ของ Overwatch ที่แฟน ๆ สร้างขึ้น ไม่มีส่วนเกี่ยวข้องกับ Blizzard Entertainment",
   "steps.1": "ใน Overwatch ให้เปิด <b>เล่น → เพิ่มเติม → เกมแบบกำหนดเอง → สร้าง</b>",
   "steps.2": "ไปที่ <b>การตั้งค่า → นำเข้ารหัส</b> (ใต้ สรุป) แล้ววางโค้ด (เช่น <code>59W28</code>)",

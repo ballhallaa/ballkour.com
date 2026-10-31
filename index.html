@@ -604,8 +604,8 @@ a.link-copy { text-decoration: none; }
 .split { display: inline-flex; }
 .split > .link-copy { position: relative; }
 .split > .link-copy:hover, .split > .link-copy.copied { z-index: 1; }
-.split > a { border-radius: 9px 0 0 9px; }
-.split > button { margin-left: -1px; padding: 0 9px; border-radius: 0 9px 9px 0; }
+.split > :first-child { border-radius: 9px 0 0 9px; }
+.split > :last-child { margin-left: -1px; padding: 0 9px; border-radius: 0 9px 9px 0; }
 .link-copy:hover .ext { color: var(--volt); transform: translate(1px, -1px); }
 /* Blurring glass over a moving canvas is costly on phones: use solid glass there */
 @media (max-width: 700px), (pointer: coarse) {
@@ -872,8 +872,8 @@ a.link-copy { text-decoration: none; }
       <span class="contact-q" data-i18n="foot.contact">Questions or feedback?</span>
       <button class="link-copy" type="button" data-copy="ballhallaa"><span class="sr-only" data-i18n="foot.copyDiscord">Copy Discord username</span><svg class="icon" aria-hidden="true"><use href="#i-discord"/></svg><span class="copy-val">ballhallaa</span><svg class="icon i-copy" aria-hidden="true"><use href="#i-copy"/></svg><svg class="icon i-check" aria-hidden="true"><use href="#i-check"/></svg></button>
       <span class="split">
-        <a class="link-copy" href="mailto:hi@ballhal.la"><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg>hi@ballhal.la<svg class="icon ext" aria-hidden="true"><use href="#i-out"/></svg></a>
-        <button class="link-copy" type="button" data-copy-mailto><span class="sr-only" data-i18n="foot.copyEmail">Copy email address</span><svg class="icon i-copy" aria-hidden="true"><use href="#i-copy"/></svg><svg class="icon i-check" aria-hidden="true"><use href="#i-check"/></svg></button>
+        <button class="link-copy" type="button" data-copy-mailto><span class="sr-only" data-i18n="foot.copyEmail">Copy email address</span><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg><span class="copy-val">hi@ballhal.la</span><svg class="icon i-copy" aria-hidden="true"><use href="#i-copy"/></svg><svg class="icon i-check" aria-hidden="true"><use href="#i-check"/></svg></button>
+        <a class="link-copy" href="mailto:hi@ballhal.la"><span class="sr-only" data-i18n="foot.writeEmail">Write an email</span><svg class="icon ext" aria-hidden="true"><use href="#i-out"/></svg></a>
       </span>
       <a class="link-copy" href="https://ballhal.la" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-globe"/></svg>ballhal.la<svg class="icon ext" aria-hidden="true"><use href="#i-out"/></svg></a>
     </div>
@@ -1217,10 +1217,10 @@ a.link-copy { text-decoration: none; }
   document.addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-copy], button[data-copy-mailto]");
     if (!btn) return;
-    // The email button copies the address from the link beside it, so it stays in one place in the HTML
-    const mailLink = btn.hasAttribute("data-copy-mailto") ? btn.previousElementSibling : null;
+    // The email button copies the address from the mail link beside it, so it stays in one place in the HTML
+    const mailLink = btn.hasAttribute("data-copy-mailto") ? btn.parentElement.querySelector("a[href]") : null;
     const text = mailLink ? decodeURIComponent(mailLink.href.replace(/^mailto:/, "")) : btn.dataset.copy;
-    const fallback = mailLink || btn.querySelector(".copy-val");
+    const fallback = btn.querySelector(".copy-val");
     const done = (ok) => {
       btn.classList.toggle("copied", ok);
       announce.textContent = t(ok ? "copy.done" : "copy.manual", { code: text });

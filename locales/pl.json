@@ -58,6 +58,7 @@
   "foot.contact": "Pytania lub uwagi?",
   "foot.copyDiscord": "Kopiuj nazwę użytkownika Discord",
   "foot.copyEmail": "Kopiuj adres e-mail",
+  "foot.writeEmail": "Napisz e-mail",
   "foot.disclaimer": "Ballkour to fanowski tryb Warsztatu Overwatch. Nie jest powiązany z Blizzard Entertainment.",
   "steps.1": "W Overwatch otwórz <b>Graj → Więcej → Gry niestandardowe → Utwórz</b>.",
   "steps.2": "Przejdź do <b>Ustawienia → Importuj kod</b> (w sekcji Podsumowanie) i wklej kod (np. <code>59W28</code>).",

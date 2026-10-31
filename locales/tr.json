@@ -58,6 +58,7 @@
   "foot.contact": "Soru veya geri bildirim?",
   "foot.copyDiscord": "Discord kullanıcı adını kopyala",
   "foot.copyEmail": "E-posta adresini kopyala",
+  "foot.writeEmail": "E-posta yaz",
   "foot.disclaimer": "Ballkour, hayranlar tarafından yapılmış bir Overwatch Workshop modudur. Blizzard Entertainment ile bağlantılı değildir.",
   "steps.1": "Overwatch’ta <b>Oyna → Diğer → Özel Oyunlar → Oluştur</b> yolunu aç.",
   "steps.2": "<b>Ayarlar → Kodu İçe Aktar</b> (Özet altında) bölümüne git ve kodu yapıştır (ör. <code>59W28</code>).",

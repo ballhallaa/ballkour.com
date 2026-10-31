@@ -58,6 +58,7 @@
   "foot.contact": "Вопросы или отзывы?",
   "foot.copyDiscord": "Скопировать имя пользователя Discord",
   "foot.copyEmail": "Скопировать адрес эл. почты",
+  "foot.writeEmail": "Написать письмо",
   "foot.disclaimer": "Ballkour — фанатский режим Мастерской Overwatch. Он не связан с Blizzard Entertainment.",
   "steps.1": "В Overwatch откройте <b>Играть → Ещё → Пользовательские игры → Создать</b>.",
   "steps.2": "Перейдите в <b>Настройки → Импорт кода</b> (в разделе «Сводка») и вставьте код (например, <code>59W28</code>).",
