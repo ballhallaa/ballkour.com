@@ -47,7 +47,7 @@
   "dc.blurb": "提交成绩上排行榜、接收更新通知，还能结识其他破坏球玩家！",
   "dc.copyLink": "复制链接",
   "tr.title": "翻译",
-  "tr.intro": "本网站和 Ballkour（测试版）已在 Weblate 上翻译成 13 种语言。欢迎精通该语言的人在那里审校和改进翻译。",
+  "tr.about": "本网站和 Ballkour 测试版已在 Weblate 上翻译成 13 种语言。欢迎精通该语言的人在那里审校和改进翻译。",
   "tr.fix.title": "发现翻译错误？",
   "tr.fix.sub": "在 Weblate 上修正",
   "src.title": "源代码",

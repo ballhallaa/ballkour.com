@@ -51,7 +51,7 @@
   "src.view": "View on GitHub",
   "src.gameReleases.title": "Game release notes",
   "src.group.web": "Website",
-  "tr.intro": "This website and Ballkour (in the beta builds) are translated into 13 languages on Weblate. Fluent speakers are welcome to review and improve the translations there.",
+  "tr.about": "This website and Ballkour’s beta builds are translated into 13 languages on Weblate. Fluent speakers are welcome to review and improve the translations there.",
   "tr.fix.title": "Found a translation error?",
   "tr.fix.sub": "Fix it on Weblate",
   "foot.contact": "Questions or feedback?",
