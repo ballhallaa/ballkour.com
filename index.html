@@ -354,30 +354,44 @@ select option, select optgroup { background: var(--menu); color: var(--ink); }
 .code.copied .i-check { display: block; }
 .note { margin: 0; padding: 12px 18px 16px; border-top: 1px solid var(--line); font: 400 13px/1.45 var(--body); color: var(--ink-3); }
 
-/* Leaderboard */
-#leaderboard { position: relative; z-index: 5; overflow: visible; }
-.pick-wrap { position: relative; margin-left: auto; min-width: 0; max-width: 100%; }
-.pick {
+/* Leaderboards: each course row has a record button that opens its top 10 under it */
+.lang-pick .chev { width: 14px; height: 14px; transition: transform .2s ease; }
+.rec {
+  margin-top: 7px;
+  max-width: 100%;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  max-width: 100%;
-  height: 34px;
-  padding: 0 10px 0 12px;
-  border: 1px solid var(--line-hi);
-  border-radius: 10px;
-  background: rgba(0, 0, 0, .35);
+  gap: 7px;
+  padding: 4px 8px 4px 7px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .025);
   color: var(--ink-2);
-  font: 600 14px/1 var(--body);
+  font: 500 12.5px/1.2 var(--mono);
+  text-align: left;
   cursor: pointer;
-  transition: border-color .15s ease;
+  transition: border-color .15s, color .15s;
 }
-.pick:hover, .pick[aria-expanded="true"] { border-color: var(--volt); }
-#course-current { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
-.pick .chev, .lang-pick .chev { width: 14px; height: 14px; transition: transform .2s ease; }
-.pick[aria-expanded="true"] .chev { transform: rotate(180deg); }
-.course-menu { width: min(300px, calc(100vw - 32px)); max-height: min(440px, 62vh); overflow-y: auto; overscroll-behavior: contain; }
-.pick select:focus-visible { outline: none; }
+.rec:hover, .rec[aria-expanded="true"] { border-color: var(--volt); color: var(--ink); }
+.rec .icon { width: 14px; height: 14px; }
+.rec .i-trophy { color: var(--gold); }
+.rec-time { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.rec-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rec .chev { color: var(--ink-3); transition: transform .2s ease; }
+.rec[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.course-board {
+  grid-column: 1 / -1;
+  margin: 2px 0 6px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, .28);
+  overflow: hidden;
+  animation: pop .16s ease-out;
+}
+.course-board .board-meta { padding: 10px 12px 2px; }
+.course-board .board { padding: 2px 0 6px; }
+.course-board .run { padding: 7px 12px; }
+.course-board .board-empty { padding: 12px; font-size: 14.5px; }
 .board-meta { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 12px; padding: 14px 18px 6px; font: 500 11.5px/1.3 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
 .board-hint { font: 400 13px/1.3 var(--body); letter-spacing: 0; text-transform: none; }
 .board { list-style: none; margin: 0; padding: 2px 0 10px; }
@@ -401,7 +415,7 @@ a.stat:hover .play { color: var(--volt); }
 .submit .lr-text { flex: 1 1 260px; }
 .submit .lr-sub { font: 400 14px/1.45 var(--body); }
 @media (max-width: 480px) {
-  .run { grid-template-columns: 22px minmax(0, 1fr) auto 40px; gap: 8px; padding: 8px 12px; }
+  .run, .course-board .run { grid-template-columns: 22px minmax(0, 1fr) auto 40px; gap: 8px; padding: 8px 12px; }
   a.stat .play { display: none; }
 }
 .submit-actions { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -557,22 +571,6 @@ a.stat:hover .play { color: var(--volt); }
       </div>
       <noscript><p class="note">Turn on JavaScript to see the course codes, or find them in the README on GitHub.</p></noscript>
       <p class="note" data-i18n="courses.note">Struck-through codes have been broken since Overwatch’s August 2026 patch.</p>
-    </section>
-
-    <section class="panel" id="leaderboard" aria-labelledby="lb-title">
-      <div class="panel-head">
-        <h2 class="panel-title" id="lb-title"><svg class="icon" aria-hidden="true"><use href="#i-trophy"/></svg><span data-i18n="lb.title">Leaderboard</span></h2>
-        <div class="pick-wrap" id="course-wrap">
-          <button class="pick" id="course-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="course-menu">
-            <span class="sr-only" data-i18n="lb.course">Course</span>
-            <span id="course-current">1 · Watchpoint: Gibraltar</span>
-            <svg class="icon chev" aria-hidden="true"><use href="#i-chev"/></svg>
-          </button>
-          <ul class="menu course-menu" id="course-menu" role="listbox" tabindex="-1" hidden></ul>
-        </div>
-      </div>
-      <div class="board-meta" id="board-meta"></div>
-      <ol class="board" id="board" aria-live="polite"></ol>
       <div class="submit">
         <span class="lr-icon"><svg class="icon" aria-hidden="true"><use href="#i-upload"/></svg></span>
         <span class="lr-text">
@@ -730,6 +728,8 @@ a.stat:hover .play { color: var(--volt); }
   "code.brokenTitle": "Broken since Overwatch’s August 2026 patch",
   "copy.done": "Copied {code}",
   "copy.manual": "{code} is selected. Copy it with your keyboard.",
+  "lb.noTimes": "No times yet",
+  "lb.toggle": "Top 10 for {course}",
   "lb.videoHint": "Tap a time to watch the run",
   "lb.watch": "Watch the {time} run by {player}",
   "lb.empty": "No times on this board yet. Submit a run and take first place.",
@@ -755,11 +755,11 @@ a.stat:hover .play { color: var(--volt); }
   let reduced = motionQuery.matches;
 
   /* ---------- Courses (one list drives the codes, the numbers and the leaderboards) ----------
-     Runs: { name, time, miss, date, video }. The remakes (file set) re-read their leaderboards/<n>-<slug>.opy
+     Runs: { name, time, miss, date, video }. The remakes (file set) re-read their leaderboard.opy
      from GitHub's develop branch on ballkour.com; the runs below are the fallback. */
   const COURSES = [
     { n: 1, flag: "🇬🇮", name: "Watchpoint: Gibraltar", by: "Spiz", remaker: "ballhallaa", latest: "59W28", beta: "9GTJH",
-      file: "leaderboards/1-watchpoint-gibraltar.opy",
+      file: "src/courses/1-watchpoint-gibraltar/leaderboard.opy",
       runs: [
         { name: "BALLMYBLOVED", time: "3:54.23", miss: 5, date: "Jun 2, 2026", video: "https://youtu.be/Rkz9kWNEiHM" },
         { name: "COLDSKIN", time: "4:05.81", miss: 2, date: "Aug 26, 2026", video: "https://youtu.be/xDH0hywqCtc" },
@@ -773,10 +773,10 @@ a.stat:hover .play { color: var(--volt); }
         { name: "VANESSA", time: "6:59.56", miss: 58, date: "Sep 30, 2026", video: "https://medal.tv/games/overwatch/clips/nDcPQeGIujXfUqe5G" }
       ] },
     { n: 2, flag: "🇺🇸", name: "Blizzard World (Winter)", by: "Spiz", remaker: "ballhallaa", latest: "GMWRF", beta: "8Y14F",
-      file: "leaderboards/2-blizzard-world.opy",
+      file: "src/courses/2-blizzard-world/leaderboard.opy",
       runs: [{ name: "BALLMYBLOVED", time: "7:14.76", miss: 16, date: "Jun 5, 2026", video: "https://youtu.be/hNSpNvWyNcI" }] },
     { n: 3, flag: "🇧🇷", name: "Paraíso", by: "Spiz", remaker: "ballhallaa", latest: "NT5G3K", latestBroken: true, beta: "MXJ0W",
-      file: "leaderboards/3-paraíso.opy", runs: [] },
+      file: "src/courses/3-paraíso/leaderboard.opy", runs: [] },
     { n: 4, flag: "🇩🇪", name: "Eichenwalde", by: "Spiz", code: "9AVPN", broken: true, runs: [] },
     { n: 5, flag: "🎯", name: "Practice Range", by: "Spiz", code: "KSG9E9", runs: [] },
     { n: 6, flag: "🇲🇽", name: "Dorado", by: "Fasteroid", code: "N8ZFR", runs: [] },
@@ -934,6 +934,32 @@ a.stat:hover .play { color: var(--volt); }
       `<span class="code-kind">${esc(t("code." + kindKey))}</span>` +
       (broken ? `<s class="code-val">${esc(code)}</s>` : `<span class="code-val">${esc(code)}</span>`) + COPY_ICONS + `</button>`;
   }
+  let openCourse = 0;
+  function recordButton(c) {
+    const r = c.runs[0];
+    const label = esc(t("lb.toggle", { course: `${c.n} ${c.name}` }));
+    const open = openCourse === c.n;
+    const body = r
+      ? `${icon("trophy", "icon i-trophy")}<span class="rec-time">${esc(r.time)}</span><span class="rec-name">${esc(r.name)}</span>`
+      : `<span>${esc(t("lb.noTimes"))}</span>`;
+    return `<button class="rec" type="button" data-course="${c.n}" aria-expanded="${open}" aria-controls="board-${c.n}" aria-label="${label}">${body}${icon("chev", "icon chev")}</button>`;
+  }
+  function boardHtml(c) {
+    if (!c.runs.length) return `<p class="board-empty">${esc(t("lb.empty"))}</p>`;
+    const hint = c.runs.some((r) => r.video) ? `<div class="board-meta"><span class="board-hint">${esc(t("lb.videoHint"))}</span></div>` : "";
+    return hint + `<ol class="board">` + c.runs.slice(0, 10).map((r, i) => {
+      const time = `${icon("bolt")}<span class="v">${esc(r.time)}</span>`;
+      const timeCell = r.video
+        ? `<a class="stat time" href="${esc(r.video)}" target="_blank" rel="noopener" title="${esc(t("lb.watch", { time: r.time, player: r.name }))}">${time}${icon("play", "play")}</a>`
+        : `<span class="stat time">${time}</span>`;
+      return `<li class="run${i < 3 ? " p" + (i + 1) : ""}">` +
+        `<span class="run-rank">${i + 1}</span>` +
+        `<span class="run-who"><span class="run-name" title="${esc(r.name)}">${esc(r.name)}</span>${r.date ? `<span class="run-date">${esc(formatDate(r.date))}</span>` : ""}</span>` +
+        timeCell +
+        `<span class="stat miss">${icon("skull")}${esc(r.miss)}<span class="sr-only"> ${esc(t("unit.mistakes", { count: r.miss }))}</span></span>` +
+        `</li>`;
+    }).join("") + `</ol>`;
+  }
   function courseRow(c) {
     const codes = c.remaker
       ? codeButton(c, "latest", c.latest, c.latestBroken) + codeButton(c, "beta", c.beta, false)
@@ -945,8 +971,17 @@ a.stat:hover .play { color: var(--volt); }
     return `<li class="course${c.remaker ? " two" : ""}" id="course-${c.n}">` +
       `<span class="num"><span class="sr-only">${esc(t("course.number", { n: c.n }))}</span><span aria-hidden="true">${c.n}</span></span>` +
       `<span class="flag" aria-hidden="true">${c.flag}</span>` +
-      `<div class="course-info"><p class="course-name">${esc(c.name)}</p>${meta}</div>` +
-      `<div class="codes">${codes}</div></li>`;
+      `<div class="course-info"><p class="course-name">${esc(c.name)}</p>${meta}${recordButton(c)}</div>` +
+      `<div class="codes">${codes}</div>` +
+      `<div class="course-board" id="board-${c.n}"${openCourse === c.n ? "" : " hidden"}>${openCourse === c.n ? boardHtml(c) : ""}</div></li>`;
+  }
+  // Redraws one course row in place, keeping keyboard focus on its record button
+  function refreshCourse(c) {
+    const el = document.getElementById(`course-${c.n}`);
+    if (!el) return;
+    const hadFocus = el.contains(document.activeElement) && document.activeElement.classList.contains("rec");
+    el.outerHTML = courseRow(c);
+    if (hadFocus) document.querySelector(`#course-${c.n} .rec`).focus();
   }
   function renderCourses() {
     $("#list-remakes").innerHTML = remakes.map(courseRow).join("");
@@ -963,6 +998,17 @@ a.stat:hover .play { color: var(--volt); }
     });
     $("#list-classic").innerHTML = html + "</ul>";
   }
+
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("button.rec");
+    if (!btn) return;
+    const n = Number(btn.dataset.course);
+    const before = openCourse;
+    openCourse = openCourse === n ? 0 : n;
+    if (before && before !== n) refreshCourse(course(before));
+    refreshCourse(course(n));
+    document.querySelector(`#course-${n} .rec`).focus();
+  });
 
   /* ---------- Copy course codes ---------- */
   const announce = $("#announce");
@@ -1006,47 +1052,6 @@ a.stat:hover .play { color: var(--volt); }
     const d = new Date(Date.UTC(Number(m[3]), MONTHS.indexOf(m[1].toLowerCase()), Number(m[2])));
     try { return new Intl.DateTimeFormat(htmlLang(), { dateStyle: "medium", timeZone: "UTC" }).format(d); } catch (e) { return s; }
   }
-  let current = 1;
-  const coursePicker = makeMenu($("#course-wrap"), $("#course-btn"), $("#course-menu"), 1, (v) => { current = Number(v); renderBoardSelect(); renderBoard(); });
-  function renderBoardSelect() {
-    const opt = (c) => `<li class="opt" role="option" id="course-opt-${c.n}" data-value="${c.n}" aria-selected="false">` +
-      `<span class="opt-num">${c.n}</span><span class="opt-flag" aria-hidden="true">${c.flag}</span><span class="opt-label">${esc(c.name)}</span>${CHECK}</li>`;
-    let html = `<li class="menu-group" role="presentation">${esc(t("remakes.title"))}</li>${remakes.map(opt).join("")}`;
-    let open = null;
-    classics.forEach((c) => {
-      if (c.by !== open) {
-        html += `<li class="menu-group" role="presentation">${esc(t("classic.title"))} · ${esc(c.by)}</li>`;
-        open = c.by;
-      }
-      html += opt(c);
-    });
-    coursePicker.fill(html);
-    coursePicker.select(current);
-    const c = course(current);
-    $("#course-current").textContent = `${c.n} · ${c.name}`;
-    $("#course-menu").setAttribute("aria-label", t("lb.course"));
-  }
-  function renderBoard() {
-    const c = course(current);
-    const hasVideo = c.runs.some((r) => r.video);
-    $("#board-meta").innerHTML = `<span>${c.n} · ${esc(c.name)}</span>${hasVideo ? `<span class="board-hint">${esc(t("lb.videoHint"))}</span>` : ""}`;
-    if (!c.runs.length) {
-      $("#board").innerHTML = `<li class="board-empty">${esc(t("lb.empty"))}</li>`;
-      return;
-    }
-    $("#board").innerHTML = c.runs.slice(0, 10).map((r, i) => {
-      const time = `${icon("bolt")}<span class="v">${esc(r.time)}</span>`;
-      const timeCell = r.video
-        ? `<a class="stat time" href="${esc(r.video)}" target="_blank" rel="noopener" title="${esc(t("lb.watch", { time: r.time, player: r.name }))}">${time}${icon("play", "play")}</a>`
-        : `<span class="stat time">${time}</span>`;
-      return `<li class="run${i < 3 ? " p" + (i + 1) : ""}">` +
-        `<span class="run-rank">${i + 1}</span>` +
-        `<span class="run-who"><span class="run-name" title="${esc(r.name)}">${esc(r.name)}</span>${r.date ? `<span class="run-date">${esc(formatDate(r.date))}</span>` : ""}</span>` +
-        timeCell +
-        `<span class="stat miss">${icon("skull")}${esc(r.miss)}<span class="sr-only"> ${esc(t("unit.mistakes", { count: r.miss }))}</span></span>` +
-        `</li>`;
-    }).join("");
-  }
   // lb[i] = "NAME, M:SS.cc, MISTAKES, '...'" and lbRunInfo(rank, "Mon D, YYYY", "host/path")
   function parseBoard(text) {
     const rows = [];
@@ -1068,26 +1073,21 @@ a.stat:hover .play { color: var(--volt); }
       .then((text) => {
         if (!/\blb\s*=\s*\[\s*\]/.test(text)) return; // file layout changed: keep the fallback runs
         c.runs = parseBoard(text);
-        if (c.n === current) renderBoard();
+        refreshCourse(c);
       })
       .catch(() => {});
   });
 
-  // Each classic course's board is a list of runs in leaderboards/<n>-<slug>.json on the game repo's develop branch:
-  // [{ "name", "time", "mistakes", "date", "video" }]
-  const CLASSIC_FILES = {
-    4: "4-eichenwalde", 5: "5-practice-range", 6: "6-dorado", 7: "7-ilios", 8: "8-paraíso", 9: "9-temple-of-anubis",
-    10: "10-horizon-lunar-colony", 11: "11-blizzard-world", 12: "12-circuit-royal", 13: "13-neon-junction",
-    14: "14-kings-row", 15: "15-eichenwalde"
-  };
+  // The classic courses' boards live in leaderboards/classic.json on the game repo's develop branch:
+  // { "courses": [{ "course": 13, "name": "Neon Junction", "runs": [{ "name", "time", "mistakes", "date", "video" }] }] }
   const toSeconds = (t) => t.split(":").reduce((sum, part) => sum * 60 + Number(part), 0);
-  classics.forEach((c) => {
-    if (!CLASSIC_FILES[c.n]) return;
-    fetch(`https://raw.githubusercontent.com/${REPO}/develop/leaderboards/${encodeURI(CLASSIC_FILES[c.n])}.json`, { cache: "no-cache" })
-      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-      .then((runs) => {
-        if (!Array.isArray(runs)) return;
-        c.runs = runs
+  fetch(`https://raw.githubusercontent.com/${REPO}/develop/leaderboards/classic.json`, { cache: "no-cache" })
+    .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+    .then((data) => {
+      (Array.isArray(data && data.courses) ? data.courses : []).forEach((entry) => {
+        const c = course(Number(entry && entry.course));
+        if (!c || c.remaker || !Array.isArray(entry.runs)) return;
+        c.runs = entry.runs
           .filter((r) => r && typeof r.name === "string" && r.name.trim()
             && /^(\d{1,2}:)?\d{1,2}:\d{2}\.\d{2}$/.test(r.time) && Number.isInteger(r.mistakes) && r.mistakes >= 0)
           .map((r) => ({
@@ -1099,10 +1099,10 @@ a.stat:hover .play { color: var(--volt); }
           }))
           .sort((a, b) => toSeconds(a.time) - toSeconds(b.time) || a.miss - b.miss)
           .slice(0, 10);
-        if (c.n === current) renderBoard();
-      })
-      .catch(() => {});
-  });
+        refreshCourse(c);
+      });
+    })
+    .catch(() => {});
 
   /* ---------- Discord (live widget data) ---------- */
   let widget = null;
@@ -1160,8 +1160,6 @@ a.stat:hover .play { color: var(--volt); }
   function renderAll() {
     renderLangControls();
     renderCourses();
-    renderBoardSelect();
-    renderBoard();
     renderDiscord();
     renderVersions();
   }
