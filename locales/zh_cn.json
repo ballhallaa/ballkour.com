@@ -58,6 +58,7 @@
   "foot.contact": "有问题或反馈？",
   "foot.copyDiscord": "复制 Discord 用户名",
   "foot.copyEmail": "复制电子邮件地址",
+  "foot.writeEmail": "写邮件",
   "foot.disclaimer": "Ballkour 是粉丝制作的守望先锋地图工坊模式，与 Blizzard Entertainment 无关。",
   "steps.1": "在守望先锋中打开<b>开始游戏 → 更多 → 自定义比赛 → 创建</b>。",
   "steps.2": "前往<b>设置 → 导入代码</b>（在“概要”下），然后粘贴代码（例如 <code>59W28</code>）。",

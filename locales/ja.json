@@ -58,6 +58,7 @@
   "foot.contact": "質問やフィードバックはこちら",
   "foot.copyDiscord": "Discordのユーザー名をコピー",
   "foot.copyEmail": "メールアドレスをコピー",
+  "foot.writeEmail": "メールを書く",
   "foot.disclaimer": "BallkourはファンメイドのOverwatchワークショップモードです。Blizzard Entertainmentとは提携していません。",
   "steps.1": "Overwatchで<b>プレイ → その他 → カスタム・ゲーム → 作成</b>を開きます。",
   "steps.2": "<b>設定 → コードをインポート</b>（サマリー内）に移動し、コード（例：<code>59W28</code>）を貼り付けます。",

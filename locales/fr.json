@@ -58,6 +58,7 @@
   "foot.contact": "Des questions ou des remarques ?",
   "foot.copyDiscord": "Copier le pseudo Discord",
   "foot.copyEmail": "Copier l’adresse e-mail",
+  "foot.writeEmail": "Écrire un e-mail",
   "foot.disclaimer": "Ballkour est un mode Workshop d’Overwatch créé par des fans. Il n’est pas affilié à Blizzard Entertainment.",
   "steps.1": "Dans Overwatch, ouvrez <b>Jouer → Plus → Parties personnalisées → Créer</b>.",
   "steps.2": "Allez dans <b>Paramètres → Importer un code</b> (sous Résumé), puis collez le code (ex. <code>59W28</code>).",
