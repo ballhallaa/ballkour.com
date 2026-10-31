@@ -72,6 +72,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 img { max-width: 100%; }
+p, .lr-sub { text-wrap: pretty; }
 a { color: inherit; }
 button { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--volt); outline-offset: 3px; }
@@ -360,12 +361,12 @@ select option, select optgroup { background: var(--menu); color: var(--ink); }
 /* Courses */
 .group { padding: 4px 0 10px; }
 .group + .group { border-top: 1px solid var(--line); }
-.group-head { padding: 16px 18px 6px; }
+
 #leaderboards, #submit { scroll-margin-top: 72px; }
-.group-title { margin: 0; font: italic 700 23px/1 var(--display); letter-spacing: .02em; text-transform: uppercase; color: var(--ink); }
-.group-sub { margin: 6px 0 0; max-width: 62ch; font: 400 14.5px/1.45 var(--body); color: var(--ink-2); }
-.by { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 14px 18px 4px; font: 600 11.5px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
-.ramp { display: inline-flex; align-items: center; gap: 7px; font-weight: 500; letter-spacing: .02em; text-transform: none; }
+.by { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; padding: 16px 18px 6px; }
+.by-title { margin: 0; font: italic 700 22px/1 var(--display); letter-spacing: .02em; text-transform: uppercase; color: var(--ink-3); }
+.by-name { color: var(--ink); }
+.ramp { display: inline-flex; align-items: center; gap: 7px; font: 500 11.5px/1 var(--mono); letter-spacing: .02em; color: var(--ink-3); }
 .ramp i { width: 38px; height: 3px; border-radius: 2px; background: linear-gradient(90deg, var(--volt), var(--ember), var(--coral)); }
 .course-list { list-style: none; margin: 0; padding: 0; }
 .course { display: grid; grid-template-columns: 22px 26px minmax(0, 1fr) auto; align-items: center; gap: 8px 10px; padding: 8px 18px; }
@@ -715,21 +716,7 @@ a.link-copy { text-decoration: none; }
         <li><span data-i18n="steps.3">Start the match and enjoy!</span></li>
       </ol>
 
-      <div class="group" id="leaderboards">
-        <div class="group-head">
-          <h3 class="group-title" data-i18n="remakes.title">Ballkour remakes</h3>
-          <p class="group-sub" data-i18n="remakes.sub">Remade by ballhallaa with a leaderboard on every course. The beta codes add hints, splits, spectating, and translations.</p>
-        </div>
-        <ul class="course-list" id="list-remakes"></ul>
-      </div>
-
-      <div class="group">
-        <div class="group-head">
-          <h3 class="group-title" data-i18n="classic.title">Classic courses</h3>
-          <p class="group-sub" data-i18n="classic.sub">More Wrecking Ball parkour from Spiz, Fasteroid, and Senimar.</p>
-        </div>
-        <div id="list-classic"></div>
-      </div>
+      <div id="leaderboards"></div>
       <noscript><p class="note">Turn on JavaScript to see the course codes, or find them in the README on GitHub.</p></noscript>
       <p class="note" data-i18n="courses.note">Struck-through codes have been broken since Overwatch’s August 2026 patch.</p>
       <div class="submit" id="submit">
@@ -887,7 +874,8 @@ a.link-copy { text-decoration: none; }
 {
   "hero.online": "{count} online",
   "unit.mistakes": "{count} mistakes",
-  "course.remade": "Creator: {creator} • Remaker: {remaker}",
+  "course.by": "Courses by {creator}",
+  "course.remaker": "Remaker: {remaker}",
   "course.number": "Course {n}",
   "course.easiest": "easiest",
   "course.hardest": "hardest",
@@ -1136,7 +1124,7 @@ a.link-copy { text-decoration: none; }
       : codeButton(c, "code", c.code, c.broken);
     // Each "Label: name" part stays on one line; if the row is too narrow, it breaks at the bullet
     const meta = c.remaker
-      ? `<p class="course-meta">${t("course.remade", { creator: c.by, remaker: c.remaker }).split("•").map((part) => `<span>${esc(part.trim())}</span>`).join(" • ")}</p>`
+      ? `<p class="course-meta">${esc(t("course.remaker", { remaker: c.remaker }))}</p>`
       : "";
     return `<li class="course${c.remaker ? " two" : ""}" id="course-${c.n}">` +
       `<span class="num"><span class="sr-only">${esc(t("course.number", { n: c.n }))}</span><span aria-hidden="true">${c.n}</span></span>` +
@@ -1153,20 +1141,21 @@ a.link-copy { text-decoration: none; }
     el.outerHTML = courseRow(c);
     if (hadFocus) document.querySelector(`#course-${c.n} .rec`).focus();
   }
+  // One list grouped by creator ("Courses by Spiz"); COURSES is already in that order, so the numbers run 1–15
   function renderCourses() {
-    $("#list-remakes").innerHTML = remakes.map(courseRow).join("");
     let html = "";
     let open = null;
-    classics.forEach((c) => {
+    COURSES.forEach((c) => {
       if (c.by !== open) {
-        if (open !== null) html += "</ul>";
-        const ramp = c.ordered ? ` <span class="ramp">${esc(t("course.easiest"))} <i></i> ${esc(t("course.hardest"))}</span>` : "";
-        html += `<p class="by">${esc(c.by)}${ramp}</p><ul class="course-list">`;
+        if (open !== null) html += "</ul></div>";
+        const title = esc(t("course.by", { creator: "\u0000" })).replace("\u0000", `<span class="by-name">${esc(c.by)}</span>`);
+        const ramp = c.ordered ? `<span class="ramp">${esc(t("course.easiest"))} <i></i> ${esc(t("course.hardest"))}</span>` : "";
+        html += `<div class="group"><div class="by"><h3 class="by-title">${title}</h3>${ramp}</div><ul class="course-list">`;
         open = c.by;
       }
       html += courseRow(c);
     });
-    $("#list-classic").innerHTML = html + "</ul>";
+    $("#leaderboards").innerHTML = html + "</ul></div>";
   }
 
   document.addEventListener("click", (e) => {
