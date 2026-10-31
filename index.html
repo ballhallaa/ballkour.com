@@ -755,11 +755,11 @@ a.stat:hover .play { color: var(--volt); }
   let reduced = motionQuery.matches;
 
   /* ---------- Courses (one list drives the codes, the numbers and the leaderboards) ----------
-     Runs: { name, time, miss, date, video }. The remakes (file set) re-read their leaderboard.opy
+     Runs: { name, time, miss, date, video }. The remakes (file set) re-read their leaderboards/<n>-<slug>.opy
      from GitHub's develop branch on ballkour.com; the runs below are the fallback. */
   const COURSES = [
     { n: 1, flag: "🇬🇮", name: "Watchpoint: Gibraltar", by: "Spiz", remaker: "ballhallaa", latest: "59W28", beta: "9GTJH",
-      file: "src/courses/1-watchpoint-gibraltar/leaderboard.opy",
+      file: "leaderboards/1-watchpoint-gibraltar.opy",
       runs: [
         { name: "BALLMYBLOVED", time: "3:54.23", miss: 5, date: "Jun 2, 2026", video: "https://youtu.be/Rkz9kWNEiHM" },
         { name: "COLDSKIN", time: "4:05.81", miss: 2, date: "Aug 26, 2026", video: "https://youtu.be/xDH0hywqCtc" },
@@ -773,10 +773,10 @@ a.stat:hover .play { color: var(--volt); }
         { name: "VANESSA", time: "6:59.56", miss: 58, date: "Sep 30, 2026", video: "https://medal.tv/games/overwatch/clips/nDcPQeGIujXfUqe5G" }
       ] },
     { n: 2, flag: "🇺🇸", name: "Blizzard World (Winter)", by: "Spiz", remaker: "ballhallaa", latest: "GMWRF", beta: "8Y14F",
-      file: "src/courses/2-blizzard-world/leaderboard.opy",
+      file: "leaderboards/2-blizzard-world.opy",
       runs: [{ name: "BALLMYBLOVED", time: "7:14.76", miss: 16, date: "Jun 5, 2026", video: "https://youtu.be/hNSpNvWyNcI" }] },
     { n: 3, flag: "🇧🇷", name: "Paraíso", by: "Spiz", remaker: "ballhallaa", latest: "NT5G3K", latestBroken: true, beta: "MXJ0W",
-      file: "src/courses/3-paraíso/leaderboard.opy", runs: [] },
+      file: "leaderboards/3-paraíso.opy", runs: [] },
     { n: 4, flag: "🇩🇪", name: "Eichenwalde", by: "Spiz", code: "9AVPN", broken: true, runs: [] },
     { n: 5, flag: "🎯", name: "Practice Range", by: "Spiz", code: "KSG9E9", runs: [] },
     { n: 6, flag: "🇲🇽", name: "Dorado", by: "Fasteroid", code: "N8ZFR", runs: [] },
@@ -1073,16 +1073,21 @@ a.stat:hover .play { color: var(--volt); }
       .catch(() => {});
   });
 
-  // The classic courses' boards live in leaderboards/classic.json on the game repo's develop branch:
-  // { "courses": [{ "course": 13, "name": "Neon Junction", "runs": [{ "name", "time", "mistakes", "date", "video" }] }] }
+  // Each classic course's board is a list of runs in leaderboards/<n>-<slug>.json on the game repo's develop branch:
+  // [{ "name", "time", "mistakes", "date", "video" }]
+  const CLASSIC_FILES = {
+    4: "4-eichenwalde", 5: "5-practice-range", 6: "6-dorado", 7: "7-ilios", 8: "8-paraíso", 9: "9-temple-of-anubis",
+    10: "10-horizon-lunar-colony", 11: "11-blizzard-world", 12: "12-circuit-royal", 13: "13-neon-junction",
+    14: "14-kings-row", 15: "15-eichenwalde"
+  };
   const toSeconds = (t) => t.split(":").reduce((sum, part) => sum * 60 + Number(part), 0);
-  fetch(`https://raw.githubusercontent.com/${REPO}/develop/leaderboards/classic.json`, { cache: "no-cache" })
-    .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-    .then((data) => {
-      (Array.isArray(data && data.courses) ? data.courses : []).forEach((entry) => {
-        const c = course(Number(entry && entry.course));
-        if (!c || c.remaker || !Array.isArray(entry.runs)) return;
-        c.runs = entry.runs
+  classics.forEach((c) => {
+    if (!CLASSIC_FILES[c.n]) return;
+    fetch(`https://raw.githubusercontent.com/${REPO}/develop/leaderboards/${encodeURI(CLASSIC_FILES[c.n])}.json`, { cache: "no-cache" })
+      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+      .then((runs) => {
+        if (!Array.isArray(runs)) return;
+        c.runs = runs
           .filter((r) => r && typeof r.name === "string" && r.name.trim()
             && /^(\d{1,2}:)?\d{1,2}:\d{2}\.\d{2}$/.test(r.time) && Number.isInteger(r.mistakes) && r.mistakes >= 0)
           .map((r) => ({
@@ -1095,9 +1100,9 @@ a.stat:hover .play { color: var(--volt); }
           .sort((a, b) => toSeconds(a.time) - toSeconds(b.time) || a.miss - b.miss)
           .slice(0, 10);
         if (c.n === current) renderBoard();
-      });
-    })
-    .catch(() => {});
+      })
+      .catch(() => {});
+  });
 
   /* ---------- Discord (live widget data) ---------- */
   let widget = null;
