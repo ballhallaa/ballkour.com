@@ -85,8 +85,6 @@
   "lb.empty": "Ancora nessun tempo in questa classifica. Invia una run e prenditi il primo posto.",
   "dc.voice": "{channel} · {count} in vocale",
   "dc.voiceMore": "+{count} altri",
-  "src.versions": "Attuale {latest} · Beta {beta}",
-  "src.latestOnly": "Attuale {latest}",
   "nf.title": "Fuori percorso",
   "nf.text": "Questa pagina non esiste. Il link potrebbe contenere un errore di battitura, oppure la pagina è stata spostata.",
   "nf.home": "Torna alla home page",

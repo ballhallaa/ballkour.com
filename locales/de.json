@@ -85,8 +85,6 @@
   "lb.empty": "Noch keine Zeiten auf dieser Liste. Reiche einen Lauf ein und hol dir Platz 1.",
   "dc.voice": "{channel} · {count} im Sprachkanal",
   "dc.voiceMore": "+{count} weitere",
-  "src.versions": "Aktuell {latest} · Beta {beta}",
-  "src.latestOnly": "Aktuell {latest}",
   "nf.title": "Von der Strecke abgekommen",
   "nf.text": "Diese Seite gibt es nicht. Vielleicht enthält der Link einen Tippfehler, oder die Seite wurde verschoben.",
   "nf.home": "Zurück zur Startseite",

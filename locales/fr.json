@@ -85,8 +85,6 @@
   "lb.empty": "Aucun temps pour l’instant. Envoyez une partie et prenez la première place.",
   "dc.voice": "{channel} · {count} en vocal",
   "dc.voiceMore": "+{count} autres",
-  "src.versions": "Actuel {latest} · Bêta {beta}",
-  "src.latestOnly": "Actuel {latest}",
   "nf.title": "Hors parcours",
   "nf.text": "Cette page n’existe pas. Le lien contient peut-être une faute de frappe, ou la page a été déplacée.",
   "nf.home": "Retour à l’accueil",
