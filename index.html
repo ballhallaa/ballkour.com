@@ -1,0 +1,1335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ballkour · Wrecking Ball parkour for Overwatch</title>
+<meta name="description" content="Wrecking Ball parkour courses for Overwatch. Grab a course code, run every checkpoint on one clock, and get your time on the leaderboard.">
+<link rel="canonical" href="https://ballkour.com/">
+<meta name="theme-color" content="#00e697">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Ballkour">
+<meta property="og:title" content="Ballkour">
+<meta property="og:description" content="Wrecking Ball parkour courses for Overwatch. Grab a course code, run every checkpoint on one clock, and get your time on the leaderboard.">
+<meta property="og:url" content="https://ballkour.com/">
+<meta property="og:image" content="https://ballkour.com/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The Ballkour hamster logo next to the Ballkour wordmark on a neon speed-line background">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,700;1,800&family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Color+Emoji&display=swap">
+</head>
+<body>
+<style>
+/* Layout: a warp field bursting out from behind the hamster badge; under it, one column of
+   smoked-glass HUD panels (ballhal.la's card anatomy) carrying Ballkour's own colors. */
+:root {
+  --void: #030605;
+  --glass: rgba(11, 18, 15, 0.68);
+  --glass-solid: rgba(9, 15, 13, 0.9);
+  --glass-hi: rgba(210, 255, 238, 0.055);
+  --line: rgba(196, 255, 232, 0.11);
+  --line-hi: rgba(196, 255, 232, 0.24);
+  --ink: #ecf6f2;
+  --ink-2: #a7b6b0;
+  --ink-3: #76867f;
+  --volt: #00e697;
+  --volt-hi: #4ff0b8;
+  --on-volt: #001a10;
+  --ember: #ff9a2e;
+  --arc: #33c6ff;
+  --coral: #ff6a4f;
+  --gold: #ffd54f;
+  --silver: #d3dde2;
+  --bronze: #e8a066;
+  --menu: #0a110e;
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "Barlow", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --emoji: "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+  --r: 14px;
+  --col: 660px;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { background: var(--void); scroll-behavior: smooth; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--void);
+  color: var(--ink);
+  font: 400 16px/1.5 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+img { max-width: 100%; }
+a { color: inherit; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--volt); outline-offset: 3px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.icon { width: 18px; height: 18px; flex: none; }
+
+#warp, #balls { position: fixed; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+#warp { z-index: 0; }
+#balls { z-index: 20; }
+.page { position: relative; z-index: 1; }
+
+/* ---------- Language picker ---------- */
+.topbar { max-width: 780px; margin: 0 auto; padding-block: 14px 0; display: flex; justify-content: flex-end; }
+.lang-wrap { position: relative; z-index: 30; }
+.lang-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 10px 0 12px;
+  border: 1px solid var(--line-hi);
+  border-radius: 10px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  color: var(--ink-2);
+  font: 600 14.5px/1 var(--body);
+  cursor: pointer;
+  transition: border-color .15s ease;
+}
+.lang-pick:hover, .lang-pick[aria-expanded="true"] { border-color: var(--volt); }
+.lang-pick #lang-current { color: var(--ink); }
+.lang-pick .chev { width: 14px; height: 14px; transition: transform .2s ease; }
+.lang-pick[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border: 1px solid var(--line-hi);
+  border-radius: 14px;
+  background: var(--menu);
+  box-shadow: 0 22px 50px -14px rgba(0, 0, 0, .8);
+  transform-origin: top right;
+  animation: pop .16s ease-out;
+}
+.menu:focus { outline: none; }
+@keyframes pop { from { opacity: 0; transform: translateY(-6px) scale(.97); } }
+.opt {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  color: var(--ink-2);
+  font: 500 14px/1.2 var(--body);
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
+}
+.opt > .opt-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.opt.active { background: var(--glass-hi); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
+.opt[aria-selected="true"] { background: rgba(0, 230, 151, .12); color: var(--ink); }
+.opt > .icon { width: 15px; height: 15px; color: var(--volt); visibility: hidden; }
+.opt[aria-selected="true"] > .icon { visibility: visible; }
+.opt-num { width: 20px; flex: none; font: 600 12.5px/1 var(--mono); color: var(--ink-3); text-align: right; font-variant-numeric: tabular-nums; }
+.opt-flag { flex: none; font: 400 16px/1 var(--emoji); }
+.menu-group { padding: 10px 10px 4px; font: 600 10.5px/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+.menu-group:first-child { padding-top: 6px; }
+
+/* Languages: a compact two-column grid that stays right of the logo on wide screens, and
+   opens in the page flow on narrower ones so it never covers the logo */
+.lang-menu { width: 244px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; }
+@media (max-width: 919px) {
+  .lang-wrap { width: 100%; display: flex; flex-direction: column; align-items: flex-end; }
+  .lang-menu { position: static; width: min(340px, 100%); margin-top: 8px; }
+}
+select option, select optgroup { background: var(--menu); color: var(--ink); }
+
+/* ---------- Hero ---------- */
+.hero {
+  max-width: 780px;
+  margin: 0 auto;
+  padding-block: clamp(14px, 4vh, 56px) 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.badge {
+  position: relative;
+  width: clamp(164px, 36vw, 232px);
+  aspect-ratio: 1;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.badge::before {
+  content: "";
+  position: absolute;
+  inset: -9%;
+  border-radius: 50%;
+  background: conic-gradient(#ff4b3e, #ff9a2e, #ffd23f, #00e697, #33c6ff, #5a6bff, #a54bd8, #ff4b3e);
+  filter: blur(28px);
+  opacity: .5;
+  animation: turn 10s linear infinite;
+}
+.badge img { position: relative; display: block; width: 100%; height: 100%; animation: bob 5s ease-in-out infinite; }
+.badge.spin img { animation: roll .9s cubic-bezier(.25, .9, .25, 1); }
+.badge:focus-visible { outline-offset: 8px; border-radius: 50%; }
+@keyframes turn { to { transform: rotate(1turn); } }
+@keyframes bob { 50% { transform: translateY(-7px) rotate(-1.5deg); } }
+@keyframes roll {
+  0% { transform: rotate(0) scale(1); }
+  35% { transform: rotate(-210deg) scale(.88); }
+  100% { transform: rotate(-360deg) scale(1); }
+}
+
+.wordmark {
+  margin: 20px 0 0;
+  padding-right: .06em;
+  font: italic 800 clamp(66px, 15.5vw, 136px)/.8 var(--display);
+  letter-spacing: .005em;
+  text-transform: uppercase;
+  color: var(--ink);
+  text-shadow: .035em 0 0 rgba(255, 154, 46, .8), -.035em 0 0 rgba(51, 198, 255, .75), 0 0 .45em rgba(0, 230, 151, .3);
+}
+.tagline { margin: 16px 0 0; font: 500 clamp(17px, 2.4vw, 21px)/1.35 var(--body); color: var(--ink-2); text-wrap: balance; }
+
+.stat { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.stat .icon { width: 15px; height: 15px; }
+.stat.time .icon { color: var(--volt); }
+.stat.miss .icon { color: var(--coral); }
+
+.actions { margin-top: 24px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 46px;
+  padding: 0 18px;
+  border: 1px solid var(--line-hi);
+  border-radius: 12px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  color: var(--ink);
+  font: 600 16px/1.1 var(--body);
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform .15s ease, border-color .15s ease, background-color .15s ease;
+}
+.btn:hover { transform: translateY(-1px); border-color: rgba(196, 255, 232, .42); background-color: rgba(16, 30, 25, .8); }
+.btn-primary { background: var(--volt); border-color: var(--volt); color: var(--on-volt); box-shadow: 0 10px 30px -8px rgba(0, 230, 151, .55); }
+.btn-primary:hover { background-color: var(--volt-hi); border-color: var(--volt-hi); }
+.btn-sm { min-height: 36px; padding: 0 12px; border-radius: 10px; font-size: 14.5px; }
+.btn .count { display: inline-flex; align-items: center; gap: 6px; font: 500 13px/1 var(--mono); color: var(--ink-2); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--volt); animation: pulse 2s infinite; }
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(0, 230, 151, .6); }
+  70%, 100% { box-shadow: 0 0 0 7px rgba(0, 230, 151, 0); }
+}
+@media (max-width: 520px) {
+  .actions { width: 100%; flex-direction: column; }
+}
+
+/* ---------- Panels ---------- */
+.column { max-width: var(--col); margin: 0 auto; padding-block: 10px 30px; display: grid; gap: 14px; }
+.panel {
+  min-width: 0;
+  overflow: hidden;
+  scroll-margin-top: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  backdrop-filter: blur(18px) saturate(1.2);
+}
+.panel-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; padding: 15px 18px; border-bottom: 1px solid var(--line); }
+.panel-title { margin: 0; display: inline-flex; align-items: center; gap: 10px; font: 600 13px/1 var(--body); letter-spacing: .14em; text-transform: uppercase; color: var(--ink); }
+.panel-title .icon { color: var(--ink-2); }
+.panel-body { padding: 16px 18px 18px; }
+.panel-text { margin: 0; max-width: 62ch; font: 400 15.5px/1.55 var(--body); color: var(--ink-2); }
+
+.tag { display: inline-flex; align-items: center; height: 19px; padding: 0 7px; border-radius: 5px; font: 600 10.5px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.tag-beta { color: var(--ember); background: rgba(255, 154, 46, .12); border: 1px solid rgba(255, 154, 46, .32); }
+
+/* How to load a code */
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 14px 18px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 16px;
+  counter-reset: step;
+  border-bottom: 1px solid var(--line);
+  background: rgba(0, 230, 151, .035);
+}
+.steps li { min-width: 0; display: flex; gap: 10px; counter-increment: step; font: 500 14.5px/1.4 var(--body); color: var(--ink-2); }
+.steps li::before {
+  content: counter(step);
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  background: var(--volt);
+  color: var(--on-volt);
+  font: 700 12px/1 var(--mono);
+}
+.steps b { font-weight: 600; color: var(--ink); }
+.steps code { padding: 1px 5px; border: 1px solid var(--line-hi); border-radius: 5px; font: 600 13px/1 var(--mono); letter-spacing: .05em; color: var(--ink); }
+@media (max-width: 620px) { .steps { grid-template-columns: 1fr; } }
+
+/* Courses */
+.group { padding: 4px 0 10px; }
+.group + .group { border-top: 1px solid var(--line); }
+.group-head { padding: 16px 18px 6px; }
+.group-title { margin: 0; font: italic 700 23px/1 var(--display); letter-spacing: .02em; text-transform: uppercase; color: var(--ink); }
+.group-sub { margin: 6px 0 0; max-width: 62ch; font: 400 14.5px/1.45 var(--body); color: var(--ink-2); }
+.by { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 14px 18px 4px; font: 600 11.5px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+.ramp { display: inline-flex; align-items: center; gap: 7px; font-weight: 500; letter-spacing: .02em; text-transform: none; }
+.ramp i { width: 38px; height: 3px; border-radius: 2px; background: linear-gradient(90deg, var(--volt), var(--ember), var(--coral)); }
+.course-list { list-style: none; margin: 0; padding: 0; }
+.course { display: grid; grid-template-columns: 22px 26px minmax(0, 1fr) auto; align-items: center; gap: 8px 10px; padding: 8px 18px; }
+.course:hover { background: var(--glass-hi); }
+.num { font: 600 13px/1 var(--mono); color: var(--ink-3); text-align: right; font-variant-numeric: tabular-nums; }
+.flag { font: 400 20px/1 var(--emoji); text-align: center; }
+.course-info { min-width: 0; }
+.course-name { margin: 0; font: 600 16.5px/1.25 var(--body); color: var(--ink); }
+.course-meta { margin: 2px 0 0; font: 400 12.5px/1.4 var(--mono); color: var(--ink-2); }
+.codes { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+@media (max-width: 560px) {
+  .course.two { grid-template-columns: 22px 26px minmax(0, 1fr); }
+  .course.two .codes { grid-column: 3; justify-content: flex-start; }
+}
+.code {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 10px 0 9px;
+  border: 1px solid var(--line-hi);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, .03);
+  color: var(--ink);
+  font: 600 14.5px/1 var(--mono);
+  letter-spacing: .06em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color .15s, background-color .15s, color .15s, transform .1s;
+}
+.code:hover { border-color: var(--volt); color: var(--volt-hi); }
+.code:active { transform: scale(.97); }
+.code-kind { font: 600 10px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.code.beta .code-kind { color: var(--ember); }
+.code .icon { width: 14px; height: 14px; color: var(--ink-3); }
+.code .i-check { display: none; }
+.code.broken { border-style: dashed; background: none; color: var(--ink-3); }
+.code.broken .code-kind { color: var(--coral); }
+.code.broken s { text-decoration-color: var(--coral); text-decoration-thickness: 2px; }
+.code.broken:hover { border-color: var(--coral); color: var(--ink-2); }
+.code.copied { border-style: solid; background: var(--volt); border-color: var(--volt); color: var(--on-volt); }
+.code.copied .code-kind, .code.copied .icon { color: var(--on-volt); }
+.code.copied .i-copy { display: none; }
+.code.copied .i-check { display: block; }
+.note { margin: 0; padding: 12px 18px 16px; border-top: 1px solid var(--line); font: 400 13px/1.45 var(--body); color: var(--ink-3); }
+
+/* Leaderboard */
+#leaderboard { position: relative; z-index: 5; overflow: visible; }
+.pick-wrap { position: relative; margin-left: auto; min-width: 0; max-width: 100%; }
+.pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  height: 34px;
+  padding: 0 10px 0 12px;
+  border: 1px solid var(--line-hi);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, .35);
+  color: var(--ink-2);
+  font: 600 14px/1 var(--body);
+  cursor: pointer;
+  transition: border-color .15s ease;
+}
+.pick:hover, .pick[aria-expanded="true"] { border-color: var(--volt); }
+#course-current { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
+.pick .chev, .lang-pick .chev { width: 14px; height: 14px; transition: transform .2s ease; }
+.pick[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.course-menu { width: min(300px, calc(100vw - 32px)); max-height: min(440px, 62vh); overflow-y: auto; overscroll-behavior: contain; }
+.pick select:focus-visible { outline: none; }
+.board-meta { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 12px; padding: 14px 18px 6px; font: 500 11.5px/1.3 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.board-hint { font: 400 13px/1.3 var(--body); letter-spacing: 0; text-transform: none; }
+.board { list-style: none; margin: 0; padding: 2px 0 10px; }
+.run { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto 50px; align-items: center; gap: 12px; padding: 8px 18px; font-variant-numeric: tabular-nums; }
+.run-rank { font: 700 15px/1 var(--mono); color: var(--ink-3); }
+.run-who { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.run-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 16px/1.2 var(--body); letter-spacing: .03em; text-transform: uppercase; color: var(--ink-2); }
+.run-date { font: 400 11.5px/1.2 var(--mono); color: var(--ink-3); }
+.run .stat { justify-content: flex-end; font: 600 14.5px/1 var(--mono); color: var(--ink-2); }
+a.stat { text-decoration: none; border-radius: 6px; }
+a.stat .play { width: 11px; height: 11px; color: var(--ink-3); transition: color .15s; }
+a.stat:hover .v { text-decoration: underline; text-underline-offset: 3px; }
+a.stat:hover .play { color: var(--volt); }
+.run.p1, .run.p2, .run.p3 { --tier: var(--gold); background: linear-gradient(90deg, color-mix(in srgb, var(--tier) 13%, transparent), transparent 75%); }
+.run.p2 { --tier: var(--silver); }
+.run.p3 { --tier: var(--bronze); }
+.run.p1 .run-rank, .run.p1 .run-name, .run.p2 .run-rank, .run.p2 .run-name, .run.p3 .run-rank, .run.p3 .run-name { color: var(--tier); }
+.run.p1 .stat, .run.p2 .stat, .run.p3 .stat { color: var(--ink); }
+.board-empty { padding: 18px; font: 400 15px/1.5 var(--body); color: var(--ink-2); }
+.submit { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 14px; padding: 14px 18px; border-top: 1px solid var(--line); }
+.submit .lr-text { flex: 1 1 260px; }
+.submit .lr-sub { font: 400 14px/1.45 var(--body); }
+@media (max-width: 480px) {
+  .run { grid-template-columns: 22px minmax(0, 1fr) auto 40px; gap: 8px; padding: 8px 12px; }
+  a.stat .play { display: none; }
+}
+.submit-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.link-row { display: flex; align-items: center; gap: 14px; padding: 14px 18px; color: var(--ink); text-decoration: none; transition: background-color .15s; }
+.link-row + .link-row, .panel-body + .link-row { border-top: 1px solid var(--line); }
+.link-row:hover { background: var(--glass-hi); }
+.lr-icon { width: 38px; height: 38px; flex: none; display: grid; place-items: center; border-radius: 10px; background: rgba(0, 230, 151, .12); color: var(--volt); }
+.lr-text { flex: 1; min-width: 0; }
+.lr-title { display: block; font: 600 16.5px/1.25 var(--body); }
+.lr-sub { display: block; margin-top: 3px; overflow-wrap: anywhere; font: 400 12.5px/1.4 var(--mono); color: var(--ink-2); }
+.lr-arrow { width: 18px; height: 18px; flex: none; color: var(--ink-3); transition: transform .15s, color .15s; }
+.link-row:hover .lr-arrow { color: var(--volt); transform: translate(2px, -2px); }
+
+/* Features */
+.features { list-style: none; margin: 0; padding: 8px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 6px; }
+.feature { min-width: 0; display: flex; gap: 12px; padding: 12px 10px; }
+.f-icon { width: 38px; height: 38px; flex: none; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 10px; background: rgba(255, 255, 255, .035); color: var(--c, var(--ink)); }
+.f-title { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font: 600 16px/1.25 var(--body); color: var(--ink); }
+.f-text { margin: 4px 0 0; font: 400 14.5px/1.45 var(--body); color: var(--ink-2); }
+@media (max-width: 620px) { .features { grid-template-columns: 1fr; } }
+
+/* Discord */
+.live { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; font: 600 13px/1 var(--mono); color: var(--ink); }
+.people { margin-top: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.faces { display: flex; padding-left: 8px; }
+.faces img { width: 32px; height: 32px; margin-left: -8px; border: 2px solid #0a110e; border-radius: 50%; background: #19221e; }
+.faces-more { font: 500 13px/1 var(--mono); color: var(--ink-2); }
+.voice { margin: 12px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.voice li { display: flex; align-items: center; gap: 8px; font: 500 13.5px/1.3 var(--mono); color: var(--ink-2); }
+.voice .icon { width: 15px; height: 15px; color: var(--volt); }
+.join { margin-top: 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.join-sub { font: 400 12.5px/1.3 var(--mono); color: var(--ink-3); }
+
+/* Translations */
+.langs { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.langs button { padding: 5px 10px; border: 1px solid var(--line); border-radius: 8px; background: rgba(255, 255, 255, .025); color: var(--ink-2); font: 500 14px/1.2 var(--body); cursor: pointer; transition: border-color .15s, color .15s, background-color .15s; }
+.langs button:hover { border-color: var(--line-hi); color: var(--ink); }
+.langs button[aria-pressed="true"] { border-color: var(--volt); background: rgba(0, 230, 151, .1); color: var(--ink); }
+.wl-badge { display: inline-block; margin-top: 14px; }
+.wl-badge img { display: block; height: 20px; }
+
+/* Footer */
+.foot { max-width: var(--col); margin: 0 auto; padding-block: 8px 44px; text-align: center; font: 400 13.5px/1.5 var(--body); color: var(--ink-3); }
+.foot p { margin: 0 auto; max-width: 60ch; }
+
+/* Blurring glass over a moving canvas is costly on phones: use solid glass there */
+@media (max-width: 700px), (pointer: coarse) {
+  .panel, .btn, .lang-pick { -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .panel, .lang-pick { background: var(--glass-solid); }
+  .btn:not(.btn-primary) { background-color: var(--glass-solid); }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-flag" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/></g></symbol>
+    <symbol id="i-trophy" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></g></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></symbol>
+    <symbol id="i-skull" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12.5 17-.5-1-.5 1h1z"/><path d="M15 22a1 1 0 0 0 1-1v-1a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20v1a1 1 0 0 0 1 1z"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="12" r="1"/></g></symbol>
+    <symbol id="i-anchor" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/></g></symbol>
+    <symbol id="i-skip" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4l10 8-10 8z"/><path d="M19 5v14"/></g></symbol>
+    <symbol id="i-bulb" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></g></symbol>
+    <symbol id="i-timer" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2h4"/><path d="m12 14 3-3"/><circle cx="12" cy="14" r="8"/></g></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/></g></symbol>
+    <symbol id="i-langs" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></g></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></g></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-out" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></g></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></g></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path fill="currentColor" d="M7 4.5v15a1 1 0 0 0 1.52.85l12-7.5a1 1 0 0 0 0-1.7l-12-7.5A1 1 0 0 0 7 4.5Z"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></g></symbol>
+    <symbol id="i-voice" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></g></symbol>
+    <symbol id="i-notes" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 13H8"/><path d="M16 17H8"/><path d="M16 13h-2"/></g></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-code" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></g></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><path fill="currentColor" d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></symbol>
+    <symbol id="i-discord" viewBox="0 0 24 24"><path fill="currentColor" d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></symbol>
+  </defs>
+</svg>
+
+<canvas id="warp" aria-hidden="true"></canvas>
+<canvas id="balls" aria-hidden="true"></canvas>
+
+<!-- Text: English lives in this file. Elements with data-i18n* keys are translated from
+     locales/<lang>.json (managed on Weblate). After changing English text here, run
+     `python3 tools/extract-en.py` to refresh locales/en.json. -->
+<div class="page">
+  <div class="topbar">
+    <div class="lang-wrap" id="lang-wrap">
+      <button class="lang-pick" id="lang-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="lang-menu">
+        <svg class="icon" aria-hidden="true"><use href="#i-langs"/></svg>
+        <span class="sr-only" data-i18n="lang.label">Language</span>
+        <span id="lang-current">English</span>
+        <svg class="icon chev" aria-hidden="true"><use href="#i-chev"/></svg>
+      </button>
+      <ul class="menu lang-menu" id="lang-menu" role="listbox" tabindex="-1" hidden></ul>
+    </div>
+  </div>
+
+  <header class="hero">
+    <button class="badge" id="badge" type="button" data-i18n-aria="badge.label" aria-label="Give the hamster a boost">
+      <img src="assets/logo.webp" width="560" height="560" data-i18n-alt="logo.alt" alt="Ballkour logo: a hamster in goggles riding a black and orange ball">
+    </button>
+    <h1 class="wordmark">Ballkour</h1>
+    <p class="tagline" data-i18n="hero.tagline">Wrecking Ball parkour courses for Overwatch</p>
+
+    <nav class="actions" data-i18n-aria="hero.nav" aria-label="Get started">
+      <a class="btn btn-primary" href="#courses"><svg class="icon" aria-hidden="true"><use href="#i-down"/></svg><span data-i18n="hero.codes">Get a course code</span></a>
+      <a class="btn" href="https://ballkour.com/discord" data-invite target="_blank" rel="noopener">
+        <svg class="icon" aria-hidden="true"><use href="#i-discord"/></svg><span data-i18n="hero.discord">Join the Discord</span>
+        <span class="count" data-online-wrap hidden><span class="dot"></span><span data-online></span></span>
+      </a>
+      <a class="btn" href="https://ballkour.com/gameplay" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-play"/></svg><span data-i18n="hero.gameplay">Watch gameplay</span></a>
+    </nav>
+  </header>
+
+  <main class="column">
+    <section class="panel" id="courses" aria-labelledby="courses-title">
+      <div class="panel-head">
+        <h2 class="panel-title" id="courses-title"><svg class="icon" aria-hidden="true"><use href="#i-flag"/></svg><span data-i18n="courses.title">Courses</span></h2>
+      </div>
+      <ol class="steps">
+        <li><span data-i18n-html="steps.1">In Overwatch, open <b>Play → More → Custom Games → Create</b>.</span></li>
+        <li><span data-i18n-html="steps.2">Go to <b>Settings → Import Code</b> (under Summary), and paste the code (e.g. <code>59W28</code>).</span></li>
+        <li><span data-i18n="steps.3">Start the match and enjoy!</span></li>
+      </ol>
+
+      <div class="group">
+        <div class="group-head">
+          <h3 class="group-title" data-i18n="remakes.title">Ballkour remakes</h3>
+          <p class="group-sub" data-i18n="remakes.sub">Remade by ballhallaa with a leaderboard on every course. The beta codes add hints, splits, spectating, and translations.</p>
+        </div>
+        <ul class="course-list" id="list-remakes"></ul>
+      </div>
+
+      <div class="group">
+        <div class="group-head">
+          <h3 class="group-title" data-i18n="classic.title">Classic courses</h3>
+          <p class="group-sub" data-i18n="classic.sub">More Wrecking Ball parkour from Spiz, Fasteroid, and Senimar.</p>
+        </div>
+        <div id="list-classic"></div>
+      </div>
+      <noscript><p class="note">Turn on JavaScript to see the course codes, or find them in the README on GitHub.</p></noscript>
+      <p class="note" data-i18n="courses.note">Struck-through codes have been broken since Overwatch’s August 2026 patch.</p>
+    </section>
+
+    <section class="panel" id="leaderboard" aria-labelledby="lb-title">
+      <div class="panel-head">
+        <h2 class="panel-title" id="lb-title"><svg class="icon" aria-hidden="true"><use href="#i-trophy"/></svg><span data-i18n="lb.title">Leaderboard</span></h2>
+        <div class="pick-wrap" id="course-wrap">
+          <button class="pick" id="course-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="course-menu">
+            <span class="sr-only" data-i18n="lb.course">Course</span>
+            <span id="course-current">1 · Watchpoint: Gibraltar</span>
+            <svg class="icon chev" aria-hidden="true"><use href="#i-chev"/></svg>
+          </button>
+          <ul class="menu course-menu" id="course-menu" role="listbox" tabindex="-1" hidden></ul>
+        </div>
+      </div>
+      <div class="board-meta" id="board-meta"></div>
+      <ol class="board" id="board" aria-live="polite"></ol>
+      <div class="submit">
+        <span class="lr-icon"><svg class="icon" aria-hidden="true"><use href="#i-upload"/></svg></span>
+        <span class="lr-text">
+          <span class="lr-title" data-i18n="lb.submit.title">Submit a video of your run</span>
+          <span class="lr-sub" data-i18n="lb.submit.sub">Open a ticket on the Ballkour Discord and share your video. New to the server? Join it first.</span>
+        </span>
+        <span class="submit-actions">
+          <a class="btn btn-sm btn-primary" href="https://discord.com/channels/1212553452283101245/1498944426901508106" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-discord"/></svg><span data-i18n="lb.submit.ticket">Open a ticket</span></a>
+          <a class="btn btn-sm" href="https://ballkour.com/discord" data-invite target="_blank" rel="noopener"><span data-i18n="hero.discord">Join the Discord</span></a>
+        </span>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="run-title">
+      <div class="panel-head">
+        <h2 class="panel-title" id="run-title"><svg class="icon" aria-hidden="true"><use href="#i-bolt"/></svg><span data-i18n="run.title">Features</span></h2>
+      </div>
+      <ul class="features">
+        <li class="feature">
+          <span class="f-icon" style="--c: var(--volt)"><svg class="icon" aria-hidden="true"><use href="#i-bolt"/></svg></span>
+          <div><p class="f-title"><span data-i18n="f.run.title">One continuous run</span></p><p class="f-text" data-i18n="f.run.text">Clear every checkpoint in order, from start to finish, with one total time at the end.</p></div>
+        </li>
+        <li class="feature">
+          <span class="f-icon" style="--c: var(--coral)"><svg class="icon" aria-hidden="true"><use href="#i-skull"/></svg></span>
+          <div><p class="f-title"><span data-i18n="f.mistakes.title">Mistake counter</span></p><p class="f-text" data-i18n="f.mistakes.text">Missing a checkpoint or dying to the map counts. Your total sits next to your time.</p></div>
+        </li>
+        <li class="feature">
+          <span class="f-icon" style="--c: var(--arc)"><svg class="icon" aria-hidden="true"><use href="#i-anchor"/></svg></span>
+          <div><p class="f-title"><span data-i18n="f.rules.title">Checkpoint rules</span></p><p class="f-text" data-i18n="f.rules.text">Some checkpoints block or utilize only Grapple, Shield Bounce, and/or Piledriver.</p></div>
+        </li>
+        <li class="feature">
+          <span class="f-icon" style="--c: var(--ink)"><svg class="icon" aria-hidden="true"><use href="#i-skip"/></svg></span>
+          <div><p class="f-title"><span data-i18n="f.practice.title">Skip, go back, freemode</span></p><p class="f-text" data-i18n="f.practice.text">Practice any checkpoint, or roam the map with the clock paused.</p></div>
+        </li>
+        <li class="feature">
+          <span class="f-icon" style="--c: var(--gold)"><svg class="icon" aria-hidden="true"><use href="#i-trophy"/></svg></span>
+          <div><p class="f-title"><span data-i18n="f.lobby.title">Leaderboards and scorecards</span></p><p class="f-text" data-i18n="f.lobby.text">On the Ballkour remakes, the top 10 times hang in the lobby and the finish screen shows the time to beat. In the beta, a live scorecard tracks everyone’s run, along with the lobby’s top 3.</p></div>
+        </li>
+        <li class="feature">
+          <span class="f-icon" style="--c: var(--ember)"><svg class="icon" aria-hidden="true"><use href="#i-bulb"/></svg></span>
+          <div><p class="f-title"><span data-i18n="f.hints.title">Hints</span> <span class="tag tag-beta" data-i18n="tag.beta">Beta</span></p><p class="f-text" data-i18n="f.hints.text">A recorded route shows you the way through. Turn hints on yourself, or they switch on after 10 mistakes on one checkpoint.</p></div>
+        </li>
+        <li class="feature">
+          <span class="f-icon" style="--c: var(--arc)"><svg class="icon" aria-hidden="true"><use href="#i-timer"/></svg></span>
+          <div><p class="f-title"><span data-i18n="f.splits.title">Splits</span> <span class="tag tag-beta" data-i18n="tag.beta">Beta</span></p><p class="f-text" data-i18n="f.splits.text">Best and average times for every checkpoint, with your live pace.</p></div>
+        </li>
+        <li class="feature">
+          <span class="f-icon" style="--c: var(--volt)"><svg class="icon" aria-hidden="true"><use href="#i-eye"/></svg></span>
+          <div><p class="f-title"><span data-i18n="f.spectate.title">Spectate</span> <span class="tag tag-beta" data-i18n="tag.beta">Beta</span></p><p class="f-text" data-i18n="f.spectate.text">Watch other runners in first or third person, or fly a free camera.</p></div>
+        </li>
+      </ul>
+    </section>
+
+    <section class="panel" id="discord" aria-labelledby="dc-title">
+      <div class="panel-head">
+        <h2 class="panel-title" id="dc-title"><svg class="icon" aria-hidden="true"><use href="#i-discord"/></svg><span data-i18n="dc.title">Discord</span></h2>
+        <span class="live" data-online-wrap hidden><span class="dot"></span><span data-online></span></span>
+      </div>
+      <div class="panel-body">
+        <p class="panel-text" data-i18n="dc.text">Submit runs for the leaderboard, find new courses, and get notified on updates.</p>
+        <div class="people" id="people" hidden>
+          <div class="faces" id="faces"></div>
+          <span class="faces-more" id="faces-more"></span>
+        </div>
+        <ul class="voice" id="voice" hidden></ul>
+        <div class="join">
+          <a class="btn btn-primary" href="https://ballkour.com/discord" data-invite target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-discord"/></svg><span data-i18n="hero.discord">Join the Discord</span></a>
+          <span class="join-sub">ballkour.com/discord</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="translations" aria-labelledby="tr-title">
+      <div class="panel-head">
+        <h2 class="panel-title" id="tr-title"><svg class="icon" aria-hidden="true"><use href="#i-langs"/></svg><span data-i18n="tr.title">Translations</span></h2>
+      </div>
+      <div class="panel-body">
+        <p class="panel-text" data-i18n="tr.text">This website and Ballkour (in the beta builds) are translated into 13 languages on Weblate. Native speakers can review and improve the translations there.</p>
+        <ul class="langs" id="lang-chips" data-i18n-aria="tr.langs" aria-label="Languages"></ul>
+        <a class="wl-badge" href="https://hosted.weblate.org/engage/ballkour/" target="_blank" rel="noopener"><img src="https://hosted.weblate.org/widget/ballkour/svg-badge.svg" data-i18n-alt="tr.badge" alt="Translation status on Weblate" height="20" onerror="this.parentNode.remove()"></a>
+      </div>
+      <a class="link-row" href="https://hosted.weblate.org/projects/ballkour/" target="_blank" rel="noopener">
+        <span class="lr-icon"><svg class="icon" aria-hidden="true"><use href="#i-langs"/></svg></span>
+        <span class="lr-text">
+          <span class="lr-title" data-i18n="tr.fix.title">Found a translation error?</span>
+          <span class="lr-sub"><span data-i18n="tr.fix.sub">Fix it on Weblate</span> · hosted.weblate.org/projects/ballkour</span>
+        </span>
+        <svg class="lr-arrow" aria-hidden="true"><use href="#i-out"/></svg>
+      </a>
+    </section>
+
+    <section class="panel" id="source" aria-labelledby="src-title">
+      <div class="panel-head">
+        <h2 class="panel-title" id="src-title"><svg class="icon" aria-hidden="true"><use href="#i-code"/></svg><span data-i18n="src.title">Source code</span></h2>
+      </div>
+      <a class="link-row" href="https://github.com/ballhallaa/ballkour" target="_blank" rel="noopener">
+        <span class="lr-icon"><svg class="icon" aria-hidden="true"><use href="#i-github"/></svg></span>
+        <span class="lr-text">
+          <span class="lr-title" data-i18n="src.repo.title">View on GitHub</span>
+          <span class="lr-sub">github.com/ballhallaa/ballkour</span>
+        </span>
+        <svg class="lr-arrow" aria-hidden="true"><use href="#i-out"/></svg>
+      </a>
+      <a class="link-row" href="https://github.com/ballhallaa/ballkour/releases" target="_blank" rel="noopener">
+        <span class="lr-icon"><svg class="icon" aria-hidden="true"><use href="#i-notes"/></svg></span>
+        <span class="lr-text">
+          <span class="lr-title" data-i18n="src.releases.title">Release notes</span>
+          <span class="lr-sub" id="versions">github.com/ballhallaa/ballkour/releases</span>
+        </span>
+        <svg class="lr-arrow" aria-hidden="true"><use href="#i-out"/></svg>
+      </a>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p data-i18n="foot.disclaimer">Ballkour is a fan-made Overwatch Workshop mode. It isn’t affiliated with or endorsed by Blizzard Entertainment.</p>
+  </footer>
+</div>
+<p class="sr-only" id="announce" aria-live="polite"></p>
+
+<!-- English for text the script builds. Translations override these keys too. -->
+<script type="application/json" id="i18n-dynamic">
+{
+  "hero.online": "{count} online",
+  "unit.mistakes": "{count} mistakes",
+  "course.remade": "Creator: {creator} | Remaker: {remaker}",
+  "course.number": "Course {n}",
+  "course.easiest": "easiest",
+  "course.hardest": "hardest",
+  "code.latest": "Latest",
+  "code.beta": "Beta",
+  "code.code": "Code",
+  "code.broken": "Broken",
+  "code.copied": "Copied",
+  "code.selected": "Selected",
+  "code.copy": "Copy {code} ({course}, {kind})",
+  "code.brokenTitle": "Broken since Overwatch’s August 2026 patch",
+  "copy.done": "Copied {code}",
+  "copy.manual": "{code} is selected. Copy it with your keyboard.",
+  "lb.videoHint": "Tap a time to watch the run",
+  "lb.watch": "Watch the {time} run by {player}",
+  "lb.empty": "No times on this board yet. Submit a run and take first place.",
+  "dc.more": "+{count} more online",
+  "dc.now": "online now",
+  "dc.voice": "{channel} · {count} in voice",
+  "src.versions": "Latest {latest} · Beta {beta}",
+  "src.latestOnly": "Latest {latest}"
+}
+</script>
+
+<script>
+(() => {
+  "use strict";
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const icon = (id, cls = "icon") => `<svg class="${cls}" aria-hidden="true"><use href="#i-${id}"/></svg>`;
+
+  const GUILD_ID = "1212553452283101245";
+  const REPO = "ballhallaa/ballkour";
+  const motionQuery = matchMedia("(prefers-reduced-motion: reduce)");
+  let reduced = motionQuery.matches;
+
+  /* ---------- Courses (one list drives the codes, the numbers and the leaderboards) ----------
+     Runs: { name, time, miss, date, video }. The remakes (file set) re-read their leaderboard.opy
+     from GitHub's develop branch on ballkour.com; the runs below are the fallback. */
+  const COURSES = [
+    { n: 1, flag: "🇬🇮", name: "Watchpoint: Gibraltar", by: "Spiz", remaker: "ballhallaa", latest: "59W28", beta: "9GTJH",
+      file: "src/courses/1-watchpoint-gibraltar/leaderboard.opy",
+      runs: [
+        { name: "BALLMYBLOVED", time: "3:54.23", miss: 5, date: "Jun 2, 2026", video: "https://youtu.be/Rkz9kWNEiHM" },
+        { name: "COLDSKIN", time: "4:05.81", miss: 2, date: "Aug 26, 2026", video: "https://youtu.be/xDH0hywqCtc" },
+        { name: "JAKOBONEDGE", time: "4:21.96", miss: 12, date: "Jun 11, 2026", video: "https://youtu.be/L3tIoo9Ue40" },
+        { name: "BACKLINEREIN", time: "4:34.15", miss: 15, date: "May 13, 2026", video: "https://youtu.be/SDw339nB_dw" },
+        { name: "DVD", time: "5:02.50", miss: 15, date: "May 7, 2026", video: "https://youtu.be/RXrrX5Sj_L0" },
+        { name: "GAMINGCHAIR", time: "5:08.37", miss: 16, date: "May 7, 2026", video: "https://youtu.be/Ufn1zTb1Upo" },
+        { name: "BLOWSKI", time: "5:40.50", miss: 24, date: "Jun 13, 2026", video: "https://medal.tv/games/overwatch/clips/mTEZK5NUYrfkDFtcS" },
+        { name: "安宁", time: "5:51.20", miss: 40, date: "Jun 12, 2026", video: "https://medal.tv/games/overwatch/clips/mTG72hXv3vOdGEDPP" },
+        { name: "KINGO", time: "6:26.18", miss: 37, date: "Jun 10, 2026", video: "https://youtu.be/OaXIV4kSh_k" },
+        { name: "VANESSA", time: "6:59.56", miss: 58, date: "Sep 30, 2026", video: "https://medal.tv/games/overwatch/clips/nDcPQeGIujXfUqe5G" }
+      ] },
+    { n: 2, flag: "🇺🇸", name: "Blizzard World (Winter)", by: "Spiz", remaker: "ballhallaa", latest: "GMWRF", beta: "8Y14F",
+      file: "src/courses/2-blizzard-world/leaderboard.opy",
+      runs: [{ name: "BALLMYBLOVED", time: "7:14.76", miss: 16, date: "Jun 5, 2026", video: "https://youtu.be/hNSpNvWyNcI" }] },
+    { n: 3, flag: "🇧🇷", name: "Paraíso", by: "Spiz", remaker: "ballhallaa", latest: "NT5G3K", latestBroken: true, beta: "MXJ0W",
+      file: "src/courses/3-paraíso/leaderboard.opy", runs: [] },
+    { n: 4, flag: "🇩🇪", name: "Eichenwalde", by: "Spiz", code: "9AVPN", broken: true, runs: [] },
+    { n: 5, flag: "🎯", name: "Practice Range", by: "Spiz", code: "KSG9E9", runs: [] },
+    { n: 6, flag: "🇲🇽", name: "Dorado", by: "Fasteroid", code: "N8ZFR", runs: [] },
+    { n: 7, flag: "🇬🇷", name: "Ilios", by: "Fasteroid", code: "4BA40", runs: [] },
+    { n: 8, flag: "🇧🇷", name: "Paraíso", by: "Senimar", ordered: true, code: "5P58Q", broken: true, runs: [] },
+    { n: 9, flag: "🇪🇬", name: "Temple of Anubis", by: "Senimar", ordered: true, code: "18ZZK", runs: [] },
+    { n: 10, flag: "🌙", name: "Horizon Lunar Colony", by: "Senimar", ordered: true, code: "JEFA9", runs: [] },
+    { n: 11, flag: "🇺🇸", name: "Blizzard World", by: "Senimar", ordered: true, code: "D6WC7", runs: [] },
+    { n: 12, flag: "🇲🇨", name: "Circuit Royal", by: "Senimar", ordered: true, code: "71GPZ", runs: [] },
+    { n: 13, flag: "🇯🇵", name: "Neon Junction", by: "Senimar", ordered: true, code: "EPWMD",
+      runs: [{ name: "FIZZY", time: "4:11.19", miss: 18, date: "Aug 4, 2026", video: "https://youtu.be/rNPnIf2-zvE" }] },
+    { n: 14, flag: "🇬🇧", name: "King’s Row", by: "Senimar", ordered: true, code: "PQZDY", runs: [] },
+    { n: 15, flag: "🇩🇪", name: "Eichenwalde", by: "Senimar", ordered: true, code: "R6TYG", broken: true, runs: [] }
+  ];
+  const course = (n) => COURSES.find((c) => c.n === n);
+  const remakes = COURSES.filter((c) => c.remaker);
+  const classics = COURSES.filter((c) => !c.remaker);
+
+  /* ---------- Translations ---------- */
+  const LANGS = [
+    ["en", "English", "en"], ["de", "Deutsch", "de"], ["es", "Español", "es"], ["fr", "Français", "fr"],
+    ["it", "Italiano", "it"], ["pl", "Polski", "pl"], ["pt", "Português", "pt-BR"], ["tr", "Türkçe", "tr"],
+    ["ru", "Русский", "ru"], ["th", "ไทย", "th"], ["ja", "日本語", "ja"], ["ko", "한국어", "ko"],
+    ["zh_cn", "简体中文", "zh-Hans"], ["zh_tw", "繁體中文", "zh-Hant"]
+  ];
+  const EN = JSON.parse($("#i18n-dynamic").textContent);
+  $$("[data-i18n]").forEach((el) => { EN[el.dataset.i18n] = el.textContent.trim(); });
+  $$("[data-i18n-html]").forEach((el) => { EN[el.dataset.i18nHtml] = el.innerHTML.trim(); });
+  $$("[data-i18n-aria]").forEach((el) => { EN[el.dataset.i18nAria] = el.getAttribute("aria-label"); });
+  $$("[data-i18n-alt]").forEach((el) => { EN[el.dataset.i18nAlt] = el.getAttribute("alt"); });
+  const cache = { en: {} };
+  let dict = {};
+  let lang = "en";
+  const htmlLang = () => (LANGS.find((l) => l[0] === lang) || LANGS[0])[2];
+  function t(key, vars) {
+    const own = dict[key];
+    let s = typeof own === "string" && own.trim() ? own : (EN[key] ?? key);
+    if (vars) s = s.replace(/\{(\w+)\}/g, (m, v) => (v in vars ? String(vars[v]) : m));
+    return s;
+  }
+  // Translations may only use <b> and <code>; everything else is shown as text.
+  const safeHtml = (s) => esc(s).replace(/&lt;(\/?)(b|code)&gt;/g, "<$1$2>");
+
+  function applyStatic() {
+    $$("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
+    $$("[data-i18n-html]").forEach((el) => { el.innerHTML = safeHtml(t(el.dataset.i18nHtml)); });
+    $$("[data-i18n-aria]").forEach((el) => { el.setAttribute("aria-label", t(el.dataset.i18nAria)); });
+    $$("[data-i18n-alt]").forEach((el) => { el.setAttribute("alt", t(el.dataset.i18nAlt)); });
+    document.documentElement.lang = htmlLang();
+  }
+  function storedLang() { try { return localStorage.getItem("ballkour-lang"); } catch (e) { return null; } }
+  function storeLang(code) { try { localStorage.setItem("ballkour-lang", code); } catch (e) { /* private mode */ } }
+  function detectLang() {
+    const saved = storedLang();
+    if (saved && LANGS.some((l) => l[0] === saved)) return saved;
+    for (const raw of navigator.languages || [navigator.language || "en"]) {
+      const l = String(raw).toLowerCase();
+      if (l.startsWith("zh")) return /(tw|hk|mo|hant)/.test(l) ? "zh_tw" : "zh_cn";
+      const base = l.split("-")[0];
+      if (LANGS.some((x) => x[0] === base)) return base;
+    }
+    return "en";
+  }
+  async function setLang(code, save) {
+    if (!LANGS.some((l) => l[0] === code)) code = "en";
+    if (!cache[code]) {
+      try {
+        const r = await fetch(`locales/${code}.json`, { cache: "no-cache" });
+        if (!r.ok) throw new Error(r.status);
+        cache[code] = await r.json();
+      } catch (e) {
+        code = "en";
+      }
+    }
+    lang = code;
+    dict = cache[code] || {};
+    if (save) storeLang(code);
+    applyStatic();
+    renderAll();
+  }
+
+  /* A button that opens a listbox menu: mouse, touch and keyboard (arrows, Home/End, Enter, Escape) */
+  function makeMenu(wrap, btn, menu, cols, onChoose) {
+    let opts = [];
+    let active = 0;
+    function setActive(i, scroll) {
+      if (!opts.length) return;
+      active = (i + opts.length) % opts.length;
+      opts.forEach((o, j) => o.classList.toggle("active", j === active));
+      menu.setAttribute("aria-activedescendant", opts[active].id);
+      if (scroll) opts[active].scrollIntoView({ block: "nearest" });
+    }
+    function open() {
+      menu.hidden = false;
+      btn.setAttribute("aria-expanded", "true");
+      setActive(Math.max(0, opts.findIndex((o) => o.getAttribute("aria-selected") === "true")), true);
+      menu.focus({ preventScroll: true });
+    }
+    function close(refocus) {
+      if (menu.hidden) return;
+      menu.hidden = true;
+      btn.setAttribute("aria-expanded", "false");
+      opts.forEach((o) => o.classList.remove("active"));
+      if (refocus) btn.focus();
+    }
+    function choose(value) { close(true); onChoose(value); }
+    btn.addEventListener("click", () => (menu.hidden ? open() : close(false)));
+    btn.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); open(); }
+    });
+    menu.addEventListener("click", (e) => { const o = e.target.closest('[role="option"]'); if (o) choose(o.dataset.value); });
+    menu.addEventListener("pointermove", (e) => { const o = e.target.closest('[role="option"]'); if (o) setActive(opts.indexOf(o), false); });
+    menu.addEventListener("keydown", (e) => {
+      const step = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: cols, ArrowUp: -cols }[e.key];
+      if (step) { e.preventDefault(); setActive(active + step, true); }
+      else if (e.key === "Home") { e.preventDefault(); setActive(0, true); }
+      else if (e.key === "End") { e.preventDefault(); setActive(opts.length - 1, true); }
+      else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); if (opts[active]) choose(opts[active].dataset.value); }
+      else if (e.key === "Escape") { e.preventDefault(); close(true); }
+      else if (e.key === "Tab") close(false);
+    });
+    document.addEventListener("pointerdown", (e) => { if (!wrap.contains(e.target)) close(false); });
+    return {
+      fill(html) { menu.innerHTML = html; opts = $$('[role="option"]', menu); },
+      select(value) { opts.forEach((o) => o.setAttribute("aria-selected", String(o.dataset.value === String(value)))); },
+    };
+  }
+  const CHECK = icon("check");
+
+  const langMenu = $("#lang-menu");
+  const langPicker = makeMenu($("#lang-wrap"), $("#lang-btn"), langMenu, 2, (code) => { if (code !== lang) setLang(code, true); });
+  langPicker.fill(LANGS.map(([code, name, tag]) =>
+    `<li class="opt" role="option" id="lang-opt-${code}" data-value="${code}" lang="${tag}" aria-selected="false"><span class="opt-label">${esc(name)}</span>${CHECK}</li>`).join(""));
+  $("#lang-chips").innerHTML = LANGS.map(([code, name, tag]) =>
+    `<li><button type="button" data-lang="${code}" lang="${tag}" aria-pressed="false">${esc(name)}</button></li>`).join("");
+  $("#lang-chips").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-lang]");
+    if (b) setLang(b.dataset.lang, true);
+  });
+  function renderLangControls() {
+    const cur = LANGS.find((l) => l[0] === lang) || LANGS[0];
+    $("#lang-current").textContent = cur[1];
+    $("#lang-current").setAttribute("lang", cur[2]);
+    langMenu.setAttribute("aria-label", t("lang.label"));
+    langPicker.select(lang);
+    $$("#lang-chips button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
+  }
+
+  /* ---------- Course list ---------- */
+  const COPY_ICONS = icon("copy", "icon i-copy") + icon("check", "icon i-check");
+  function codeButton(c, kind, code, broken) {
+    const kindKey = broken ? "broken" : kind;
+    const label = t("code.copy", { code, course: `${c.n} ${c.name}`, kind: t("code." + kindKey) });
+    return `<button class="code${kind === "beta" ? " beta" : ""}${broken ? " broken" : ""}" type="button" data-code="${esc(code)}" data-kind="${kindKey}" aria-label="${esc(label)}"${broken ? ` title="${esc(t("code.brokenTitle"))}"` : ""}>` +
+      `<span class="code-kind">${esc(t("code." + kindKey))}</span>` +
+      (broken ? `<s class="code-val">${esc(code)}</s>` : `<span class="code-val">${esc(code)}</span>`) + COPY_ICONS + `</button>`;
+  }
+  function courseRow(c) {
+    const codes = c.remaker
+      ? codeButton(c, "latest", c.latest, c.latestBroken) + codeButton(c, "beta", c.beta, false)
+      : codeButton(c, "code", c.code, c.broken);
+    const meta = c.remaker ? `<p class="course-meta">${esc(t("course.remade", { creator: c.by, remaker: c.remaker }))}</p>` : "";
+    return `<li class="course${c.remaker ? " two" : ""}" id="course-${c.n}">` +
+      `<span class="num"><span class="sr-only">${esc(t("course.number", { n: c.n }))}</span><span aria-hidden="true">${c.n}</span></span>` +
+      `<span class="flag" aria-hidden="true">${c.flag}</span>` +
+      `<div class="course-info"><p class="course-name">${esc(c.name)}</p>${meta}</div>` +
+      `<div class="codes">${codes}</div></li>`;
+  }
+  function renderCourses() {
+    $("#list-remakes").innerHTML = remakes.map(courseRow).join("");
+    let html = "";
+    let open = null;
+    classics.forEach((c) => {
+      if (c.by !== open) {
+        if (open !== null) html += "</ul>";
+        const ramp = c.ordered ? ` <span class="ramp">${esc(t("course.easiest"))} <i></i> ${esc(t("course.hardest"))}</span>` : "";
+        html += `<p class="by">${esc(c.by)}${ramp}</p><ul class="course-list">`;
+        open = c.by;
+      }
+      html += courseRow(c);
+    });
+    $("#list-classic").innerHTML = html + "</ul>";
+  }
+
+  /* ---------- Copy course codes ---------- */
+  const announce = $("#announce");
+  function selectText(el) {
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const sel = getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+    if (ok) sel.removeAllRanges();
+    return ok;
+  }
+  function showCopied(btn, ok) {
+    const kind = btn.querySelector(".code-kind");
+    btn.classList.toggle("copied", ok);
+    kind.textContent = t(ok ? "code.copied" : "code.selected");
+    announce.textContent = t(ok ? "copy.done" : "copy.manual", { code: btn.dataset.code });
+    clearTimeout(btn._timer);
+    btn._timer = setTimeout(() => { btn.classList.remove("copied"); kind.textContent = t("code." + btn.dataset.kind); }, 1600);
+  }
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("button.code");
+    if (!btn) return;
+    const val = btn.querySelector(".code-val");
+    let pending = null;
+    try { pending = navigator.clipboard ? navigator.clipboard.writeText(btn.dataset.code) : null; } catch (err) { pending = null; }
+    if (pending && typeof pending.then === "function") {
+      pending.then(() => showCopied(btn, true), () => showCopied(btn, selectText(val)));
+    } else {
+      showCopied(btn, selectText(val));
+    }
+  });
+
+  /* ---------- Leaderboards ---------- */
+  const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+  function formatDate(s) {
+    const m = /^([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2}),\s*(\d{4})$/.exec(String(s || "").trim());
+    if (!m || MONTHS.indexOf(m[1].toLowerCase()) < 0) return s || "";
+    const d = new Date(Date.UTC(Number(m[3]), MONTHS.indexOf(m[1].toLowerCase()), Number(m[2])));
+    try { return new Intl.DateTimeFormat(htmlLang(), { dateStyle: "medium", timeZone: "UTC" }).format(d); } catch (e) { return s; }
+  }
+  let current = 1;
+  const coursePicker = makeMenu($("#course-wrap"), $("#course-btn"), $("#course-menu"), 1, (v) => { current = Number(v); renderBoardSelect(); renderBoard(); });
+  function renderBoardSelect() {
+    const opt = (c) => `<li class="opt" role="option" id="course-opt-${c.n}" data-value="${c.n}" aria-selected="false">` +
+      `<span class="opt-num">${c.n}</span><span class="opt-flag" aria-hidden="true">${c.flag}</span><span class="opt-label">${esc(c.name)}</span>${CHECK}</li>`;
+    let html = `<li class="menu-group" role="presentation">${esc(t("remakes.title"))}</li>${remakes.map(opt).join("")}`;
+    let open = null;
+    classics.forEach((c) => {
+      if (c.by !== open) {
+        html += `<li class="menu-group" role="presentation">${esc(t("classic.title"))} · ${esc(c.by)}</li>`;
+        open = c.by;
+      }
+      html += opt(c);
+    });
+    coursePicker.fill(html);
+    coursePicker.select(current);
+    const c = course(current);
+    $("#course-current").textContent = `${c.n} · ${c.name}`;
+    $("#course-menu").setAttribute("aria-label", t("lb.course"));
+  }
+  function renderBoard() {
+    const c = course(current);
+    const hasVideo = c.runs.some((r) => r.video);
+    $("#board-meta").innerHTML = `<span>${c.n} · ${esc(c.name)}</span>${hasVideo ? `<span class="board-hint">${esc(t("lb.videoHint"))}</span>` : ""}`;
+    if (!c.runs.length) {
+      $("#board").innerHTML = `<li class="board-empty">${esc(t("lb.empty"))}</li>`;
+      return;
+    }
+    $("#board").innerHTML = c.runs.slice(0, 10).map((r, i) => {
+      const time = `${icon("bolt")}<span class="v">${esc(r.time)}</span>`;
+      const timeCell = r.video
+        ? `<a class="stat time" href="${esc(r.video)}" target="_blank" rel="noopener" title="${esc(t("lb.watch", { time: r.time, player: r.name }))}">${time}${icon("play", "play")}</a>`
+        : `<span class="stat time">${time}</span>`;
+      return `<li class="run${i < 3 ? " p" + (i + 1) : ""}">` +
+        `<span class="run-rank">${i + 1}</span>` +
+        `<span class="run-who"><span class="run-name" title="${esc(r.name)}">${esc(r.name)}</span>${r.date ? `<span class="run-date">${esc(formatDate(r.date))}</span>` : ""}</span>` +
+        timeCell +
+        `<span class="stat miss">${icon("skull")}${esc(r.miss)}<span class="sr-only"> ${esc(t("unit.mistakes", { count: r.miss }))}</span></span>` +
+        `</li>`;
+    }).join("");
+  }
+  // lb[i] = "NAME, M:SS.cc, MISTAKES, '...'" and lbRunInfo(rank, "Mon D, YYYY", "host/path")
+  function parseBoard(text) {
+    const rows = [];
+    for (const m of text.matchAll(/lb\[(\d+)\]\s*=\s*"([^"]*)"/g)) {
+      const [name, time, miss] = m[2].split(",").map((s) => s.trim());
+      if (name && /^\d{1,2}:\d{2}\.\d{2}$/.test(time) && /^\d+$/.test(miss)) rows[Number(m[1])] = { name, time, miss: Number(miss) };
+    }
+    for (const m of text.matchAll(/lbRunInfo\(\s*(\d+)\s*,\s*"([^"]*)"\s*,\s*"([^"]*)"\s*\)/g)) {
+      const r = rows[Number(m[1])];
+      if (!r) continue;
+      r.date = m[2];
+      if (/^[a-z0-9.-]+\.[a-z]{2,}(\/[^\s"'<>]*)?$/i.test(m[3])) r.video = "https://" + m[3];
+    }
+    return rows.filter(Boolean);
+  }
+  remakes.forEach((c) => {
+    fetch(`https://raw.githubusercontent.com/${REPO}/develop/${encodeURI(c.file)}`, { cache: "no-cache" })
+      .then((r) => (r.ok ? r.text() : Promise.reject(r.status)))
+      .then((text) => {
+        if (!/\blb\s*=\s*\[\s*\]/.test(text)) return; // file layout changed: keep the fallback runs
+        c.runs = parseBoard(text);
+        if (c.n === current) renderBoard();
+      })
+      .catch(() => {});
+  });
+
+  /* ---------- Discord (live widget data) ---------- */
+  let widget = null;
+  function renderDiscord() {
+    if (!widget) return;
+    const members = Array.isArray(widget.members) ? widget.members : [];
+    const online = typeof widget.presence_count === "number" ? widget.presence_count : members.length;
+    const fmt = (n) => n.toLocaleString(htmlLang());
+    $$("[data-online]").forEach((el) => { el.textContent = t("hero.online", { count: fmt(online) }); });
+    $$("[data-online-wrap]").forEach((el) => { el.hidden = false; });
+    const shown = members.filter((m) => m.avatar_url).slice(0, 12);
+    if (shown.length) {
+      const ring = { online: "var(--volt)", idle: "var(--ember)", dnd: "var(--coral)" };
+      $("#faces").innerHTML = shown.map((m) =>
+        `<img src="${esc(m.avatar_url)}" alt="" title="${esc(m.username)}" width="32" height="32" loading="lazy" referrerpolicy="no-referrer" style="box-shadow:0 0 0 2px ${ring[m.status] || "var(--ink-3)"}">`).join("");
+      const more = online - shown.length;
+      $("#faces-more").textContent = more > 0 ? t("dc.more", { count: fmt(more) }) : t("dc.now");
+      $("#people").hidden = false;
+    }
+    const rooms = new Map((widget.channels || []).map((c) => [c.id, { name: c.name, pos: c.position || 0, n: 0 }]));
+    members.forEach((m) => { const c = m.channel_id && rooms.get(m.channel_id); if (c) c.n += 1; });
+    const busy = Array.from(rooms.values()).filter((c) => c.n > 0).sort((a, b) => a.pos - b.pos);
+    if (busy.length) {
+      $("#voice").innerHTML = busy.map((c) => `<li>${icon("voice")}${esc(t("dc.voice", { channel: c.name, count: fmt(c.n) }))}</li>`).join("");
+      $("#voice").hidden = false;
+    }
+  }
+  fetch(`https://discord.com/api/guilds/${GUILD_ID}/widget.json`)
+    .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+    .then((d) => {
+      widget = d;
+      if (d.instant_invite) $$("[data-invite]").forEach((a) => { a.href = d.instant_invite; });
+      renderDiscord();
+    })
+    .catch(() => {});
+
+  /* ---------- Latest releases ---------- */
+  let releases = null;
+  function renderVersions() {
+    if (!releases) return;
+    const isBeta = (x) => x.prerelease || /beta|rc|alpha/i.test(x.tag_name);
+    const stable = releases.find((x) => !isBeta(x));
+    const beta = releases.find(isBeta);
+    if (!stable) return;
+    const newerBeta = beta && new Date(beta.published_at) > new Date(stable.published_at);
+    $("#versions").textContent = newerBeta
+      ? t("src.versions", { latest: stable.tag_name, beta: beta.tag_name })
+      : t("src.latestOnly", { latest: stable.tag_name });
+  }
+  fetch(`https://api.github.com/repos/${REPO}/releases?per_page=30`, { headers: { Accept: "application/vnd.github+json" } })
+    .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+    .then((list) => { releases = (Array.isArray(list) ? list : []).filter((x) => !x.draft); renderVersions(); })
+    .catch(() => {});
+
+  function renderAll() {
+    renderLangControls();
+    renderCourses();
+    renderBoardSelect();
+    renderBoard();
+    renderDiscord();
+    renderVersions();
+  }
+
+  /* ---------- Warp background ---------- */
+  const warp = $("#warp");
+  const wctx = warp.getContext("2d");
+  const ballsCanvas = $("#balls");
+  const bctx = ballsCanvas.getContext("2d");
+  const badge = $("#badge");
+  const PALETTE = [[0, 230, 151], [0, 230, 151], [0, 230, 151], [0, 230, 151], [110, 255, 205], [255, 154, 46], [51, 198, 255]];
+  const rand = (a, b) => a + Math.random() * (b - a);
+  let W = 0, H = 0, dprWarp = 1, dprBalls = 1, maxD = 0;
+  let streaks = [], sparks = [];
+  let ox = 0, oy = 0, tx = 0, ty = 0, px = 0.5, py = 0.5;
+  let boost = 0, last = 0, running = false;
+
+  function spawn(s, anywhere) {
+    s.a = Math.random() * Math.PI * 2;
+    s.d = anywhere ? rand(0, maxD) : rand(0, 50);
+    s.v = s.spark ? rand(14, 40) : rand(36, 120);
+    s.w = s.spark ? rand(0.8, 2.2) : rand(0.6, 2.1);
+    s.l = rand(0.12, 0.3);
+    s.c = s.spark ? PALETTE[0] : PALETTE[(Math.random() * PALETTE.length) | 0];
+    return s;
+  }
+  function aim() {
+    const r = badge.getBoundingClientRect();
+    tx = r.left + r.width / 2 + (px - 0.5) * 46;
+    ty = r.top + r.height / 2 + (py - 0.5) * 34;
+  }
+  function size() {
+    const dpr = window.devicePixelRatio || 1;
+    dprWarp = Math.min(dpr, 1.5);
+    dprBalls = Math.min(dpr, 2);
+    W = window.innerWidth;
+    H = window.innerHeight;
+    warp.width = Math.round(W * dprWarp);
+    warp.height = Math.round(H * dprWarp);
+    ballsCanvas.width = Math.round(W * dprBalls);
+    ballsCanvas.height = Math.round(H * dprBalls);
+    maxD = Math.hypot(W, H) + 80;
+    const n = Math.max(70, Math.min(230, Math.round((W * H) / 8000)));
+    while (streaks.length < n) streaks.push(spawn({}, true));
+    streaks.length = n;
+    const m = Math.round(n / 5);
+    while (sparks.length < m) sparks.push(spawn({ spark: true }, true));
+    sparks.length = m;
+    if (!running) draw(0);
+  }
+  function draw(dt) {
+    aim();
+    const k = dt ? Math.min(1, dt * 6) : 1;
+    ox += (tx - ox) * k;
+    oy += (ty - oy) * k;
+    const ctx = wctx;
+    ctx.setTransform(dprWarp, 0, 0, dprWarp, 0, 0);
+    ctx.globalCompositeOperation = "source-over";
+    ctx.fillStyle = "#030605";
+    ctx.fillRect(0, 0, W, H);
+    const glow = ctx.createRadialGradient(ox, oy, 0, ox, oy, Math.max(W, H) * 0.75);
+    glow.addColorStop(0, "rgba(0,230,151,0.2)");
+    glow.addColorStop(0.25, "rgba(0,150,100,0.07)");
+    glow.addColorStop(1, "rgba(4,6,4,0)");
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, W, H);
+
+    const dim = 1 - Math.min(0.5, window.scrollY / (H * 1.6));
+    const speed = 1 + boost;
+    ctx.globalCompositeOperation = "lighter";
+    ctx.lineCap = "round";
+    for (const s of streaks) {
+      s.d += s.v * dt * speed * (1 + s.d / 240);
+      if (s.d > maxD) spawn(s, false);
+      const len = Math.min(s.d, (s.l * s.d + 4) * (1 + boost * 1.6));
+      const cx = Math.cos(s.a), cy = Math.sin(s.a);
+      const hx = ox + cx * s.d, hy = oy + cy * s.d;
+      const mx = ox + cx * (s.d - len * 0.45), my = oy + cy * (s.d - len * 0.45);
+      const ax = ox + cx * (s.d - len), ay = oy + cy * (s.d - len);
+      const alpha = Math.min(1, s.d / 260) * 0.75 * dim;
+      const c = s.c;
+      ctx.lineWidth = s.w * (0.55 + s.d / 700);
+      ctx.strokeStyle = `rgba(${c[0]},${c[1]},${c[2]},${(alpha * 0.32).toFixed(3)})`;
+      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(mx, my); ctx.stroke();
+      ctx.strokeStyle = `rgba(${c[0]},${c[1]},${c[2]},${alpha.toFixed(3)})`;
+      ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(hx, hy); ctx.stroke();
+    }
+    for (const s of sparks) {
+      s.d += s.v * dt * speed * (1 + s.d / 400);
+      if (s.d > maxD) spawn(s, false);
+      const alpha = Math.min(1, s.d / 200) * 0.7 * dim;
+      ctx.fillStyle = `rgba(0,230,151,${alpha.toFixed(3)})`;
+      ctx.beginPath();
+      ctx.arc(ox + Math.cos(s.a) * s.d, oy + Math.sin(s.a) * s.d, s.w * (0.5 + s.d / 900), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalCompositeOperation = "source-over";
+    const vig = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.78);
+    vig.addColorStop(0, "rgba(0,0,0,0)");
+    vig.addColorStop(1, "rgba(0,0,0,0.55)");
+    ctx.fillStyle = vig;
+    ctx.fillRect(0, 0, W, H);
+  }
+  function loop(ts) {
+    if (!running) return;
+    const dt = last ? Math.min(0.05, (ts - last) / 1000) : 1 / 60;
+    last = ts;
+    boost *= Math.pow(0.12, dt);
+    if (boost < 0.002) boost = 0;
+    draw(dt);
+    requestAnimationFrame(loop);
+  }
+  function start() {
+    if (running || reduced || document.hidden) return;
+    running = true;
+    last = 0;
+    requestAnimationFrame(loop);
+  }
+  function stop() { running = false; }
+  function kick(v) { if (!reduced) boost = Math.max(boost, v); }
+
+  /* ---------- Easter egg: click the hamster ---------- */
+  const balls = [];
+  let ballsRunning = false, lastBall = 0;
+  function drawBall(ctx, b, alpha) {
+    const r = b.r;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(b.x, b.y);
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    const shell = ctx.createRadialGradient(-r * 0.35, -r * 0.4, r * 0.1, 0, 0, r);
+    shell.addColorStop(0, "#3b403d");
+    shell.addColorStop(0.55, "#121513");
+    shell.addColorStop(1, "#030403");
+    ctx.fillStyle = shell;
+    ctx.fill();
+    ctx.save();
+    ctx.clip();
+    ctx.rotate(b.rot);
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "#ff8a1f";
+    ctx.lineWidth = r * 0.42;
+    ctx.beginPath(); ctx.moveTo(-r * 1.2, -r * 0.5); ctx.quadraticCurveTo(0, r * 0.2, r * 1.2, -r * 0.5); ctx.stroke();
+    ctx.strokeStyle = "#33c6ff";
+    ctx.lineWidth = r * 0.13;
+    ctx.beginPath(); ctx.moveTo(-r * 1.2, r * 0.25); ctx.quadraticCurveTo(0, r * 0.95, r * 1.2, r * 0.25); ctx.stroke();
+    ctx.restore();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = "rgba(255,255,255,0.18)";
+    ctx.beginPath(); ctx.arc(0, 0, r - 0.75, 0, Math.PI * 2); ctx.stroke();
+    const shine = ctx.createRadialGradient(-r * 0.38, -r * 0.45, 0, -r * 0.38, -r * 0.45, r * 0.6);
+    shine.addColorStop(0, "rgba(255,255,255,0.55)");
+    shine.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = shine;
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+  function stepBalls(ts) {
+    const dt = lastBall ? Math.min(0.033, (ts - lastBall) / 1000) : 1 / 60;
+    lastBall = ts;
+    const ctx = bctx;
+    ctx.setTransform(dprBalls, 0, 0, dprBalls, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    for (let i = balls.length - 1; i >= 0; i--) {
+      const b = balls[i];
+      b.age += dt;
+      b.vy += 2000 * dt;
+      b.x += b.vx * dt;
+      b.y += b.vy * dt;
+      if (b.x < b.r) { b.x = b.r; b.vx = Math.abs(b.vx) * 0.82; }
+      else if (b.x > W - b.r) { b.x = W - b.r; b.vx = -Math.abs(b.vx) * 0.82; }
+      if (b.y > H - b.r) {
+        b.y = H - b.r;
+        b.vy = -Math.abs(b.vy) * 0.7;
+        b.vx *= 0.97;
+        if (b.vy > -90) b.vy = 0;
+      }
+      b.rot += (b.vx * dt) / b.r;
+      const fade = b.age > 6 ? 1 - (b.age - 6) / 0.8 : 1;
+      if (fade <= 0) { balls.splice(i, 1); continue; }
+      drawBall(ctx, b, fade);
+    }
+    if (balls.length) {
+      requestAnimationFrame(stepBalls);
+    } else {
+      ballsRunning = false;
+      ctx.clearRect(0, 0, W, H);
+    }
+  }
+  function launchBall(x, y) {
+    if (reduced) return;
+    if (balls.length >= 10) balls.shift();
+    balls.push({ x, y, r: rand(15, 23), vx: rand(-560, 560), vy: rand(-1050, -700), rot: 0, age: 0 });
+    if (!ballsRunning) {
+      ballsRunning = true;
+      lastBall = 0;
+      requestAnimationFrame(stepBalls);
+    }
+  }
+  badge.addEventListener("click", () => {
+    kick(3.2);
+    badge.classList.remove("spin");
+    void badge.offsetWidth;
+    badge.classList.add("spin");
+    const r = badge.getBoundingClientRect();
+    launchBall(r.left + r.width / 2, r.top + r.height * 0.72);
+  });
+  badge.addEventListener("animationend", (e) => { if (e.animationName === "roll") badge.classList.remove("spin"); });
+  $$(".btn-primary").forEach((b) => b.addEventListener("pointerenter", () => kick(0.7)));
+
+  let resizeTimer = 0;
+  window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(size, 120); });
+  window.addEventListener("scroll", () => { if (!running) draw(0); }, { passive: true });
+  window.addEventListener("pointermove", (e) => { if (W && H) { px = e.clientX / W; py = e.clientY / H; } }, { passive: true });
+  document.addEventListener("visibilitychange", () => (document.hidden ? stop() : start()));
+  const onMotionChange = (e) => { reduced = e.matches; if (reduced) { stop(); draw(0); } else { start(); } };
+  if (motionQuery.addEventListener) motionQuery.addEventListener("change", onMotionChange);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (!running) draw(0); });
+  window.addEventListener("load", () => { if (!running) draw(0); });
+
+  /* ---------- Start ---------- */
+  renderAll();
+  const initial = detectLang();
+  if (initial !== "en") setLang(initial, false);
+  size();
+  start();
+})();
+</script>
+</body>
+</html>
