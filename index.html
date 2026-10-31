@@ -1311,7 +1311,6 @@ a.stat:hover .play { color: var(--volt); }
     launchBall(r.left + r.width / 2, r.top + r.height * 0.72);
   });
   badge.addEventListener("animationend", (e) => { if (e.animationName === "roll") badge.classList.remove("spin"); });
-  $$(".btn-primary").forEach((b) => b.addEventListener("pointerenter", () => kick(0.7)));
 
   let resizeTimer = 0;
   window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(size, 120); });
