@@ -40,7 +40,7 @@
   "f.scorecards.title": "Tableaux des scores",
   "f.scorecards.text": "Suivez en direct le point de contrôle, le temps et les erreurs de chaque joueur, avec le top 3 du lobby.",
   "dc.title": "Discord",
-  "dc.text": "Envoyez vos parties pour le classement, trouvez de nouveaux parcours et soyez averti des mises à jour.",
+  "dc.blurb": "Envoyez vos parties pour le classement, soyez averti des mises à jour et rencontrez d’autres joueurs de Ball !",
   "dc.copyLink": "Copier le lien",
   "tr.title": "Traductions",
   "tr.intro": "Ce site et Ballkour (dans les versions bêta) sont traduits en 13 langues sur Weblate. Les personnes qui parlent couramment la langue sont les bienvenues pour y relire et améliorer les traductions.",

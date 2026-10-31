@@ -41,7 +41,7 @@
   "f.spectate.text": "Watch other runners in first or third person, or fly in freecam mode.",
   "f.scorecards.title": "Scorecards",
   "f.scorecards.text": "See every runner’s checkpoint, time, and mistakes live, along with the lobby’s top 3.",
-  "dc.text": "Submit runs for the leaderboard, find new courses, and get notified on updates.",
+  "dc.blurb": "Submit runs for the leaderboard, get notified on updates, and meet fellow ballers!",
   "dc.copyLink": "Copy link",
   "src.group.game": "Game",
   "src.view": "View on GitHub",

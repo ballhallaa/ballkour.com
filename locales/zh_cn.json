@@ -40,7 +40,7 @@
   "f.scorecards.title": "记分卡",
   "f.scorecards.text": "实时查看每位玩家的检查点、时间和失误，并显示大厅前三名。",
   "dc.title": "Discord",
-  "dc.text": "提交成绩上排行榜、发现新关卡，并接收更新通知。",
+  "dc.blurb": "提交成绩上排行榜、接收更新通知，还能结识其他破坏球玩家！",
   "dc.copyLink": "复制链接",
   "tr.title": "翻译",
   "tr.intro": "本网站和 Ballkour（测试版）已在 Weblate 上翻译成 13 种语言。欢迎精通该语言的人在那里审校和改进翻译。",

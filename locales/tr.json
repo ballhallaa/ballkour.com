@@ -40,7 +40,7 @@
   "f.scorecards.title": "Skor kartları",
   "f.scorecards.text": "Her oyuncunun kontrol noktasını, süresini ve hatalarını canlı gör, lobinin ilk 3’üyle birlikte.",
   "dc.title": "Discord",
-  "dc.text": "Skor tablosu için koşu gönder, yeni parkurlar bul ve güncellemelerden haberdar ol.",
+  "dc.blurb": "Skor tablosu için koşu gönder, güncellemelerden haberdar ol ve diğer Ball oyuncularıyla tanış!",
   "dc.copyLink": "Bağlantıyı kopyala",
   "tr.title": "Çeviriler",
   "tr.intro": "Bu site ve Ballkour (beta sürümlerinde) Weblate’te 13 dile çevrildi. Dili akıcı konuşan herkes çevirileri orada inceleyip geliştirmeye davetlidir.",
