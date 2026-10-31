@@ -12,7 +12,7 @@ tools/extract-en.py      rebuilds locales/en.json from index.html
 .github/workflows/       deploys the site on every push to main
 ```
 
-Keep everything out of `/v*`, `/discord` and `/gameplay`, since Cloudflare redirects those paths.
+Keep everything out of `/v*`, `/discord`, `/gameplay` and `/leaderboards`. Cloudflare redirects the first three, and rewrites `/leaderboards` to the home page, which then opens on the leaderboards (as does `/#leaderboards`).
 
 ## Deploying
 
@@ -32,8 +32,8 @@ Course numbers, flags, codes and broken flags live in the `COURSES` list in the 
 
 Leaderboards load live from the game repo's `develop` branch, so they update without a deploy:
 
-- **Remakes (1–3):** `src/courses/*/leaderboard.opy`
-- **Classic courses (4–15):** `leaderboards/classic.json`
+- **Remakes (1–3):** `leaderboards/<n>-<slug>.opy`
+- **Classic courses (4–15):** `leaderboards/<n>-<slug>.json` (the slugs are in `CLASSIC_FILES`)
 
 The runs written into `COURSES` are only a fallback for when GitHub can't be reached.
 

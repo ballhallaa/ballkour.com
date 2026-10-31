@@ -247,12 +247,64 @@ select option, select optgroup { background: var(--menu); color: var(--ink); }
   .actions { width: 100%; flex-direction: column; }
 }
 
+/* ---------- Section bar: sticks to the top of the screen above the panels ---------- */
+.sections {
+  position: sticky;
+  top: 8px;
+  z-index: 10;
+  max-width: var(--col);
+  --bar: #0a1210;
+  margin: 0 auto;
+  padding: 5px;
+  overflow: hidden;
+  border: 1px solid var(--line-hi);
+  border-radius: 12px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  backdrop-filter: blur(16px) saturate(1.2);
+  box-shadow: 0 14px 30px -18px rgba(0, 0, 0, .9);
+}
+.sections-track { position: relative; display: flex; overflow-x: auto; scrollbar-width: none; }
+.sections-track::-webkit-scrollbar { display: none; }
+/* "…" at an end that has more links hidden past it; tapping it scrolls that way */
+.sections-more {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 64px;
+  display: none;
+  align-items: center;
+  padding: 0 12px;
+  border: 0;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: color .15s;
+}
+.sections-more:hover { color: var(--volt); }
+.sections-more .icon { width: 20px; height: 20px; }
+.sections-more.right { right: 0; justify-content: flex-end; background: linear-gradient(90deg, transparent, var(--bar) 50%); }
+.sections-more.left { left: 0; justify-content: flex-start; background: linear-gradient(270deg, transparent, var(--bar) 50%); }
+.sections.more-right .sections-more.right, .sections.more-left .sections-more.left { display: flex; }
+.sections a {
+  flex: 1 0 auto;
+  padding: 8px;
+  border-radius: 8px;
+  color: var(--ink-2);
+  font: 600 14px/1.1 var(--body);
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color .15s, background-color .15s, box-shadow .15s;
+}
+.sections a:hover { color: var(--ink); background: var(--glass-hi); }
+.sections a[aria-current="true"] { color: var(--ink); background: rgba(0, 230, 151, .12); box-shadow: inset 0 0 0 1px rgba(0, 230, 151, .35); }
+
 /* ---------- Panels ---------- */
 .column { max-width: var(--col); margin: 0 auto; padding-block: 10px 30px; display: grid; gap: 14px; }
 .panel {
   min-width: 0;
   overflow: hidden;
-  scroll-margin-top: 16px;
+  scroll-margin-top: 72px;
   border: 1px solid var(--line);
   border-radius: var(--r);
   background: var(--glass);
@@ -302,6 +354,7 @@ select option, select optgroup { background: var(--menu); color: var(--ink); }
 .group { padding: 4px 0 10px; }
 .group + .group { border-top: 1px solid var(--line); }
 .group-head { padding: 16px 18px 6px; }
+#leaderboards, #submit { scroll-margin-top: 72px; }
 .group-title { margin: 0; font: italic 700 23px/1 var(--display); letter-spacing: .02em; text-transform: uppercase; color: var(--ink); }
 .group-sub { margin: 6px 0 0; max-width: 62ch; font: 400 14.5px/1.45 var(--body); color: var(--ink-2); }
 .by { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 14px 18px 4px; font: 600 11.5px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
@@ -393,7 +446,7 @@ select option, select optgroup { background: var(--menu); color: var(--ink); }
 .course-board .run { padding: 7px 12px; }
 .course-board .board-empty { padding: 12px; font-size: 14.5px; }
 .board-meta { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 12px; padding: 14px 18px 6px; font: 500 11.5px/1.3 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
-.board-hint { font: 400 13px/1.3 var(--body); letter-spacing: 0; text-transform: none; }
+.board-hint { margin-left: auto; font: 400 13px/1.3 var(--body); letter-spacing: 0; text-transform: none; text-align: right; }
 .board { list-style: none; margin: 0; padding: 2px 0 10px; }
 .run { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto 50px; align-items: center; gap: 12px; padding: 8px 18px; font-variant-numeric: tabular-nums; }
 .run-rank { font: 700 15px/1 var(--mono); color: var(--ink-3); }
@@ -442,15 +495,31 @@ a.stat:hover .play { color: var(--volt); }
 
 /* Discord */
 .live { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; font: 600 13px/1 var(--mono); color: var(--ink); }
-.people { margin-top: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
-.faces { display: flex; padding-left: 8px; }
-.faces img { width: 32px; height: 32px; margin-left: -8px; border: 2px solid #0a110e; border-radius: 50%; background: #19221e; }
-.faces-more { font: 500 13px/1 var(--mono); color: var(--ink-2); }
-.voice { margin: 12px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.voice { margin: 14px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; }
 .voice li { display: flex; align-items: center; gap: 8px; font: 500 13.5px/1.3 var(--mono); color: var(--ink-2); }
 .voice .icon { width: 15px; height: 15px; color: var(--volt); }
 .join { margin-top: 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
-.join-sub { font: 400 12.5px/1.3 var(--mono); color: var(--ink-3); }
+.link-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, .025);
+  color: var(--ink-2);
+  font: 500 13px/1 var(--mono);
+  cursor: pointer;
+  transition: border-color .15s, color .15s, transform .1s;
+}
+.link-copy:hover { border-color: var(--volt); color: var(--ink); }
+.link-copy:active { transform: scale(.97); }
+.link-copy .icon { width: 14px; height: 14px; color: var(--ink-3); }
+.link-copy .i-check { display: none; }
+.link-copy.copied { border-color: var(--volt); color: var(--volt-hi); }
+.link-copy.copied .i-copy { display: none; }
+.link-copy.copied .i-check { display: block; color: var(--volt); }
 
 /* Translations */
 .langs { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
@@ -463,11 +532,22 @@ a.stat:hover .play { color: var(--volt); }
 /* Footer */
 .foot { max-width: var(--col); margin: 0 auto; padding-block: 8px 44px; text-align: center; font: 400 13.5px/1.5 var(--body); color: var(--ink-3); }
 .foot p { margin: 0 auto; max-width: 60ch; }
-
+.contact { margin-bottom: 16px; padding-bottom: 18px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; }
+.contact-q { flex-basis: 100%; margin-bottom: 2px; font: 500 14.5px/1.3 var(--body); color: var(--ink-2); }
+a.link-copy { text-decoration: none; }
+.link-copy .ext { transition: color .15s, transform .15s; }
+/* The email: a link to write and a joined copy button */
+.split { display: inline-flex; }
+.split > .link-copy { position: relative; }
+.split > .link-copy:hover, .split > .link-copy.copied { z-index: 1; }
+.split > a { border-radius: 9px 0 0 9px; }
+.split > button { margin-left: -1px; padding: 0 9px; border-radius: 0 9px 9px 0; }
+.link-copy:hover .ext { color: var(--volt); transform: translate(1px, -1px); }
 /* Blurring glass over a moving canvas is costly on phones: use solid glass there */
 @media (max-width: 700px), (pointer: coarse) {
-  .panel, .btn, .lang-pick { -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .panel, .btn, .lang-pick, .sections { -webkit-backdrop-filter: none; backdrop-filter: none; }
   .panel, .lang-pick { background: var(--glass-solid); }
+  .sections { --bar: #090f0d; background: #090f0d; }
   .btn:not(.btn-primary) { background-color: var(--glass-solid); }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -499,8 +579,10 @@ a.stat:hover .play { color: var(--volt); }
     <symbol id="i-chev" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></symbol>
     <symbol id="i-gamepad" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" x2="10" y1="11" y2="11"/><line x1="8" x2="8" y1="9" y2="13"/><line x1="15" x2="15.01" y1="12" y2="12"/><line x1="18" x2="18.01" y1="10" y2="10"/><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"/></g></symbol>
     <symbol id="i-globe" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></g></symbol>
-    <symbol id="i-qol" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></g></symbol>
-    <symbol id="i-users" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></g></symbol>
+    <symbol id="i-dots" viewBox="0 0 24 24"><g fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></g></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></g></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></symbol>
+    <symbol id="i-scorecard" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></g></symbol>
     <symbol id="i-code" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></g></symbol>
     <symbol id="i-github" viewBox="0 0 24 24"><path fill="currentColor" d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></symbol>
     <symbol id="i-discord" viewBox="0 0 24 24"><path fill="currentColor" d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></symbol>
@@ -535,13 +617,27 @@ a.stat:hover .play { color: var(--volt); }
 
     <nav class="actions" data-i18n-aria="hero.nav" aria-label="Get started">
       <a class="btn btn-primary" href="#courses"><svg class="icon" aria-hidden="true"><use href="#i-down"/></svg><span data-i18n="hero.codes">Pick a course</span></a>
-      <a class="btn" href="https://ballkour.com/discord" data-invite target="_blank" rel="noopener">
+      <a class="btn" href="https://discord.gg/Skz6cg9rbR" target="_blank" rel="noopener">
         <svg class="icon" aria-hidden="true"><use href="#i-discord"/></svg><span data-i18n="hero.discord">Join our Discord</span>
         <span class="count" data-online-wrap hidden><span class="dot"></span><span data-online></span></span>
       </a>
       <a class="btn" href="https://ballkour.com/gameplay" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-play"/></svg><span data-i18n="hero.gameplay">Watch gameplay</span></a>
     </nav>
   </header>
+
+  <nav class="sections" id="sections" data-i18n-aria="nav.label" aria-label="Sections">
+    <div class="sections-track" id="sections-track">
+      <a href="#courses" data-i18n="courses.title">Courses</a>
+      <a href="#leaderboards" data-i18n="nav.leaderboards">Leaderboards</a>
+      <a href="#submit" data-i18n="nav.submit">Submit a run</a>
+      <a href="#features" data-i18n="run.title">Features</a>
+      <a href="#discord" data-i18n="dc.title">Discord</a>
+      <a href="#source" data-i18n="src.title">Source code</a>
+      <a href="#translations" data-i18n="tr.title">Translations</a>
+    </div>
+    <button class="sections-more left" type="button" data-dir="-1" tabindex="-1" aria-hidden="true"><svg class="icon"><use href="#i-dots"/></svg></button>
+    <button class="sections-more right" type="button" data-dir="1" tabindex="-1" aria-hidden="true"><svg class="icon"><use href="#i-dots"/></svg></button>
+  </nav>
 
   <main class="column">
     <section class="panel" id="courses" aria-labelledby="courses-title">
@@ -554,7 +650,7 @@ a.stat:hover .play { color: var(--volt); }
         <li><span data-i18n="steps.3">Start the match and enjoy!</span></li>
       </ol>
 
-      <div class="group">
+      <div class="group" id="leaderboards">
         <div class="group-head">
           <h3 class="group-title" data-i18n="remakes.title">Ballkour remakes</h3>
           <p class="group-sub" data-i18n="remakes.sub">Remade by ballhallaa with a leaderboard on every course. The beta codes add hints, splits, spectating, and translations.</p>
@@ -571,20 +667,20 @@ a.stat:hover .play { color: var(--volt); }
       </div>
       <noscript><p class="note">Turn on JavaScript to see the course codes, or find them in the README on GitHub.</p></noscript>
       <p class="note" data-i18n="courses.note">Struck-through codes have been broken since Overwatch’s August 2026 patch.</p>
-      <div class="submit">
+      <div class="submit" id="submit">
         <span class="lr-icon"><svg class="icon" aria-hidden="true"><use href="#i-upload"/></svg></span>
         <span class="lr-text">
           <span class="lr-title" data-i18n="lb.submit.title">Submit a video of your run</span>
           <span class="lr-sub" data-i18n="lb.submit.sub">Open a ticket on the Ballkour Discord and share your video. New to the server? Join it first.</span>
         </span>
         <span class="submit-actions">
+          <a class="btn btn-sm btn-primary" href="https://discord.gg/Skz6cg9rbR" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-discord"/></svg><span data-i18n="hero.discord">Join our Discord</span></a>
           <a class="btn btn-sm btn-primary" href="https://discord.com/channels/1212553452283101245/1498944426901508106" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-discord"/></svg><span data-i18n="lb.submit.ticket">Open a ticket</span></a>
-          <a class="btn btn-sm" href="https://ballkour.com/discord" data-invite target="_blank" rel="noopener"><span data-i18n="hero.discord">Join our Discord</span></a>
         </span>
       </div>
     </section>
 
-    <section class="panel" aria-labelledby="run-title">
+    <section class="panel" id="features" aria-labelledby="run-title">
       <div class="panel-head">
         <h2 class="panel-title" id="run-title"><svg class="icon" aria-hidden="true"><use href="#i-bolt"/></svg><span data-i18n="run.title">Features</span></h2>
       </div>
@@ -606,7 +702,7 @@ a.stat:hover .play { color: var(--volt); }
           <div><p class="f-title"><span data-i18n="f.practice.title">Skip, go back, freemode</span></p><p class="f-text" data-i18n="f.practice.text">Practice any checkpoint, or roam the map with the clock paused.</p></div>
         </li>
         <li class="feature">
-          <span class="f-icon" style="--c: var(--ember)"><svg class="icon" aria-hidden="true"><use href="#i-qol"/></svg></span>
+          <span class="f-icon" style="--c: var(--coral)"><svg class="icon" aria-hidden="true"><use href="#i-heart"/></svg></span>
           <div><p class="f-title"><span data-i18n="f.qol.title">Quality of life</span></p><p class="f-text" data-i18n="f.qol.text">Hold to restart a checkpoint or your whole run, pause to the lobby and resume later, and get a bhop of grace on every checkpoint.</p></div>
         </li>
         <li class="feature">
@@ -626,7 +722,7 @@ a.stat:hover .play { color: var(--volt); }
           <div><p class="f-title"><span data-i18n="f.spectate.title">Spectate</span> <span class="tag tag-beta" data-i18n="tag.beta">Beta</span></p><p class="f-text" data-i18n="f.spectate.text">Watch other runners in first or third person, or fly in freecam mode.</p></div>
         </li>
         <li class="feature">
-          <span class="f-icon" style="--c: var(--coral)"><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg></span>
+          <span class="f-icon" style="--c: var(--ember)"><svg class="icon" aria-hidden="true"><use href="#i-scorecard"/></svg></span>
           <div><p class="f-title"><span data-i18n="f.scorecards.title">Scorecards</span> <span class="tag tag-beta" data-i18n="tag.beta">Beta</span></p><p class="f-text" data-i18n="f.scorecards.text">See every runner’s checkpoint, time, and mistakes live, along with the lobby’s top 3.</p></div>
         </li>
       </ul>
@@ -639,35 +735,12 @@ a.stat:hover .play { color: var(--volt); }
       </div>
       <div class="panel-body">
         <p class="panel-text" data-i18n="dc.text">Submit runs for the leaderboard, find new courses, and get notified on updates.</p>
-        <div class="people" id="people" hidden>
-          <div class="faces" id="faces"></div>
-          <span class="faces-more" id="faces-more"></span>
-        </div>
         <ul class="voice" id="voice" hidden></ul>
         <div class="join">
-          <a class="btn btn-primary" href="https://ballkour.com/discord" data-invite target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-discord"/></svg><span data-i18n="hero.discord">Join our Discord</span></a>
-          <span class="join-sub">ballkour.com/discord</span>
+          <a class="btn btn-primary" href="https://discord.gg/Skz6cg9rbR" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-discord"/></svg><span data-i18n="hero.discord">Join our Discord</span></a>
+          <button class="link-copy" type="button" data-copy="https://ballkour.com/discord"><span class="sr-only" data-i18n="dc.copyLink">Copy link</span><span class="copy-val">ballkour.com/discord</span><svg class="icon i-copy" aria-hidden="true"><use href="#i-copy"/></svg><svg class="icon i-check" aria-hidden="true"><use href="#i-check"/></svg></button>
         </div>
       </div>
-    </section>
-
-    <section class="panel" id="translations" aria-labelledby="tr-title">
-      <div class="panel-head">
-        <h2 class="panel-title" id="tr-title"><svg class="icon" aria-hidden="true"><use href="#i-langs"/></svg><span data-i18n="tr.title">Translations</span></h2>
-      </div>
-      <div class="panel-body">
-        <p class="panel-text" data-i18n="tr.text">This website and Ballkour (in the beta builds) are translated into 13 languages on Weblate. Native speakers can review and improve the translations there.</p>
-        <ul class="langs" id="lang-chips" data-i18n-aria="tr.langs" aria-label="Languages"></ul>
-        <a class="wl-badge" href="https://hosted.weblate.org/engage/ballkour/" target="_blank" rel="noopener"><img src="https://hosted.weblate.org/widget/ballkour/svg-badge.svg" data-i18n-alt="tr.badge" alt="Translation status on Weblate" height="20" onerror="this.parentNode.remove()"></a>
-      </div>
-      <a class="link-row" href="https://hosted.weblate.org/projects/ballkour/" target="_blank" rel="noopener">
-        <span class="lr-icon"><svg class="icon" aria-hidden="true"><use href="#i-langs"/></svg></span>
-        <span class="lr-text">
-          <span class="lr-title" data-i18n="tr.fix.title">Found a translation error?</span>
-          <span class="lr-sub"><span data-i18n="tr.fix.sub">Fix it on Weblate</span> · hosted.weblate.org/projects/ballkour</span>
-        </span>
-        <svg class="lr-arrow" aria-hidden="true"><use href="#i-out"/></svg>
-      </a>
     </section>
 
     <section class="panel" id="source" aria-labelledby="src-title">
@@ -701,9 +774,37 @@ a.stat:hover .play { color: var(--volt); }
         <svg class="lr-arrow" aria-hidden="true"><use href="#i-out"/></svg>
       </a>
     </section>
+
+    <section class="panel" id="translations" aria-labelledby="tr-title">
+      <div class="panel-head">
+        <h2 class="panel-title" id="tr-title"><svg class="icon" aria-hidden="true"><use href="#i-langs"/></svg><span data-i18n="tr.title">Translations</span></h2>
+      </div>
+      <div class="panel-body">
+        <p class="panel-text" data-i18n="tr.text">This website and Ballkour (in the beta builds) are translated into 13 languages on Weblate. Fluent speakers are welcome to review and improve the translations there.</p>
+        <ul class="langs" id="lang-chips" data-i18n-aria="tr.langs" aria-label="Languages"></ul>
+        <a class="wl-badge" href="https://hosted.weblate.org/engage/ballkour/" target="_blank" rel="noopener"><img src="https://hosted.weblate.org/widget/ballkour/svg-badge.svg" data-i18n-alt="tr.badge" alt="Translation status on Weblate" height="20" onerror="this.parentNode.remove()"></a>
+      </div>
+      <a class="link-row" href="https://hosted.weblate.org/projects/ballkour/" target="_blank" rel="noopener">
+        <span class="lr-icon"><svg class="icon" aria-hidden="true"><use href="#i-langs"/></svg></span>
+        <span class="lr-text">
+          <span class="lr-title" data-i18n="tr.fix.title">Found a translation error?</span>
+          <span class="lr-sub"><span data-i18n="tr.fix.sub">Fix it on Weblate</span> · hosted.weblate.org/projects/ballkour</span>
+        </span>
+        <svg class="lr-arrow" aria-hidden="true"><use href="#i-out"/></svg>
+      </a>
+    </section>
   </main>
 
   <footer class="foot">
+    <div class="contact">
+      <span class="contact-q" data-i18n="foot.contact">Questions or feedback?</span>
+      <button class="link-copy" type="button" data-copy="ballhallaa"><span class="sr-only" data-i18n="foot.copyDiscord">Copy Discord username</span><svg class="icon" aria-hidden="true"><use href="#i-discord"/></svg><span class="copy-val">ballhallaa</span><svg class="icon i-copy" aria-hidden="true"><use href="#i-copy"/></svg><svg class="icon i-check" aria-hidden="true"><use href="#i-check"/></svg></button>
+      <span class="split">
+        <a class="link-copy" href="mailto:hi@ballhal.la"><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg>hi@ballhal.la<svg class="icon ext" aria-hidden="true"><use href="#i-out"/></svg></a>
+        <button class="link-copy" type="button" data-copy-mailto><span class="sr-only" data-i18n="foot.copyEmail">Copy email address</span><svg class="icon i-copy" aria-hidden="true"><use href="#i-copy"/></svg><svg class="icon i-check" aria-hidden="true"><use href="#i-check"/></svg></button>
+      </span>
+      <a class="link-copy" href="https://ballhal.la" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-globe"/></svg>ballhal.la<svg class="icon ext" aria-hidden="true"><use href="#i-out"/></svg></a>
+    </div>
     <p data-i18n="foot.disclaimer">Ballkour is a fan-made Overwatch Workshop mode. It isn’t affiliated with Blizzard Entertainment.</p>
   </footer>
 </div>
@@ -733,8 +834,6 @@ a.stat:hover .play { color: var(--volt); }
   "lb.videoHint": "Tap a time to watch the run",
   "lb.watch": "Watch the {time} run by {player}",
   "lb.empty": "No times on this board yet. Submit a run and take first place.",
-  "dc.more": "+{count} more online",
-  "dc.now": "online now",
   "dc.voice": "{channel} · {count} in voice",
   "src.versions": "Latest {latest} · Beta {beta}",
   "src.latestOnly": "Latest {latest}"
@@ -755,11 +854,11 @@ a.stat:hover .play { color: var(--volt); }
   let reduced = motionQuery.matches;
 
   /* ---------- Courses (one list drives the codes, the numbers and the leaderboards) ----------
-     Runs: { name, time, miss, date, video }. The remakes (file set) re-read their leaderboard.opy
+     Runs: { name, time, miss, date, video }. The remakes (file set) re-read their leaderboards/<n>-<slug>.opy
      from GitHub's develop branch on ballkour.com; the runs below are the fallback. */
   const COURSES = [
     { n: 1, flag: "🇬🇮", name: "Watchpoint: Gibraltar", by: "Spiz", remaker: "ballhallaa", latest: "59W28", beta: "9GTJH",
-      file: "src/courses/1-watchpoint-gibraltar/leaderboard.opy",
+      file: "leaderboards/1-watchpoint-gibraltar.opy",
       runs: [
         { name: "BALLMYBLOVED", time: "3:54.23", miss: 5, date: "Jun 2, 2026", video: "https://youtu.be/Rkz9kWNEiHM" },
         { name: "COLDSKIN", time: "4:05.81", miss: 2, date: "Aug 26, 2026", video: "https://youtu.be/xDH0hywqCtc" },
@@ -773,10 +872,10 @@ a.stat:hover .play { color: var(--volt); }
         { name: "VANESSA", time: "6:59.56", miss: 58, date: "Sep 30, 2026", video: "https://medal.tv/games/overwatch/clips/nDcPQeGIujXfUqe5G" }
       ] },
     { n: 2, flag: "🇺🇸", name: "Blizzard World (Winter)", by: "Spiz", remaker: "ballhallaa", latest: "GMWRF", beta: "8Y14F",
-      file: "src/courses/2-blizzard-world/leaderboard.opy",
+      file: "leaderboards/2-blizzard-world.opy",
       runs: [{ name: "BALLMYBLOVED", time: "7:14.76", miss: 16, date: "Jun 5, 2026", video: "https://youtu.be/hNSpNvWyNcI" }] },
     { n: 3, flag: "🇧🇷", name: "Paraíso", by: "Spiz", remaker: "ballhallaa", latest: "NT5G3K", latestBroken: true, beta: "MXJ0W",
-      file: "src/courses/3-paraíso/leaderboard.opy", runs: [] },
+      file: "leaderboards/3-paraíso.opy", runs: [] },
     { n: 4, flag: "🇩🇪", name: "Eichenwalde", by: "Spiz", code: "9AVPN", broken: true, runs: [] },
     { n: 5, flag: "🎯", name: "Practice Range", by: "Spiz", code: "KSG9E9", runs: [] },
     { n: 6, flag: "🇲🇽", name: "Dorado", by: "Fasteroid", code: "N8ZFR", runs: [] },
@@ -1043,16 +1142,40 @@ a.stat:hover .play { color: var(--volt); }
       showCopied(btn, selectText(val));
     }
   });
+  // Copy-link buttons (ballkour.com/discord): the copy icon turns into a check for a moment
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-copy], button[data-copy-mailto]");
+    if (!btn) return;
+    // The email button copies the address from the link beside it, so it stays in one place in the HTML
+    const mailLink = btn.hasAttribute("data-copy-mailto") ? btn.previousElementSibling : null;
+    const text = mailLink ? decodeURIComponent(mailLink.href.replace(/^mailto:/, "")) : btn.dataset.copy;
+    const fallback = mailLink || btn.querySelector(".copy-val");
+    const done = (ok) => {
+      btn.classList.toggle("copied", ok);
+      announce.textContent = t(ok ? "copy.done" : "copy.manual", { code: text });
+      clearTimeout(btn._timer);
+      btn._timer = setTimeout(() => btn.classList.remove("copied"), 1600);
+    };
+    let pending = null;
+    try { pending = navigator.clipboard ? navigator.clipboard.writeText(text) : null; } catch (err) { pending = null; }
+    if (pending && typeof pending.then === "function") pending.then(() => done(true), () => done(selectText(fallback)));
+    else done(selectText(fallback));
+  });
 
   /* ---------- Leaderboards ---------- */
   const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+  // Dates come as "YYYY-MM-DD" (the .opy files) or "Mon D, YYYY" (the .json files and the fallback runs)
   function formatDate(s) {
-    const m = /^([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2}),\s*(\d{4})$/.exec(String(s || "").trim());
-    if (!m || MONTHS.indexOf(m[1].toLowerCase()) < 0) return s || "";
-    const d = new Date(Date.UTC(Number(m[3]), MONTHS.indexOf(m[1].toLowerCase()), Number(m[2])));
-    try { return new Intl.DateTimeFormat(htmlLang(), { dateStyle: "medium", timeZone: "UTC" }).format(d); } catch (e) { return s; }
+    const str = String(s || "").trim();
+    const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(str);
+    const m = /^([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2}),\s*(\d{4})$/.exec(str);
+    let d = null;
+    if (iso) d = new Date(Date.UTC(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3])));
+    else if (m && MONTHS.indexOf(m[1].toLowerCase()) >= 0) d = new Date(Date.UTC(Number(m[3]), MONTHS.indexOf(m[1].toLowerCase()), Number(m[2])));
+    if (!d || isNaN(d)) return str;
+    try { return new Intl.DateTimeFormat(htmlLang(), { dateStyle: "medium", timeZone: "UTC" }).format(d); } catch (e) { return str; }
   }
-  // lb[i] = "NAME, M:SS.cc, MISTAKES, '...'" and lbRunInfo(rank, "Mon D, YYYY", "host/path")
+  // lb[i] = "NAME, M:SS.cc, MISTAKES, '...'" and lbRunInfo(rank, "YYYY-MM-DD", "host/path")
   function parseBoard(text) {
     const rows = [];
     for (const m of text.matchAll(/lb\[(\d+)\]\s*=\s*"([^"]*)"/g)) {
@@ -1078,16 +1201,21 @@ a.stat:hover .play { color: var(--volt); }
       .catch(() => {});
   });
 
-  // The classic courses' boards live in leaderboards/classic.json on the game repo's develop branch:
-  // { "courses": [{ "course": 13, "name": "Neon Junction", "runs": [{ "name", "time", "mistakes", "date", "video" }] }] }
+  // Each classic course's board is a list of runs in leaderboards/<n>-<slug>.json on the game repo's develop branch:
+  // [{ "name", "time", "mistakes", "date", "video" }]
+  const CLASSIC_FILES = {
+    4: "4-eichenwalde", 5: "5-practice-range", 6: "6-dorado", 7: "7-ilios", 8: "8-paraíso", 9: "9-temple-of-anubis",
+    10: "10-horizon-lunar-colony", 11: "11-blizzard-world", 12: "12-circuit-royal", 13: "13-neon-junction",
+    14: "14-kings-row", 15: "15-eichenwalde"
+  };
   const toSeconds = (t) => t.split(":").reduce((sum, part) => sum * 60 + Number(part), 0);
-  fetch(`https://raw.githubusercontent.com/${REPO}/develop/leaderboards/classic.json`, { cache: "no-cache" })
-    .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-    .then((data) => {
-      (Array.isArray(data && data.courses) ? data.courses : []).forEach((entry) => {
-        const c = course(Number(entry && entry.course));
-        if (!c || c.remaker || !Array.isArray(entry.runs)) return;
-        c.runs = entry.runs
+  classics.forEach((c) => {
+    if (!CLASSIC_FILES[c.n]) return;
+    fetch(`https://raw.githubusercontent.com/${REPO}/develop/leaderboards/${encodeURI(CLASSIC_FILES[c.n])}.json`, { cache: "no-cache" })
+      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+      .then((runs) => {
+        if (!Array.isArray(runs)) return;
+        c.runs = runs
           .filter((r) => r && typeof r.name === "string" && r.name.trim()
             && /^(\d{1,2}:)?\d{1,2}:\d{2}\.\d{2}$/.test(r.time) && Number.isInteger(r.mistakes) && r.mistakes >= 0)
           .map((r) => ({
@@ -1100,9 +1228,9 @@ a.stat:hover .play { color: var(--volt); }
           .sort((a, b) => toSeconds(a.time) - toSeconds(b.time) || a.miss - b.miss)
           .slice(0, 10);
         refreshCourse(c);
-      });
-    })
-    .catch(() => {});
+      })
+      .catch(() => {});
+  });
 
   /* ---------- Discord (live widget data) ---------- */
   let widget = null;
@@ -1113,15 +1241,6 @@ a.stat:hover .play { color: var(--volt); }
     const fmt = (n) => n.toLocaleString(htmlLang());
     $$("[data-online]").forEach((el) => { el.textContent = t("hero.online", { count: fmt(online) }); });
     $$("[data-online-wrap]").forEach((el) => { el.hidden = false; });
-    const shown = members.filter((m) => m.avatar_url).slice(0, 12);
-    if (shown.length) {
-      const ring = { online: "var(--volt)", idle: "var(--ember)", dnd: "var(--coral)" };
-      $("#faces").innerHTML = shown.map((m) =>
-        `<img src="${esc(m.avatar_url)}" alt="" title="${esc(m.username)}" width="32" height="32" loading="lazy" referrerpolicy="no-referrer" style="box-shadow:0 0 0 2px ${ring[m.status] || "var(--ink-3)"}">`).join("");
-      const more = online - shown.length;
-      $("#faces-more").textContent = more > 0 ? t("dc.more", { count: fmt(more) }) : t("dc.now");
-      $("#people").hidden = false;
-    }
     const rooms = new Map((widget.channels || []).map((c) => [c.id, { name: c.name, pos: c.position || 0, n: 0 }]));
     members.forEach((m) => { const c = m.channel_id && rooms.get(m.channel_id); if (c) c.n += 1; });
     const busy = Array.from(rooms.values()).filter((c) => c.n > 0).sort((a, b) => a.pos - b.pos);
@@ -1134,7 +1253,6 @@ a.stat:hover .play { color: var(--volt); }
     .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
     .then((d) => {
       widget = d;
-      if (d.instant_invite) $$("[data-invite]").forEach((a) => { a.href = d.instant_invite; });
       renderDiscord();
     })
     .catch(() => {});
@@ -1380,12 +1498,85 @@ a.stat:hover .play { color: var(--volt); }
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (!running) draw(0); });
   window.addEventListener("load", () => { if (!running) draw(0); });
 
+  /* ---------- ballkour.com/leaderboards (and #leaderboards) lands on Gibraltar's open top 10 ---------- */
+  const wantsBoards = /^\/leaderboards\/?$/i.test(location.pathname) || /^#leaderboards?$/i.test(location.hash);
+  if (wantsBoards) openCourse = 1;
+  function jumpToBoards() {
+    const root = document.documentElement;
+    root.style.scrollBehavior = "auto";
+    $("#leaderboards").scrollIntoView({ block: "start" });
+    root.style.scrollBehavior = "";
+  }
+
+  /* ---------- Section bar: highlights the section on screen ---------- */
+  const sectionBar = $("#sections");
+  const sectionLinks = $$("a", sectionBar);
+  const sectionTargets = sectionLinks.map((a) => document.getElementById(a.hash.slice(1)));
+  let currentSection = -1, spyQueued = false, clicked = -1;
+  function spy() {
+    spyQueued = false;
+    const line = sectionBar.getBoundingClientRect().bottom + 32;
+    let i = -1;
+    sectionTargets.forEach((el, j) => { if (el && el.getBoundingClientRect().top <= line) i = j; });
+    // At the very bottom the last section counts, even though its top never reaches the line
+    if (i >= 0 && innerHeight + scrollY >= document.documentElement.scrollHeight - 4) i = sectionTargets.length - 1;
+    // A clicked link stays highlighted until the visitor scrolls on their own
+    if (clicked >= 0) i = clicked;
+    if (i === currentSection) return;
+    currentSection = i;
+    sectionLinks.forEach((a, j) => { if (j === i) a.setAttribute("aria-current", "true"); else a.removeAttribute("aria-current"); });
+    // On narrow screens the bar scrolls sideways: keep the highlighted link in view
+    const cur = sectionLinks[i];
+    if (cur && sectionTrack.scrollWidth > sectionTrack.clientWidth) {
+      sectionTrack.scrollTo({ left: cur.offsetLeft - (sectionTrack.clientWidth - cur.offsetWidth) / 2, behavior: reduced ? "auto" : "smooth" });
+    }
+  }
+  // Show "…" at whichever end has more links hidden past it
+  const sectionTrack = $("#sections-track");
+  function updateMore() {
+    const t = sectionTrack;
+    sectionBar.classList.toggle("more-left", t.scrollLeft > 2);
+    sectionBar.classList.toggle("more-right", t.scrollLeft + t.clientWidth < t.scrollWidth - 2);
+  }
+  sectionTrack.addEventListener("scroll", updateMore, { passive: true });
+  window.addEventListener("resize", updateMore);
+  // Link widths change with the language and once the web font loads
+  if ("ResizeObserver" in window) {
+    const ro = new ResizeObserver(updateMore);
+    ro.observe(sectionTrack);
+    sectionLinks.forEach((a) => ro.observe(a));
+  }
+  $$(".sections-more", sectionBar).forEach((b) => b.addEventListener("click", () => {
+    sectionTrack.scrollBy({ left: Number(b.dataset.dir) * sectionTrack.clientWidth * 0.6, behavior: reduced ? "auto" : "smooth" });
+  }));
+  const queueSpy = () => { if (!spyQueued) { spyQueued = true; requestAnimationFrame(spy); } };
+  window.addEventListener("scroll", queueSpy, { passive: true });
+  window.addEventListener("resize", queueSpy);
+  ["wheel", "touchstart", "keydown"].forEach((ev) => addEventListener(ev, () => { if (clicked >= 0) { clicked = -1; queueSpy(); } }, { passive: true }));
+  sectionBar.addEventListener("click", (e) => {
+    const a = e.target.closest("a");
+    if (!a) return;
+    clicked = sectionLinks.indexOf(a);
+    queueSpy();
+    // The Leaderboards link opens Gibraltar's top 10 if no board is open yet
+    if (a.hash === "#leaderboards" && !openCourse) { openCourse = 1; refreshCourse(course(1)); }
+  });
+
   /* ---------- Start ---------- */
   renderAll();
   const initial = detectLang();
   if (initial !== "en") setLang(initial, false);
   size();
   start();
+  if (wantsBoards) {
+    jumpToBoards();
+    // Web fonts can shift the page as they load: jump again once they're in, unless the visitor has scrolled
+    let moved = false;
+    ["wheel", "touchstart", "keydown"].forEach((ev) => addEventListener(ev, () => { moved = true; }, { once: true, passive: true }));
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (!moved) jumpToBoards(); });
+  }
+  spy();
+  updateMore();
 })();
 </script>
 </body>
