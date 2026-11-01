@@ -134,6 +134,8 @@
   "faq.tiny.a": "I giocatori fermi da 60 secondi si rimpiccioliscono per non intralciare nessuno. Tornano normali appena si muovono.",
   "faq.restart.q": "Il server si riavvia?",
   "faq.restart.a": "Sì, circa ogni 4 ore, con avvisi da 30 minuti prima. Migliore, Media, Partite e Tentativi ripartono da zero.",
+  "faq.loading.q": "Perché ci vuole così tanto a caricare una partita di Ballkour?",
+  "faq.loading.a": "Il suo script del Workshop è grande, soprattutto per le traduzioni in 13 lingue, e Overwatch impiega un po' a caricarlo prima che inizi la partita.",
   "faq.language.q": "C'è qualcosa di sbagliato nella mia lingua?",
   "faq.language.a": "Le traduzioni sono bozze, quindi segnala gli errori su ballkour.com/issues."
 }

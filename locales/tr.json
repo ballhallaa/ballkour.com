@@ -134,6 +134,8 @@
   "faq.tiny.a": "60 saniye hareket etmeyen oyuncular kimsenin yolunu kesmesin diye küçülür. Hareket edince hemen eski boyutlarına dönerler.",
   "faq.restart.q": "Sunucu yeniden başlar mı?",
   "faq.restart.a": "Evet, yaklaşık 4 saatte bir; 30 dakika öncesinden uyarılar gelir. En iyi, Ort., Denemeler ve Girişimler sıfırdan başlar.",
+  "faq.loading.q": "Bir Ballkour oyununun yüklenmesi neden bu kadar uzun sürüyor?",
+  "faq.loading.a": "Workshop betiği büyük, çoğunlukla 13 dile yapılan çeviriler yüzünden; Overwatch'un da maç başlamadan önce onu yüklemesi biraz zaman alıyor.",
   "faq.language.q": "Dilimde bir hata mı var?",
   "faq.language.a": "Çeviriler taslaktır, hataları lütfen ballkour.com/issues adresinden bildir."
 }

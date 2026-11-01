@@ -130,6 +130,8 @@
   "faq.tiny.a": "Players who haven't moved for 60 seconds shrink, so they're not in anyone's way. They grow back as soon as they move.",
   "faq.restart.q": "Does the server restart?",
   "faq.restart.a": "Yes, about every 4 hours, with warnings from 30 minutes before. Best, Avg, Runs and Attempts start over.",
+  "faq.loading.q": "Why does it take so long to load a Ballkour game?",
+  "faq.loading.a": "Its Workshop script is big, mostly from its translations into 13 languages, and Overwatch takes a while to load it before the match starts.",
   "faq.language.q": "Is something wrong in my language?",
   "faq.language.a": "The translations are drafts, so please report mistakes at ballkour.com/issues.",
   "nf.title": "Off the course",

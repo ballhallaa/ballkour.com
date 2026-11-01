@@ -1060,6 +1060,8 @@ a.link-copy { text-decoration: none; }
   "faq.tiny.a": "Players who haven't moved for 60 seconds shrink, so they're not in anyone's way. They grow back as soon as they move.",
   "faq.restart.q": "Does the server restart?",
   "faq.restart.a": "Yes, about every 4 hours, with warnings from 30 minutes before. Best, Avg, Runs and Attempts start over.",
+  "faq.loading.q": "Why does it take so long to load a Ballkour game?",
+  "faq.loading.a": "Its Workshop script is big, mostly from its translations into 13 languages, and Overwatch takes a while to load it before the match starts.",
   "faq.language.q": "Is something wrong in my language?",
   "faq.language.a": "The translations are drafts, so please report mistakes at ballkour.com/issues."
 }
@@ -1735,7 +1737,7 @@ a.link-copy { text-decoration: none; }
      shows translated only while develop's English still matches that English; one the game has changed, or a
      new question, shows in English until the site's copy is updated (then run tools/extract-en.py). */
   const FAQ_IDS = ["valid", "mistake", "timer", "pause", "freemode", "counts", "attempt", "best", "pace", "grayed",
-    "scorecard", "hints", "leaderboard", "tiny", "restart", "language"];
+    "scorecard", "hints", "leaderboard", "tiny", "restart", "loading", "language"];
   const norm = (s) => String(s).replace(/\s+/g, " ").trim();
   let faq = FAQ_IDS.map((id) => ({ id }));
   // qaHudText[n] = ("...", "...") → [{ q, a }]: a block that opens with a green "…?" line is a question; a block

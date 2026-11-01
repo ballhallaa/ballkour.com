@@ -134,6 +134,8 @@
   "faq.tiny.a": "Gracze, którzy nie ruszali się przez 60 sekund, kurczą się, żeby nikomu nie przeszkadzać. Wracają do normy, gdy tylko się ruszą.",
   "faq.restart.q": "Czy serwer się restartuje?",
   "faq.restart.a": "Tak, mniej więcej co 4 godziny, z ostrzeżeniami od 30 minut wcześniej. Najlepszy, Średnia, Podejścia i Próby zaczynają się od nowa.",
+  "faq.loading.q": "Dlaczego wczytywanie gry Ballkour trwa tak długo?",
+  "faq.loading.a": "Skrypt Warsztatu jest duży, głównie przez tłumaczenia na 13 języków, a Overwatch potrzebuje chwili, żeby wczytać go przed rozpoczęciem meczu.",
   "faq.language.q": "Coś jest źle w moim języku?",
   "faq.language.a": "Tłumaczenia to wersje robocze, więc zgłaszaj błędy na ballkour.com/issues."
 }
