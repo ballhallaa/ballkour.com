@@ -466,7 +466,6 @@ select option, select optgroup { background: var(--menu); color: var(--ink); }
 .course-board .run { padding: 7px 12px; }
 .course-board .board-empty { padding: 12px; font-size: 14.5px; }
 .board-meta { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 12px; padding: 14px 18px 6px; font: 500 11.5px/1.3 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
-.board-hint { margin-left: auto; font: 400 13px/1.3 var(--body); letter-spacing: 0; text-transform: none; text-align: right; }
 .board { list-style: none; margin: 0; padding: 2px 0 10px; }
 .run { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto 50px; align-items: center; gap: 12px; padding: 8px 18px; font-variant-numeric: tabular-nums; }
 .run-rank { font: 700 15px/1 var(--mono); color: var(--ink-3); }
@@ -484,6 +483,74 @@ a.stat:hover .play { color: var(--volt); }
 .run.p1 .run-rank, .run.p1 .run-name, .run.p2 .run-rank, .run.p2 .run-name, .run.p3 .run-rank, .run.p3 .run-name { color: var(--tier); }
 .run.p1 .stat, .run.p2 .stat, .run.p3 .stat { color: var(--ink); }
 .board-empty { padding: 18px; font: 400 15px/1.5 var(--body); color: var(--ink-2); }
+
+/* Leaderboard archive: Top 10 / Legacy tabs, a scrubber through every board posted to Discord (gold ticks
+   set a new #1), the congrats line for that board's new times, and the fine print under the runs */
+.lb-tabs { display: flex; gap: 4px; padding: 7px; border-bottom: 1px solid var(--line); }
+.lb-tab {
+  padding: 6px 11px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--ink-2);
+  font: 600 14px/1.2 var(--body);
+  cursor: pointer;
+  transition: color .15s, background-color .15s, box-shadow .15s;
+}
+.lb-tab:hover { color: var(--ink); background: var(--glass-hi); }
+.lb-tab[aria-selected="true"] { color: var(--ink); background: rgba(0, 230, 151, .12); box-shadow: inset 0 0 0 1px rgba(0, 230, 151, .35); }
+.lb-hist { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 11px 12px 4px; }
+.lb-hist-head { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; font: 500 11.5px/1.3 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.lb-hist-date { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--ink-2); letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+.tag-latest { height: 18px; color: var(--volt); background: rgba(0, 230, 151, .1); border: 1px solid rgba(0, 230, 151, .32); }
+.tag-wr { height: 18px; color: var(--gold); background: rgba(255, 213, 79, .1); border: 1px solid rgba(255, 213, 79, .3); }
+.lb-step {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--line-hi);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .03);
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.lb-step:hover:not(:disabled) { border-color: var(--volt); color: var(--ink); }
+.lb-step:disabled { opacity: .35; cursor: default; }
+.lb-step .icon { width: 15px; height: 15px; }
+.lb-step.prev .icon { transform: rotate(90deg); }
+.lb-step.next .icon { transform: rotate(-90deg); }
+.lb-ticks { min-width: 0; height: 30px; display: flex; align-items: center; gap: 2px; }
+.lb-tick { flex: 1 1 0; min-width: 0; height: 100%; display: grid; place-items: center; padding: 0; border: 0; border-radius: 4px; background: none; cursor: pointer; }
+.lb-tick::before { content: ""; width: 100%; max-width: 9px; height: 10px; border-radius: 2px; background: var(--line-hi); transition: height .15s, background-color .15s; }
+.lb-tick.wr::before { background: rgba(255, 213, 79, .6); }
+.lb-tick:hover::before { height: 15px; background: var(--ink-3); }
+.lb-tick.wr:hover::before { background: var(--gold); }
+.lb-ticks .lb-tick[aria-current="true"]::before { height: 22px; background: var(--volt); box-shadow: 0 0 10px rgba(0, 230, 151, .55); }
+.lb-tick:focus-visible { outline-offset: -1px; }
+.lb-congrats {
+  margin: 8px 12px 2px;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 9px 11px;
+  border: 1px solid rgba(255, 213, 79, .18);
+  border-radius: 9px;
+  background: rgba(255, 213, 79, .055);
+  font: 500 14.5px/1.4 var(--body);
+  color: var(--ink-2);
+}
+.lb-congrats .icon { width: 16px; height: 16px; margin-top: 2px; color: var(--gold); }
+.lb-congrats b { font-weight: 700; letter-spacing: .02em; color: var(--ink); }
+.run-line { min-width: 0; display: flex; align-items: center; gap: 7px; }
+.run-line .run-name { min-width: 0; }
+.tag-new { flex: none; height: 17px; padding: 0 5px; font-size: 9.5px; color: var(--volt); background: rgba(0, 230, 151, .1); border: 1px solid rgba(0, 230, 151, .32); }
+.run.fresh { box-shadow: inset 2px 0 0 var(--volt); }
+.stat .na { color: var(--ink-3); }
+.lb-foot { margin: 0; display: grid; gap: 3px; padding: 9px 12px 11px; border-top: 1px solid var(--line); font: 400 12.5px/1.45 var(--body); color: var(--ink-3); }
+
 .submit { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 14px; padding: 14px 18px; border-top: 1px solid var(--line); }
 .submit .lr-text { flex: 1 1 260px; }
 .submit .lr-sub { font: 400 14px/1.45 var(--body); }
@@ -650,6 +717,7 @@ a.link-copy { text-decoration: none; }
   <defs>
     <symbol id="i-flag" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/></g></symbol>
     <symbol id="i-trophy" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></g></symbol>
+    <symbol id="i-party" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.8 11.3 2 22l10.7-3.79"/><path d="M4 3h.01"/><path d="M22 8h.01"/><path d="M15 2h.01"/><path d="M22 20h.01"/><path d="m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10"/><path d="m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11-.11.7-.72 1.22-1.43 1.22H17"/><path d="m11 2 .33.82c.34.86-.2 1.82-1.11 1.98-.7.11-1.22.72-1.22 1.43V7"/><path d="M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2Z"/></g></symbol>
     <symbol id="i-bolt" viewBox="0 0 24 24"><path fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></symbol>
     <symbol id="i-skull" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12.5 17-.5-1-.5 1h1z"/><path d="M15 22a1 1 0 0 0 1-1v-1a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20v1a1 1 0 0 0 1 1z"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="12" r="1"/></g></symbol>
     <symbol id="i-anchor" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/></g></symbol>
@@ -933,6 +1001,19 @@ a.link-copy { text-decoration: none; }
   "lb.watch": "Watch the {time} run by {player}",
   "lb.empty": "No times on this board yet. Submit a run and take first place.",
   "lb.emptyBroken": "No times on this board yet. Its code is broken, so no new runs can be set for now.",
+  "lb.tab.top": "Top 10",
+  "lb.tab.legacy": "Legacy",
+  "lb.legacy.title": "Leaderboard before May 2026",
+  "lb.legacy.note": "These runs weren’t verified with videos.",
+  "lb.history": "Board history",
+  "lb.boardOf": "Board {n} of {total}",
+  "lb.prev": "Previous board",
+  "lb.next": "Next board",
+  "lb.newRecord": "New record",
+  "lb.new": "New",
+  "lb.congrats.one": "Congrats {names} for the new top-10 time!",
+  "lb.congrats.other": "Congrats {names} for the new top-10 times!",
+  "lb.datesNote": "Dates (YYYY-MM-DD) are when the run was submitted, in UTC.",
   "dc.voice": "{channel} · {count} in voice",
   "dc.voiceMore": "+{count} more",
   "faq.valid.q": "What counts as a valid run?",
@@ -1173,21 +1254,85 @@ a.link-copy { text-decoration: none; }
       : `<span class="rec-none">${esc(t("lb.noTimes"))}</span>`;
     return `<button class="rec" type="button" data-course="${c.n}" aria-expanded="${open}" aria-controls="board-${c.n}" aria-label="${label}">${body}${icon("chev", "icon chev")}</button>`;
   }
+  /* An open board: the Top 10 (with the scrubber through its history, when the course has one) and, for
+     courses with one, the legacy board from before May 2026 on its own tab */
   function boardHtml(c) {
-    if (!c.runs.length) return `<p class="board-empty">${esc(t(c.broken ? "lb.emptyBroken" : "lb.empty"))}</p>`;
-    const hint = c.runs.some((r) => r.video) ? `<div class="board-meta"><span class="board-hint">${esc(t("lb.videoHint"))}</span></div>` : "";
-    return hint + `<ol class="board">` + c.runs.slice(0, 10).map((r, i) => {
-      const time = `${icon("bolt")}<span class="v">${esc(r.time)}</span>`;
-      const timeCell = r.video
-        ? `<a class="stat time" href="${esc(r.video)}" target="_blank" rel="noopener" title="${esc(t("lb.watch", { time: r.time, player: r.name }))}">${time}${icon("play", "play")}</a>`
-        : `<span class="stat time">${time}</span>`;
-      return `<li class="run${i < 3 ? " p" + (i + 1) : ""}">` +
-        `<span class="run-rank">${i + 1}</span>` +
-        `<span class="run-who"><span class="run-name" title="${esc(r.name)}">${esc(r.name)}</span>${r.date ? `<span class="run-date">${esc(formatDate(r.date))}</span>` : ""}</span>` +
-        timeCell +
-        `<span class="stat miss" title="${esc(t("unit.mistakes", { count: r.miss }))}">${icon("skull")}${esc(r.miss)}<span class="sr-only"> ${esc(t("unit.mistakes", { count: r.miss }))}</span></span>` +
-        `</li>`;
-    }).join("") + `</ol>`;
+    const h = HISTORY[c.n];
+    const v = viewOf(c);
+    const hasLegacy = !!(h && h.legacy.length);
+    if (!hasLegacy) v.tab = "top";
+    if (!hasLegacy) return topHtml(c, v);
+    const tab = (id, key) => `<button class="lb-tab" type="button" role="tab" id="lbt-${c.n}-${id}" data-course="${c.n}" data-tab="${id}" aria-selected="${v.tab === id}" aria-controls="lbp-${c.n}" tabindex="${v.tab === id ? 0 : -1}">${esc(t(key))}</button>`;
+    return `<div class="lb-tabs" role="tablist" aria-label="${esc(t("lb.toggle", { course: `${c.n} ${c.name}` }))}">${tab("top", "lb.tab.top")}${tab("legacy", "lb.tab.legacy")}</div>` +
+      `<div role="tabpanel" id="lbp-${c.n}" aria-labelledby="lbt-${c.n}-${v.tab}">${v.tab === "legacy" ? legacyHtml(h.legacy) : topHtml(c, v)}</div>`;
+  }
+  function topHtml(c, v) {
+    const list = boardsOf(c);
+    if (!list) return runsHtml(c, c.runs, null);
+    const at = v.at < 0 || v.at >= list.length ? list.length - 1 : v.at;
+    const fresh = freshAt(list, at);
+    return (list.length > 1 ? historyHtml(c, list, at) : "") + congratsHtml(list[at], fresh) + runsHtml(c, list[at], fresh);
+  }
+  function runRow(r, i, fresh, legacy) {
+    const isNew = !!fresh && fresh.has(runKey(r));
+    const split = legacy ? /^(.*?)(\.--)?$/.exec(r.time) : null;
+    const shown = split ? esc(split[1]) + (split[2] ? `<span class="na">.--</span>` : "") : esc(r.time);
+    const time = `${icon("bolt")}<span class="v">${shown}</span>`;
+    const timeCell = r.video
+      ? `<a class="stat time" href="${esc(r.video)}" target="_blank" rel="noopener" title="${esc(t("lb.watch", { time: r.time, player: r.name }))}">${time}${icon("play", "play")}</a>`
+      : `<span class="stat time">${time}</span>`;
+    return `<li class="run${i < 3 ? " p" + (i + 1) : ""}${isNew ? " fresh" : ""}" data-k="${esc(r.name)}">` +
+      `<span class="run-rank">${i + 1}</span>` +
+      `<span class="run-who"><span class="run-line"><span class="run-name" title="${esc(r.name)}">${esc(r.name)}</span>${isNew ? `<span class="tag tag-new">${esc(t("lb.new"))}</span>` : ""}</span>` +
+      `${r.date ? `<span class="run-date">${esc(formatDate(r.date))}</span>` : ""}</span>` +
+      timeCell +
+      `<span class="stat miss" title="${esc(t("unit.mistakes", { count: r.miss }))}">${icon("skull")}${esc(r.miss)}<span class="sr-only"> ${esc(t("unit.mistakes", { count: r.miss }))}</span></span>` +
+      `</li>`;
+  }
+  function runsHtml(c, runs, fresh) {
+    if (!runs.length) return `<p class="board-empty">${esc(t(c.broken ? "lb.emptyBroken" : "lb.empty"))}</p>`;
+    const notes = [];
+    if (runs.some((r) => r.video)) notes.push(t("lb.videoHint"));
+    if (runs.some((r) => r.date)) notes.push(t("lb.datesNote"));
+    return `<ol class="board">${runs.slice(0, 10).map((r, i) => runRow(r, i, fresh, false)).join("")}</ol>` +
+      (notes.length ? `<p class="lb-foot">${notes.map((s) => `<span>${esc(s)}</span>`).join("")}</p>` : "");
+  }
+  function legacyHtml(runs) {
+    return `<div class="board-meta"><span>${esc(t("lb.legacy.title"))}</span></div>` +
+      `<ol class="board">${runs.slice(0, 10).map((r, i) => runRow(r, i, null, true)).join("")}</ol>` +
+      `<p class="lb-foot"><span>${esc(t("lb.legacy.note"))}</span></p>`;
+  }
+  // "‹ ▮▮▮▮ ›": one tick per board, the selected one in mint, the ones that set a new #1 in gold
+  function historyHtml(c, list, at) {
+    const total = list.length;
+    const label = (i) => `${t("lb.boardOf", { n: i + 1, total })} · ${boardDate(list[i])}${isRecord(list, i) ? ` · ${t("lb.newRecord")}` : ""}`;
+    const ticks = list.map((b, i) =>
+      `<button class="lb-tick${isRecord(list, i) ? " wr" : ""}" type="button" data-course="${c.n}" data-at="${i}" tabindex="${i === at ? 0 : -1}"${i === at ? ' aria-current="true"' : ""} aria-label="${esc(label(i))}" title="${esc(label(i))}"></button>`).join("");
+    const step = (dir, to, key, off) =>
+      `<button class="lb-step ${dir}" type="button" data-course="${c.n}" data-at="${to}" aria-label="${esc(t(key))}"${off ? " disabled" : ""}>${icon("chev")}</button>`;
+    return `<div class="lb-hist">` +
+      `<div class="lb-hist-head"><span>${esc(t("lb.boardOf", { n: at + 1, total }))}</span><span class="lb-hist-date">` +
+      (isRecord(list, at) ? `<span class="tag tag-wr">${esc(t("lb.newRecord"))}</span>` : "") +
+      (at === total - 1 ? `<span class="tag tag-latest">${esc(t("code.latest"))}</span>` : "") +
+      `${esc(boardDate(list[at]))}</span></div>` +
+      step("prev", at - 1, "lb.prev", at === 0) +
+      `<div class="lb-ticks" role="group" aria-label="${esc(t("lb.history"))}">${ticks}</div>` +
+      step("next", at + 1, "lb.next", at === total - 1) +
+      `</div>`;
+  }
+  // "Congrats A, B, and C for the new top-10 times!", with the list joined the way the page's language joins one
+  function congratsHtml(runs, fresh) {
+    const names = runs.filter((r) => fresh.has(runKey(r))).map((r) => r.name);
+    if (!names.length) return "";
+    let list;
+    try {
+      list = new Intl.ListFormat(htmlLang(), { style: "long", type: "conjunction" }).formatToParts(names)
+        .map((p) => (p.type === "element" ? `<b>${esc(p.value)}</b>` : esc(p.value))).join("");
+    } catch (e) {
+      list = names.map((n) => `<b>${esc(n)}</b>`).join(", ");
+    }
+    const msg = esc(t(names.length === 1 ? "lb.congrats.one" : "lb.congrats.other", { names: "\u0000" })).replace("\u0000", list);
+    return `<p class="lb-congrats">${icon("party")}<span>${msg}</span></p>`;
   }
   function courseRow(c) {
     const codes = c.remaker
@@ -1204,14 +1349,93 @@ a.link-copy { text-decoration: none; }
       `<div class="codes">${codes}</div>` +
       `<div class="course-board" id="board-${c.n}"${openCourse === c.n ? "" : " hidden"}>${openCourse === c.n ? boardHtml(c) : ""}</div></li>`;
   }
-  // Redraws one course row in place, keeping keyboard focus on its record button
+  // Where keyboard focus sat inside a course row, so a redraw can put it back
+  function focusSpot(row) {
+    const a = document.activeElement;
+    if (!row.contains(a)) return null;
+    if (a.classList.contains("rec")) return ".rec";
+    if (a.classList.contains("lb-tab")) return `.lb-tab[data-tab="${a.dataset.tab}"]`;
+    if (a.classList.contains("lb-step")) return a.classList.contains("prev") ? ".lb-step.prev" : ".lb-step.next";
+    if (a.classList.contains("lb-tick")) return '.lb-tick[aria-current="true"]';
+    return null;
+  }
+  // Redraws one course row in place, keeping keyboard focus where it was
   function refreshCourse(c) {
     const el = document.getElementById(`course-${c.n}`);
     if (!el) return;
-    const hadFocus = el.contains(document.activeElement) && document.activeElement.classList.contains("rec");
+    const spot = focusSpot(el);
     el.outerHTML = courseRow(c);
-    if (hadFocus) document.querySelector(`#course-${c.n} .rec`).focus();
+    const back = spot && document.querySelector(`#course-${c.n} ${spot}`);
+    if (back) back.focus({ preventScroll: true });
   }
+  // Redraws just an open board; rows that are on both boards slide to their new rank, new ones fade in
+  function refreshBoard(c, focusSel) {
+    const box = document.getElementById(`board-${c.n}`);
+    if (!box || box.hidden) return;
+    const offsets = (root) => {
+      const ol = root.querySelector(".board");
+      const m = new Map();
+      if (ol) $$(".run[data-k]", ol).forEach((li) => m.set(li.dataset.k, li.getBoundingClientRect().top - ol.getBoundingClientRect().top));
+      return m;
+    };
+    const before = reduced ? null : offsets(box);
+    box.innerHTML = boardHtml(c);
+    if (before && before.size && box.querySelector(".board")) {
+      const after = offsets(box);
+      $$(".run[data-k]", box).forEach((li) => {
+        const was = before.get(li.dataset.k);
+        const now = after.get(li.dataset.k);
+        if (was === undefined) li.animate([{ opacity: 0, transform: "translateX(-10px)" }, { opacity: 1, transform: "none" }], { duration: 260, easing: "ease-out" });
+        else if (Math.abs(was - now) > 1) li.animate([{ transform: `translateY(${was - now}px)` }, { transform: "none" }], { duration: 340, easing: "cubic-bezier(.2, .8, .2, 1)" });
+      });
+    }
+    const f = focusSel && box.querySelector(focusSel);
+    if (f) f.focus({ preventScroll: true });
+  }
+  function showBoard(n, at, from) {
+    const c = course(n);
+    const list = c && boardsOf(c);
+    if (!list) return;
+    at = Math.max(0, Math.min(list.length - 1, at));
+    const last = list.length - 1;
+    viewOf(c).at = at === last ? -1 : at; // -1 follows the newest board, even after a new one arrives
+    let sel = `.lb-tick[data-at="${at}"]`;
+    if (from === "prev" && at > 0) sel = ".lb-step.prev";
+    if (from === "next" && at < last) sel = ".lb-step.next";
+    refreshBoard(c, sel);
+    announce.textContent = `${t("lb.boardOf", { n: at + 1, total: list.length })} · ${boardDate(list[at])}`;
+  }
+  function showTab(n, tab) {
+    const c = course(n);
+    if (!c || viewOf(c).tab === tab) return;
+    viewOf(c).tab = tab;
+    refreshBoard(c, `.lb-tab[data-tab="${tab}"]`);
+  }
+  document.addEventListener("click", (e) => {
+    const tab = e.target.closest(".lb-tab");
+    if (tab) { showTab(Number(tab.dataset.course), tab.dataset.tab); return; }
+    const b = e.target.closest(".lb-step, .lb-tick");
+    if (b && !b.disabled) showBoard(Number(b.dataset.course), Number(b.dataset.at), b.classList.contains("prev") ? "prev" : b.classList.contains("next") ? "next" : "tick");
+  });
+  // Arrow keys move between the tabs, and along the ticks (Home/End jump to the first and newest board)
+  document.addEventListener("keydown", (e) => {
+    const el = e.target instanceof Element ? e.target : null;
+    const tick = el && el.closest(".lb-tick");
+    if (tick) {
+      const at = Number(tick.dataset.at);
+      const total = tick.parentElement.children.length;
+      const to = { ArrowLeft: at - 1, ArrowRight: at + 1, Home: 0, End: total - 1 }[e.key];
+      if (to === undefined) return;
+      e.preventDefault();
+      if (to >= 0 && to < total && to !== at) showBoard(Number(tick.dataset.course), to, "tick");
+      return;
+    }
+    const tab = el && el.closest(".lb-tab");
+    if (tab && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+      e.preventDefault();
+      showTab(Number(tab.dataset.course), tab.dataset.tab === "top" ? "legacy" : "top");
+    }
+  });
   // One list grouped by creator ("Courses by Spiz"); COURSES is already in that order, so the numbers run 1–15
   function renderCourses() {
     let html = "";
@@ -1295,7 +1519,8 @@ a.link-copy { text-decoration: none; }
 
   /* ---------- Leaderboards ---------- */
   const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
-  // Dates come as "YYYY-MM-DD" (the .opy files) or "Mon D, YYYY" (the .json files and the fallback runs)
+  // Dates come as "YYYY-MM-DD" (the .opy and .json files) or "Mon D, YYYY" (older files and the fallback runs),
+  // and always show as YYYY-MM-DD in UTC, the same as on Discord and in the lobby
   function formatDate(s) {
     const str = String(s || "").trim();
     const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(str);
@@ -1303,8 +1528,7 @@ a.link-copy { text-decoration: none; }
     let d = null;
     if (iso) d = new Date(Date.UTC(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3])));
     else if (m && MONTHS.indexOf(m[1].toLowerCase()) >= 0) d = new Date(Date.UTC(Number(m[3]), MONTHS.indexOf(m[1].toLowerCase()), Number(m[2])));
-    if (!d || isNaN(d)) return str;
-    try { return new Intl.DateTimeFormat(htmlLang(), { dateStyle: "medium", timeZone: "UTC" }).format(d); } catch (e) { return str; }
+    return !d || isNaN(d) ? str : d.toISOString().slice(0, 10);
   }
   // lb[i] = "NAME, M:SS.cc, MISTAKES, '...'" and lbRunInfo(rank, "YYYY-MM-DD", "host/path")
   function parseBoard(text) {
@@ -1339,29 +1563,81 @@ a.link-copy { text-decoration: none; }
     10: "10-horizon-lunar-colony", 11: "11-blizzard-world", 12: "12-circuit-royal", 13: "13-neon-junction",
     14: "14-kings-row", 15: "15-eichenwalde"
   };
-  const toSeconds = (t) => t.split(":").reduce((sum, part) => sum * 60 + Number(part), 0);
+  const toSeconds = (t) => t.replace(".--", "").split(":").reduce((sum, part) => sum * 60 + Number(part), 0);
+  // A run from a .json file → { name, time, miss, date, video }, or null if it's malformed. Legacy runs were
+  // timed to the second ("4:30.--") and have no date or video.
+  function cleanRun(r, legacy) {
+    if (!r || typeof r.name !== "string" || !r.name.trim() || !Number.isInteger(r.mistakes) || r.mistakes < 0) return null;
+    if (!(legacy ? /^(\d{1,2}:)?\d{1,2}:\d{2}(\.--)?$/ : /^(\d{1,2}:)?\d{1,2}:\d{2}\.\d{2}$/).test(r.time)) return null;
+    return {
+      name: r.name.trim(),
+      time: r.time,
+      miss: r.mistakes,
+      date: !legacy && typeof r.date === "string" ? r.date : "",
+      video: !legacy && typeof r.video === "string" && /^https:\/\/[^\s"'<>]+$/.test(r.video) ? r.video : "",
+    };
+  }
   classics.forEach((c) => {
     if (!CLASSIC_FILES[c.n]) return;
     fetch(`https://raw.githubusercontent.com/${REPO}/develop/leaderboards/${encodeURI(CLASSIC_FILES[c.n])}.json`, { cache: "no-cache" })
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
       .then((runs) => {
         if (!Array.isArray(runs)) return;
-        c.runs = runs
-          .filter((r) => r && typeof r.name === "string" && r.name.trim()
-            && /^(\d{1,2}:)?\d{1,2}:\d{2}\.\d{2}$/.test(r.time) && Number.isInteger(r.mistakes) && r.mistakes >= 0)
-          .map((r) => ({
-            name: r.name.trim(),
-            time: r.time,
-            miss: r.mistakes,
-            date: typeof r.date === "string" ? r.date : "",
-            video: typeof r.video === "string" && /^https:\/\/[^\s"'<>]+$/.test(r.video) ? r.video : "",
-          }))
+        c.runs = runs.map((r) => cleanRun(r)).filter(Boolean)
           .sort((a, b) => toSeconds(a.time) - toSeconds(b.time) || a.miss - b.miss)
           .slice(0, 10);
         refreshCourse(c);
       })
       .catch(() => {});
   });
+
+  /* ---------- Leaderboard history ----------
+     leaderboards/history.json on the game's develop branch keeps every board posted to Discord, oldest first,
+     and the legacy boards from before May 2026, by course number:
+       { "1": { "course": "Watchpoint: Gibraltar", "legacy": [run, …], "boards": [[run, …], …] }, … }
+     Runs are { "name", "time", "mistakes", "date", "video" }, like the classic files. Paste each new board at the
+     end of "boards". The live board above counts as the newest one whenever it differs from the last in the file,
+     so the history is never behind. Each board's new times (the congrats line and New tags) are the runs whose
+     time and mistakes weren't on the board before it, so a renamed player doesn't count as a new time. */
+  const HISTORY = {};
+  const views = {};
+  const viewOf = (c) => views[c.n] || (views[c.n] = { tab: "top", at: -1 }); // at: board index, -1 = newest
+  const runKey = (r) => `${r.time}|${r.miss}`;
+  const sameBoard = (a, b) => a.length === b.length && a.every((r, i) => runKey(r) === runKey(b[i]));
+  function boardsOf(c) {
+    const h = HISTORY[c.n];
+    if (!h || !h.boards.length) return null;
+    const list = h.boards.slice();
+    const live = c.runs.slice(0, 10);
+    if (live.length) {
+      if (sameBoard(live, list[list.length - 1])) list[list.length - 1] = live; // same board: the live copy wins
+      else list.push(live);
+    }
+    return list;
+  }
+  function freshAt(list, i) {
+    const before = new Set(i > 0 ? list[i - 1].map(runKey) : []);
+    return new Set(list[i].map(runKey).filter((k) => !before.has(k)));
+  }
+  const isRecord = (list, i) => !!list[i][0] && (i === 0 || !list[i - 1][0] || toSeconds(list[i][0].time) < toSeconds(list[i - 1][0].time));
+  // A board is dated by its newest run
+  const boardDate = (runs) => runs.map((r) => formatDate(r.date)).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort().pop() || "";
+  fetch(`https://raw.githubusercontent.com/${REPO}/develop/leaderboards/history.json`, { cache: "no-cache" })
+    .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+    .then((data) => {
+      if (!data || typeof data !== "object") return;
+      Object.keys(data).forEach((k) => {
+        const c = course(Number(k));
+        const e = data[k];
+        if (!c || !e || typeof e !== "object") return;
+        HISTORY[c.n] = {
+          legacy: Array.isArray(e.legacy) ? e.legacy.map((r) => cleanRun(r, true)).filter(Boolean) : [],
+          boards: Array.isArray(e.boards) ? e.boards.filter(Array.isArray).map((b) => b.map((r) => cleanRun(r)).filter(Boolean)).filter((b) => b.length) : [],
+        };
+        refreshCourse(c);
+      });
+    })
+    .catch(() => {});
 
   /* ---------- Discord (live widget data) ---------- */
   let widget = null;
