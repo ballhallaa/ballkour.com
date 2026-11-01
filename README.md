@@ -12,7 +12,7 @@ tools/extract-en.py      rebuilds locales/en.json from index.html
 .github/workflows/       deploys the site on every push to main
 ```
 
-Keep everything out of `/v*`, `/discord`, `/gameplay` and `/leaderboards`. Cloudflare redirects the first three, and rewrites `/leaderboards` to the home page, which then opens on the leaderboards (as does `/#leaderboards`).
+Keep everything out of `/v*`, `/discord`, `/gameplay`, `/courses`, `/leaderboards`, `/submit`, `/features`, `/faq`, `/source-code` and `/translations`. Cloudflare redirects the first three. It rewrites the others (with or without a trailing slash) to the home page, which scrolls to that section; `/leaderboards` also opens Gibraltar's top 10.
 
 ## Deploying
 
