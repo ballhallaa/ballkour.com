@@ -99,7 +99,7 @@
   "f.qol.text": "Un HUD più pulito con comandi dei menu più semplici. Tieni premuto per riavviare un checkpoint o l’intera run, metti in pausa quando vuoi e riprendi più tardi, e hai un bhop di tolleranza a ogni checkpoint.",
   "f.qol.beta": "I giocatori inattivi si rimpiccioliscono per non bloccarti mai la visuale. Vedi il numero di partita e di tentativo attuali, guarda video e data di ogni run nella lobby e attiva una FAQ per i nuovi arrivati.",
   "f.splits.text": "Tempo migliore e medio per ogni checkpoint, più una previsione che mostra il tuo tempo finale stimato.",
-  "f.beta.try": "Provale con il codice Beta di qualsiasi percorso.",
+  "f.beta.tryList": "Provale con un codice Beta dall’elenco dei percorsi.",
   "faq.title": "FAQ",
   "faq.intro": "Le stesse risposte della FAQ nel gioco, che si apre in partita con <b>Ultra + Abilità 2</b>.",
   "faq.issues.title": "Qualcosa non va o manca?",

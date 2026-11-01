@@ -99,7 +99,7 @@
   "f.qol.text": "Um HUD mais limpo, com controles de menu mais fáceis. Segure para reiniciar um checkpoint ou a corrida inteira, pause quando quiser e continue depois, e tenha um bhop de folga em cada checkpoint.",
   "f.qol.beta": "Jogadores inativos encolhem para nunca bloquear sua visão. Veja o número da sua partida e tentativa atuais, confira o vídeo e a data de cada corrida no lobby e ative um FAQ para iniciantes.",
   "f.splits.text": "Melhor tempo e média de cada checkpoint, mais uma previsão que mostra seu tempo final estimado.",
-  "f.beta.try": "Experimente com o código Beta de qualquer percurso.",
+  "f.beta.tryList": "Experimente com um código Beta da lista de percursos.",
   "faq.title": "FAQ",
   "faq.intro": "As mesmas respostas do FAQ do jogo, que abre na partida com <b>Suprema + Habilidade 2</b>.",
   "faq.issues.title": "Algo errado ou faltando?",

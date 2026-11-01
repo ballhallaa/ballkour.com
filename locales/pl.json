@@ -99,7 +99,7 @@
   "f.qol.text": "Czytelniejszy HUD i prostsza obsługa menu. Przytrzymaj, aby zrestartować punkt kontrolny lub całe przejście, zatrzymaj się w dowolnej chwili i wróć później, a na każdym punkcie kontrolnym masz jeden bhop zapasu.",
   "f.qol.beta": "Nieaktywni gracze się zmniejszają, żeby nigdy nie zasłaniać ci widoku. Sprawdzaj numer bieżącego podejścia i próby, oglądaj w lobby nagranie i datę każdego przejścia i włączaj FAQ dla nowych graczy.",
   "f.splits.text": "Najlepszy i średni czas dla każdego punktu kontrolnego oraz prognoza szacowanego czasu ukończenia.",
-  "f.beta.try": "Wypróbuj je z kodem Beta dowolnej trasy.",
+  "f.beta.tryList": "Wypróbuj je z kodem Beta z listy tras.",
   "faq.title": "FAQ",
   "faq.intro": "Te same odpowiedzi co w FAQ w grze, które otwierasz w meczu przez <b>Superumiejętność + Umiejętność 2</b>.",
   "faq.issues.title": "Coś się nie zgadza albo czegoś brakuje?",

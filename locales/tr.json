@@ -99,7 +99,7 @@
   "f.qol.text": "Daha sade bir HUD ve daha kolay menü kontrolleri. Bir kontrol noktasını ya da tüm koşuyu yeniden başlatmak için basılı tut, istediğin zaman duraklat ve sonra devam et, her kontrol noktasında da bir bhop hakkın olsun.",
   "f.qol.beta": "Hareketsiz oyuncular küçülür, böylece görüşünü asla kapatmazlar. Mevcut deneme ve girişim sayını gör, lobide her koşunun videosuna ve tarihine bak, yeni gelenler için SSS'yi aç ya da kapat.",
   "f.splits.text": "Her kontrol noktası için en iyi ve ortalama süreler, ayrıca tahmini bitiş süreni gösteren bir tahmin.",
-  "f.beta.try": "Bunları herhangi bir parkurun Beta koduyla dene.",
+  "f.beta.tryList": "Bunları parkur listesindeki bir Beta koduyla dene.",
   "faq.title": "SSS",
   "faq.intro": "Oyun içi SSS ile aynı cevaplar; maçta <b>Ulti + Yetenek 2</b> ile açılır.",
   "faq.issues.title": "Yanlış ya da eksik bir şey mi var?",
