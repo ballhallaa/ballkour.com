@@ -1079,7 +1079,7 @@ a.link-copy { text-decoration: none; }
   let reduced = motionQuery.matches;
 
   /* ---------- Courses (one list drives the codes, the numbers and the leaderboards) ----------
-     Runs: { name, time, miss, date, video }. The remakes (file set) re-read their leaderboards/<n>-<slug>.opy
+     Runs: { name, discord, time, miss, date, video }. The remakes (file set) re-read their leaderboards/<n>-<slug>.opy
      from GitHub's develop branch on ballkour.com; the runs below are the fallback. */
   const COURSES = [
     { n: 1, flag: "🇬🇮", name: "Watchpoint: Gibraltar", by: "Spiz", remaker: "ballhallaa", latest: "59W28", beta: "9GTJH",
@@ -1288,7 +1288,7 @@ a.link-copy { text-decoration: none; }
     return (list.length > 1 ? historyHtml(c, list, at) : "") + congratsHtml(list[at], fresh) + runsHtml(c, list[at], fresh);
   }
   function runRow(r, i, fresh, legacy) {
-    const isNew = !!fresh && fresh.has(runKey(r));
+    const isNew = !!fresh && fresh.has(r);
     const split = legacy ? /^(.*?)(\.--)?$/.exec(r.time) : null;
     const shown = split ? esc(split[1]) + (split[2] ? `<span class="na">.--</span>` : "") : esc(r.time);
     const time = `${icon("bolt")}<span class="v">${shown}</span>`;
@@ -1336,7 +1336,7 @@ a.link-copy { text-decoration: none; }
   }
   // "Congrats A, B, and C for the new top-10 times!", with the list joined the way the page's language joins one
   function congratsHtml(runs, fresh) {
-    const names = runs.filter((r) => fresh.has(runKey(r))).map((r) => r.name);
+    const names = runs.filter((r) => fresh.has(r)).map((r) => r.name);
     if (!names.length) return "";
     let list;
     try {
@@ -1544,12 +1544,13 @@ a.link-copy { text-decoration: none; }
     else if (m && MONTHS.indexOf(m[1].toLowerCase()) >= 0) d = new Date(Date.UTC(Number(m[3]), MONTHS.indexOf(m[1].toLowerCase()), Number(m[2])));
     return !d || isNaN(d) ? str : d.toISOString().slice(0, 10);
   }
-  // lb[i] = "NAME, M:SS.cc, MISTAKES, '...'" and lbRunInfo(rank, "YYYY-MM-DD", "host/path")
+  // lb[i] = "NAME, M:SS.cc, MISTAKES, '...'"  # discord: ID
+  // and lbRunInfo(rank, "YYYY-MM-DD", "host/path")
   function parseBoard(text) {
     const rows = [];
-    for (const m of text.matchAll(/lb\[(\d+)\]\s*=\s*"([^"]*)"/g)) {
+    for (const m of text.matchAll(/lb\[(\d+)\]\s*=\s*"([^"]*)"(?:[ \t]*#[ \t]*discord:[ \t]*(\d{17,20})\b)?/g)) {
       const [name, time, miss] = m[2].split(",").map((s) => s.trim());
-      if (name && /^\d{1,2}:\d{2}\.\d{2}$/.test(time) && /^\d+$/.test(miss)) rows[Number(m[1])] = { name, time, miss: Number(miss) };
+      if (name && /^\d{1,2}:\d{2}\.\d{2}$/.test(time) && /^\d+$/.test(miss)) rows[Number(m[1])] = { name, discord: m[3] || "", time, miss: Number(miss) };
     }
     for (const m of text.matchAll(/lbRunInfo\(\s*(\d+)\s*,\s*"([^"]*)"\s*,\s*"([^"]*)"\s*\)/g)) {
       const r = rows[Number(m[1])];
@@ -1571,20 +1572,21 @@ a.link-copy { text-decoration: none; }
   });
 
   // Each classic course's board is a list of runs in leaderboards/<n>-<slug>.json on the game repo's develop branch:
-  // [{ "name", "time", "mistakes", "date", "video" }]
+  // [{ "name", "discord", "time", "mistakes", "date", "video" }]
   const CLASSIC_FILES = {
     4: "4-eichenwalde", 5: "5-practice-range", 6: "6-dorado", 7: "7-ilios", 8: "8-paraíso", 9: "9-temple-of-anubis",
     10: "10-horizon-lunar-colony", 11: "11-blizzard-world", 12: "12-circuit-royal", 13: "13-neon-junction",
     14: "14-kings-row", 15: "15-eichenwalde"
   };
   const toSeconds = (t) => t.replace(".--", "").split(":").reduce((sum, part) => sum * 60 + Number(part), 0);
-  // A run from a .json file → { name, time, miss, date, video }, or null if it's malformed. Legacy runs were
+  // A run from a .json file → { name, discord, time, miss, date, video }, or null if it's malformed. Legacy runs were
   // timed to the second ("4:30.--") and have no date or video.
   function cleanRun(r, legacy) {
     if (!r || typeof r.name !== "string" || !r.name.trim() || !Number.isInteger(r.mistakes) || r.mistakes < 0) return null;
     if (!(legacy ? /^(\d{1,2}:)?\d{1,2}:\d{2}(\.--)?$/ : /^(\d{1,2}:)?\d{1,2}:\d{2}\.\d{2}$/).test(r.time)) return null;
     return {
       name: r.name.trim(),
+      discord: typeof r.discord === "string" && /^\d{17,20}$/.test(r.discord) ? r.discord : "",
       time: r.time,
       miss: r.mistakes,
       date: !legacy && typeof r.date === "string" ? r.date : "",
@@ -1609,15 +1611,25 @@ a.link-copy { text-decoration: none; }
      leaderboards/history.json on the game's develop branch keeps every board posted to Discord, oldest first,
      and the legacy boards from before May 2026, by course number:
        { "1": { "course": "Watchpoint: Gibraltar", "legacy": [run, …], "boards": [[run, …], …] }, … }
-     Runs are { "name", "time", "mistakes", "date", "video" }, like the classic files. Paste each new board at the
+     Runs are { "name", "discord", "time", "mistakes", "date", "video" }, like the classic files. Paste each new board at the
      end of "boards". The live board above counts as the newest one whenever it differs from the last in the file,
-     so the history is never behind. Each board's new times (the congrats line and New tags) are the runs whose
-     time and mistakes weren't on the board before it, so a renamed player doesn't count as a new time. */
+     so the history is never behind. Each board's new times (the congrats line and New tags) are the runs that
+     weren't on the board before it: each old run matches one run with the same player (their Discord ID when
+     both runs have one, so a linked player's rename doesn't count, and their name otherwise), time and mistakes,
+     so a new run that ties an old one exactly still counts. */
   const HISTORY = {};
   const views = {};
   const viewOf = (c) => views[c.n] || (views[c.n] = { tab: "top", at: -1 }); // at: board index, -1 = newest
-  const runKey = (r) => `${r.time}|${r.miss}`;
-  const sameBoard = (a, b) => a.length === b.length && a.every((r, i) => runKey(r) === runKey(b[i]));
+  const samePlayer = (a, b) => (a.discord && b.discord ? a.discord === b.discord : a.name.toUpperCase() === b.name.toUpperCase());
+  function freshRuns(runs, before) {
+    const left = before.slice();
+    return new Set(runs.filter((r) => {
+      const i = left.findIndex((b) => b.time === r.time && b.miss === r.miss && samePlayer(b, r));
+      if (i >= 0) left.splice(i, 1);
+      return i < 0;
+    }));
+  }
+  const sameBoard = (a, b) => a.length === b.length && !freshRuns(a, b).size;
   function boardsOf(c) {
     const h = HISTORY[c.n];
     if (!h || !h.boards.length) return null;
@@ -1629,10 +1641,7 @@ a.link-copy { text-decoration: none; }
     }
     return list;
   }
-  function freshAt(list, i) {
-    const before = new Set(i > 0 ? list[i - 1].map(runKey) : []);
-    return new Set(list[i].map(runKey).filter((k) => !before.has(k)));
-  }
+  const freshAt = (list, i) => freshRuns(list[i], i > 0 ? list[i - 1] : []);
   const isRecord = (list, i) => !!list[i][0] && (i === 0 || !list[i - 1][0] || toSeconds(list[i][0].time) < toSeconds(list[i - 1][0].time));
   // A board is dated by its newest run
   const boardDate = (runs) => runs.map((r) => formatDate(r.date)).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort().pop() || "";
