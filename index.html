@@ -337,19 +337,17 @@ select option, select optgroup { background: var(--menu); color: var(--ink); }
   margin: 0;
   padding: 14px 18px;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px 16px;
+  gap: 10px;
   counter-reset: step;
   border-bottom: 1px solid var(--line);
   background: rgba(0, 230, 151, .035);
 }
-.steps li { min-width: 0; display: flex; gap: 10px; counter-increment: step; font: 500 14.5px/1.4 var(--body); color: var(--ink-2); }
+.steps li { min-width: 0; display: flex; align-items: baseline; gap: 10px; counter-increment: step; font: 500 14.5px/1.55 var(--body); color: var(--ink-2); }
 .steps li::before {
   content: counter(step);
   flex: none;
   width: 22px;
   height: 22px;
-  margin-top: 1px;
   display: grid;
   place-items: center;
   border-radius: 6px;
@@ -358,11 +356,27 @@ select option, select optgroup { background: var(--menu); color: var(--ink); }
   font: 700 12px/1 var(--mono);
 }
 .steps b { font-weight: 600; color: var(--ink); }
-.step-aside { display: block; }
-/* Step 1's menu path starts on its own line (a line break, so the period still follows it) */
-.steps li:first-child b::before { content: "\A"; white-space: pre; }
+.step-aside { margin-inline-start: .3em; }
+/* A menu path ("Play → More → Custom Games → Create") shows as one bar, its last stop in mint (see renderPaths()) */
+.path {
+  max-width: 100%;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 6px;
+  margin-block: 1px;
+  padding: 2px 10px;
+  border: 1px solid var(--line-hi);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .04);
+  font: 600 14px/1.65 var(--body);
+  color: var(--ink);
+}
+/* Each stop keeps the › before it, so a long path wraps between stops and no line ends on a › */
+.path-stop { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.path .sep { width: 12px; height: 12px; color: var(--ink-3); transform: rotate(-90deg); }
+.path-end { color: var(--volt); }
 .steps code { padding: 1px 5px; border: 1px solid var(--line-hi); border-radius: 5px; font: 600 13px/1 var(--mono); letter-spacing: .05em; color: var(--ink); }
-@media (max-width: 620px) { .steps { grid-template-columns: 1fr; } }
 
 /* Courses */
 .group { padding: 4px 0 10px; }
@@ -1770,7 +1784,26 @@ a.link-copy { text-decoration: none; }
     })
     .catch(() => {});
 
+  /* ---------- Menu paths in the steps ----------
+     The steps' bold menu paths ("<b>Play → More → Custom Games → Create</b>") become a bar of menu names,
+     so every language gets it from its own translation. A period right after the bar is dropped. */
+  function renderPaths() {
+    $$(".steps b").forEach((b) => {
+      const stops = b.textContent.split("→").map((s) => s.trim()).filter(Boolean);
+      if (stops.length < 2) return;
+      const bar = document.createElement("span");
+      bar.className = "path";
+      bar.innerHTML = stops.map((s, i) => `<span class="path-stop">` +
+        (i ? icon("chev", "icon sep") + `<span class="sr-only"> → </span>` : "") +
+        `<span${i === stops.length - 1 ? ' class="path-end"' : ""}>${esc(s)}</span></span>`).join("");
+      const after = b.nextSibling;
+      if (after && after.nodeType === Node.TEXT_NODE && /^[\s.。．]*$/.test(after.nodeValue)) after.remove();
+      b.replaceWith(bar);
+    });
+  }
+
   function renderAll() {
+    renderPaths();
     renderLangControls();
     renderCourses();
     renderDiscord();
