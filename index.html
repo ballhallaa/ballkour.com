@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>if (/^\/[a-z-]+\/$/i.test(location.pathname)) history.replaceState(null, "", location.pathname.slice(0, -1) + location.search + location.hash);</script>
 <title>Ballkour · Wrecking Ball parkour courses for Overwatch</title>
 <meta name="description" content="Wrecking Ball parkour courses for Overwatch. Grab a course code, run through every checkpoint, and get your time on the leaderboard!">
 <link rel="canonical" href="https://ballkour.com/">
@@ -73,6 +74,8 @@ body {
 }
 img { max-width: 100%; }
 p, .lr-sub { text-wrap: pretty; }
+/* Korean wraps between words, not inside them */
+:lang(ko) { word-break: keep-all; }
 a { color: inherit; }
 button { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--volt); outline-offset: 3px; }
@@ -355,6 +358,9 @@ select option, select optgroup { background: var(--menu); color: var(--ink); }
   font: 700 12px/1 var(--mono);
 }
 .steps b { font-weight: 600; color: var(--ink); }
+.step-aside { display: block; }
+/* Step 1's menu path starts on its own line (a line break, so the period still follows it) */
+.steps li:first-child b::before { content: "\A"; white-space: pre; }
 .steps code { padding: 1px 5px; border: 1px solid var(--line-hi); border-radius: 5px; font: 600 13px/1 var(--mono); letter-spacing: .05em; color: var(--ink); }
 @media (max-width: 620px) { .steps { grid-template-columns: 1fr; } }
 
@@ -535,6 +541,26 @@ a.stat:hover .play { color: var(--volt); }
 .f-icon { width: 38px; height: 38px; flex: none; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 10px; background: rgba(255, 255, 255, .035); color: var(--c, var(--ink)); }
 .f-title { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font: 600 16px/1.25 var(--body); color: var(--ink); }
 .f-text .tag { vertical-align: 1px; margin-right: 1px; }
+/* The beta features sit under one Beta tag */
+.f-group { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0 8px; padding: 14px 10px 2px; border-top: 1px solid var(--line); font: 500 14px/1.4 var(--body); color: var(--ink-2); }
+
+/* FAQ: one row per question, read live from the game's develop branch */
+.faq-intro { border-bottom: 1px solid var(--line); }
+.qa + .qa { border-top: 1px solid var(--line); }
+.qa summary { display: flex; align-items: center; gap: 12px; padding: 13px 18px; list-style: none; font: 600 15.5px/1.35 var(--body); color: var(--ink); cursor: pointer; transition: background-color .15s; }
+.qa summary::-webkit-details-marker { display: none; }
+.qa summary:hover { background: var(--glass-hi); }
+.qa summary:focus-visible { outline-offset: -3px; border-radius: 6px; }
+.qa-q { flex: 1; min-width: 0; }
+.qa summary .chev { width: 16px; height: 16px; flex: none; color: var(--ink-3); transition: transform .2s ease, color .2s ease; }
+.qa[open] summary .chev { transform: rotate(180deg); color: var(--volt); }
+.qa-a { margin: 0; max-width: 66ch; padding: 0 18px 15px; font: 400 15px/1.55 var(--body); color: var(--ink-2); }
+.qa-a .fg { font-weight: 600; }
+/* A row of colored words (the hint colors) shows as a legend of chips */
+.qa-legend { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 10px; }
+.qa-legend .fg { display: inline-flex; align-items: center; gap: 7px; padding: 4px 9px; border: 1px solid var(--line); border-radius: 7px; background: rgba(255, 255, 255, .03); font: 600 13px/1.2 var(--body); }
+.qa-legend .fg::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.faq + .link-row { border-top: 1px solid var(--line); }
 .f-text { margin: 4px 0 0; font: 400 14.5px/1.45 var(--body); color: var(--ink-2); }
 @media (max-width: 620px) { .features { grid-template-columns: 1fr; } }
 
@@ -591,8 +617,6 @@ a.stat:hover .play { color: var(--volt); }
 .langs button { padding: 5px 10px; border: 1px solid var(--line); border-radius: 8px; background: rgba(255, 255, 255, .025); color: var(--ink-2); font: 500 14px/1.2 var(--body); cursor: pointer; transition: border-color .15s, color .15s, background-color .15s; }
 .langs button:hover { border-color: var(--line-hi); color: var(--ink); }
 .langs button[aria-pressed="true"] { border-color: var(--volt); background: rgba(0, 230, 151, .1); color: var(--ink); }
-.wl-badge { display: inline-block; margin-top: 14px; }
-.wl-badge img { display: block; height: 20px; }
 
 /* Footer */
 .foot { max-width: var(--col); margin: 0 auto; padding-block: 8px 44px; text-align: center; font: 400 13.5px/1.5 var(--body); color: var(--ink-3); }
@@ -649,6 +673,7 @@ a.link-copy { text-decoration: none; }
     <symbol id="i-mail" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></g></symbol>
     <symbol id="i-heart" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></symbol>
     <symbol id="i-scorecard" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></g></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></g></symbol>
     <symbol id="i-code" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></g></symbol>
     <symbol id="i-github" viewBox="0 0 24 24"><path fill="currentColor" d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></symbol>
     <symbol id="i-discord" viewBox="0 0 24 24"><path fill="currentColor" d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></symbol>
@@ -682,7 +707,7 @@ a.link-copy { text-decoration: none; }
     <p class="tagline" data-i18n="hero.tagline">Wrecking Ball parkour courses for Overwatch</p>
 
     <nav class="actions" data-i18n-aria="hero.nav" aria-label="Get started">
-      <a class="btn btn-primary" href="#courses"><svg class="icon" aria-hidden="true"><use href="#i-down"/></svg><span data-i18n="hero.codes">Pick a course</span></a>
+      <a class="btn btn-primary" href="/courses" data-route="courses"><svg class="icon" aria-hidden="true"><use href="#i-down"/></svg><span data-i18n="hero.codes">Pick a course</span></a>
       <a class="btn" href="https://discord.gg/Skz6cg9rbR" target="_blank" rel="noopener">
         <svg class="icon" aria-hidden="true"><use href="#i-discord"/></svg><span data-i18n="hero.discord">Join our Discord</span>
         <span class="count" data-online-wrap hidden><span class="dot"></span><span data-online></span></span>
@@ -693,13 +718,14 @@ a.link-copy { text-decoration: none; }
 
   <nav class="sections" id="sections" data-i18n-aria="nav.label" aria-label="Sections">
     <div class="sections-track" id="sections-track">
-      <a href="#courses" data-i18n="courses.title">Courses</a>
-      <a href="#leaderboards" data-i18n="nav.leaderboards">Leaderboards</a>
-      <a href="#submit" data-i18n="nav.submit">Submit a run</a>
-      <a href="#features" data-i18n="run.title">Features</a>
-      <a href="#discord" data-i18n="dc.title">Discord</a>
-      <a href="#source" data-i18n="src.title">Source code</a>
-      <a href="#translations" data-i18n="tr.title">Translations</a>
+      <a href="/courses" data-route="courses" data-i18n="courses.title">Courses</a>
+      <a href="/leaderboards" data-route="leaderboards" data-i18n="nav.leaderboards">Leaderboards</a>
+      <a href="/submit" data-route="submit" data-i18n="nav.submit">Submit a run</a>
+      <a href="/features" data-route="features" data-i18n="run.title">Features</a>
+      <a href="/faq" data-route="faq" data-i18n="faq.title">FAQ</a>
+      <a href="/#discord" data-route="discord" data-i18n="dc.title">Discord</a>
+      <a href="/source-code" data-route="source-code" data-i18n="src.title">Source code</a>
+      <a href="/translations" data-route="translations" data-i18n="tr.title">Translations</a>
     </div>
     <button class="sections-more left" type="button" data-dir="-1" tabindex="-1" aria-hidden="true"><svg class="icon"><use href="#i-dots"/></svg></button>
     <button class="sections-more right" type="button" data-dir="1" tabindex="-1" aria-hidden="true"><svg class="icon"><use href="#i-dots"/></svg></button>
@@ -711,9 +737,9 @@ a.link-copy { text-decoration: none; }
         <h2 class="panel-title" id="courses-title"><svg class="icon" aria-hidden="true"><use href="#i-flag"/></svg><span data-i18n="courses.title">Courses</span></h2>
       </div>
       <ol class="steps">
-        <li><span data-i18n-html="steps.1">In Overwatch, open <b>Play → More → Custom Games → Create</b>.</span></li>
-        <li><span data-i18n-html="steps.2">Go to <b>Settings → Import Code</b> (under Summary), and paste the code (e.g. <code>59W28</code>).</span></li>
-        <li><span data-i18n="steps.3">Start the match and enjoy!</span></li>
+        <li><span data-i18n-html="steps.goto">In Overwatch, go to <b>Play → More → Custom Games → Create</b>.</span></li>
+        <li><span data-i18n-html="steps.import">Go to <b>Settings → Import Code</b> (under Summary) and paste the code (e.g. <code>59W28</code>).</span></li>
+        <li><span><span data-i18n="steps.start">Start the match.</span><span class="step-aside" data-i18n="steps.luck">Good luck!</span></span></li>
       </ol>
 
       <div id="leaderboards"></div>
@@ -723,7 +749,7 @@ a.link-copy { text-decoration: none; }
         <span class="lr-icon"><svg class="icon" aria-hidden="true"><use href="#i-upload"/></svg></span>
         <span class="lr-text">
           <span class="lr-title" data-i18n="lb.submit.title">Submit a video of your run</span>
-          <span class="lr-sub" data-i18n="lb.submit.sub">Open a ticket on the Ballkour Discord and share your video. New to the server? Join it first.</span>
+          <span class="lr-sub" data-i18n="lb.submit.how">Open a ticket on our Discord and share your video. Not in our server yet? Join us first!</span>
         </span>
         <span class="submit-actions">
           <a class="btn btn-sm btn-primary" href="https://discord.gg/Skz6cg9rbR" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-discord"/></svg><span data-i18n="hero.discord">Join our Discord</span><span class="count" data-online-wrap hidden><span class="dot"></span><span data-online></span></span></a>
@@ -738,14 +764,6 @@ a.link-copy { text-decoration: none; }
       </div>
       <ul class="features">
         <li class="feature">
-          <span class="f-icon" style="--c: var(--volt)"><svg class="icon" aria-hidden="true"><use href="#i-bolt"/></svg></span>
-          <div><p class="f-title"><span data-i18n="f.run.title">One continuous run</span></p><p class="f-text" data-i18n="f.run.text">Clear every checkpoint in order, from start to finish, with one total time at the end.</p></div>
-        </li>
-        <li class="feature">
-          <span class="f-icon" style="--c: var(--coral)"><svg class="icon" aria-hidden="true"><use href="#i-skull"/></svg></span>
-          <div><p class="f-title"><span data-i18n="f.mistakes.title">Mistake counter</span></p><p class="f-text" data-i18n="f.mistakes.text">Missing a checkpoint or dying to the map counts. Your total sits next to your time.</p></div>
-        </li>
-        <li class="feature">
           <span class="f-icon" style="--c: var(--arc)"><svg class="icon" aria-hidden="true"><use href="#i-anchor"/></svg></span>
           <div><p class="f-title"><span data-i18n="f.rules.title">Checkpoint rules</span></p><p class="f-text" data-i18n="f.rules.text">Some checkpoints block or utilize only Grapple, Shield Bounce, and/or Piledriver.</p></div>
         </li>
@@ -754,38 +772,59 @@ a.link-copy { text-decoration: none; }
           <div><p class="f-title"><span data-i18n="f.practice.title">Skip, go back, freemode</span></p><p class="f-text" data-i18n="f.practice.text">Practice any checkpoint, or roam the map with the clock paused.</p></div>
         </li>
         <li class="feature">
+          <span class="f-icon" style="--c: var(--coral)"><svg class="icon" aria-hidden="true"><use href="#i-heart"/></svg></span>
+          <div><p class="f-title"><span data-i18n="f.qol.title">Quality of life</span></p><p class="f-text" data-i18n="f.qol.text">A cleaner HUD with easier menu controls. Hold to restart a checkpoint or your whole run, pause anytime and resume later, and get a bhop of grace on every checkpoint.</p></div>
+        </li>
+        <li class="feature">
           <span class="f-icon" style="--c: var(--gold)"><svg class="icon" aria-hidden="true"><use href="#i-trophy"/></svg></span>
           <div><p class="f-title"><span data-i18n="f.lobby.title">Lobby leaderboard</span></p><p class="f-text" data-i18n="f.lobby.text">On the Ballkour remakes, the top 10 times hang in the lobby and the finish screen shows the time to beat.</p></div>
         </li>
-        <li class="feature">
-          <span class="f-icon" style="--c: var(--coral)"><svg class="icon" aria-hidden="true"><use href="#i-heart"/></svg></span>
-          <div><p class="f-title"><span data-i18n="f.qol.title">Quality of life</span></p><p class="f-text"><span data-i18n="f.qol.basics">Hold to restart a checkpoint or your whole run, pause anytime and resume later, and get a bhop of grace on every checkpoint.</span> <span class="tag tag-beta" data-i18n="tag.beta">Beta</span> <span data-i18n="f.qol.afk">Idle runners shrink so they never block your view.</span></p></div>
-        </li>
+      </ul>
+      <div class="f-group"><span class="tag tag-beta" data-i18n="tag.beta">Beta</span><span data-i18n="f.beta.note">Try these with the Beta code of a Ballkour remake.</span></div>
+      <ul class="features">
         <li class="feature">
           <span class="f-icon" style="--c: var(--ember)"><svg class="icon" aria-hidden="true"><use href="#i-bulb"/></svg></span>
-          <div><p class="f-title"><span data-i18n="f.hints.title">Hints</span> <span class="tag tag-beta" data-i18n="tag.beta">Beta</span></p><p class="f-text" data-i18n="f.hints.text">A recorded route shows you the way through. Turn hints on yourself, or they switch on after 10 mistakes on one checkpoint.</p></div>
+          <div><p class="f-title"><span data-i18n="f.hints.title">Hints</span></p><p class="f-text" data-i18n="f.hints.text">A recorded route shows you the way through. Turn hints on yourself, or they switch on after 10 mistakes on one checkpoint.</p></div>
         </li>
         <li class="feature">
           <span class="f-icon" style="--c: var(--volt)"><svg class="icon" aria-hidden="true"><use href="#i-eye"/></svg></span>
-          <div><p class="f-title"><span data-i18n="f.spectate.title">Spectate</span> <span class="tag tag-beta" data-i18n="tag.beta">Beta</span></p><p class="f-text" data-i18n="f.spectate.text">Watch other runners in first or third person, or fly in freecam mode.</p></div>
+          <div><p class="f-title"><span data-i18n="f.spectate.title">Spectate</span></p><p class="f-text" data-i18n="f.spectate.text">Watch other runners in first or third person, or fly in freecam mode.</p></div>
         </li>
         <li class="feature">
           <span class="f-icon" style="--c: var(--arc)"><svg class="icon" aria-hidden="true"><use href="#i-timer"/></svg></span>
-          <div><p class="f-title"><span data-i18n="f.splits.title">Splits</span> <span class="tag tag-beta" data-i18n="tag.beta">Beta</span></p><p class="f-text" data-i18n="f.splits.desc">Best and average times for every checkpoint, so you can see where you lose time.</p></div>
-        </li>
-        <li class="feature">
-          <span class="f-icon" style="--c: var(--gold)"><svg class="icon" aria-hidden="true"><use href="#i-gauge"/></svg></span>
-          <div><p class="f-title"><span data-i18n="f.pace.title">Pace</span> <span class="tag tag-beta" data-i18n="tag.beta">Beta</span></p><p class="f-text" data-i18n="f.pace.text">Your estimated finish time, updated live from your average split. It turns red when you fall behind.</p></div>
+          <div><p class="f-title"><span data-i18n="f.splits.title">Splits</span></p><p class="f-text" data-i18n="f.splits.text">Best and average times for every checkpoint, plus a pace timer to see your estimated finish time.</p></div>
         </li>
         <li class="feature">
           <span class="f-icon" style="--c: var(--ember)"><svg class="icon" aria-hidden="true"><use href="#i-scorecard"/></svg></span>
-          <div><p class="f-title"><span data-i18n="f.scorecards.title">Scorecards</span> <span class="tag tag-beta" data-i18n="tag.beta">Beta</span></p><p class="f-text" data-i18n="f.scorecards.text">See every runner’s checkpoint, time, and mistakes live, along with the lobby’s top 3.</p></div>
+          <div><p class="f-title"><span data-i18n="f.scorecards.title">Scorecards</span></p><p class="f-text" data-i18n="f.scorecards.text">See every runner’s checkpoint, time, and mistakes live, along with the lobby’s top 3.</p></div>
+        </li>
+        <li class="feature">
+          <span class="f-icon" style="--c: var(--coral)"><svg class="icon" aria-hidden="true"><use href="#i-heart"/></svg></span>
+          <div><p class="f-title"><span data-i18n="f.qol.title">Quality of life</span></p><p class="f-text" data-i18n="f.qol.beta">Idle runners shrink so they never block your view. See your current run and attempt numbers, view each run’s video and date in the lobby, and toggle an FAQ for newcomers.</p></div>
         </li>
         <li class="feature">
           <span class="f-icon" style="--c: var(--ink)"><svg class="icon" aria-hidden="true"><use href="#i-langs"/></svg></span>
-          <div><p class="f-title"><span data-i18n="tr.title">Translations</span> <span class="tag tag-beta" data-i18n="tag.beta">Beta</span></p><p class="f-text" data-i18n="f.translations.text">Translated into 13 languages, so each player gets the full experience in their own language.</p></div>
+          <div><p class="f-title"><span data-i18n="tr.title">Translations</span></p><p class="f-text" data-i18n="f.translations.text">Translated into 13 languages, so each player gets a similar experience in their own language.</p></div>
         </li>
       </ul>
+    </section>
+
+    <section class="panel" id="faq" aria-labelledby="faq-title">
+      <div class="panel-head">
+        <h2 class="panel-title" id="faq-title"><svg class="icon" aria-hidden="true"><use href="#i-help"/></svg><span data-i18n="faq.title">FAQ</span></h2>
+      </div>
+      <div class="panel-body faq-intro">
+        <p class="panel-text" data-i18n-html="faq.intro">The same answers as the in-game FAQ, which opens with <b>Ultimate + Ability 2</b> in a match.</p>
+      </div>
+      <div class="faq" id="faq-list"></div>
+      <a class="link-row" href="https://ballkour.com/issues" target="_blank" rel="noopener">
+        <span class="lr-icon"><svg class="icon" aria-hidden="true"><use href="#i-help"/></svg></span>
+        <span class="lr-text">
+          <span class="lr-title" data-i18n="faq.issues.title">Something wrong or missing?</span>
+          <span class="lr-sub"><span data-i18n="faq.issues.sub">Report it on GitHub</span> · ballkour.com/issues</span>
+        </span>
+        <svg class="lr-arrow" aria-hidden="true"><use href="#i-out"/></svg>
+      </a>
     </section>
 
     <section class="panel" id="discord" aria-labelledby="dc-title">
@@ -839,9 +878,8 @@ a.link-copy { text-decoration: none; }
         <h2 class="panel-title" id="tr-title"><svg class="icon" aria-hidden="true"><use href="#i-langs"/></svg><span data-i18n="tr.title">Translations</span></h2>
       </div>
       <div class="panel-body">
-        <p class="panel-text" data-i18n="tr.about">This website and Ballkour’s beta builds are translated into 13 languages on Weblate. Fluent speakers are welcome to review and improve the translations there.</p>
+        <p class="panel-text" data-i18n="tr.invite">This website and Ballkour’s beta builds are translated into 13 languages on Weblate. If you speak one of these languages well, you’re welcome to review and improve the translations there.</p>
         <ul class="langs" id="lang-chips" data-i18n-aria="tr.langs" aria-label="Languages"></ul>
-        <a class="wl-badge" href="https://hosted.weblate.org/engage/ballkour/" target="_blank" rel="noopener"><img src="https://hosted.weblate.org/widget/ballkour/svg-badge.svg" data-i18n-alt="tr.badge" alt="Translation status on Weblate" height="20" onerror="this.parentNode.remove()"></a>
       </div>
       <a class="link-row" href="https://hosted.weblate.org/projects/ballkour/" target="_blank" rel="noopener">
         <span class="lr-icon"><svg class="icon" aria-hidden="true"><use href="#i-langs"/></svg></span>
@@ -862,7 +900,6 @@ a.link-copy { text-decoration: none; }
         <button class="link-copy" type="button" data-copy-mailto><span class="sr-only" data-i18n="foot.copyEmail">Copy email address</span><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg><span class="copy-val">hi@ballhal.la</span><svg class="icon i-copy" aria-hidden="true"><use href="#i-copy"/></svg><svg class="icon i-check" aria-hidden="true"><use href="#i-check"/></svg></button>
         <a class="link-copy" href="mailto:hi@ballhal.la"><span class="sr-only" data-i18n="foot.writeEmail">Write an email</span><svg class="icon ext" aria-hidden="true"><use href="#i-out"/></svg></a>
       </span>
-      <a class="link-copy" href="https://ballhal.la" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-globe"/></svg>ballhal.la<svg class="icon ext" aria-hidden="true"><use href="#i-out"/></svg></a>
     </div>
     <p data-i18n="foot.disclaimer">Ballkour is a fan-made Overwatch Workshop mode. It isn’t affiliated with Blizzard Entertainment.</p>
   </footer>
@@ -894,8 +931,41 @@ a.link-copy { text-decoration: none; }
   "lb.videoHint": "Tap a time to watch the run",
   "lb.watch": "Watch the {time} run by {player}",
   "lb.empty": "No times on this board yet. Submit a run and take first place.",
+  "lb.emptyBroken": "No times on this board yet. Its code is broken, so no new runs can be set for now.",
   "dc.voice": "{channel} · {count} in voice",
-  "dc.voiceMore": "+{count} more"
+  "dc.voiceMore": "+{count} more",
+  "faq.valid.q": "What counts as a valid run?",
+  "faq.valid.a": "Your run is only disqualified if you skip a checkpoint. Going back a checkpoint, restarting checkpoints, and spectating are allowed for legitimate runs. Leaving a checkpoint with freemode on counts as skipping it. Disqualified runs are <fg808080FF>grayed out</fg> on the scorecard.",
+  "faq.mistake.q": "What counts as a mistake?",
+  "faq.mistake.a": "Landing anywhere but the next checkpoint, bhopping twice, missing a bounce checkpoint's bounce, dying, or leaving mid-attempt with Reset CP, Prev./Next CP, Lobby, Freemode or Spectate.",
+  "faq.timer.q": "When does my run's timer start?",
+  "faq.timer.a": "When you leave the first checkpoint, not when you spawn.",
+  "faq.pause.q": "What pauses my run?",
+  "faq.pause.a": "Lobby/Pause and Spectate stop your timer, and Resume Run in the lobby carries on from your checkpoint. Pausing away from your checkpoint counts as a mistake.",
+  "faq.freemode.q": "What is freemode for?",
+  "faq.freemode.a": "Practice, with no timer and all your abilities. You can't clear checkpoints in it, and leaving your checkpoint with it on disqualifies your run.",
+  "faq.counts.q": "What do Runs and Attempts count?",
+  "faq.counts.a": "Runs counts the runs you've finished or restarted. Attempts counts your mistakes and clears on this checkpoint, over all your runs.",
+  "faq.attempt.q": "What do Attempt and Split mean?",
+  "faq.attempt.a": "Attempt is timed from leaving the checkpoint, and Split from reaching it, so it includes your mistakes. Each turns red once it's slower than your best. After a clear they show your times for 2 seconds: <fgFFFF00FF>yellow</fg> on your first clear, then <fg00E092FF>green</fg> if faster or <fgFF4646FF>red</fg> if slower than your average. A new best is compared with your old best.",
+  "faq.best.q": "Are Best and Avg server records?",
+  "faq.best.a": "No, they're only your own times on that checkpoint, over all your runs. They reset when you leave or the server restarts.",
+  "faq.pace.q": "What is Pace?",
+  "faq.pace.a": "Your estimated finish time, from this run's average split so far. Once your current split is slower than that average, it turns <fgFF4646FF>red</fg> and counts up with your time.",
+  "faq.grayed.q": "Why are some controls grayed out?",
+  "faq.grayed.a": "They can't be used right now: Prev. CP on the first checkpoint, Next CP on the last, and the player controls while there's nobody to spectate. X-Hair Player also needs freecam.",
+  "faq.scorecard.q": "What's on the scorecard?",
+  "faq.scorecard.a": "Each runner's checkpoint, time and mistakes, furthest first, then fastest. <fg808080FF>Grayed out</fg> runs are disqualified.",
+  "faq.hints.q": "What do the hint colors mean?",
+  "faq.hints.a": "<fgCB87FFFF>Movement</fg> <fgFFFFFFFF>Jump</fg> <fgFFD200FF>Grapple</fg> <fgFF4646FF>Piledrive</fg> <fg00BEFFFF>Shield Bounce</fg> Hints turn on by themselves after 10 mistakes on one checkpoint, and off again when you move on to another.",
+  "faq.leaderboard.q": "How do I get on the leaderboard?",
+  "faq.leaderboard.a": "Finish a valid run and submit a video of it at ballkour.com. Lobby Top 3 only lists the fastest valid runs finished in this lobby.",
+  "faq.tiny.q": "Why are some players tiny?",
+  "faq.tiny.a": "Players who haven't moved for 60 seconds shrink, so they're not in anyone's way. They grow back as soon as they move.",
+  "faq.restart.q": "Does the server restart?",
+  "faq.restart.a": "Yes, about every 4 hours, with warnings from 30 minutes before. Best, Avg, Runs and Attempts start over.",
+  "faq.language.q": "Is something wrong in my language?",
+  "faq.language.a": "The translations are drafts, so please report mistakes at ballkour.com/issues."
 }
 </script>
 
@@ -1103,7 +1173,7 @@ a.link-copy { text-decoration: none; }
     return `<button class="rec" type="button" data-course="${c.n}" aria-expanded="${open}" aria-controls="board-${c.n}" aria-label="${label}">${body}${icon("chev", "icon chev")}</button>`;
   }
   function boardHtml(c) {
-    if (!c.runs.length) return `<p class="board-empty">${esc(t("lb.empty"))}</p>`;
+    if (!c.runs.length) return `<p class="board-empty">${esc(t(c.broken ? "lb.emptyBroken" : "lb.empty"))}</p>`;
     const hint = c.runs.some((r) => r.video) ? `<div class="board-meta"><span class="board-hint">${esc(t("lb.videoHint"))}</span></div>` : "";
     return hint + `<ol class="board">` + c.runs.slice(0, 10).map((r, i) => {
       const time = `${icon("bolt")}<span class="v">${esc(r.time)}</span>`;
@@ -1114,7 +1184,7 @@ a.link-copy { text-decoration: none; }
         `<span class="run-rank">${i + 1}</span>` +
         `<span class="run-who"><span class="run-name" title="${esc(r.name)}">${esc(r.name)}</span>${r.date ? `<span class="run-date">${esc(formatDate(r.date))}</span>` : ""}</span>` +
         timeCell +
-        `<span class="stat miss">${icon("skull")}${esc(r.miss)}<span class="sr-only"> ${esc(t("unit.mistakes", { count: r.miss }))}</span></span>` +
+        `<span class="stat miss" title="${esc(t("unit.mistakes", { count: r.miss }))}">${icon("skull")}${esc(r.miss)}<span class="sr-only"> ${esc(t("unit.mistakes", { count: r.miss }))}</span></span>` +
         `</li>`;
     }).join("") + `</ol>`;
   }
@@ -1315,15 +1385,26 @@ a.link-copy { text-decoration: none; }
         ? `<details class="voice-more"${wasOpen ? " open" : ""}><summary><span>${esc(t("dc.voiceMore", { count: fmt(rest.length) }))}</span>${icon("chev", "icon chev")}</summary>${list(rest)}</details>`
         : "");
       box.hidden = false;
+    } else {
+      $("#voice").hidden = true;
     }
   }
-  fetch(`https://discord.com/api/guilds/${GUILD_ID}/widget.json`)
-    .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-    .then((d) => {
-      widget = d;
-      renderDiscord();
-    })
-    .catch(() => {});
+  // The online count and voice channels refresh every 5 minutes while the page is open and on screen
+  const WIDGET_EVERY = 5 * 60 * 1000;
+  let widgetAt = 0;
+  function loadWidget() {
+    widgetAt = Date.now();
+    fetch(`https://discord.com/api/guilds/${GUILD_ID}/widget.json`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+      .then((d) => {
+        widget = d;
+        renderDiscord();
+      })
+      .catch(() => {});
+  }
+  loadWidget();
+  setInterval(() => { if (!document.hidden) loadWidget(); }, WIDGET_EVERY);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - widgetAt >= WIDGET_EVERY) loadWidget(); });
 
   /* ---------- Latest releases ---------- */
   let releases = null;
@@ -1347,11 +1428,77 @@ a.link-copy { text-decoration: none; }
     .then((list) => { releases = (Array.isArray(list) ? list : []).filter((x) => !x.draft); renderVersions(); })
     .catch(() => {});
 
+  /* ---------- FAQ ----------
+     The in-game FAQ, read live from src/engine/qa.opy on the game's develop branch. The game shows its answers
+     in English only and sends players here for the translated ones (ballkour.com/faq), so the translations are
+     the site's own: faq.<id>.q/.a in locales/<lang>.json, with the English in #i18n-dynamic above. An answer
+     shows translated only while develop's English still matches that English; one the game has changed, or a
+     new question, shows in English until the site's copy is updated (then run tools/extract-en.py). */
+  const FAQ_IDS = ["valid", "mistake", "timer", "pause", "freemode", "counts", "attempt", "best", "pace", "grayed",
+    "scorecard", "hints", "leaderboard", "tiny", "restart", "language"];
+  const norm = (s) => String(s).replace(/\s+/g, " ").trim();
+  let faq = FAQ_IDS.map((id) => ({ id }));
+  // qaHudText[n] = ("...", "...") → [{ q, a }]: a block that opens with a green "…?" line is a question; a block
+  // without one (an answer split to fit Workshop's 511-byte strings) carries on the answer before it
+  function parseFaq(text) {
+    const blocks = [];
+    for (const m of text.matchAll(/qaHudText\[(\d+)\]\s*=\s*\(\s*((?:"(?:[^"\\\n]|\\.)*"\s*)+)\)/g)) {
+      let s = "";
+      for (const lit of m[2].matchAll(/"(?:[^"\\\n]|\\.)*"/g)) {
+        try { s += JSON.parse(lit[0]); } catch (e) { s = null; break; }
+      }
+      if (s !== null && !s.includes("{}")) blocks.push([Number(m[1]), s]);
+    }
+    blocks.sort((x, y) => x[0] - y[0]);
+    const out = [];
+    for (const [, s] of blocks) {
+      const lines = s.split("\n").map((l) => l.trim()).filter(Boolean);
+      if (!lines.length) continue;
+      const q = /^<fg00E092FF>.*\?<\/fg>$/i.test(lines[0]) ? lines.shift() : null;
+      const a = norm(lines.join(" "));
+      if (q) out.push({ q: norm(q.replace(/<\/?fg[^>]*>/gi, "")), a });
+      else if (out.length) out[out.length - 1].a += " " + a;
+    }
+    return out;
+  }
+  // Workshop color tags become colored text; a run of colored words that opens an answer (the hint colors) is a legend
+  function fgHtml(s) {
+    const h = esc(s).replace(/&lt;fg([0-9a-f]{6})[0-9a-f]{2}&gt;(.*?)&lt;\/fg&gt;/gi,
+      (m, hex, inner) => `<span class="fg" style="color:#${hex}">${inner}</span>`);
+    return h.replace(/^((?:\s*<span class="fg"[^>]*>[^<]*<\/span>){2,})\s*/, (m, run) => `<span class="qa-legend">${run.trim()}</span>`);
+  }
+  function renderFaq() {
+    const box = $("#faq-list");
+    const open = new Set($$("details[open]", box).map((d) => d.dataset.id));
+    box.innerHTML = faq.map((e) => {
+      const qKey = `faq.${e.id}.q`, aKey = `faq.${e.id}.a`;
+      const own = !e.q && typeof dict[qKey] === "string" && dict[qKey].trim() && typeof dict[aKey] === "string" && dict[aKey].trim();
+      const q = e.q || t(qKey), a = e.a || t(aKey);
+      const enAttr = lang !== "en" && !own ? ' lang="en"' : "";
+      return `<details class="qa" data-id="${esc(e.id)}"${enAttr}${open.has(e.id) ? " open" : ""}>` +
+        `<summary><span class="qa-q">${esc(q)}</span>${icon("chev", "icon chev")}</summary>` +
+        `<p class="qa-a">${fgHtml(a)}</p></details>`;
+    }).join("");
+  }
+  fetch(`https://raw.githubusercontent.com/${REPO}/develop/src/engine/qa.opy`, { cache: "no-cache" })
+    .then((r) => (r.ok ? r.text() : Promise.reject(r.status)))
+    .then((text) => {
+      const live = parseFaq(text);
+      if (live.length < 3) return; // file layout changed: keep the site's copy
+      faq = live.map((e, i) => {
+        const id = FAQ_IDS.find((k) => norm(EN[`faq.${k}.q`]) === e.q);
+        return id && norm(EN[`faq.${id}.a`]) === norm(e.a) ? { id } : { id: id || `new-${i}`, q: e.q, a: e.a };
+      });
+      renderFaq();
+    })
+    .catch(() => {});
+
   function renderAll() {
     renderLangControls();
     renderCourses();
     renderDiscord();
     renderVersions();
+    renderFaq();
   }
 
   /* ---------- Warp background ---------- */
@@ -1570,20 +1717,49 @@ a.link-copy { text-decoration: none; }
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (!running) draw(0); });
   window.addEventListener("load", () => { if (!running) draw(0); });
 
-  /* ---------- ballkour.com/leaderboards (and #leaderboards) lands on Gibraltar's open top 10 ---------- */
-  const wantsBoards = /^\/leaderboards\/?$/i.test(location.pathname) || /^#leaderboards?$/i.test(location.hash);
-  if (wantsBoards) openCourse = 1;
-  function jumpToBoards() {
+  /* ---------- Clean section links: ballkour.com/features, /leaderboards, … ----------
+     Cloudflare serves this page at each path. Clicking one scrolls in place and updates the address, so the
+     link can be shared, reloaded and stepped through with Back. /leaderboards opens Gibraltar's top 10. */
+  // route → section id. Discord stays /#discord, since /discord already goes straight to the server.
+  const ROUTES = { courses: "courses", leaderboards: "leaderboards", submit: "submit", features: "features", faq: "faq", discord: "discord", "source-code": "source", translations: "translations" };
+  const pathFor = (route) => (route === "discord" ? "/#discord" : "/" + route);
+  const routeOf = (path) => { const m = /^\/([a-z-]+)\/?$/i.exec(path); const r = m && m[1].toLowerCase(); return r && r !== "discord" && ROUTES[r] ? r : null; };
+  // Old hash links still work too, including #leaderboard from the workshop.codes README
+  const hashRoute = (hash) => { const h = hash.slice(1).toLowerCase(); return h === "leaderboard" ? "leaderboards" : Object.keys(ROUTES).find((r) => ROUTES[r] === h) || null; };
+  const startRoute = routeOf(location.pathname) || hashRoute(location.hash);
+  if (startRoute === "leaderboards") openCourse = 1;
+  function goTo(route, smooth) {
+    if (route === "leaderboards" && !openCourse) { openCourse = 1; refreshCourse(course(1)); }
+    clicked = sectionLinks.findIndex((a) => a.dataset.route === route);
+    queueSpy();
     const root = document.documentElement;
-    root.style.scrollBehavior = "auto";
-    $("#leaderboards").scrollIntoView({ block: "start" });
+    if (!smooth) root.style.scrollBehavior = "auto";
+    document.getElementById(ROUTES[route]).scrollIntoView({ block: "start", behavior: smooth && !reduced ? "smooth" : "auto" });
     root.style.scrollBehavior = "";
   }
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest("a[data-route]");
+    // Ctrl/Cmd/Shift/middle clicks open the path in a new tab as usual
+    if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    const path = pathFor(a.dataset.route);
+    try { if (location.pathname + location.hash !== path) history.pushState(null, "", path); } catch (err) { /* address stays as it is */ }
+    goTo(a.dataset.route, true);
+  });
+  window.addEventListener("popstate", () => {
+    const r = routeOf(location.pathname) || hashRoute(location.hash);
+    if (r) goTo(r, true);
+    else {
+      clicked = -1;
+      queueSpy();
+      if (!location.hash) window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
+    }
+  });
 
   /* ---------- Section bar: highlights the section on screen ---------- */
   const sectionBar = $("#sections");
   const sectionLinks = $$("a", sectionBar);
-  const sectionTargets = sectionLinks.map((a) => document.getElementById(a.hash.slice(1)));
+  const sectionTargets = sectionLinks.map((a) => document.getElementById(ROUTES[a.dataset.route]));
   let currentSection = -1, spyQueued = false, clicked = -1;
   function spy() {
     spyQueued = false;
@@ -1630,8 +1806,6 @@ a.link-copy { text-decoration: none; }
     if (!a) return;
     clicked = sectionLinks.indexOf(a);
     queueSpy();
-    // The Leaderboards link opens Gibraltar's top 10 if no board is open yet
-    if (a.hash === "#leaderboards" && !openCourse) { openCourse = 1; refreshCourse(course(1)); }
   });
 
   /* ---------- Start ---------- */
@@ -1640,12 +1814,12 @@ a.link-copy { text-decoration: none; }
   if (initial !== "en") setLang(initial, false);
   size();
   start();
-  if (wantsBoards) {
-    jumpToBoards();
+  if (startRoute) {
+    goTo(startRoute, false);
     // Web fonts can shift the page as they load: jump again once they're in, unless the visitor has scrolled
     let moved = false;
     ["wheel", "touchstart", "keydown"].forEach((ev) => addEventListener(ev, () => { moved = true; }, { once: true, passive: true }));
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (!moved) jumpToBoards(); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (!moved) goTo(startRoute, false); });
   }
   spy();
   updateMore();
