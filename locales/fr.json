@@ -99,7 +99,7 @@
   "f.qol.text": "Un HUD plus épuré avec des menus plus simples à utiliser. Maintenez pour relancer un point de contrôle ou toute la partie, faites une pause à tout moment et reprenez plus tard, et profitez d’un bhop de tolérance à chaque point de contrôle.",
   "f.qol.beta": "Les joueurs inactifs rétrécissent pour ne jamais vous boucher la vue. Voyez votre numéro de partie et d’essai, consultez la vidéo et la date de chaque partie dans le lobby, et affichez une FAQ pour les nouveaux venus.",
   "f.splits.text": "Meilleur temps et moyenne pour chaque point de contrôle, plus une prévision de votre temps final estimé.",
-  "f.beta.try": "Essayez-les avec le code Bêta de n’importe quel parcours.",
+  "f.beta.tryList": "Essayez-les avec un code Bêta de la liste des parcours.",
   "faq.title": "FAQ",
   "faq.intro": "Les mêmes réponses que la FAQ du jeu, qui s’ouvre en partie avec <b>Capacité ultime + Capacité 2</b>.",
   "faq.issues.title": "Quelque chose d’erroné ou de manquant ?",

@@ -27,7 +27,7 @@
   "f.lobby.title": "Lobby leaderboard",
   "f.lobby.textBeta": "On courses with a Beta code, the top 10 times hang in the lobby and the finish screen shows the time to beat.",
   "tag.beta": "Beta",
-  "f.beta.try": "Try these with any course’s Beta code.",
+  "f.beta.tryList": "Try these with a Beta code from the course list.",
   "f.hints.title": "Hints",
   "f.hints.text": "A recorded route shows you the way through. Turn hints on yourself, or they switch on after 10 mistakes on one checkpoint.",
   "f.spectate.title": "Spectate",
