@@ -1719,7 +1719,8 @@ a.link-copy { text-decoration: none; }
 
   /* ---------- Clean section links: ballkour.com/features, /leaderboards, … ----------
      Cloudflare serves this page at each path. Clicking one scrolls in place and updates the address, so the
-     link can be shared, reloaded and stepped through with Back. /leaderboards opens Gibraltar's top 10. */
+     link can be shared, reloaded and stepped through with Back. Scrolling updates the address too (see spy()).
+     /leaderboards opens Gibraltar's top 10. */
   // route → section id. Discord stays /#discord, since /discord already goes straight to the server.
   const ROUTES = { courses: "courses", leaderboards: "leaderboards", submit: "submit", features: "features", faq: "faq", discord: "discord", "source-code": "source", translations: "translations" };
   const pathFor = (route) => (route === "discord" ? "/#discord" : "/" + route);
@@ -1770,6 +1771,7 @@ a.link-copy { text-decoration: none; }
     if (i >= 0 && innerHeight + scrollY >= document.documentElement.scrollHeight - 4) i = sectionTargets.length - 1;
     // A clicked link stays highlighted until the visitor scrolls on their own
     if (clicked >= 0) i = clicked;
+    followAddress(i);
     if (i === currentSection) return;
     currentSection = i;
     sectionLinks.forEach((a, j) => { if (j === i) a.setAttribute("aria-current", "true"); else a.removeAttribute("aria-current"); });
@@ -1778,6 +1780,18 @@ a.link-copy { text-decoration: none; }
     if (cur && sectionTrack.scrollWidth > sectionTrack.clientWidth) {
       sectionTrack.scrollTo({ left: cur.offsetLeft - (sectionTrack.clientWidth - cur.offsetWidth) / 2, behavior: reduced ? "auto" : "smooth" });
     }
+  }
+  // The address follows the section on screen (/faq, /features, …), and is / at the very top. It replaces the
+  // current entry rather than adding one, so Back still leaves the page instead of stepping through sections.
+  // A link someone opened (ballkour.com/faq) keeps its address until they scroll or click themselves.
+  let addressHeld = !!startRoute;
+  ["wheel", "touchstart", "keydown", "mousedown"].forEach((ev) => addEventListener(ev, () => { addressHeld = false; }, { passive: true }));
+  function followAddress(i) {
+    if (addressHeld) return;
+    const path = i >= 0 && (scrollY >= 2 || clicked >= 0) ? pathFor(sectionLinks[i].dataset.route) : "/";
+    const [pathname, hash = ""] = path.split("#");
+    if (location.pathname === pathname && location.hash === (hash && "#" + hash)) return;
+    try { history.replaceState(history.state, "", pathname + location.search + (hash && "#" + hash)); } catch (err) { /* address stays as it is */ }
   }
   // Show "…" at whichever end has more links hidden past it
   const sectionTrack = $("#sections-track");
