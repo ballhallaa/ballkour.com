@@ -134,6 +134,8 @@
   "faq.tiny.a": "Spieler, die sich 60 Sekunden nicht bewegt haben, schrumpfen, damit sie niemandem im Weg sind. Sie wachsen wieder, sobald sie sich bewegen.",
   "faq.restart.q": "Startet der Server neu?",
   "faq.restart.a": "Ja, etwa alle 4 Stunden, mit Warnungen ab 30 Minuten vorher. Beste, Schnitt, Läufe und Versuche beginnen von vorn.",
+  "faq.loading.q": "Warum dauert es so lange, ein Ballkour-Spiel zu laden?",
+  "faq.loading.a": "Das Workshop-Skript ist groß, vor allem wegen seiner Übersetzungen in 13 Sprachen, und Overwatch braucht eine Weile, es vor dem Matchstart zu laden.",
   "faq.language.q": "Stimmt etwas in meiner Sprache nicht?",
   "faq.language.a": "Die Übersetzungen sind Entwürfe, also melde Fehler bitte auf ballkour.com/issues."
 }

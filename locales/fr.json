@@ -134,6 +134,8 @@
   "faq.tiny.a": "Les joueurs immobiles depuis 60 secondes rétrécissent pour ne gêner personne. Ils retrouvent leur taille dès qu'ils bougent.",
   "faq.restart.q": "Le serveur redémarre-t-il ?",
   "faq.restart.a": "Oui, environ toutes les 4 heures, avec des avertissements dès 30 minutes avant. Meilleur, Moy., Parties et Essais repartent de zéro.",
+  "faq.loading.q": "Pourquoi une partie de Ballkour met-elle autant de temps à charger ?",
+  "faq.loading.a": "Son script Workshop est gros, surtout à cause de ses traductions en 13 langues, et Overwatch met un moment à le charger avant le début de la partie.",
   "faq.language.q": "Il y a une erreur dans ma langue ?",
   "faq.language.a": "Les traductions sont des brouillons, alors signale les erreurs sur ballkour.com/issues."
 }

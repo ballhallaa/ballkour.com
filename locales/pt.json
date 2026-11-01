@@ -134,6 +134,8 @@
   "faq.tiny.a": "Jogadores que não se mexem por 60 segundos encolhem para não atrapalhar ninguém. Eles voltam ao normal assim que se mexem.",
   "faq.restart.q": "O servidor reinicia?",
   "faq.restart.a": "Sim, a cada 4 horas mais ou menos, com avisos a partir de 30 minutos antes. Melhor, Média, Partidas e Tentativas começam do zero.",
+  "faq.loading.q": "Por que uma partida de Ballkour demora tanto para carregar?",
+  "faq.loading.a": "O script do Workshop é grande, principalmente por causa das traduções para 13 idiomas, e o Overwatch leva um tempo para carregá-lo antes de a partida começar.",
   "faq.language.q": "Tem algo errado no meu idioma?",
   "faq.language.a": "As traduções são rascunhos, então informe os erros em ballkour.com/issues."
 }
