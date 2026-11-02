@@ -22,7 +22,11 @@
      npx wrangler secret put GITHUB_TOKEN        optional: any GitHub token, for GitHub's higher rate limits
 
    Board and answer links (/leaderboards/6-dorado, /faq/pause) get the home page, like /leaderboards and /faq do; the
-   page opens the board or answer itself. Anything else passes straight through to the VPS. */
+   page opens the board or answer itself.
+
+   /code/game and /code/site (also /code/website) redirect to the game's and this website's GitHub repos. Anything
+   after them carries over, so /code/game/releases goes to the game's releases. Anything else passes straight
+   through to the VPS. */
 
 const GUILD_ID = "1212553452283101245";
 const INVITE = "Skz6cg9rbR";
@@ -210,6 +214,18 @@ async function buildPlayers(env, ctx, previous) {
   return JSON.stringify(found);
 }
 
+/* ---------- Short links ---------- */
+// ballkour.com/code/game → the game repo, /code/site (or /code/website) → this repo. A temporary (302) redirect, so
+// browsers don't remember it if a repo ever moves.
+const CODE_LINK = /^\/code\/(game|site|website)(\/.*)?$/i;
+function codeLink(path) {
+  const m = CODE_LINK.exec(path);
+  if (!m) return null;
+  const repo = m[1].toLowerCase() === "game" ? REPO : SITE_REPO;
+  const rest = (m[2] || "").replace(/\/+$/, "");
+  return Response.redirect(`https://github.com/${repo}${rest}`, 302);
+}
+
 /* ---------- Pages ---------- */
 const DEEP_LINK = /^\/(?:leaderboards|faq)\/[\w-]+\/?$/i;
 async function page(request, env, ctx) {
@@ -253,6 +269,8 @@ export default {
     ctx.passThroughOnException();
     if (request.method !== "GET") return fetch(request);
     const path = new URL(request.url).pathname;
+    const short = codeLink(path);
+    if (short) return short;
     try {
       if (path === "/data/game.json") return json(await game(env, ctx), 60);
       if (path === "/data/widget.json") return json(await cached("widget", 60, ctx, (prev) => buildWidget(prev)), 60);
