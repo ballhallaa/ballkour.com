@@ -50,6 +50,7 @@ async function cached(name, ttl, ctx, build) {
     ]));
     return body;
   } catch (e) {
+    console.error(`${name}: rebuild failed, ${previous ? "serving the last good copy" : "nothing cached yet"}: ${(e && e.message) || e}`);
     if (previous) return previous;
     throw e;
   }
@@ -60,6 +61,20 @@ async function peek(name, ttl, ctx, build) {
   const fresh = await caches.default.match(cacheKey(name));
   if (fresh) return fresh.text();
   ctx.waitUntil(cached(name, ttl, ctx, build).catch(() => {}));
+  const old = await caches.default.match(cacheKey(name, true));
+  return old ? old.text() : null;
+}
+
+// For copies baked into a page: the cached copy if it's fresh. If not, it's rebuilt right away and the page waits up
+// to `wait` ms for it, so a page served after a new release already shows it. If the rebuild takes longer, the last
+// good copy goes into the page and the rebuild finishes in the background for the next visitor.
+async function soon(name, ttl, ctx, build, wait) {
+  const fresh = await caches.default.match(cacheKey(name));
+  if (fresh) return fresh.text();
+  const rebuild = cached(name, ttl, ctx, build).catch(() => null);
+  ctx.waitUntil(rebuild);
+  const quick = await Promise.race([rebuild, new Promise((resolve) => setTimeout(resolve, wait))]);
+  if (quick) return quick;
   const old = await caches.default.match(cacheKey(name, true));
   return old ? old.text() : null;
 }
@@ -107,10 +122,18 @@ async function buildGame(env, previous) {
         headers: { ...headers, Accept: "application/vnd.github+json" },
         signal: AbortSignal.timeout(5000),
       });
-      if (!r.ok) return kept;
+      if (!r.ok) {
+        // Usually GitHub's limit on requests without a token (60 an hour, shared with other Workers on the same IP)
+        const why = (await r.text().catch(() => "")).slice(0, 160).replace(/\s+/g, " ");
+        console.error(`releases of ${repo}: GitHub said ${r.status}${env.GITHUB_TOKEN ? "" : " (no GITHUB_TOKEN set)"}; keeping the last list. ${why}`);
+        return kept;
+      }
       return (await r.json()).filter((x) => !x.draft)
         .map(({ tag_name, html_url, prerelease, published_at }) => ({ tag_name, html_url, prerelease, published_at }));
-    } catch (e) { return kept; }
+    } catch (e) {
+      console.error(`releases of ${repo}: ${(e && e.message) || e}; keeping the last list`);
+      return kept;
+    }
   };
   const [releases, siteReleases] = await Promise.all([
     releasesOf(REPO, previous ? previous.releases : null),
@@ -201,7 +224,7 @@ async function page(request, env, ctx) {
     fetch(new Request(url, { method: "GET", headers, redirect: "manual" })),
     // The online count is worth a short wait (Discord answers in well under the 1.5 s limit), so it's never stale
     cached("widget", 60, ctx, (prev) => buildWidget(prev)).catch(() => null),
-    peek("game", 60, ctx, (prev) => buildGame(env, prev)),
+    soon("game", 60, ctx, (prev) => buildGame(env, prev), 2500),
     env.DISCORD_BOT_TOKEN ? peek("players", 60 * 60, ctx, (prev) => buildPlayers(env, ctx, prev)) : null,
   ]);
   if (!res.ok || !(res.headers.get("Content-Type") || "").includes("text/html")) return res;
