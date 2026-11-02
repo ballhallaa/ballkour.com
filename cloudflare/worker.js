@@ -109,7 +109,7 @@ async function buildGame(env, previous) {
   let paths = previous ? Object.keys(previous.files) : [];
   try {
     const courses = JSON.parse(await get("tools/leaderboard-bot/courses.json")).courses;
-    paths = ["leaderboards/history.json", "src/engine/qa.opy", ...courses.map((c) => c.file)];
+    paths = ["leaderboards/history.json", "src/engine/faq.opy", ...courses.map((c) => c.file)];
   } catch (e) {
     if (!paths.length) throw e;
   }

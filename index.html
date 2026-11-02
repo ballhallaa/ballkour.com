@@ -1081,7 +1081,7 @@ a.link-copy { text-decoration: none; }
   "dc.voice": "{channel} · {count} in voice",
   "dc.voiceMore": "+{count} more",
   "faq.valid.q": "What counts as a valid run?",
-  "faq.valid.a": "Your run is only disqualified if you skip a checkpoint. Going back a checkpoint, restarting checkpoints, and spectating are allowed for legitimate runs. Leaving a checkpoint with freemode on counts as skipping it. Disqualified runs are <fg808080FF>grayed out</fg> on the scorecard.",
+  "faq.valid.a": "Your run is only disqualified if you skip a checkpoint you haven't cleared yet this run. Going back or restarting checkpoints, skipping ahead to cleared checkpoints, and spectating are fine. Leaving an uncleared checkpoint in freemode counts as skipping it. Disqualified runs don't count toward Lobby Top 3 or Lobby Stats.",
   "faq.mistake.q": "What counts as a mistake?",
   "faq.mistake.a": "Landing anywhere but the next checkpoint, bhopping twice, missing a bounce checkpoint's bounce, dying, or leaving mid-attempt with Reset CP, Prev./Next CP, Lobby, Freemode or Spectate.",
   "faq.timer.q": "When does my run's timer start?",
@@ -1101,7 +1101,7 @@ a.link-copy { text-decoration: none; }
   "faq.grayed.q": "Why are some controls grayed out?",
   "faq.grayed.a": "They can't be used right now: Prev. CP on the first checkpoint, Next CP on the last, and the player controls while there's nobody to spectate. X-Hair Player also needs freecam.",
   "faq.scorecard.q": "What's on the scorecard?",
-  "faq.scorecard.a": "Each runner's checkpoint, time and mistakes, furthest first, then fastest. <fg808080FF>Grayed out</fg> runs are disqualified.",
+  "faq.scorecard.a": "Each runner's checkpoint, time and mistakes, furthest first, then fastest. <fgFF4646FF>Red</fg> runs, marked <fgFF4646FF>×</fg>, are disqualified.",
   "faq.hints.q": "What do the hint colors mean?",
   "faq.hints.a": "<fgCB87FFFF>Movement</fg> <fgFFFFFFFF>Jump</fg> <fgFFD200FF>Grapple</fg> <fgFF4646FF>Piledrive</fg> <fg00BEFFFF>Shield Bounce</fg> Hints turn on by themselves after 10 mistakes on one checkpoint, and off again when you move on to another.",
   "faq.leaderboard.q": "How do I get on the leaderboard?",
@@ -1870,7 +1870,7 @@ a.link-copy { text-decoration: none; }
     .catch(() => {});
 
   /* ---------- FAQ ----------
-     The in-game FAQ, read live from src/engine/qa.opy on the game's develop branch. The game shows its answers
+     The in-game FAQ, read live from src/engine/faq.opy on the game's develop branch. The game shows its answers
      in English only and sends players here for the translated ones (ballkour.com/faq), so the translations are
      the site's own: faq.<id>.q/.a in locales/<lang>.json, with the English in #i18n-dynamic above. An answer
      shows translated only while develop's English still matches that English; one the game has changed, or a
@@ -1879,11 +1879,11 @@ a.link-copy { text-decoration: none; }
     "scorecard", "hints", "leaderboard", "tiny", "restart", "loading", "language"];
   const norm = (s) => String(s).replace(/\s+/g, " ").trim();
   let faq = FAQ_IDS.map((id) => ({ id }));
-  // qaHudText[n] = ("...", "...") → [{ q, a }]: a block that opens with a green "…?" line is a question; a block
+  // faqHudText[n] = ("...", "...") → [{ q, a }]: a block that opens with a green "…?" line is a question; a block
   // without one (an answer split to fit Workshop's 511-byte strings) carries on the answer before it
   function parseFaq(text) {
     const blocks = [];
-    for (const m of text.matchAll(/qaHudText\[(\d+)\]\s*=\s*\(\s*((?:"(?:[^"\\\n]|\\.)*"\s*)+)\)/g)) {
+    for (const m of text.matchAll(/faqHudText\[(\d+)\]\s*=\s*\(\s*((?:"(?:[^"\\\n]|\\.)*"\s*)+)\)/g)) {
       let s = "";
       for (const lit of m[2].matchAll(/"(?:[^"\\\n]|\\.)*"/g)) {
         try { s += JSON.parse(lit[0]); } catch (e) { s = null; break; }
@@ -1933,7 +1933,7 @@ a.link-copy { text-decoration: none; }
         `<p class="qa-a">${fgHtml(a)}</p></details>`;
     }).join("");
   }
-  gameFile("src/engine/qa.opy")
+  gameFile("src/engine/faq.opy")
     .then((text) => {
       const live = parseFaq(text);
       if (live.length < 3) return; // file layout changed: keep the site's copy
