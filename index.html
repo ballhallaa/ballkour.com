@@ -1984,7 +1984,7 @@ a.link-copy { text-decoration: none; }
   let W = 0, H = 0, dprWarp = 1, dprBalls = 1, maxD = 0;
   let streaks = [], sparks = [];
   let ox = 0, oy = 0, tx = 0, ty = 0, px = 0.5, py = 0.5;
-  let boost = 0, last = 0, running = false, heroInView = true;
+  let boost = 0, last = 0, running = false, heroInView = true, pace = 1;
 
   function spawn(s, anywhere) {
     s.a = Math.random() * Math.PI * 2;
@@ -2037,7 +2037,7 @@ a.link-copy { text-decoration: none; }
     ctx.fillRect(0, 0, W, H);
 
     const dim = 1 - Math.min(0.5, window.scrollY / (H * 1.6));
-    const speed = 1 + boost;
+    const speed = (1 + boost) * pace;
     ctx.globalCompositeOperation = "lighter";
     ctx.lineCap = "round";
     for (const s of streaks) {
@@ -2078,8 +2078,11 @@ a.link-copy { text-decoration: none; }
     last = ts;
     boost *= Math.pow(0.12, dt);
     if (boost < 0.002) boost = 0;
+    // Out of view it glides to a stop instead of freezing mid-flight, and picks back up the same way
+    pace += ((heroInView ? 1 : 0) - pace) * Math.min(1, dt * 2.5);
     draw(dt);
-    requestAnimationFrame(loop);
+    if (heroInView || pace > 0.01) requestAnimationFrame(loop);
+    else running = false;
   }
   function start() {
     if (running || reduced || document.hidden || !heroInView) return;
@@ -2183,8 +2186,9 @@ a.link-copy { text-decoration: none; }
   window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(size, 120); });
   // Further down, the background is dimmed and mostly behind panels, so it stops moving there instead of redrawing the
   // whole screen every frame (easier on laptop batteries and fans). It starts again on the way back up.
+  // A quick scroll down and back can report both in one go, so the last entry is the current one.
   if ("IntersectionObserver" in window) {
-    new IntersectionObserver(([e]) => { heroInView = e.isIntersecting; if (heroInView) start(); else stop(); }).observe($(".hero"));
+    new IntersectionObserver((es) => { heroInView = es[es.length - 1].isIntersecting; if (heroInView) start(); }).observe($(".hero"));
   }
   // While it's still, scrolling only redraws it once per frame, to update the dimming
   let stillQueued = false;
