@@ -20,7 +20,8 @@
      npx wrangler secret put DISCORD_BOT_TOKEN   Ballkyrie's bot token, for the player names
      npx wrangler secret put GITHUB_TOKEN        optional: any GitHub token, for GitHub's higher rate limits
 
-   Anything else passes straight through to the VPS. */
+   Board and answer links (/leaderboards/6-dorado, /faq/pause) get the home page, like /leaderboards and /faq do; the
+   page opens the board or answer itself. Anything else passes straight through to the VPS. */
 
 const GUILD_ID = "1212553452283101245";
 const REPO = "ballhallaa/ballkour";
@@ -63,7 +64,11 @@ async function peek(name, ttl, ctx, build) {
 const json = (body, maxAge) => new Response(body, {
   headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": `public, max-age=${maxAge}` },
 });
-const unavailable = () => new Response("{}", { status: 503, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } });
+// Says why, so a problem shows up both here and in `npx wrangler tail`
+const unavailable = (why) => {
+  console.error(why);
+  return new Response(JSON.stringify({ error: why }), { status: 503, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } });
+};
 
 /* ---------- Game data from GitHub ---------- */
 const githubHeaders = (env) => ({
@@ -87,9 +92,10 @@ async function buildGame(env, previous) {
     if (!paths.length) throw e;
   }
   const got = await Promise.allSettled(paths.map(get));
+  const failed = got.find((g) => g.status === "rejected");
   const files = {};
   paths.forEach((p, i) => { files[p] = got[i].status === "fulfilled" ? got[i].value : (previous && previous.files[p]) ?? null; });
-  if (Object.values(files).every((v) => v === null)) throw new Error("GitHub can't be reached");
+  if (Object.values(files).every((v) => v === null)) throw new Error(`GitHub can't be reached: ${failed ? failed.reason.message : "no files"}`);
 
   // Only what the page uses from each release
   let releases = previous ? previous.releases : null;
@@ -163,13 +169,17 @@ async function buildPlayers(env, ctx, previous) {
 }
 
 /* ---------- Pages ---------- */
+const DEEP_LINK = /^\/(?:leaderboards|faq)\/[\w-]+\/?$/i;
 async function page(request, env, ctx) {
   // Ask for the full page every time (no 304 Not Modified), so a browser never reuses old data from its cache
   const headers = new Headers(request.headers);
   headers.delete("If-None-Match");
   headers.delete("If-Modified-Since");
+  // /leaderboards/6-dorado and /faq/pause are the home page
+  const url = new URL(request.url);
+  if (DEEP_LINK.test(url.pathname)) url.pathname = "/";
   const [res, widget, gameData, players] = await Promise.all([
-    fetch(new Request(request, { headers })),
+    fetch(new Request(url, { method: "GET", headers, redirect: "manual" })),
     // The online count is worth a short wait (Discord answers in well under the 1.5 s limit), so it's never stale
     cached("widget", 60, ctx, buildWidget).catch(() => null),
     peek("game", 60, ctx, (prev) => buildGame(env, prev)),
@@ -205,12 +215,12 @@ export default {
       if (path === "/data/game.json") return json(await game(env, ctx), 60);
       if (path === "/data/widget.json") return json(await cached("widget", 60, ctx, buildWidget), 60);
       if (path === "/data/players.json" || path === "/players.json") {
-        if (!env.DISCORD_BOT_TOKEN) return unavailable();
+        if (!env.DISCORD_BOT_TOKEN) return unavailable("The DISCORD_BOT_TOKEN secret isn't set");
         return json(await cached("players", 60 * 60, ctx, (prev) => buildPlayers(env, ctx, prev)), 300);
       }
     } catch (e) {
-      if (path.startsWith("/data/") || path === "/players.json") return unavailable();
+      if (path.startsWith("/data/") || path === "/players.json") return unavailable(String((e && e.message) || e));
     }
-    return (request.headers.get("Accept") || "").includes("text/html") ? page(request, env, ctx) : fetch(request);
+    return DEEP_LINK.test(path) || (request.headers.get("Accept") || "").includes("text/html") ? page(request, env, ctx) : fetch(request);
   },
 };

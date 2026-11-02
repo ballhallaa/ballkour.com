@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<script>if (/^\/[a-z-]+\/$/i.test(location.pathname)) history.replaceState(null, "", location.pathname.slice(0, -1) + location.search + location.hash);</script>
+<script>if (/^\/[a-z-]+(\/[\w-]+)?\/$/i.test(location.pathname)) history.replaceState(null, "", location.pathname.slice(0, -1) + location.search + location.hash);</script>
 <title>Ballkour · Wrecking Ball parkour courses for Overwatch</title>
 <meta name="description" content="Wrecking Ball parkour courses for Overwatch. Grab a course code, run through every checkpoint, and get your time on the leaderboard!">
 <link rel="canonical" href="https://ballkour.com/">
@@ -19,9 +19,9 @@
 <meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:alt" content="The Ballkour hamster logo next to the Ballkour wordmark on a neon speed-line background">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
-<link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
-<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/icon-192.png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
 <!-- Fonts are served from ballkour.com (assets/fonts, Open Font License): no Google request, so the page draws
      straight away everywhere, Google never sees visitors, and it works where Google is blocked. The wordmark font
      is preloaded so the title doesn't flash in a fallback font first. -->
@@ -830,7 +830,7 @@ a.link-copy { text-decoration: none; }
 
   <header class="hero">
     <button class="badge" id="badge" type="button" data-i18n-aria="badge.label" aria-label="Give the hamster a boost">
-      <img src="assets/logo.webp" width="560" height="560" data-i18n-alt="logo.alt" alt="Ballkour logo: a hamster in goggles riding a black and orange ball">
+      <img src="/assets/logo.webp" width="560" height="560" data-i18n-alt="logo.alt" alt="Ballkour logo: a hamster in goggles riding a black and orange ball">
     </button>
     <h1 class="wordmark">Ballkour</h1>
     <p class="tagline" data-i18n="hero.tagline">Wrecking Ball parkour courses for Overwatch</p>
@@ -1163,7 +1163,7 @@ a.link-copy { text-decoration: none; }
     { n: 15, flag: "🇩🇪", name: "Eichenwalde", by: "Senimar", ordered: true, code: "R6TYG", broken: true, runs: [] }
   ];
   const course = (n) => COURSES.find((c) => c.n === n);
-  // Board links: ballkour.com/leaderboards#6-dorado opens Dorado's top 10 (a bare #6 works too). The leaderboard bot
+  // Board links: ballkour.com/leaderboards/6-dorado opens Dorado's top 10 (a bare /6 works too). The leaderboard bot
   // links each post to its course's board the same way.
   const slug = (s) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/['’]/g, "").toLowerCase()
     .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
@@ -1243,7 +1243,7 @@ a.link-copy { text-decoration: none; }
     if (!LANGS.some((l) => l[0] === code)) code = "en";
     if (!cache[code]) {
       try {
-        const r = await fetch(`locales/${code}.json`, { cache: "no-cache" });
+        const r = await fetch(`/locales/${code}.json`, { cache: "no-cache" });
         if (!r.ok) throw new Error(r.status);
         cache[code] = await r.json();
       } catch (e) {
@@ -1890,7 +1890,7 @@ a.link-copy { text-decoration: none; }
       (m, hex, inner) => `<span class="fg" style="color:#${hex}">${inner}</span>`);
     return h.replace(/^((?:\s*<span class="fg"[^>]*>[^<]*<\/span>){2,})\s*/, (m, run) => `<span class="qa-legend">${run.trim()}</span>`);
   }
-  // FAQ links: ballkour.com/faq#pause opens that answer. While an answer is open, the address links to it.
+  // FAQ links: ballkour.com/faq/pause opens that answer. While an answer is open, the address links to it.
   let pendingFaq = null, openFaq = null;
   $("#faq-list").addEventListener("toggle", (e) => {
     const d = e.target;
@@ -2186,13 +2186,16 @@ a.link-copy { text-decoration: none; }
   // route → section id. Discord stays /#discord, since /discord already goes straight to the server.
   const ROUTES = { courses: "courses", leaderboards: "leaderboards", submit: "submit", features: "features", faq: "faq", discord: "discord", "source-code": "source", translations: "translations" };
   const pathFor = (route) => (route === "discord" ? "/#discord" : "/" + route);
-  const routeOf = (path) => { const m = /^\/([a-z-]+)\/?$/i.exec(path); const r = m && m[1].toLowerCase(); return r && r !== "discord" && ROUTES[r] ? r : null; };
+  const routeOf = (path) => { const m = /^\/([a-z-]+)(?:\/[\w-]+)?\/?$/i.exec(path); const r = m && m[1].toLowerCase(); return r && r !== "discord" && ROUTES[r] ? r : null; };
+  // The board or answer a link names: /leaderboards/6-dorado, /faq/pause, or the older #6-dorado and #pause
+  const subOf = (path, hash) => { const m = /^\/(?:leaderboards|faq)\/([\w-]+)\/?$/i.exec(path); return m ? m[1].toLowerCase() : /^#[\w-]+$/.test(hash) ? hash.slice(1) : null; };
   // Old hash links still work too, including #leaderboard from the workshop.codes README
   const hashRoute = (hash) => { const h = hash.slice(1).toLowerCase(); return h === "leaderboard" ? "leaderboards" : Object.keys(ROUTES).find((r) => ROUTES[r] === h) || null; };
   const startRoute = routeOf(location.pathname) || hashRoute(location.hash);
-  // ballkour.com/leaderboards#6-dorado and /faq#pause open that board or answer
-  const startBoard = startRoute === "leaderboards" ? courseOfHash(location.hash) : null;
-  const startFaq = startRoute === "faq" && /^#[\w-]+$/.test(location.hash) ? location.hash.slice(1) : null;
+  // ballkour.com/leaderboards/6-dorado and /faq/pause open that board or answer
+  const startSub = subOf(location.pathname, location.hash);
+  const startBoard = startRoute === "leaderboards" && startSub ? courseOfHash(startSub) : null;
+  const startFaq = startRoute === "faq" ? startSub : null;
   if (startRoute === "leaderboards") openCourse = startBoard ? startBoard.n : 1;
   if (startFaq) pendingFaq = openFaq = startFaq;
   function goTo(route, smooth) {
@@ -2209,8 +2212,10 @@ a.link-copy { text-decoration: none; }
     // Ctrl/Cmd/Shift/middle clicks open the path in a new tab as usual
     if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     e.preventDefault();
-    const path = pathFor(a.dataset.route);
-    try { if (location.pathname + location.hash !== path) history.pushState(null, "", path); } catch (err) { /* address stays as it is */ }
+    // Keeps ?lang=… in the address
+    const [pathname, hash = ""] = pathFor(a.dataset.route).split("#");
+    const target = pathname + location.search + (hash && "#" + hash);
+    try { if (location.pathname + location.search + location.hash !== target) history.pushState(null, "", target); } catch (err) { /* address stays as it is */ }
     goTo(a.dataset.route, true);
   });
   window.addEventListener("popstate", () => {
@@ -2252,8 +2257,8 @@ a.link-copy { text-decoration: none; }
   // A link someone opened (ballkour.com/faq) keeps its address until they scroll or click themselves.
   let addressHeld = !!startRoute;
   ["wheel", "touchstart", "keydown", "mousedown"].forEach((ev) => addEventListener(ev, () => { addressHeld = false; }, { passive: true }));
-  // While a board or an answer is open, the address links to it: /leaderboards#6-dorado, /faq#pause
-  function subHash(route) {
+  // While a board or an answer is open, the address links to it: /leaderboards/6-dorado, /faq/pause
+  function subPath(route) {
     if (route === "leaderboards" && openCourse) return boardHash(course(openCourse));
     if (route === "faq" && openFaq && $(`.qa[data-id="${CSS.escape(openFaq)}"][open]`)) return openFaq;
     return "";
@@ -2261,10 +2266,11 @@ a.link-copy { text-decoration: none; }
   function followAddress(i) {
     if (addressHeld) return;
     const route = i >= 0 && (scrollY >= 2 || clicked >= 0) ? sectionLinks[i].dataset.route : null;
-    const [pathname, hash = ""] = (route ? pathFor(route) : "/").split("#");
-    const frag = hash || (route ? subHash(route) : "");
-    if (location.pathname === pathname && location.hash === (frag && "#" + frag)) return;
-    try { history.replaceState(history.state, "", pathname + location.search + (frag && "#" + frag)); } catch (err) { /* address stays as it is */ }
+    let [pathname, hash = ""] = (route ? pathFor(route) : "/").split("#");
+    const sub = route ? subPath(route) : "";
+    if (sub) pathname += "/" + sub;
+    if (location.pathname === pathname && location.hash === (hash && "#" + hash)) return;
+    try { history.replaceState(history.state, "", pathname + location.search + (hash && "#" + hash)); } catch (err) { /* address stays as it is */ }
   }
   // Show "…" at whichever end has more links hidden past it
   const sectionTrack = $("#sections-track");

@@ -18,8 +18,10 @@ Keep everything out of `/v*`, `/discord`, `/gameplay`, `/courses`, `/leaderboard
 
 Links can go deeper, and the address shows them while a board or answer is open:
 
-- **A course's board:** `ballkour.com/leaderboards#6-dorado` (or just `#6`). The leaderboard bot links its posts this way.
-- **An FAQ answer:** `ballkour.com/faq#pause`. The ids are in `FAQ_IDS`.
+- **A course's board:** `ballkour.com/leaderboards/6-dorado` (or just `/leaderboards/6`). The leaderboard bot links its posts this way. The Worker serves the page at these addresses.
+- **An FAQ answer:** `ballkour.com/faq/pause`. The ids are in `FAQ_IDS`.
+
+The older `#6-dorado` and `#pause` forms still work.
 - **A language:** `ballkour.com/?lang=ja` opens the page in Japanese; it works with any of the links above. Picking a language puts it in the address.
 
 ## Deploying
