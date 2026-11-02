@@ -1560,7 +1560,7 @@ a.link-copy { text-decoration: none; }
     if (before && before !== n) refreshCourse(course(before));
     refreshCourse(course(n));
     document.querySelector(`#course-${n} .rec`).focus();
-    queueSpy(); // the address links to the open board
+    showLink("leaderboards", openCourse ? boardHash(course(openCourse)) : ""); // the address links to the open board
   });
 
   /* ---------- Copy course codes ---------- */
@@ -1891,13 +1891,15 @@ a.link-copy { text-decoration: none; }
     return h.replace(/^((?:\s*<span class="fg"[^>]*>[^<]*<\/span>){2,})\s*/, (m, run) => `<span class="qa-legend">${run.trim()}</span>`);
   }
   // FAQ links: ballkour.com/faq/pause opens that answer. While an answer is open, the address links to it.
-  let pendingFaq = null, openFaq = null;
+  let pendingFaq = null, openFaq = null, faqClicked = null;
+  // Only a visitor's own click (or Enter) on a question changes the address, not a redraw
+  $("#faq-list").addEventListener("click", (e) => { const q = e.target.closest("details.qa"); faqClicked = q ? q.dataset.id : null; });
   $("#faq-list").addEventListener("toggle", (e) => {
     const d = e.target;
     if (!(d instanceof HTMLDetailsElement)) return;
     if (d.open) openFaq = d.dataset.id;
     else if (openFaq === d.dataset.id) openFaq = null;
-    queueSpy();
+    if (faqClicked === d.dataset.id) { faqClicked = null; showLink("faq", openFaq || ""); }
   }, true);
   function renderFaq() {
     const box = $("#faq-list");
@@ -2257,6 +2259,17 @@ a.link-copy { text-decoration: none; }
   // A link someone opened (ballkour.com/faq) keeps its address until they scroll or click themselves.
   let addressHeld = !!startRoute;
   ["wheel", "touchstart", "keydown", "mousedown"].forEach((ev) => addEventListener(ev, () => { addressHeld = false; }, { passive: true }));
+  // Opening a board or an answer puts its link in the address straight away, wherever the page is scrolled to, and
+  // keeps it there until the visitor scrolls on their own. Closing it lets the address follow the page again.
+  function showLink(route, sub) {
+    if (sub) {
+      try { history.replaceState(history.state, "", pathFor(route) + "/" + sub + location.search); } catch (err) { /* address stays as it is */ }
+      addressHeld = true;
+    } else {
+      addressHeld = false;
+      queueSpy();
+    }
+  }
   // While a board or an answer is open, the address links to it: /leaderboards/6-dorado, /faq/pause
   function subPath(route) {
     if (route === "leaderboards" && openCourse) return boardHash(course(openCourse));
