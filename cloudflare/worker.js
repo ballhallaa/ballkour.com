@@ -24,9 +24,9 @@
    Board and answer links (/leaderboards/6-dorado, /faq/pause) get the home page, like /leaderboards and /faq do; the
    page opens the board or answer itself.
 
-   /code/game and /code/site (also /code/website) redirect to the game's and this website's GitHub repos. Anything
-   after them carries over, so /code/game/releases goes to the game's releases. Anything else passes straight
-   through to the VPS. */
+   /code/game and /code/site (also /code/website) redirect to the game's and this website's GitHub repos, and
+   /releases and /releases/site (also /releases/website) to their release notes. Anything after them carries over,
+   so /code/game/issues goes to the game's issues. Anything else passes straight through to the VPS. */
 
 const GUILD_ID = "1212553452283101245";
 const INVITE = "Skz6cg9rbR";
@@ -215,15 +215,18 @@ async function buildPlayers(env, ctx, previous) {
 }
 
 /* ---------- Short links ---------- */
-// ballkour.com/code/game → the game repo, /code/site (or /code/website) → this repo. A temporary (302) redirect, so
-// browsers don't remember it if a repo ever moves.
+// ballkour.com/code/game → the game repo, /code/site (or /code/website) → this repo.
+// ballkour.com/releases (or /releases/game) → the game's release notes, /releases/site (or /releases/website) → this
+// website's. A temporary (302) redirect, so browsers don't remember it if a repo ever moves.
 const CODE_LINK = /^\/code\/(game|site|website)(\/.*)?$/i;
-function codeLink(path) {
-  const m = CODE_LINK.exec(path);
-  if (!m) return null;
-  const repo = m[1].toLowerCase() === "game" ? REPO : SITE_REPO;
-  const rest = (m[2] || "").replace(/\/+$/, "");
-  return Response.redirect(`https://github.com/${repo}${rest}`, 302);
+const RELEASES_LINK = /^\/releases(?:\/(game|site|website)(?=\/|$))?(\/.*)?$/i;
+const repoOf = (name) => (/^(site|website)$/i.test(name || "") ? SITE_REPO : REPO);
+function shortLink(path) {
+  let m, to;
+  if ((m = CODE_LINK.exec(path))) to = `https://github.com/${repoOf(m[1])}${m[2] || ""}`;
+  else if ((m = RELEASES_LINK.exec(path))) to = `https://github.com/${repoOf(m[1])}/releases${m[2] || ""}`;
+  else return null;
+  return Response.redirect(to.replace(/\/+$/, ""), 302);
 }
 
 /* ---------- Pages ---------- */
@@ -269,7 +272,7 @@ export default {
     ctx.passThroughOnException();
     if (request.method !== "GET") return fetch(request);
     const path = new URL(request.url).pathname;
-    const short = codeLink(path);
+    const short = shortLink(path);
     if (short) return short;
     try {
       if (path === "/data/game.json") return json(await game(env, ctx), 60);
