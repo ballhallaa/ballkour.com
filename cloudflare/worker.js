@@ -4,7 +4,8 @@
    anonymous requests, and works where GitHub and Discord are blocked (mainland China, some schools).
 
    /data/game.json     The game repo's leaderboard files, leaderboard history and in-game FAQ (develop branch),
-                       plus the latest releases: { files: { "<path>": "<text>" | null }, releases: [...] }.
+                       plus the latest releases of the game and of this website:
+                         { files: { "<path>": "<text>" | null }, releases: [...], siteReleases: [...] }.
                        Refreshed at most once a minute.
    /data/widget.json   The Discord widget: online count, voice channels and who's in them. Refreshed at most once
                        a minute.
@@ -25,6 +26,7 @@
 
 const GUILD_ID = "1212553452283101245";
 const REPO = "ballhallaa/ballkour";
+const SITE_REPO = "ballhallaa/ballkour.com";
 const GAME = `https://raw.githubusercontent.com/${REPO}/develop`;
 const DISCORD_API = "https://discord.com/api/v10";
 const STALE_FOR = 7 * 24 * 60 * 60; // seconds: how long the last good copy is kept for when a source is down
@@ -97,19 +99,23 @@ async function buildGame(env, previous) {
   paths.forEach((p, i) => { files[p] = got[i].status === "fulfilled" ? got[i].value : (previous && previous.files[p]) ?? null; });
   if (Object.values(files).every((v) => v === null)) throw new Error(`GitHub can't be reached: ${failed ? failed.reason.message : "no files"}`);
 
-  // Only what the page uses from each release
-  let releases = previous ? previous.releases : null;
-  try {
-    const r = await fetch(`https://api.github.com/repos/${REPO}/releases?per_page=30`, {
-      headers: { ...headers, Accept: "application/vnd.github+json" },
-      signal: AbortSignal.timeout(5000),
-    });
-    if (r.ok) {
-      releases = (await r.json()).filter((x) => !x.draft)
+  // Only what the page uses from each release; if GitHub doesn't answer, the previous list is kept
+  const releasesOf = async (repo, kept) => {
+    try {
+      const r = await fetch(`https://api.github.com/repos/${repo}/releases?per_page=30`, {
+        headers: { ...headers, Accept: "application/vnd.github+json" },
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!r.ok) return kept;
+      return (await r.json()).filter((x) => !x.draft)
         .map(({ tag_name, html_url, prerelease, published_at }) => ({ tag_name, html_url, prerelease, published_at }));
-    }
-  } catch (e) { /* keep the previous releases */ }
-  return JSON.stringify({ files, releases });
+    } catch (e) { return kept; }
+  };
+  const [releases, siteReleases] = await Promise.all([
+    releasesOf(REPO, previous ? previous.releases : null),
+    releasesOf(SITE_REPO, previous ? previous.siteReleases ?? null : null),
+  ]);
+  return JSON.stringify({ files, releases, siteReleases });
 }
 const game = (env, ctx) => cached("game", 60, ctx, (prev) => buildGame(env, prev));
 
