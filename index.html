@@ -986,7 +986,7 @@ a.link-copy { text-decoration: none; }
       <div class="link-row rel-row">
         <span class="lr-icon"><svg class="icon" aria-hidden="true"><use href="#i-notes"/></svg></span>
         <span class="lr-text">
-          <a class="lr-title stretch" href="https://github.com/ballhallaa/ballkour/releases" target="_blank" rel="noopener" data-i18n="src.gameReleases.title">Game release notes</a>
+          <a class="lr-title stretch" href="https://github.com/ballhallaa/ballkour/releases" target="_blank" rel="noopener" data-i18n="src.releases">Release notes</a>
           <span class="lr-sub" id="versions">github.com/ballhallaa/ballkour/releases</span>
         </span>
         <svg class="lr-arrow" aria-hidden="true"><use href="#i-out"/></svg>
@@ -1000,6 +1000,14 @@ a.link-copy { text-decoration: none; }
         </span>
         <svg class="lr-arrow" aria-hidden="true"><use href="#i-out"/></svg>
       </a>
+      <div class="link-row rel-row">
+        <span class="lr-icon"><svg class="icon" aria-hidden="true"><use href="#i-notes"/></svg></span>
+        <span class="lr-text">
+          <a class="lr-title stretch" href="https://github.com/ballhallaa/ballkour.com/releases" target="_blank" rel="noopener" data-i18n="src.releases">Release notes</a>
+          <span class="lr-sub" id="site-versions">github.com/ballhallaa/ballkour.com/releases</span>
+        </span>
+        <svg class="lr-arrow" aria-hidden="true"><use href="#i-out"/></svg>
+      </div>
     </section>
 
     <section class="panel" id="translations" aria-labelledby="tr-title">
@@ -1646,8 +1654,8 @@ a.link-copy { text-decoration: none; }
     return rows.filter(Boolean);
   }
   /* ---------- Game data ----------
-     The leaderboards, their history, the in-game FAQ and the latest releases all come from the game repo on GitHub,
-     through the Cloudflare Worker (cloudflare/worker.js): it puts its latest copy into the page as it's served, or
+     The leaderboards, their history, the in-game FAQ and the latest releases all come from the game repo on GitHub
+     (the website's own releases from its repo), through the Cloudflare Worker (cloudflare/worker.js): it puts its latest copy into the page as it's served, or
      serves it at /data/game.json. The browser never talks to GitHub itself. */
   const gameData = (() => {
     try {
@@ -1831,24 +1839,35 @@ a.link-copy { text-decoration: none; }
   document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - widgetAt >= WIDGET_EVERY) loadWidget(); });
 
   /* ---------- Latest releases ---------- */
-  let releases = null;
+  // The newest release (and a newer beta, if there is one) as chips under a "Release notes" row
+  const SITE_REPO = "ballhallaa/ballkour.com";
+  let releases = null, siteReleases = null;
   function renderVersions() {
-    if (!releases) return;
+    renderRels("#versions", REPO, releases);
+    renderRels("#site-versions", SITE_REPO, siteReleases);
+  }
+  function renderRels(selector, repo, releases) {
+    if (!Array.isArray(releases)) return;
+    releases = releases.filter((x) => x && !x.draft);
     const isBeta = (x) => x.prerelease || /beta|rc|alpha/i.test(x.tag_name);
     const stable = releases.find((x) => !isBeta(x));
     const beta = releases.find(isBeta);
     if (!stable) return;
     const newerBeta = beta && new Date(beta.published_at) > new Date(stable.published_at);
     // Each version is its own link to that release; the beta only shows when it's newer than the latest
-    const url = (x) => (/^https:\/\/github\.com\//.test(x.html_url) ? x.html_url : `https://github.com/${REPO}/releases/tag/${encodeURIComponent(x.tag_name)}`);
+    const url = (x) => (/^https:\/\/github\.com\//.test(x.html_url) ? x.html_url : `https://github.com/${repo}/releases/tag/${encodeURIComponent(x.tag_name)}`);
     const chip = (kind, x) => `<a class="rel${kind === "beta" ? " beta" : ""}" href="${esc(url(x))}" target="_blank" rel="noopener">` +
       `<span class="code-kind">${esc(t("code." + kind))}</span>${esc(x.tag_name)}${icon("out")}</a>`;
-    const el = $("#versions");
+    const el = $(selector);
     el.className = "rels";
     el.innerHTML = chip("latest", stable) + (newerBeta ? chip("beta", beta) : "");
   }
   gameData
-    .then((d) => { releases = (Array.isArray(d.releases) ? d.releases : []).filter((x) => x && !x.draft); renderVersions(); })
+    .then((d) => {
+      releases = d.releases;
+      siteReleases = d.siteReleases;
+      renderVersions();
+    })
     .catch(() => {});
 
   /* ---------- FAQ ----------
