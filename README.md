@@ -14,7 +14,7 @@ cloudflare/              Worker that serves the GitHub and Discord data the page
 .github/workflows/       deploys the site on every push to main
 ```
 
-Keep everything out of `/v*`, `/discord`, `/gameplay`, `/courses`, `/leaderboards`, `/submit`, `/features`, `/faq`, `/source-code` and `/translations`. Cloudflare redirects the first three. It rewrites the others (with or without a trailing slash) to the home page, which scrolls to that section; `/leaderboards` also opens Gibraltar's top 10.
+Keep everything out of `/v*`, `/discord`, `/gameplay`, `/code`, `/releases`, `/courses`, `/leaderboards`, `/submit`, `/features`, `/faq`, `/source-code` and `/translations`. Cloudflare redirects the first three, and the Worker redirects `/code/game` and `/code/site` (or `/code/website`) to the game's and this website's GitHub repos, and `/releases` and `/releases/site` (or `/releases/website`) to their release notes. Cloudflare rewrites the others (with or without a trailing slash) to the home page, which scrolls to that section; `/leaderboards` also opens Gibraltar's top 10.
 
 Links can go deeper, and the address shows them while a board or answer is open:
 
@@ -42,6 +42,10 @@ and commit `locales/en.json` along with it.
 
 - `/data/game.json`: the game repo's leaderboard files, leaderboard history and in-game FAQ from `develop`, plus the latest releases. Refreshed at most once a minute.
 - `/data/widget.json`: the Discord server's member count and voice channels. Refreshed at most once a minute.
+- `/code/game`, `/code/site` (or `/code/website`): redirect to the game's and this website's GitHub repos.
+- `/releases`, `/releases/site` (or `/releases/website`): redirect to the game's and this website's release notes.
+
+  Anything after these carries over, e.g. `/code/game/issues` or `/releases/site/tag/v2026.11.02.2`.
 - `/data/players.json`: the Discord name and picture of every player whose run has a Discord ID, looked up with Ballkyrie's token. Refreshed at most once an hour.
 
 Each page also gets the latest copy of all three as it's served, with the "• N members" counts already filled in, so nothing pops in after the page loads. If GitHub or Discord can't be reached, the last copy that worked is served for up to a week.
