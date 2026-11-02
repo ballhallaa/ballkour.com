@@ -13,17 +13,47 @@
 <meta property="og:title" content="Ballkour">
 <meta property="og:description" content="Wrecking Ball parkour courses for Overwatch. Grab a course code, run through every checkpoint, and get your time on the leaderboard!">
 <meta property="og:url" content="https://ballkour.com/">
-<meta property="og:image" content="https://ballkour.com/assets/og.png?v=2">
+<meta property="og:image" content="https://ballkour.com/assets/og.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:alt" content="The Ballkour hamster logo next to the Ballkour wordmark on a neon speed-line background">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,700;1,800&family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Color+Emoji&display=swap">
+<!-- Fonts are served from ballkour.com (assets/fonts, Open Font License): no Google request, so the page draws
+     straight away everywhere, Google never sees visitors, and it works where Google is blocked. The wordmark font
+     is preloaded so the title doesn't flash in a fallback font first. -->
+<link rel="preload" href="/assets/fonts/barlow-condensed-latin-800-italic.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face { font-family: "Barlow Condensed"; font-style: italic; font-weight: 700; font-display: swap; src: url("/assets/fonts/barlow-condensed-latin-ext-700-italic.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "Barlow Condensed"; font-style: italic; font-weight: 700; font-display: swap; src: url("/assets/fonts/barlow-condensed-latin-700-italic.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Barlow Condensed"; font-style: italic; font-weight: 800; font-display: swap; src: url("/assets/fonts/barlow-condensed-latin-ext-800-italic.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "Barlow Condensed"; font-style: italic; font-weight: 800; font-display: swap; src: url("/assets/fonts/barlow-condensed-latin-800-italic.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Barlow"; font-style: normal; font-weight: 400; font-display: swap; src: url("/assets/fonts/barlow-latin-ext-400-normal.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "Barlow"; font-style: normal; font-weight: 400; font-display: swap; src: url("/assets/fonts/barlow-latin-400-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Barlow"; font-style: normal; font-weight: 500; font-display: swap; src: url("/assets/fonts/barlow-latin-ext-500-normal.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "Barlow"; font-style: normal; font-weight: 500; font-display: swap; src: url("/assets/fonts/barlow-latin-500-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Barlow"; font-style: normal; font-weight: 600; font-display: swap; src: url("/assets/fonts/barlow-latin-ext-600-normal.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "Barlow"; font-style: normal; font-weight: 600; font-display: swap; src: url("/assets/fonts/barlow-latin-600-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Barlow"; font-style: normal; font-weight: 700; font-display: swap; src: url("/assets/fonts/barlow-latin-ext-700-normal.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "Barlow"; font-style: normal; font-weight: 700; font-display: swap; src: url("/assets/fonts/barlow-latin-700-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 400; font-display: swap; src: url("/assets/fonts/jetbrains-mono-cyrillic-400-normal.woff2") format("woff2"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 400; font-display: swap; src: url("/assets/fonts/jetbrains-mono-latin-ext-400-normal.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 400; font-display: swap; src: url("/assets/fonts/jetbrains-mono-latin-400-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 500; font-display: swap; src: url("/assets/fonts/jetbrains-mono-cyrillic-500-normal.woff2") format("woff2"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 500; font-display: swap; src: url("/assets/fonts/jetbrains-mono-latin-ext-500-normal.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 500; font-display: swap; src: url("/assets/fonts/jetbrains-mono-latin-500-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 600; font-display: swap; src: url("/assets/fonts/jetbrains-mono-cyrillic-600-normal.woff2") format("woff2"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 600; font-display: swap; src: url("/assets/fonts/jetbrains-mono-latin-ext-600-normal.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 600; font-display: swap; src: url("/assets/fonts/jetbrains-mono-latin-600-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 700; font-display: swap; src: url("/assets/fonts/jetbrains-mono-cyrillic-700-normal.woff2") format("woff2"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 700; font-display: swap; src: url("/assets/fonts/jetbrains-mono-latin-ext-700-normal.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 700; font-display: swap; src: url("/assets/fonts/jetbrains-mono-latin-700-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Ballkour Emoji"; font-style: normal; font-weight: 400; font-display: swap; src: url("/assets/fonts/ballkour-emoji.woff2") format("woff2"); unicode-range: U+1F1E6-1F1FF, U+1F319, U+1F3AF, U+FE0F; }
+</style>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebSite", "name": "Ballkour", "url": "https://ballkour.com/"}</script>
 </head>
 <body>
 <style>
@@ -52,7 +82,9 @@
   --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
   --body: "Barlow", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --emoji: "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+  /* Flags: Apple's own emoji on Apple devices, a local Noto Color Emoji where there is one, and otherwise
+     (Windows, whose emoji have no flags) the small flags-only font in assets/fonts */
+  --emoji: "Apple Color Emoji", "Noto Color Emoji", "Ballkour Emoji", "Segoe UI Emoji", sans-serif;
   --r: 14px;
   --col: 660px;
   color-scheme: dark;
@@ -80,6 +112,11 @@ a { color: inherit; }
 button { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--volt); outline-offset: 3px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* Skip link: hidden until a keyboard user tabs to it */
+.skip { position: absolute; top: 10px; left: 50%; z-index: 30; padding: 9px 16px; border-radius: 10px; transform: translate(-50%, calc(-100% - 20px));
+  background: var(--volt); color: var(--on-volt); font: 600 15px/1.2 var(--body); text-decoration: none; transition: transform .15s ease; }
+.skip:focus { transform: translate(-50%, 0); }
+main:focus { outline: none; }
 .icon { width: 18px; height: 18px; flex: none; }
 
 #warp, #balls { position: fixed; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
@@ -383,6 +420,7 @@ select option, select optgroup { background: var(--menu); color: var(--ink); }
 .group + .group { border-top: 1px solid var(--line); }
 
 #leaderboards, #submit { scroll-margin-top: 72px; }
+.course, .qa { scroll-margin-top: 80px; }
 .by { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; padding: 16px 18px 6px; }
 .by-title { margin: 0; font: italic 700 22px/1 var(--display); letter-spacing: .02em; text-transform: uppercase; color: var(--ink-3); }
 .by-name { color: var(--ink); }
@@ -777,6 +815,7 @@ a.link-copy { text-decoration: none; }
      locales/<lang>.json (managed on Weblate). After changing English text here, run
      `python3 tools/extract-en.py` to refresh locales/en.json. -->
 <div class="page">
+  <a class="skip" href="#main" data-i18n="a11y.skip">Skip to content</a>
   <div class="topbar">
     <div class="lang-wrap" id="lang-wrap">
       <button class="lang-pick" id="lang-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="lang-menu">
@@ -821,7 +860,7 @@ a.link-copy { text-decoration: none; }
     <button class="sections-more right" type="button" data-dir="1" tabindex="-1" aria-hidden="true"><svg class="icon"><use href="#i-dots"/></svg></button>
   </nav>
 
-  <main class="column">
+  <main class="column" id="main" tabindex="-1">
     <section class="panel" id="courses" aria-labelledby="courses-title">
       <div class="panel-head">
         <h2 class="panel-title" id="courses-title"><svg class="icon" aria-hidden="true"><use href="#i-flag"/></svg><span data-i18n="courses.title">Courses</span></h2>
@@ -867,7 +906,7 @@ a.link-copy { text-decoration: none; }
         </li>
         <li class="feature">
           <span class="f-icon" style="--c: var(--gold)"><svg class="icon" aria-hidden="true"><use href="#i-trophy"/></svg></span>
-          <div><p class="f-title"><span data-i18n="f.lobby.title">Lobby leaderboard</span></p><p class="f-text" data-i18n="f.lobby.textBeta">On courses with a Beta code, the top 10 times hang in the lobby and the finish screen shows the time to beat.</p></div>
+          <div><p class="f-title"><span data-i18n="f.lobby.title">Lobby leaderboard</span></p><p class="f-text" data-i18n="f.lobby.text">The top 10 times hang in the lobby and the finish screen shows the time to beat.</p></div>
         </li>
       </ul>
       <div class="f-group"><span class="tag tag-beta" data-i18n="tag.beta">Beta</span><span data-i18n="f.beta.tryList">Try these with a Beta code from the course list.</span></div>
@@ -890,11 +929,11 @@ a.link-copy { text-decoration: none; }
         </li>
         <li class="feature">
           <span class="f-icon" style="--c: var(--coral)"><svg class="icon" aria-hidden="true"><use href="#i-heart"/></svg></span>
-          <div><p class="f-title"><span data-i18n="f.qol.title">Quality of life</span></p><p class="f-text" data-i18n="f.qol.beta">Idle runners shrink so they never block your view. See your current run and attempt numbers, view each run’s video and date in the lobby, and toggle an FAQ for newcomers.</p></div>
+          <div><p class="f-title"><span data-i18n="f.qol.moreTitle">More quality of life</span></p><p class="f-text" data-i18n="f.qol.beta">Idle runners shrink so they never block your view. See your current run and attempt numbers, view each run’s video and date in the lobby, and toggle an FAQ for newcomers.</p></div>
         </li>
         <li class="feature">
           <span class="f-icon" style="--c: var(--ink)"><svg class="icon" aria-hidden="true"><use href="#i-langs"/></svg></span>
-          <div><p class="f-title"><span data-i18n="tr.title">Translations</span></p><p class="f-text" data-i18n="f.translations.text">The game and website are translated into 13 languages, so each player gets a similar experience in their own language.</p></div>
+          <div><p class="f-title"><span data-i18n="tr.title">Translations</span></p><p class="f-text" data-i18n="f.translations.game">Translated into 13 languages, so each player gets a similar experience in their own language.</p></div>
         </li>
       </ul>
     </section>
@@ -1082,7 +1121,6 @@ a.link-copy { text-decoration: none; }
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const icon = (id, cls = "icon") => `<svg class="${cls}" aria-hidden="true"><use href="#i-${id}"/></svg>`;
 
-  const GUILD_ID = "1212553452283101245";
   const REPO = "ballhallaa/ballkour";
   const motionQuery = matchMedia("(prefers-reduced-motion: reduce)");
   let reduced = motionQuery.matches;
@@ -1125,6 +1163,12 @@ a.link-copy { text-decoration: none; }
     { n: 15, flag: "🇩🇪", name: "Eichenwalde", by: "Senimar", ordered: true, code: "R6TYG", broken: true, runs: [] }
   ];
   const course = (n) => COURSES.find((c) => c.n === n);
+  // Board links: ballkour.com/leaderboards#6-dorado opens Dorado's top 10 (a bare #6 works too). The leaderboard bot
+  // links each post to its course's board the same way.
+  const slug = (s) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/['’]/g, "").toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  const boardHash = (c) => `${c.n}-${slug(c.name)}`;
+  const courseOfHash = (hash) => { const m = /^#?(\d+)(?:-|$)/.exec(hash); return m ? course(Number(m[1])) || null : null; };
   const remakes = COURSES.filter((c) => c.remaker);
   const classics = COURSES.filter((c) => !c.remaker);
 
@@ -1159,10 +1203,32 @@ a.link-copy { text-decoration: none; }
     $$("[data-i18n-aria]").forEach((el) => { el.setAttribute("aria-label", t(el.dataset.i18nAria)); });
     $$("[data-i18n-alt]").forEach((el) => { el.setAttribute("alt", t(el.dataset.i18nAlt)); });
     document.documentElement.lang = htmlLang();
+    document.title = `Ballkour · ${t("hero.tagline")}`;
   }
   function storedLang() { try { return localStorage.getItem("ballkour-lang"); } catch (e) { return null; } }
   function storeLang(code) { try { localStorage.setItem("ballkour-lang", code); } catch (e) { /* private mode */ } }
+  // ballkour.com/?lang=ja opens the page in Japanese, so a link can be shared in a language. Codes like zh-CN or
+  // pt-BR work too. Picking a language puts it in the address (English leaves it out), ready to copy.
+  function langParam() {
+    try {
+      const v = new URLSearchParams(location.search).get("lang");
+      if (!v) return null;
+      const q = v.trim().toLowerCase().replace(/_/g, "-");
+      const hit = LANGS.find((l) => l[0].replace("_", "-") === q || l[2].toLowerCase() === q) ||
+        LANGS.find((l) => q === "zh-hans" ? l[0] === "zh_cn" : q === "zh-hant" || q === "zh-hk" || q === "zh-mo" ? l[0] === "zh_tw" : l[0] === q.split("-")[0]);
+      return hit ? hit[0] : null;
+    } catch (e) { return null; }
+  }
+  function putLangInAddress(code) {
+    try {
+      const u = new URL(location.href);
+      if (code === "en") u.searchParams.delete("lang"); else u.searchParams.set("lang", code);
+      history.replaceState(history.state, "", u.pathname + u.search + u.hash);
+    } catch (e) { /* address stays as it is */ }
+  }
   function detectLang() {
+    const linked = langParam();
+    if (linked) return linked;
     const saved = storedLang();
     if (saved && LANGS.some((l) => l[0] === saved)) return saved;
     for (const raw of navigator.languages || [navigator.language || "en"]) {
@@ -1186,7 +1252,7 @@ a.link-copy { text-decoration: none; }
     }
     lang = code;
     dict = cache[code] || {};
-    if (save) storeLang(code);
+    if (save) { storeLang(code); putLangInAddress(code); }
     applyStatic();
     renderAll();
   }
@@ -1296,7 +1362,7 @@ a.link-copy { text-decoration: none; }
     const fresh = freshAt(list, at);
     return (list.length > 1 ? historyHtml(c, list, at) : "") + congratsHtml(list[at], fresh) + runsHtml(c, list[at], fresh);
   }
-  // The player's Discord name and picture, from /players.json (the Cloudflare Worker looks them up)
+  // The player's Discord name and picture, from /data/players.json (the Cloudflare Worker looks them up)
   const PLAYERS = new Map();
   function dcHtml(r) {
     const p = r.discord && PLAYERS.get(r.discord);
@@ -1494,6 +1560,7 @@ a.link-copy { text-decoration: none; }
     if (before && before !== n) refreshCourse(course(before));
     refreshCourse(course(n));
     document.querySelector(`#course-${n} .rec`).focus();
+    queueSpy(); // the address links to the open board
   });
 
   /* ---------- Copy course codes ---------- */
@@ -1578,9 +1645,25 @@ a.link-copy { text-decoration: none; }
     }
     return rows.filter(Boolean);
   }
+  /* ---------- Game data ----------
+     The leaderboards, their history, the in-game FAQ and the latest releases all come from the game repo on GitHub,
+     through the Cloudflare Worker (cloudflare/worker.js): it puts its latest copy into the page as it's served, or
+     serves it at /data/game.json. The browser never talks to GitHub itself. */
+  const gameData = (() => {
+    try {
+      const d = JSON.parse($("#game-data").textContent);
+      if (d && d.files) return Promise.resolve(d);
+    } catch (e) { /* not in the page */ }
+    return fetch("/data/game.json").then((r) => (r.ok ? r.json() : Promise.reject(r.status)));
+  })();
+  // A file from the game repo's develop branch, like "leaderboards/history.json"
+  const gameFile = (path) => gameData.then((d) => {
+    const key = Object.keys(d.files || {}).find((k) => k.normalize("NFC") === path.normalize("NFC"));
+    return key && typeof d.files[key] === "string" ? d.files[key] : Promise.reject(path);
+  });
+
   remakes.forEach((c) => {
-    fetch(`https://raw.githubusercontent.com/${REPO}/develop/${encodeURI(c.file)}`, { cache: "no-cache" })
-      .then((r) => (r.ok ? r.text() : Promise.reject(r.status)))
+    gameFile(c.file)
       .then((text) => {
         if (!/\blb\s*=\s*\[\s*\]/.test(text)) return; // file layout changed: keep the fallback runs
         c.runs = parseBoard(text);
@@ -1613,8 +1696,8 @@ a.link-copy { text-decoration: none; }
   }
   classics.forEach((c) => {
     if (!CLASSIC_FILES[c.n]) return;
-    fetch(`https://raw.githubusercontent.com/${REPO}/develop/leaderboards/${encodeURI(CLASSIC_FILES[c.n])}.json`, { cache: "no-cache" })
-      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+    gameFile(`leaderboards/${CLASSIC_FILES[c.n]}.json`)
+      .then(JSON.parse)
       .then((runs) => {
         if (!Array.isArray(runs)) return;
         c.runs = runs.map((r) => cleanRun(r)).filter(Boolean)
@@ -1663,8 +1746,8 @@ a.link-copy { text-decoration: none; }
   const isRecord = (list, i) => !!list[i][0] && (i === 0 || !list[i - 1][0] || toSeconds(list[i][0].time) < toSeconds(list[i - 1][0].time));
   // A board is dated by its newest run
   const boardDate = (runs) => runs.map((r) => formatDate(r.date)).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort().pop() || "";
-  fetch(`https://raw.githubusercontent.com/${REPO}/develop/leaderboards/history.json`, { cache: "no-cache" })
-    .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+  gameFile("leaderboards/history.json")
+    .then(JSON.parse)
     .then((data) => {
       if (!data || typeof data !== "object") return;
       Object.keys(data).forEach((k) => {
@@ -1690,7 +1773,7 @@ a.link-copy { text-decoration: none; }
   }
   try { addPlayers(JSON.parse($("#players").textContent)); } catch (e) { /* not in the page */ }
   if (!PLAYERS.size) {
-    fetch("/players.json")
+    fetch("/data/players.json")
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
       .then((data) => {
         addPlayers(data);
@@ -1700,9 +1783,9 @@ a.link-copy { text-decoration: none; }
   }
 
   /* ---------- Discord (live widget data) ---------- */
-  // The Cloudflare Worker (cloudflare/discord-widget.js) puts the widget data into the page as it's served and fills in
-  // the "• N online" pills, so they're there from the first paint. The browser still fetches the live data right after,
-  // which quietly updates the number if it changed. Without the Worker, the pills appear once that fetch answers.
+  // The Cloudflare Worker (cloudflare/worker.js) puts the widget data into the page as it's served and fills in the
+  // "• N online" pills, so they're there from the first paint. After that the page checks /data/widget.json, which the
+  // Worker keeps up to date, every 5 minutes. The browser never talks to Discord itself.
   let widget = (() => { try { return JSON.parse($("#discord-widget").textContent); } catch (e) { return null; } })();
   function renderDiscord() {
     if (!widget) return;
@@ -1734,7 +1817,7 @@ a.link-copy { text-decoration: none; }
   let widgetAt = 0;
   function loadWidget() {
     widgetAt = Date.now();
-    fetch(`https://discord.com/api/guilds/${GUILD_ID}/widget.json`, { cache: "no-store" })
+    fetch("/data/widget.json", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
       .then((d) => {
         widget = d;
@@ -1742,7 +1825,8 @@ a.link-copy { text-decoration: none; }
       })
       .catch(() => {});
   }
-  loadWidget();
+  if (widget) widgetAt = Date.now(); // the copy in the page is at most a minute old
+  else loadWidget();
   setInterval(() => { if (!document.hidden) loadWidget(); }, WIDGET_EVERY);
   document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - widgetAt >= WIDGET_EVERY) loadWidget(); });
 
@@ -1763,9 +1847,8 @@ a.link-copy { text-decoration: none; }
     el.className = "rels";
     el.innerHTML = chip("latest", stable) + (newerBeta ? chip("beta", beta) : "");
   }
-  fetch(`https://api.github.com/repos/${REPO}/releases?per_page=30`, { headers: { Accept: "application/vnd.github+json" } })
-    .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-    .then((list) => { releases = (Array.isArray(list) ? list : []).filter((x) => !x.draft); renderVersions(); })
+  gameData
+    .then((d) => { releases = (Array.isArray(d.releases) ? d.releases : []).filter((x) => x && !x.draft); renderVersions(); })
     .catch(() => {});
 
   /* ---------- FAQ ----------
@@ -1807,9 +1890,19 @@ a.link-copy { text-decoration: none; }
       (m, hex, inner) => `<span class="fg" style="color:#${hex}">${inner}</span>`);
     return h.replace(/^((?:\s*<span class="fg"[^>]*>[^<]*<\/span>){2,})\s*/, (m, run) => `<span class="qa-legend">${run.trim()}</span>`);
   }
+  // FAQ links: ballkour.com/faq#pause opens that answer. While an answer is open, the address links to it.
+  let pendingFaq = null, openFaq = null;
+  $("#faq-list").addEventListener("toggle", (e) => {
+    const d = e.target;
+    if (!(d instanceof HTMLDetailsElement)) return;
+    if (d.open) openFaq = d.dataset.id;
+    else if (openFaq === d.dataset.id) openFaq = null;
+    queueSpy();
+  }, true);
   function renderFaq() {
     const box = $("#faq-list");
     const open = new Set($$("details[open]", box).map((d) => d.dataset.id));
+    if (pendingFaq) { open.add(pendingFaq); pendingFaq = null; }
     box.innerHTML = faq.map((e) => {
       const qKey = `faq.${e.id}.q`, aKey = `faq.${e.id}.a`;
       const own = !e.q && typeof dict[qKey] === "string" && dict[qKey].trim() && typeof dict[aKey] === "string" && dict[aKey].trim();
@@ -1820,8 +1913,7 @@ a.link-copy { text-decoration: none; }
         `<p class="qa-a">${fgHtml(a)}</p></details>`;
     }).join("");
   }
-  fetch(`https://raw.githubusercontent.com/${REPO}/develop/src/engine/qa.opy`, { cache: "no-cache" })
-    .then((r) => (r.ok ? r.text() : Promise.reject(r.status)))
+  gameFile("src/engine/qa.opy")
     .then((text) => {
       const live = parseFaq(text);
       if (live.length < 3) return; // file layout changed: keep the site's copy
@@ -1871,7 +1963,7 @@ a.link-copy { text-decoration: none; }
   let W = 0, H = 0, dprWarp = 1, dprBalls = 1, maxD = 0;
   let streaks = [], sparks = [];
   let ox = 0, oy = 0, tx = 0, ty = 0, px = 0.5, py = 0.5;
-  let boost = 0, last = 0, running = false;
+  let boost = 0, last = 0, running = false, heroInView = true;
 
   function spawn(s, anywhere) {
     s.a = Math.random() * Math.PI * 2;
@@ -1969,7 +2061,7 @@ a.link-copy { text-decoration: none; }
     requestAnimationFrame(loop);
   }
   function start() {
-    if (running || reduced || document.hidden) return;
+    if (running || reduced || document.hidden || !heroInView) return;
     running = true;
     last = 0;
     requestAnimationFrame(loop);
@@ -2068,7 +2160,18 @@ a.link-copy { text-decoration: none; }
 
   let resizeTimer = 0;
   window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(size, 120); });
-  window.addEventListener("scroll", () => { if (!running) draw(0); }, { passive: true });
+  // Further down, the background is dimmed and mostly behind panels, so it stops moving there instead of redrawing the
+  // whole screen every frame (easier on laptop batteries and fans). It starts again on the way back up.
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(([e]) => { heroInView = e.isIntersecting; if (heroInView) start(); else stop(); }).observe($(".hero"));
+  }
+  // While it's still, scrolling only redraws it once per frame, to update the dimming
+  let stillQueued = false;
+  window.addEventListener("scroll", () => {
+    if (running || stillQueued) return;
+    stillQueued = true;
+    requestAnimationFrame(() => { stillQueued = false; if (!running) draw(0); });
+  }, { passive: true });
   window.addEventListener("pointermove", (e) => { if (W && H) { px = e.clientX / W; py = e.clientY / H; } }, { passive: true });
   document.addEventListener("visibilitychange", () => (document.hidden ? stop() : start()));
   const onMotionChange = (e) => { reduced = e.matches; if (reduced) { stop(); draw(0); } else { start(); } };
@@ -2087,7 +2190,11 @@ a.link-copy { text-decoration: none; }
   // Old hash links still work too, including #leaderboard from the workshop.codes README
   const hashRoute = (hash) => { const h = hash.slice(1).toLowerCase(); return h === "leaderboard" ? "leaderboards" : Object.keys(ROUTES).find((r) => ROUTES[r] === h) || null; };
   const startRoute = routeOf(location.pathname) || hashRoute(location.hash);
-  if (startRoute === "leaderboards") openCourse = 1;
+  // ballkour.com/leaderboards#6-dorado and /faq#pause open that board or answer
+  const startBoard = startRoute === "leaderboards" ? courseOfHash(location.hash) : null;
+  const startFaq = startRoute === "faq" && /^#[\w-]+$/.test(location.hash) ? location.hash.slice(1) : null;
+  if (startRoute === "leaderboards") openCourse = startBoard ? startBoard.n : 1;
+  if (startFaq) pendingFaq = openFaq = startFaq;
   function goTo(route, smooth) {
     if (route === "leaderboards" && !openCourse) { openCourse = 1; refreshCourse(course(1)); }
     clicked = sectionLinks.findIndex((a) => a.dataset.route === route);
@@ -2145,12 +2252,19 @@ a.link-copy { text-decoration: none; }
   // A link someone opened (ballkour.com/faq) keeps its address until they scroll or click themselves.
   let addressHeld = !!startRoute;
   ["wheel", "touchstart", "keydown", "mousedown"].forEach((ev) => addEventListener(ev, () => { addressHeld = false; }, { passive: true }));
+  // While a board or an answer is open, the address links to it: /leaderboards#6-dorado, /faq#pause
+  function subHash(route) {
+    if (route === "leaderboards" && openCourse) return boardHash(course(openCourse));
+    if (route === "faq" && openFaq && $(`.qa[data-id="${CSS.escape(openFaq)}"][open]`)) return openFaq;
+    return "";
+  }
   function followAddress(i) {
     if (addressHeld) return;
-    const path = i >= 0 && (scrollY >= 2 || clicked >= 0) ? pathFor(sectionLinks[i].dataset.route) : "/";
-    const [pathname, hash = ""] = path.split("#");
-    if (location.pathname === pathname && location.hash === (hash && "#" + hash)) return;
-    try { history.replaceState(history.state, "", pathname + location.search + (hash && "#" + hash)); } catch (err) { /* address stays as it is */ }
+    const route = i >= 0 && (scrollY >= 2 || clicked >= 0) ? sectionLinks[i].dataset.route : null;
+    const [pathname, hash = ""] = (route ? pathFor(route) : "/").split("#");
+    const frag = hash || (route ? subHash(route) : "");
+    if (location.pathname === pathname && location.hash === (frag && "#" + frag)) return;
+    try { history.replaceState(history.state, "", pathname + location.search + (frag && "#" + frag)); } catch (err) { /* address stays as it is */ }
   }
   // Show "…" at whichever end has more links hidden past it
   const sectionTrack = $("#sections-track");
@@ -2188,11 +2302,19 @@ a.link-copy { text-decoration: none; }
   size();
   start();
   if (startRoute) {
-    goTo(startRoute, false);
-    // Web fonts can shift the page as they load: jump again once they're in, unless the visitor has scrolled
+    // The section, or the board or answer the link names
+    const jump = () => {
+      goTo(startRoute, false);
+      const el = startBoard ? document.getElementById(`course-${startBoard.n}`) : startFaq ? $(`.qa[data-id="${startFaq}"]`) : null;
+      if (el) el.scrollIntoView({ block: "start" });
+    };
+    jump();
+    // Web fonts and the game data can shift the page as they load: jump again once they're in, unless the visitor
+    // has scrolled
     let moved = false;
     ["wheel", "touchstart", "keydown"].forEach((ev) => addEventListener(ev, () => { moved = true; }, { once: true, passive: true }));
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (!moved) goTo(startRoute, false); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (!moved) jump(); });
+    gameData.then(() => requestAnimationFrame(() => { if (!moved) jump(); }), () => {});
   }
   spy();
   updateMore();
