@@ -1665,7 +1665,10 @@ a.link-copy { text-decoration: none; }
     .catch(() => {});
 
   /* ---------- Discord (live widget data) ---------- */
-  let widget = null;
+  // The Cloudflare Worker (cloudflare/discord-widget.js) puts the widget data into the page as it's served and fills in
+  // the "• N online" pills, so they're there from the first paint. The browser still fetches the live data right after,
+  // which quietly updates the number if it changed. Without the Worker, the pills appear once that fetch answers.
+  let widget = (() => { try { return JSON.parse($("#discord-widget").textContent); } catch (e) { return null; } })();
   function renderDiscord() {
     if (!widget) return;
     const members = Array.isArray(widget.members) ? widget.members : [];

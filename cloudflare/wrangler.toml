@@ -1,0 +1,6 @@
+# Deploy from this folder with: npx wrangler deploy
+name = "ballkour-discord-widget"
+main = "discord-widget.js"
+compatibility_date = "2026-06-01"
+workers_dev = false
+routes = [{ pattern = "ballkour.com/*", zone_name = "ballkour.com" }]

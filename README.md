@@ -9,6 +9,7 @@ robots.txt, sitemap.xml  for search engines
 assets/                  logo, icons, link-preview image
 locales/*.json           translations, one file per language (managed on Weblate)
 tools/extract-en.py      rebuilds locales/en.json from index.html
+cloudflare/              Worker that puts the Discord online count into the page
 .github/workflows/       deploys the site on every push to main
 ```
 
@@ -25,6 +26,19 @@ python3 tools/extract-en.py
 ```
 
 and commit `locales/en.json` along with it.
+
+## Discord online count
+
+`cloudflare/discord-widget.js` is a Cloudflare Worker on `ballkour.com/*`. As each page goes out, it fills in the "• N online" count next to "Join our Discord" and adds the voice channel data, so neither pops in after the page loads. Discord's answer is cached at Cloudflare for 60 seconds. If Discord is slow or down, the page goes out unchanged and the browser fetches the count itself.
+
+The Worker isn't part of the VPS deploy. Deploy it once (and again only if you change it) from the `cloudflare/` folder:
+
+```
+npx wrangler login
+npx wrangler deploy
+```
+
+Or paste the file into a new Worker in the Cloudflare dashboard (Workers & Pages → Create → Start with Hello World), deploy it, then add the route `ballkour.com/*` under Settings → Domains & Routes.
 
 ## Courses and leaderboards
 
