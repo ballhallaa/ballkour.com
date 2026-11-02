@@ -281,16 +281,8 @@ select option, select optgroup { background: var(--menu); color: var(--ink); }
 .btn .count { display: inline-flex; align-items: center; gap: 6px; font: 500 13px/1 var(--mono); color: var(--ink-2); }
 /* On the green buttons the count goes dark so it reads on mint */
 .btn-primary .count { color: rgba(0, 26, 16, .72); }
-.btn-primary .dot { background: var(--on-volt); animation-name: pulse-dark; }
-@keyframes pulse-dark {
-  0% { box-shadow: 0 0 0 0 rgba(0, 26, 16, .45); }
-  70%, 100% { box-shadow: 0 0 0 7px rgba(0, 26, 16, 0); }
-}
-.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--volt); animation: pulse 2s infinite; }
-@keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(0, 230, 151, .6); }
-  70%, 100% { box-shadow: 0 0 0 7px rgba(0, 230, 151, 0); }
-}
+/* The dot takes the count's colour (grey on dark buttons, dark on green ones) and holds still: a member total isn't live */
+.dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
 @media (max-width: 520px) {
   .actions { width: 100%; flex-direction: column; }
 }
