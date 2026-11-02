@@ -56,7 +56,7 @@
   "foot.disclaimer": "Ballkour is a fan-made Overwatch Workshop mode. It isn’t affiliated with Blizzard Entertainment.",
   "steps.goto": "In Overwatch, go to <b>Play → More → Custom Games → Create</b>.",
   "steps.import": "Go to <b>Settings → Import Code</b> (under Summary) and paste the code (e.g. <code>59W28</code>).",
-  "faq.intro": "The same answers as the in-game FAQ, which opens with <b>Ultimate + Ability 2</b> in a match.",
+  "faq.intro": "The same answers as the in-game FAQ, which opens with <b>Ultimate + Melee</b> in a match.",
   "badge.label": "Give the hamster a boost",
   "logo.alt": "Ballkour logo: a hamster in goggles riding a black and orange ball",
   "hero.nav": "Get started",
