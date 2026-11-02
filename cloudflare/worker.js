@@ -122,7 +122,7 @@ async function buildGame(env, previous) {
   // Only what the page uses from each release; if GitHub doesn't answer, the previous list is kept
   const releasesOf = async (repo, kept) => {
     try {
-      const r = await fetch(`https://api.github.com/repos/${repo}/releases?per_page=30`, {
+      const r = await fetch(`https://api.github.com/repos/${repo}/releases?per_page=100`, {
         headers: { ...headers, Accept: "application/vnd.github+json" },
         signal: AbortSignal.timeout(5000),
       });
@@ -132,8 +132,13 @@ async function buildGame(env, previous) {
         console.error(`releases of ${repo}: GitHub said ${r.status}${env.GITHUB_TOKEN ? "" : " (no GITHUB_TOKEN set)"}; keeping the last list. ${why}`);
         return kept;
       }
-      return (await r.json()).filter((x) => !x.draft)
-        .map(({ tag_name, html_url, prerelease, published_at }) => ({ tag_name, html_url, prerelease, published_at }));
+      // Newest first by date: GitHub orders them by tag, where v2026.11.02-beta.9 comes before beta.13
+      const all = (await r.json()).filter((x) => !x.draft)
+        .map(({ tag_name, html_url, prerelease, published_at }) => ({ tag_name, html_url, prerelease, published_at }))
+        .sort((a, b) => Date.parse(b.published_at) - Date.parse(a.published_at));
+      // The page only shows the newest release and the newest stable one, which can be dozens of betas back
+      const stable = all.find((x) => !x.prerelease);
+      return all.filter((x, i) => i === 0 || x === stable);
     } catch (e) {
       console.error(`releases of ${repo}: ${(e && e.message) || e}; keeping the last list`);
       return kept;
