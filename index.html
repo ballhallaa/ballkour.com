@@ -481,14 +481,18 @@ select option, select optgroup { background: var(--menu); color: var(--ink); }
 .course-board .board-empty { padding: 12px; font-size: 14.5px; }
 .board-meta { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 12px; padding: 14px 18px 6px; font: 500 11.5px/1.3 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
 .board { list-style: none; margin: 0; padding: 2px 0 10px; }
-/* The date sits under the time and mistakes, flush right; rows without one stay a single line */
-.run { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto 50px; grid-template-areas: "rank who time miss" "rank . date date"; align-items: center; gap: 0 12px; padding: 8px 18px; font-variant-numeric: tabular-nums; }
+/* Under the name: the player's Discord name and picture. Under the time and mistakes: the date, flush right.
+   Rows with neither stay a single line. */
+.run { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto 50px; grid-template-areas: "rank who time miss" "rank dc date date"; align-items: center; gap: 0 12px; padding: 8px 18px; font-variant-numeric: tabular-nums; }
 .run-rank { grid-area: rank; font: 700 15px/1 var(--mono); color: var(--ink-3); }
 .run-who { grid-area: who; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .run .stat.time { grid-area: time; }
 .run .stat.miss { grid-area: miss; }
 .run-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 16px/1.2 var(--body); letter-spacing: .03em; text-transform: uppercase; color: var(--ink-2); }
 .run-date { grid-area: date; justify-self: end; margin-top: 3px; font: 400 11.5px/1.2 var(--mono); color: var(--ink-3); }
+.run-dc { grid-area: dc; min-width: 0; display: flex; align-items: center; gap: 6px; margin-top: 3px; font: 600 13px/1.2 var(--body); color: #b9befc; }
+.run-dc > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.run-pfp { width: 16px; height: 16px; flex: none; border-radius: 50%; object-fit: cover; background: var(--line); }
 .run .stat { justify-content: flex-end; font: 600 14.5px/1 var(--mono); color: var(--ink-2); }
 a.stat { text-decoration: none; border-radius: 6px; }
 a.stat .play { width: 11px; height: 11px; color: var(--ink-3); transition: color .15s; }
@@ -1292,6 +1296,14 @@ a.link-copy { text-decoration: none; }
     const fresh = freshAt(list, at);
     return (list.length > 1 ? historyHtml(c, list, at) : "") + congratsHtml(list[at], fresh) + runsHtml(c, list[at], fresh);
   }
+  // The player's Discord name and picture, from /players.json (the Cloudflare Worker looks them up)
+  const PLAYERS = new Map();
+  function dcHtml(r) {
+    const p = r.discord && PLAYERS.get(r.discord);
+    if (!p) return "";
+    const pfp = /^https:\/\/cdn\.discordapp\.com\//.test(p.avatar) ? `<img class="run-pfp" src="${esc(p.avatar)}" alt="" width="16" height="16" loading="lazy" decoding="async">` : "";
+    return `<span class="run-dc">${pfp}<span>${esc(p.name)}</span></span>`;
+  }
   function runRow(r, i, fresh, legacy) {
     const isNew = !!fresh && fresh.has(r);
     const split = legacy ? /^(.*?)(\.--)?$/.exec(r.time) : null;
@@ -1306,6 +1318,7 @@ a.link-copy { text-decoration: none; }
       timeCell +
       `<span class="stat miss" title="${esc(t("unit.mistakes", { count: r.miss }))}">${icon("skull")}${esc(r.miss)}<span class="sr-only"> ${esc(t("unit.mistakes", { count: r.miss }))}</span></span>` +
       `${r.date ? `<span class="run-date">${esc(formatDate(r.date))}</span>` : ""}` +
+      dcHtml(r) +
       `</li>`;
   }
   function runsHtml(c, runs, fresh) {
@@ -1666,6 +1679,25 @@ a.link-copy { text-decoration: none; }
       });
     })
     .catch(() => {});
+
+  // The Worker usually puts the list into the page, so the boards have the names from their first render;
+  // otherwise it's fetched and the boards fill the names in when it arrives
+  function addPlayers(data) {
+    if (!data || typeof data !== "object") return;
+    Object.entries(data).forEach(([id, p]) => {
+      if (/^\d{17,20}$/.test(id) && p && typeof p.name === "string" && p.name.trim()) PLAYERS.set(id, { name: p.name.trim(), avatar: typeof p.avatar === "string" ? p.avatar : "" });
+    });
+  }
+  try { addPlayers(JSON.parse($("#players").textContent)); } catch (e) { /* not in the page */ }
+  if (!PLAYERS.size) {
+    fetch("/players.json")
+      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+      .then((data) => {
+        addPlayers(data);
+        if (PLAYERS.size) COURSES.forEach(refreshCourse);
+      })
+      .catch(() => {});
+  }
 
   /* ---------- Discord (live widget data) ---------- */
   // The Cloudflare Worker (cloudflare/discord-widget.js) puts the widget data into the page as it's served and fills in
