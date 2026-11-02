@@ -9,7 +9,7 @@ robots.txt, sitemap.xml  for search engines
 assets/                  logo, icons, link-preview image
 locales/*.json           translations, one file per language (managed on Weblate)
 tools/extract-en.py      rebuilds locales/en.json from index.html
-cloudflare/              Worker that puts the Discord online count into the page
+cloudflare/              Worker for the Discord online count and players' Discord names
 .github/workflows/       deploys the site on every push to main
 ```
 
@@ -27,15 +27,24 @@ python3 tools/extract-en.py
 
 and commit `locales/en.json` along with it.
 
-## Discord online count
+## Discord Worker
 
-`cloudflare/discord-widget.js` is a Cloudflare Worker on `ballkour.com/*`. As each page goes out, it fills in the "• N online" count next to "Join our Discord" and adds the voice channel data, so neither pops in after the page loads. Discord's answer is cached at Cloudflare for 60 seconds. If Discord is slow or down, the page goes out unchanged and the browser fetches the count itself.
+`cloudflare/discord-widget.js` is a Cloudflare Worker on `ballkour.com/*`. It does two things:
+
+- **Online count:** as each page goes out, it fills in the "• N online" count next to "Join our Discord" and adds the voice channel data, so neither pops in after the page loads. Discord's answer is cached at Cloudflare for 60 seconds. If Discord is slow or down, the page goes out unchanged and the browser fetches the count itself.
+- **Players' Discord names:** `/players.json` has the Discord name and picture of every player whose run has a Discord ID, looked up with Ballkyrie's token. The leaderboards show them under each player's in-game name. The list is cached at Cloudflare for an hour, so a new or renamed player shows up within the hour.
 
 The Worker isn't part of the VPS deploy. Deploy it once (and again only if you change it) from the `cloudflare/` folder:
 
 ```
 npx wrangler login
 npx wrangler deploy
+```
+
+The player names need Ballkyrie's bot token as a Worker secret. Set it once (it asks you to paste the token):
+
+```
+npx wrangler secret put DISCORD_BOT_TOKEN
 ```
 
 Or paste the file into a new Worker in the Cloudflare dashboard (Workers & Pages → Create → Start with Hello World), deploy it, then add the route `ballkour.com/*` under Settings → Domains & Routes.
