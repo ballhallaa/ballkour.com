@@ -56,7 +56,7 @@
   "logo.alt": "Ballkour 標誌：戴著護目鏡的倉鼠騎在黑橘相間的球上",
   "hero.nav": "開始",
   "tr.langs": "語言",
-  "hero.online": "{count} 人在線",
+  "hero.members": "{count} 位成員",
   "unit.mistakes": "失誤 {count} 次",
   "course.by": "{creator} 的關卡",
   "course.remaker": "重製：{remaker}",

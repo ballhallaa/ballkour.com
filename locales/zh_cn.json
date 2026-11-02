@@ -56,7 +56,7 @@
   "logo.alt": "Ballkour 标志：戴着护目镜的仓鼠骑在黑橙相间的球上",
   "hero.nav": "开始",
   "tr.langs": "语言",
-  "hero.online": "{count} 人在线",
+  "hero.members": "{count} 名成员",
   "unit.mistakes": "失误 {count} 次",
   "course.by": "{creator} 的关卡",
   "course.remaker": "重制：{remaker}",

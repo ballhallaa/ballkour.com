@@ -56,7 +56,7 @@
   "logo.alt": "Logo de Ballkour: un hámster con gafas montado en una bola negra y naranja",
   "hero.nav": "Empezar",
   "tr.langs": "Idiomas",
-  "hero.online": "{count} en línea",
+  "hero.members": "{count} miembros",
   "unit.mistakes": "{count} errores",
   "course.by": "Recorridos de {creator}",
   "course.remaker": "Remake: {remaker}",

@@ -56,7 +56,7 @@
   "logo.alt": "Ballkour-Logo: ein Hamster mit Schutzbrille auf einer schwarz-orangen Kugel",
   "hero.nav": "Loslegen",
   "tr.langs": "Sprachen",
-  "hero.online": "{count} online",
+  "hero.members": "{count} Mitglieder",
   "unit.mistakes": "{count} Fehler",
   "course.by": "Strecken von {creator}",
   "course.remaker": "Remake: {remaker}",

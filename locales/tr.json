@@ -56,7 +56,7 @@
   "logo.alt": "Ballkour logosu: siyah-turuncu bir topa binen gözlüklü bir hamster",
   "hero.nav": "Başla",
   "tr.langs": "Diller",
-  "hero.online": "{count} çevrimiçi",
+  "hero.members": "{count} üye",
   "unit.mistakes": "{count} hata",
   "course.by": "{creator} parkurları",
   "course.remaker": "Yeniden yapan: {remaker}",

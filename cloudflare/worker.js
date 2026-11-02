@@ -7,14 +7,14 @@
                        plus the latest releases of the game and of this website:
                          { files: { "<path>": "<text>" | null }, releases: [...], siteReleases: [...] }.
                        Refreshed at most once a minute.
-   /data/widget.json   The Discord widget: online count, voice channels and who's in them. Refreshed at most once
-                       a minute.
+   /data/widget.json   The Discord server's member count (from its invite), plus the widget's voice channels and
+                       who's in them. Refreshed at most once a minute.
    /data/players.json  Players' Discord names and pictures for the leaderboards (also at /players.json):
                          { "<discord id>": { "name": "server nickname, display name or username", "avatar": "https://cdn.discordapp.com/…" } }
                        Looked up with Ballkyrie's token, only for players on a board. Refreshed at most once an hour.
 
    Each page also gets the latest copy of all three in <head> as <script type="application/json"> blocks, and its
-   "• N online" pills already filled in, so nothing pops in after the page loads. If GitHub or Discord can't be
+   "• N members" pills already filled in, so nothing pops in after the page loads. If GitHub or Discord can't be
    reached, the last copy that worked is served for up to a week.
 
    Secrets (set once from this folder; each asks you to paste the value):
@@ -25,6 +25,7 @@
    page opens the board or answer itself. Anything else passes straight through to the VPS. */
 
 const GUILD_ID = "1212553452283101245";
+const INVITE = "Skz6cg9rbR";
 const REPO = "ballhallaa/ballkour";
 const SITE_REPO = "ballhallaa/ballkour.com";
 const GAME = `https://raw.githubusercontent.com/${REPO}/develop`;
@@ -120,16 +121,28 @@ async function buildGame(env, previous) {
 const game = (env, ctx) => cached("game", 60, ctx, (prev) => buildGame(env, prev));
 
 /* ---------- Discord widget ---------- */
-async function buildWidget() {
-  const r = await fetch(`https://discord.com/api/guilds/${GUILD_ID}/widget.json`, { signal: AbortSignal.timeout(1500) });
-  if (!r.ok) throw new Error(`widget: ${r.status}`);
-  const d = await r.json();
-  if (typeof d.presence_count !== "number") throw new Error("widget: no count");
-  // Only what the page uses: the count, the channel names, and which channel each member is in
+// The member count comes from the server's invite (the widget only counts who's online); the voice channels come
+// from the widget. Either one can fail on its own: the other still goes out, and a missing member count keeps the
+// last one that worked.
+async function buildWidget(previous) {
+  const [widget, invite] = await Promise.allSettled([
+    fetch(`https://discord.com/api/guilds/${GUILD_ID}/widget.json`, { signal: AbortSignal.timeout(1500) })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`widget: ${r.status}`)))),
+    fetch(`${DISCORD_API}/invites/${INVITE}?with_counts=true`, {
+      headers: { "User-Agent": "DiscordBot (https://ballkour.com, 1.0)" },
+      signal: AbortSignal.timeout(1500),
+    }).then((r) => (r.ok ? r.json() : Promise.reject(new Error(`invite: ${r.status}`)))),
+  ]);
+  const d = widget.status === "fulfilled" ? widget.value : null;
+  const memberCount = invite.status === "fulfilled" && typeof invite.value.approximate_member_count === "number"
+    ? invite.value.approximate_member_count
+    : previous && previous.member_count;
+  if (typeof memberCount !== "number" && widget.status === "rejected") throw widget.reason;
+  // Only what the page uses: the member count, the channel names, and which channel each member is in
   return JSON.stringify({
-    presence_count: d.presence_count,
-    channels: (d.channels || []).map(({ id, name, position }) => ({ id, name, position })),
-    members: (d.members || []).filter((m) => m.channel_id).map((m) => ({ channel_id: m.channel_id })),
+    ...(typeof memberCount === "number" ? { member_count: memberCount } : {}),
+    channels: d ? (d.channels || []).map(({ id, name, position }) => ({ id, name, position })) : (previous && previous.channels) || [],
+    members: d ? (d.members || []).filter((m) => m.channel_id).map((m) => ({ channel_id: m.channel_id })) : (previous && previous.members) || [],
   });
 }
 
@@ -187,7 +200,7 @@ async function page(request, env, ctx) {
   const [res, widget, gameData, players] = await Promise.all([
     fetch(new Request(url, { method: "GET", headers, redirect: "manual" })),
     // The online count is worth a short wait (Discord answers in well under the 1.5 s limit), so it's never stale
-    cached("widget", 60, ctx, buildWidget).catch(() => null),
+    cached("widget", 60, ctx, (prev) => buildWidget(prev)).catch(() => null),
     peek("game", 60, ctx, (prev) => buildGame(env, prev)),
     env.DISCORD_BOT_TOKEN ? peek("players", 60 * 60, ctx, (prev) => buildPlayers(env, ctx, prev)) : null,
   ]);
@@ -202,11 +215,11 @@ async function page(request, env, ctx) {
   const script = (id, body) => `<script type="application/json" id="${id}">${body.replace(/</g, "\\u003c")}</script>`;
   const blocks = [["discord-widget", widget], ["game-data", gameData], ["players", players]].filter(([, body]) => body);
   let rw = new HTMLRewriter().on("head", { element(el) { el.append(blocks.map(([id, body]) => script(id, body)).join(""), { html: true }); } });
-  if (widget) {
-    const count = JSON.parse(widget).presence_count;
+  const count = widget && JSON.parse(widget).member_count;
+  if (typeof count === "number") {
     rw = rw
-      .on("[data-online-wrap]", { element(el) { el.removeAttribute("hidden"); } })
-      .on("[data-online]", { element(el) { el.setInnerContent(`${count.toLocaleString("en")} online`); } });
+      .on("[data-members-wrap]", { element(el) { el.removeAttribute("hidden"); } })
+      .on("[data-members]", { element(el) { el.setInnerContent(`${count.toLocaleString("en")} members`); } });
   }
   return rw.transform(out);
 }
@@ -219,7 +232,7 @@ export default {
     const path = new URL(request.url).pathname;
     try {
       if (path === "/data/game.json") return json(await game(env, ctx), 60);
-      if (path === "/data/widget.json") return json(await cached("widget", 60, ctx, buildWidget), 60);
+      if (path === "/data/widget.json") return json(await cached("widget", 60, ctx, (prev) => buildWidget(prev)), 60);
       if (path === "/data/players.json" || path === "/players.json") {
         if (!env.DISCORD_BOT_TOKEN) return unavailable("The DISCORD_BOT_TOKEN secret isn't set");
         return json(await cached("players", 60 * 60, ctx, (prev) => buildPlayers(env, ctx, prev)), 300);
