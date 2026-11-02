@@ -839,7 +839,7 @@ a.link-copy { text-decoration: none; }
       <a class="btn btn-primary" href="/courses" data-route="courses"><svg class="icon" aria-hidden="true"><use href="#i-down"/></svg><span data-i18n="hero.codes">Pick a course</span></a>
       <a class="btn" href="https://discord.gg/Skz6cg9rbR" target="_blank" rel="noopener">
         <svg class="icon" aria-hidden="true"><use href="#i-discord"/></svg><span data-i18n="hero.discord">Join our Discord</span>
-        <span class="count" data-online-wrap hidden><span class="dot"></span><span data-online></span></span>
+        <span class="count" data-members-wrap hidden><span class="dot"></span><span data-members></span></span>
       </a>
       <a class="btn" href="https://ballkour.com/gameplay" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-play"/></svg><span data-i18n="hero.gameplay">Watch gameplay</span></a>
     </nav>
@@ -881,7 +881,7 @@ a.link-copy { text-decoration: none; }
           <span class="lr-sub" data-i18n="lb.submit.how">Open a ticket on our Discord and share your video. Not in our server yet? Join us first!</span>
         </span>
         <span class="submit-actions">
-          <a class="btn btn-sm btn-primary" href="https://discord.gg/Skz6cg9rbR" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-discord"/></svg><span data-i18n="hero.discord">Join our Discord</span><span class="count" data-online-wrap hidden><span class="dot"></span><span data-online></span></span></a>
+          <a class="btn btn-sm btn-primary" href="https://discord.gg/Skz6cg9rbR" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-discord"/></svg><span data-i18n="hero.discord">Join our Discord</span><span class="count" data-members-wrap hidden><span class="dot"></span><span data-members></span></span></a>
           <a class="btn btn-sm btn-primary" href="https://discord.com/channels/1212553452283101245/1498944426901508106" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-discord"/></svg><span data-i18n="lb.submit.ticket">Open a ticket</span></a>
         </span>
       </div>
@@ -964,7 +964,7 @@ a.link-copy { text-decoration: none; }
         <p class="panel-text" data-i18n="dc.blurb">Submit runs for the leaderboard, get notified on updates, and meet fellow ballers!</p>
         <div id="voice" hidden></div>
         <div class="join">
-          <a class="btn btn-primary" href="https://discord.gg/Skz6cg9rbR" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-discord"/></svg><span data-i18n="hero.discord">Join our Discord</span><span class="count" data-online-wrap hidden><span class="dot"></span><span data-online></span></span></a>
+          <a class="btn btn-primary" href="https://discord.gg/Skz6cg9rbR" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-discord"/></svg><span data-i18n="hero.discord">Join our Discord</span><span class="count" data-members-wrap hidden><span class="dot"></span><span data-members></span></span></a>
           <button class="link-copy" type="button" data-copy="https://ballkour.com/discord"><span class="sr-only" data-i18n="dc.copyLink">Copy link</span><span class="copy-val">ballkour.com/discord</span><svg class="icon i-copy" aria-hidden="true"><use href="#i-copy"/></svg><svg class="icon i-check" aria-hidden="true"><use href="#i-check"/></svg></button>
         </div>
       </div>
@@ -1046,7 +1046,7 @@ a.link-copy { text-decoration: none; }
 <!-- English for text the script builds. Translations override these keys too. -->
 <script type="application/json" id="i18n-dynamic">
 {
-  "hero.online": "{count} online",
+  "hero.members": "{count} members",
   "unit.mistakes": "{count} mistakes",
   "course.by": "Courses by {creator}",
   "course.remaker": "Remaker: {remaker}",
@@ -1792,16 +1792,18 @@ a.link-copy { text-decoration: none; }
 
   /* ---------- Discord (live widget data) ---------- */
   // The Cloudflare Worker (cloudflare/worker.js) puts the widget data into the page as it's served and fills in the
-  // "• N online" pills, so they're there from the first paint. After that the page checks /data/widget.json, which the
+  // "• N members" pills, so they're there from the first paint. After that the page checks /data/widget.json, which the
   // Worker keeps up to date, every 5 minutes. The browser never talks to Discord itself.
   let widget = (() => { try { return JSON.parse($("#discord-widget").textContent); } catch (e) { return null; } })();
   function renderDiscord() {
     if (!widget) return;
     const members = Array.isArray(widget.members) ? widget.members : [];
-    const online = typeof widget.presence_count === "number" ? widget.presence_count : members.length;
     const fmt = (n) => n.toLocaleString(htmlLang());
-    $$("[data-online]").forEach((el) => { el.textContent = t("hero.online", { count: fmt(online) }); });
-    $$("[data-online-wrap]").forEach((el) => { el.hidden = false; });
+    // The server's total member count; the pills stay hidden until there is one
+    if (typeof widget.member_count === "number") {
+      $$("[data-members]").forEach((el) => { el.textContent = t("hero.members", { count: fmt(widget.member_count) }); });
+      $$("[data-members-wrap]").forEach((el) => { el.hidden = false; });
+    }
     const rooms = new Map((widget.channels || []).map((c) => [c.id, { name: c.name, pos: c.position || 0, n: 0 }]));
     members.forEach((m) => { const c = m.channel_id && rooms.get(m.channel_id); if (c) c.n += 1; });
     // Busiest channels first (ties keep the server's channel order)
@@ -1820,7 +1822,7 @@ a.link-copy { text-decoration: none; }
       $("#voice").hidden = true;
     }
   }
-  // The online count and voice channels refresh every 5 minutes while the page is open and on screen
+  // The member count and voice channels refresh every 5 minutes while the page is open and on screen
   const WIDGET_EVERY = 5 * 60 * 1000;
   let widgetAt = 0;
   function loadWidget() {

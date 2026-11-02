@@ -56,7 +56,7 @@
   "logo.alt": "โลโก้ Ballkour: หนูแฮมสเตอร์สวมแว่นตาขี่ลูกบอลสีดำส้ม",
   "hero.nav": "เริ่มต้น",
   "tr.langs": "ภาษา",
-  "hero.online": "ออนไลน์ {count} คน",
+  "hero.members": "สมาชิก {count} คน",
   "unit.mistakes": "พลาด {count} ครั้ง",
   "course.by": "คอร์สของ {creator}",
   "course.remaker": "ผู้รีเมก: {remaker}",

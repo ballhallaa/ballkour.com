@@ -56,7 +56,7 @@
   "logo.alt": "Ballkourのロゴ：ゴーグルをつけたハムスターが黒とオレンジのボールに乗っている",
   "hero.nav": "はじめる",
   "tr.langs": "言語",
-  "hero.online": "{count}人がオンライン",
+  "hero.members": "{count}人のメンバー",
   "unit.mistakes": "ミス{count}回",
   "course.by": "{creator}のコース",
   "course.remaker": "リメイク：{remaker}",

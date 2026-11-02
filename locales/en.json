@@ -64,7 +64,7 @@
   "hero.nav": "Get started",
   "nav.label": "Sections",
   "tr.langs": "Languages",
-  "hero.online": "{count} online",
+  "hero.members": "{count} members",
   "unit.mistakes": "{count} mistakes",
   "course.by": "Courses by {creator}",
   "course.remaker": "Remaker: {remaker}",

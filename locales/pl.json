@@ -56,7 +56,7 @@
   "logo.alt": "Logo Ballkour: chomik w goglach na czarno-pomarańczowej kuli",
   "hero.nav": "Zacznij",
   "tr.langs": "Języki",
-  "hero.online": "Online: {count}",
+  "hero.members": "Członkowie: {count}",
   "unit.mistakes": "Błędy: {count}",
   "course.by": "Trasy autorstwa {creator}",
   "course.remaker": "Remake: {remaker}",

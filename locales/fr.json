@@ -56,7 +56,7 @@
   "logo.alt": "Logo de Ballkour : un hamster avec des lunettes sur une boule noire et orange",
   "hero.nav": "Commencer",
   "tr.langs": "Langues",
-  "hero.online": "{count} en ligne",
+  "hero.members": "{count} membres",
   "unit.mistakes": "{count} erreurs",
   "course.by": "Parcours de {creator}",
   "course.remaker": "Remake : {remaker}",

@@ -41,10 +41,10 @@ and commit `locales/en.json` along with it.
 `cloudflare/worker.js` is a Cloudflare Worker on `ballkour.com/*`. Visitors' browsers only ever talk to ballkour.com: the Worker fetches what the page needs from GitHub and Discord, caches it at Cloudflare and serves it from here. That keeps the site fast, keeps visitors' IPs away from GitHub and Discord, avoids GitHub's limits on anonymous requests, and works where GitHub and Discord are blocked.
 
 - `/data/game.json`: the game repo's leaderboard files, leaderboard history and in-game FAQ from `develop`, plus the latest releases. Refreshed at most once a minute.
-- `/data/widget.json`: the Discord online count and voice channels. Refreshed at most once a minute.
+- `/data/widget.json`: the Discord server's member count and voice channels. Refreshed at most once a minute.
 - `/data/players.json`: the Discord name and picture of every player whose run has a Discord ID, looked up with Ballkyrie's token. Refreshed at most once an hour.
 
-Each page also gets the latest copy of all three as it's served, with the "• N online" counts already filled in, so nothing pops in after the page loads. If GitHub or Discord can't be reached, the last copy that worked is served for up to a week.
+Each page also gets the latest copy of all three as it's served, with the "• N members" counts already filled in, so nothing pops in after the page loads. If GitHub or Discord can't be reached, the last copy that worked is served for up to a week.
 
 The Worker isn't part of the VPS deploy. Deploy it once (and again only if you change it) from the `cloudflare/` folder:
 

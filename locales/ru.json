@@ -56,7 +56,7 @@
   "logo.alt": "Логотип Ballkour: хомяк в очках верхом на чёрно-оранжевом шаре",
   "hero.nav": "Начать",
   "tr.langs": "Языки",
-  "hero.online": "{count} в сети",
+  "hero.members": "Участников: {count}",
   "unit.mistakes": "Ошибки: {count}",
   "course.by": "Трассы от {creator}",
   "course.remaker": "Ремейк: {remaker}",
