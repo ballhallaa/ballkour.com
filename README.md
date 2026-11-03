@@ -96,3 +96,5 @@ The English source is `locales/en.json`. Weblate component settings:
 | Edit base file | Off |
 
 Translations may use `<b>` and `<code>` only. Anything else shows up as text. Keep `{placeholders}` as they are.
+
+In the FAQ, `<b>` marks the game's own labels (controls like Reset CP, HUD and lobby names like Runs and Lobby Top 3), which show in orange. Use each label as the game shows it in that language.
