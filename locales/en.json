@@ -99,7 +99,7 @@
   "lb.new": "New",
   "lb.congrats.one": "Congrats {names} for the new top-10 time!",
   "lb.congrats.other": "Congrats {names} for the new top-10 times!",
-  "lb.datesNote": "Dates (YYYY-MM-DD) are when the run was submitted, in UTC.",
+  "lb.datesFormat": "Dates: YYYY-MM-DD (UTC)",
   "dc.voice": "{channel} · {count} in voice",
   "dc.voiceMore": "+{count} more",
   "faq.all": "Show all {count} questions",
