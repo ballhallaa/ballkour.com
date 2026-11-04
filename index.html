@@ -415,6 +415,8 @@ select option, select optgroup { background: var(--menu); color: var(--ink); }
 .path .sep { width: 12px; height: 12px; color: var(--ink-3); transform: rotate(-90deg); }
 .path-end { color: var(--volt); }
 .steps code { display: inline-block; padding: 0 7px; font-family: var(--mono); font-size: 13px; letter-spacing: .05em; }
+/* The example code chip and the punctuation touching it, kept on one line (see glueCodes()) */
+.code-glue { white-space: nowrap; }
 
 /* Courses */
 .group { padding: 4px 0 10px; }
@@ -2057,8 +2059,27 @@ a.link-copy { text-decoration: none; }
     });
   }
 
+  /* A line may break on either side of a chip (an inline-block), even right before a ")", so the example
+     code's ")." could end up alone on the next line. The punctuation touching the code is kept with it. */
+  function glueCodes() {
+    $$(".steps code").forEach((code) => {
+      if (code.parentNode.classList.contains("code-glue")) return;
+      const before = code.previousSibling, after = code.nextSibling;
+      const lead = before && before.nodeType === Node.TEXT_NODE ? before.nodeValue.match(/\p{P}*$/u)[0] : "";
+      const trail = after && after.nodeType === Node.TEXT_NODE ? after.nodeValue.match(/^\p{P}*/u)[0] : "";
+      if (!lead && !trail) return;
+      const glue = document.createElement("span");
+      glue.className = "code-glue";
+      code.replaceWith(glue);
+      if (lead) { before.nodeValue = before.nodeValue.slice(0, -lead.length); glue.append(lead); }
+      glue.append(code);
+      if (trail) { after.nodeValue = after.nodeValue.slice(trail.length); glue.append(trail); }
+    });
+  }
+
   function renderAll() {
     renderPaths();
+    glueCodes();
     renderLangControls();
     renderCourses();
     renderDiscord();
