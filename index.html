@@ -682,7 +682,13 @@ a.stat:hover .play { color: var(--volt); }
 .qa-a .fg { font-weight: 600; }
 /* <b> marks the game's own labels (controls, HUD and lobby names) in the house orange */
 .qa-a b, .qa-q b { font-weight: 600; color: var(--ember); white-space: nowrap; }
-.faq-intro b { font-weight: 600; white-space: nowrap; }
+/* Controls (the keybind that opens the FAQ, the shield bounce's button) are drawn as keycaps */
+.faq-intro b { font-weight: 600; color: var(--ink-2); white-space: nowrap; }
+.faq-intro kbd, .qa-a kbd {
+  display: inline-block; padding: 1px 7px; vertical-align: 1px;
+  border: 1px solid var(--line-hi); border-bottom-width: 2px; border-radius: 6px;
+  background: var(--glass-hi); font: 600 13px/1.4 var(--body); color: var(--ink);
+}
 .faq-intro .tag { vertical-align: 1px; }
 /* A row of colored words (the hint colors) shows as a legend of chips */
 .qa-legend { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 10px; }
@@ -952,7 +958,7 @@ a.link-copy { text-decoration: none; }
         <h2 class="panel-title" id="faq-title"><svg class="icon" aria-hidden="true"><use href="#i-help"/></svg><span data-i18n="faq.title">FAQ</span></h2>
       </div>
       <div class="panel-body faq-intro">
-        <p class="panel-text" data-i18n-html="faq.intro">The same answers as the in-game FAQ in {beta} codes, which opens with <b>Ultimate + Melee</b> in a match.</p>
+        <p class="panel-text" data-i18n-html="faq.intro">The same answers as the in-game FAQ in {beta} codes, which opens with <b><kbd>Ultimate</kbd> + <kbd>Melee</kbd></b> in a match.</p>
       </div>
       <div class="faq" id="faq-list"></div>
       <a class="link-row" href="https://ballkour.com/issues" target="_blank" rel="noopener">
@@ -1118,7 +1124,7 @@ a.link-copy { text-decoration: none; }
   "faq.scorecard.q": "What's on the scorecard?",
   "faq.scorecard.a": "Each runner's checkpoint, time, and mistakes, sorted by furthest and then fastest. Disqualified runs are <fgFF4646FF>red</fg> and marked <fgFF4646FF>×</fg>.",
   "faq.shield.q": "What is a <fg00BEFFFF>shield bounce</fg>?",
-  "faq.shield.a": "Adaptive Shield (Button: Ability 2) bounces you up and forward. The faster you're going, the less it lifts you. You get one each time you leave the checkpoint, on checkpoints that allow it, and as many as you like in <fgCB87FFFF>Freemode</fg>.",
+  "faq.shield.a": "Adaptive Shield (<kbd>Ability 2</kbd>) bounces you up and forward. The faster you're going, the less it lifts you. You get one each time you leave the checkpoint, on checkpoints that allow it, and as many as you like in <fgCB87FFFF>Freemode</fg>.",
   "faq.hints.q": "What do the hint colors mean?",
   "faq.hints.a": "<fgCB87FFFF>Movement</fg> <fgFFFFFFFF>Jump</fg> <fgFFD200FF>Grapple</fg> <fgFF4646FF>Piledrive</fg> <fg00BEFFFF>Shield Bounce</fg> Hints turn on by themselves after 10 mistakes on one checkpoint, and off again when you move on to another.",
   "faq.freemode.q": "What is <fgCB87FFFF>Freemode</fg> for?",
@@ -1218,7 +1224,7 @@ a.link-copy { text-decoration: none; }
     return s;
   }
   // Translations may only use <b> and <code>; everything else is shown as text. {beta} becomes the Beta tag.
-  const safeHtml = (s) => esc(s).replace(/&lt;(\/?)(b|code)&gt;/g, "<$1$2>")
+  const safeHtml = (s) => esc(s).replace(/&lt;(\/?)(b|code|kbd)&gt;/g, "<$1$2>")
     .replace("{beta}", `<span class="tag tag-beta">${esc(t("tag.beta"))}</span>`);
   // The English is already on the page, but its {beta} still needs the tag
   $$("[data-i18n-html]").forEach((el) => { if (el.innerHTML.includes("{beta}")) el.innerHTML = safeHtml(EN[el.dataset.i18nHtml]); });
@@ -1903,7 +1909,7 @@ a.link-copy { text-decoration: none; }
   const FAQ_IDS = ["valid", "leaderboard", "timer", "mistake", "pause", "counts", "attempt", "best", "pace", "grayed",
     "scorecard", "shield", "hints", "freemode", "disconnected", "tiny", "restart", "loading", "language"];
   const norm = (s) => String(s).replace(/\s+/g, " ").trim();
-  const plain = (s) => norm(String(s).replace(/<\/?b>|<\/?fg[^>]*>/gi, ""));
+  const plain = (s) => norm(String(s).replace(/<\/?(?:b|kbd)>|<\/?fg[^>]*>/gi, ""));
   let faq = FAQ_IDS.map((id) => ({ id }));
   // faqHudText[n] = ("...", "...") → [{ q, a }]: a block that opens with a light blue "…?" line is a question (gold
   // or green in older versions); a block without one (an answer split to fit Workshop's 511-byte strings)
@@ -1924,17 +1930,18 @@ a.link-copy { text-decoration: none; }
       const lines = s.split("\n").map((l) => l.trim()).filter(Boolean);
       if (!lines.length) continue;
       const q = /^<fg(?:80D0FF|FFD700|00E092)FF>.*\?<\/fg>$/i.test(lines[0]) ? lines.shift() : null;
-      // The game fills @0 in with the player's own Ability 2 key (the shield bounce answer); the site names the control
-      const a = norm(lines.join(" ").replace(/<fgE69700FF>(.*?)<\/fg>/gi, "<b>$1</b>").replace(/@0/g, "Ability 2"));
+      // The game fills "(Button: @0)" in with the player's own Ability 2 key (the shield bounce answer); the site names
+      // the control on a keycap
+      const a = norm(lines.join(" ").replace(/<fgE69700FF>(.*?)<\/fg>/gi, "<b>$1</b>").replace(/(?:Button:\s*)?@0/g, "<kbd>Ability 2</kbd>"));
       if (q) out.push({ q: norm(q.replace(/<fg(?:80D0FF|FFD700|00E092)FF>(.*?)<\/fg>/gi, "$1").replace(/<fgE69700FF>(.*?)<\/fg>/gi, "<b>$1</b>")), a });
       else if (out.length) out[out.length - 1].a += " " + a;
     }
     return out;
   }
   // Workshop color tags become colored text; a run of colored words that opens an answer (the hint colors) is a legend.
-  // <b> (a game label) stays <b>.
+  // <b> (a game label) stays <b>, and <kbd> (a control) stays <kbd>.
   function fgHtml(s) {
-    const h = esc(s).replace(/&lt;(\/?)b&gt;/g, "<$1b>").replace(/&lt;fg([0-9a-f]{6})[0-9a-f]{2}&gt;(.*?)&lt;\/fg&gt;/gi,
+    const h = esc(s).replace(/&lt;(\/?)(b|kbd)&gt;/g, "<$1$2>").replace(/&lt;fg([0-9a-f]{6})[0-9a-f]{2}&gt;(.*?)&lt;\/fg&gt;/gi,
       (m, hex, inner) => `<span class="fg" style="color:#${hex}">${inner}</span>`);
     return h.replace(/^((?:\s*<span class="fg"[^>]*>[^<]*<\/span>){2,})\s*/, (m, run) => `<span class="qa-legend">${run.trim()}</span>`);
   }
