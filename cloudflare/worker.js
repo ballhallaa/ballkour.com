@@ -26,7 +26,7 @@
 
    /code/game and /code/site (also /code/website) redirect to the game's and this website's GitHub repos, and
    /releases and /releases/site (also /releases/website) to their release notes. Anything after them carries over,
-   so /code/game/issues goes to the game's issues. Anything else passes straight through to the VPS. */
+   so /code/game/issues goes to the game's issues. Everything else is the site's own files, which Cloudflare serves from its copy of this repo. */
 
 const GUILD_ID = "1212553452283101245";
 const INVITE = "Skz6cg9rbR";
@@ -234,6 +234,30 @@ function shortLink(path) {
   return Response.redirect(to.replace(/\/+$/, ""), 302);
 }
 
+/* ---------- Files and headers ---------- */
+// The security headers Caddy used to add, on every response
+const SECURITY_HEADERS = {
+  "Strict-Transport-Security": "max-age=31536000",
+  "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://cdn.discordapp.com; connect-src 'self' https://cloudflareinsights.com; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'",
+  "X-Content-Type-Options": "nosniff",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+};
+function secure(res) {
+  const out = new Response(res.body, res);
+  for (const [name, value] of Object.entries(SECURITY_HEADERS)) out.headers.set(name, value);
+  return out;
+}
+// One of the site's files, cached like Caddy did: logo, icons and preview image for a week; the page and
+// translations are checked for a newer copy on every visit
+async function file(request, env) {
+  const res = await env.ASSETS.fetch(request);
+  const out = new Response(res.body, res);
+  const path = new URL(request.url).pathname;
+  out.headers.set("Cache-Control", res.ok && path.startsWith("/assets/") ? "public, max-age=604800" : "no-cache");
+  return out;
+}
+
 /* ---------- Pages ---------- */
 const DEEP_LINK = /^\/(?:leaderboards|faq)\/[\w-]+\/?$/i;
 async function page(request, env, ctx) {
@@ -245,7 +269,7 @@ async function page(request, env, ctx) {
   const url = new URL(request.url);
   if (DEEP_LINK.test(url.pathname)) url.pathname = "/";
   const [res, widget, gameData, players] = await Promise.all([
-    fetch(new Request(url, { method: "GET", headers, redirect: "manual" })),
+    file(new Request(url, { method: "GET", headers, redirect: "manual" }), env),
     // The online count is worth a short wait (Discord answers in well under the 1.5 s limit), so it's never stale
     cached("widget", 60, ctx, (prev) => buildWidget(prev)).catch(() => null),
     soon("game", 60, ctx, (prev) => buildGame(env, prev), 2500),
@@ -271,24 +295,32 @@ async function page(request, env, ctx) {
   return rw.transform(out);
 }
 
+async function handle(request, env, ctx) {
+  if (request.method !== "GET") return file(request, env);
+  const path = new URL(request.url).pathname;
+  const short = shortLink(path);
+  if (short) return short;
+  try {
+    if (path === "/data/game.json") return json(await game(env, ctx), 60);
+    if (path === "/data/widget.json") return json(await cached("widget", 60, ctx, (prev) => buildWidget(prev)), 60);
+    if (path === "/data/players.json" || path === "/players.json") {
+      if (!env.DISCORD_BOT_TOKEN) return unavailable("The DISCORD_BOT_TOKEN secret isn't set");
+      return json(await cached("players", 60 * 60, ctx, (prev) => buildPlayers(env, ctx, prev)), 300);
+    }
+  } catch (e) {
+    if (path.startsWith("/data/") || path === "/players.json") return unavailable(String((e && e.message) || e));
+  }
+  return DEEP_LINK.test(path) || (request.headers.get("Accept") || "").includes("text/html") ? page(request, env, ctx) : file(request, env);
+}
+
 export default {
   async fetch(request, env, ctx) {
-    // If anything here throws, Cloudflare serves the request from the VPS as if the Worker weren't there
-    ctx.passThroughOnException();
-    if (request.method !== "GET") return fetch(request);
-    const path = new URL(request.url).pathname;
-    const short = shortLink(path);
-    if (short) return short;
     try {
-      if (path === "/data/game.json") return json(await game(env, ctx), 60);
-      if (path === "/data/widget.json") return json(await cached("widget", 60, ctx, (prev) => buildWidget(prev)), 60);
-      if (path === "/data/players.json" || path === "/players.json") {
-        if (!env.DISCORD_BOT_TOKEN) return unavailable("The DISCORD_BOT_TOKEN secret isn't set");
-        return json(await cached("players", 60 * 60, ctx, (prev) => buildPlayers(env, ctx, prev)), 300);
-      }
+      return secure(await handle(request, env, ctx));
     } catch (e) {
-      if (path.startsWith("/data/") || path === "/players.json") return unavailable(String((e && e.message) || e));
+      // If anything here breaks, the plain file still goes out, just without the baked-in data
+      console.error(`serving the plain file instead: ${(e && e.message) || e}`);
+      return secure(await file(request, env));
     }
-    return DEEP_LINK.test(path) || (request.headers.get("Accept") || "").includes("text/html") ? page(request, env, ctx) : fetch(request);
   },
 };
