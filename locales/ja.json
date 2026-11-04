@@ -91,6 +91,7 @@
   "lb.new": "NEW",
   "lb.congrats.one": "{names}、トップ10入りおめでとう！",
   "lb.congrats.other": "{names}、トップ10入りおめでとう！",
+  "lb.datesFormat": "日付：YYYY-MM-DD（UTC）",
   "dc.voice": "{channel} · ボイス{count}人",
   "dc.voiceMore": "ほか{count}件",
   "faq.all": "すべての質問を表示（{count}件）",

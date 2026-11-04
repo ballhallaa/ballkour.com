@@ -91,6 +91,7 @@
   "lb.new": "新",
   "lb.congrats.one": "恭喜 {names} 創下新的前 10 名成績！",
   "lb.congrats.other": "恭喜 {names} 創下新的前 10 名成績！",
+  "lb.datesFormat": "日期：YYYY-MM-DD（UTC）",
   "dc.voice": "{channel} · {count} 人在語音中",
   "dc.voiceMore": "另外 {count} 個",
   "faq.all": "顯示全部 {count} 個問題",

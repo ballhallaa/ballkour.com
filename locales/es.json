@@ -91,6 +91,7 @@
   "lb.new": "Nuevo",
   "lb.congrats.one": "¡Felicidades a {names} por el nuevo tiempo en el top 10!",
   "lb.congrats.other": "¡Felicidades a {names} por los nuevos tiempos en el top 10!",
+  "lb.datesFormat": "Fechas: AAAA-MM-DD (UTC)",
   "dc.voice": "{channel} · {count} en voz",
   "dc.voiceMore": "+{count} más",
   "faq.all": "Ver las {count} preguntas",
