@@ -91,6 +91,7 @@
   "lb.new": "Новый",
   "lb.congrats.one": "Поздравляем {names} с новым результатом в топ-10!",
   "lb.congrats.other": "Поздравляем {names} с новыми результатами в топ-10!",
+  "lb.datesFormat": "Даты: ГГГГ-ММ-ДД (UTC)",
   "dc.voice": "{channel} · в голосовом: {count}",
   "dc.voiceMore": "ещё {count}",
   "faq.all": "Показать все вопросы ({count})",

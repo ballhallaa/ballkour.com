@@ -91,6 +91,7 @@
   "lb.new": "Yeni",
   "lb.congrats.one": "Yeni ilk 10 süresi için tebrikler, {names}!",
   "lb.congrats.other": "Yeni ilk 10 süreleri için tebrikler, {names}!",
+  "lb.datesFormat": "Tarihler: YYYY-AA-GG (UTC)",
   "dc.voice": "{channel} · sesli kanalda {count}",
   "dc.voiceMore": "+{count} daha",
   "faq.all": "{count} sorunun tümünü göster",

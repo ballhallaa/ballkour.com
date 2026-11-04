@@ -91,6 +91,7 @@
   "lb.new": "Neu",
   "lb.congrats.one": "Glückwunsch an {names} zur neuen Top-10-Zeit!",
   "lb.congrats.other": "Glückwunsch an {names} zu den neuen Top-10-Zeiten!",
+  "lb.datesFormat": "Datum: JJJJ-MM-TT (UTC)",
   "dc.voice": "{channel} · {count} im Sprachkanal",
   "dc.voiceMore": "+{count} weitere",
   "faq.all": "Alle {count} Fragen anzeigen",
