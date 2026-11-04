@@ -1097,7 +1097,7 @@ a.link-copy { text-decoration: none; }
   "lb.new": "New",
   "lb.congrats.one": "Congrats {names} for the new top-10 time!",
   "lb.congrats.other": "Congrats {names} for the new top-10 times!",
-  "lb.datesNote": "Dates (YYYY-MM-DD) are when the run was submitted, in UTC.",
+  "lb.datesFormat": "Dates: YYYY-MM-DD (UTC)",
   "dc.voice": "{channel} · {count} in voice",
   "dc.voiceMore": "+{count} more",
   "faq.all": "Show all {count} questions",
@@ -1423,7 +1423,7 @@ a.link-copy { text-decoration: none; }
     if (!runs.length) return `<p class="board-empty">${esc(t(c.broken ? "lb.emptyBroken" : "lb.empty"))}</p>`;
     const notes = [];
     if (runs.some((r) => r.video)) notes.push(t("lb.videoHint"));
-    if (runs.some((r) => r.date)) notes.push(t("lb.datesNote"));
+    if (runs.some((r) => r.date)) notes.push(t("lb.datesFormat"));
     return `<ol class="board">${runs.slice(0, 10).map((r, i) => runRow(r, i, fresh, false)).join("")}</ol>` +
       (notes.length ? `<p class="lb-foot">${notes.map((s) => `<span>${esc(s)}</span>`).join("")}</p>` : "");
   }
