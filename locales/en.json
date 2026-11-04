@@ -86,7 +86,7 @@
   "lb.videoHint": "Tap a time to watch the run",
   "lb.watch": "Watch the {time} run by {player}",
   "lb.empty": "No times on this board yet. Submit a run and take first place.",
-  "lb.emptyBroken": "No times on this board yet. This course’s route no longer works due to Overwatch’s map updates, so no new runs can be set for now.",
+  "lb.emptyBroken": "No times on this board yet. This course no longer works due to Overwatch’s map updates, so no new runs can be set for now.",
   "lb.tab.top": "Top 10",
   "lb.tab.legacy": "Legacy",
   "lb.legacy.title": "Leaderboard before May 2026",
