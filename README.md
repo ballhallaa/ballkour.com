@@ -19,7 +19,7 @@ Keep everything out of `/discord`, `/gameplay`, `/code`, `/releases`, `/courses`
 
 Links can go deeper, and the address shows them while a board or answer is open:
 
-- **A course's board:** `ballkour.com/leaderboards/6`. The leaderboard bot links its posts this way, and older links with the course's name after the number (`/leaderboards/6-dorado`) still work. The Worker serves the page at these addresses.
+- **A course's board:** `ballkour.com/leaderboards/6`, and `ballkour.com/leaderboards/3/legacy` for a course's Legacy tab. The leaderboard bot links its posts this way, and older links with the course's name after the number (`/leaderboards/6-dorado`) still work. The Worker serves the page at these addresses.
 - **An FAQ answer:** `ballkour.com/faq/pausing`. The link names are in `FAQ_LINKS`, and older links that used the translation keys (`/faq/pause`) still work.
 
 The older `#6-dorado` and `#pause` forms still work too.
