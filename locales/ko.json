@@ -91,7 +91,6 @@
   "lb.new": "NEW",
   "lb.congrats.one": "{names} 님, TOP 10 진입을 축하합니다!",
   "lb.congrats.other": "{names} 님, TOP 10 진입을 축하합니다!",
-  "lb.datesNote": "날짜(YYYY-MM-DD)는 기록이 제출된 날짜이며 UTC 기준입니다.",
   "dc.voice": "{channel} · 음성 {count}명",
   "dc.voiceMore": "+{count}개 더 보기",
   "faq.all": "질문 {count}개 모두 보기",

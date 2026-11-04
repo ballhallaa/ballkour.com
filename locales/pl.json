@@ -91,7 +91,6 @@
   "lb.new": "Nowy",
   "lb.congrats.one": "Gratulacje dla {names} za nowy czas w top 10!",
   "lb.congrats.other": "Gratulacje dla {names} za nowe czasy w top 10!",
-  "lb.datesNote": "Daty (RRRR-MM-DD) oznaczają dzień przesłania przejścia, według UTC.",
   "dc.voice": "{channel} · na głosowym: {count}",
   "dc.voiceMore": "+{count} więcej",
   "faq.all": "Pokaż wszystkie pytania ({count})",

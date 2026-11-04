@@ -91,7 +91,6 @@
   "lb.new": "ใหม่",
   "lb.congrats.one": "ยินดีด้วยกับ {names} ที่ทำเวลาใหม่ติดท็อป 10!",
   "lb.congrats.other": "ยินดีด้วยกับ {names} ที่ทำเวลาใหม่ติดท็อป 10!",
-  "lb.datesNote": "วันที่ (YYYY-MM-DD) คือวันที่ส่งผลการวิ่ง ตามเวลา UTC",
   "dc.voice": "{channel} · ในห้องเสียง {count} คน",
   "dc.voiceMore": "อีก {count} ช่อง",
   "faq.all": "แสดงคำถามทั้งหมด {count} ข้อ",

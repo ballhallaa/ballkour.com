@@ -91,7 +91,6 @@
   "lb.new": "Nuovo",
   "lb.congrats.one": "Complimenti a {names} per il nuovo tempo in top 10!",
   "lb.congrats.other": "Complimenti a {names} per i nuovi tempi in top 10!",
-  "lb.datesNote": "Le date (AAAA-MM-GG) indicano quando è stata inviata la run, in UTC.",
   "dc.voice": "{channel} · {count} in vocale",
   "dc.voiceMore": "+{count} altri",
   "faq.all": "Mostra tutte le {count} domande",
