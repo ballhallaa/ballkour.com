@@ -21,7 +21,7 @@
      npx wrangler secret put DISCORD_BOT_TOKEN   Ballkyrie's bot token, for the player names
      npx wrangler secret put GITHUB_TOKEN        optional: any GitHub token, for GitHub's higher rate limits
 
-   Board and answer links (/leaderboards/6, /faq/pausing) get the home page, like /leaderboards and /faq do; the
+   Board and answer links (/leaderboards/6, /leaderboards/3/legacy, /faq/pausing) get the home page, like /leaderboards and /faq do; the
    page opens the board or answer itself.
 
    /code/game and /code/site (also /code/website) redirect to the game's and this website's GitHub repos, and
@@ -259,7 +259,7 @@ async function file(request, env) {
 }
 
 /* ---------- Pages ---------- */
-const DEEP_LINK = /^\/(?:leaderboards|faq)\/[\w-]+\/?$/i;
+const DEEP_LINK = /^\/(?:leaderboards\/[\w-]+(?:\/legacy)?|faq\/[\w-]+)\/?$/i;
 async function page(request, env, ctx) {
   // Ask for the full page every time (no 304 Not Modified), so a browser never reuses old data from its cache
   const headers = new Headers(request.headers);

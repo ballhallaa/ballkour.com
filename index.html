@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<script>if (/^\/[a-z-]+(\/[\w-]+)?\/$/i.test(location.pathname)) history.replaceState(null, "", location.pathname.slice(0, -1) + location.search + location.hash);</script>
+<script>if (/^\/[a-z-]+(\/[\w-]+){0,2}\/$/i.test(location.pathname)) history.replaceState(null, "", location.pathname.slice(0, -1) + location.search + location.hash);</script>
 <title>Ballkour · Wrecking Ball parkour courses for Overwatch</title>
 <meta name="description" content="Wrecking Ball parkour courses for Overwatch. Grab a course code, run through every checkpoint, and get your time on the leaderboard!">
 <link rel="canonical" href="https://ballkour.com/">
@@ -1379,8 +1379,9 @@ a.link-copy { text-decoration: none; }
   function boardHtml(c) {
     const h = HISTORY[c.n];
     const v = viewOf(c);
+    // A course without a legacy board shows its Top 10, but keeps the tab a /legacy link asked for until the
+    // history arrives
     const hasLegacy = !!(h && h.legacy.length);
-    if (!hasLegacy) v.tab = "top";
     if (!hasLegacy) return topHtml(c, v);
     const tab = (id, key) => `<button class="lb-tab" type="button" role="tab" id="lbt-${c.n}-${id}" data-course="${c.n}" data-tab="${id}" aria-selected="${v.tab === id}" aria-controls="lbp-${c.n}" tabindex="${v.tab === id ? 0 : -1}">${esc(t(key))}</button>`;
     return `<div class="lb-tabs" role="tablist" aria-label="${esc(t("lb.toggle", { course: `${c.n} ${c.name}` }))}">${tab("top", "lb.tab.top")}${tab("legacy", "lb.tab.legacy")}</div>` +
@@ -1539,6 +1540,7 @@ a.link-copy { text-decoration: none; }
     if (!c || viewOf(c).tab === tab) return;
     viewOf(c).tab = tab;
     refreshBoard(c, `.lb-tab[data-tab="${tab}"]`);
+    if (openCourse === n) showLink("leaderboards", subPath("leaderboards")); // /leaderboards/3 or /leaderboards/3/legacy
   }
   document.addEventListener("click", (e) => {
     const tab = e.target.closest(".lb-tab");
@@ -1591,7 +1593,7 @@ a.link-copy { text-decoration: none; }
     if (before && before !== n) refreshCourse(course(before));
     refreshCourse(course(n));
     document.querySelector(`#course-${n} .rec`).focus();
-    showLink("leaderboards", openCourse ? boardHash(course(openCourse)) : ""); // the address links to the open board
+    showLink("leaderboards", openCourse ? subPath("leaderboards") : ""); // the address links to the open board
   });
 
   /* ---------- Copy course codes ---------- */
@@ -1790,6 +1792,12 @@ a.link-copy { text-decoration: none; }
           boards: Array.isArray(e.boards) ? e.boards.filter(Array.isArray).map((b) => b.map((r) => cleanRun(r)).filter(Boolean)).filter((b) => b.length) : [],
         };
         refreshCourse(c);
+      });
+      // A legacy link to a course that has no legacy board (/leaderboards/6/legacy) shows the Top 10 and its link
+      COURSES.forEach((c) => {
+        if (viewOf(c).tab !== "legacy" || (HISTORY[c.n] && HISTORY[c.n].legacy.length)) return;
+        viewOf(c).tab = "top";
+        if (openCourse === c.n && /\/legacy$/i.test(location.pathname)) showLink("leaderboards", subPath("leaderboards"));
       });
     })
     .catch(() => {});
@@ -2296,16 +2304,17 @@ a.link-copy { text-decoration: none; }
   // route → section id. Discord stays /#discord, since /discord already goes straight to the server.
   const ROUTES = { courses: "courses", leaderboards: "leaderboards", submit: "submit", features: "features", faq: "faq", discord: "discord", "source-code": "source", translations: "translations" };
   const pathFor = (route) => (route === "discord" ? "/#discord" : "/" + route);
-  const routeOf = (path) => { const m = /^\/([a-z-]+)(?:\/[\w-]+)?\/?$/i.exec(path); const r = m && m[1].toLowerCase(); return r && r !== "discord" && ROUTES[r] ? r : null; };
-  // The board or answer a link names: /leaderboards/6, /faq/pausing, or the older /leaderboards/6-dorado, /faq/pause,
-  // #6-dorado and #pause
-  const subOf = (path, hash) => { const m = /^\/(?:leaderboards|faq)\/([\w-]+)\/?$/i.exec(path); return m ? m[1].toLowerCase() : /^#[\w-]+$/.test(hash) ? hash.slice(1) : null; };
+  const routeOf = (path) => { const m = /^\/([a-z-]+)(?:\/[\w-]+(?:\/legacy)?)?\/?$/i.exec(path); const r = m && m[1].toLowerCase(); return r && r !== "discord" && ROUTES[r] ? r : null; };
+  // The board or answer a link names: /leaderboards/6 (/leaderboards/6/legacy for its Legacy tab), /faq/pausing, or
+  // the older /leaderboards/6-dorado, /faq/pause, #6-dorado and #pause
+  const subOf = (path, hash) => { const m = /^\/(?:leaderboards\/([\w-]+)(?:\/legacy)?|faq\/([\w-]+))\/?$/i.exec(path); return m ? (m[1] || m[2]).toLowerCase() : /^#[\w-]+$/.test(hash) ? hash.slice(1) : null; };
   // Old hash links still work too, including #leaderboard from the workshop.codes README
   const hashRoute = (hash) => { const h = hash.slice(1).toLowerCase(); return h === "leaderboard" ? "leaderboards" : Object.keys(ROUTES).find((r) => ROUTES[r] === h) || null; };
   const startRoute = routeOf(location.pathname) || hashRoute(location.hash);
   // ballkour.com/leaderboards/6 and /faq/pausing open that board or answer
   const startSub = subOf(location.pathname, location.hash);
   const startBoard = startRoute === "leaderboards" && startSub ? courseOfHash(startSub) : null;
+  if (startBoard && /^\/leaderboards\/[\w-]+\/legacy\/?$/i.test(location.pathname)) viewOf(startBoard).tab = "legacy";
   const startFaq = startRoute === "faq" && startSub ? faqOfLink(startSub) : null;
   if (startRoute === "leaderboards") openCourse = startBoard ? startBoard.n : 1;
   if (startFaq) pendingFaq = openFaq = startFaq;
@@ -2379,9 +2388,12 @@ a.link-copy { text-decoration: none; }
       queueSpy();
     }
   }
-  // While a board or an answer is open, the address links to it: /leaderboards/6, /faq/pausing
+  // While a board or an answer is open, the address links to it: /leaderboards/6, /leaderboards/3/legacy, /faq/pausing
   function subPath(route) {
-    if (route === "leaderboards" && openCourse) return boardHash(course(openCourse));
+    if (route === "leaderboards" && openCourse) {
+      const c = course(openCourse);
+      return boardHash(c) + (viewOf(c).tab === "legacy" ? "/legacy" : "");
+    }
     if (route === "faq" && openFaq && $(`.qa[data-id="${CSS.escape(openFaq)}"][open]`)) return faqLink(openFaq);
     return "";
   }
