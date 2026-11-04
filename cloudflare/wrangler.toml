@@ -1,6 +1,19 @@
-# Deploy from this folder with: npx wrangler deploy
+# Deploy from this folder with: npx wrangler deploy (GitHub Actions does this on every push to main)
 name = "ballkour-discord-widget"
 main = "worker.js"
 compatibility_date = "2026-06-01"
 workers_dev = false
 routes = [{ pattern = "ballkour.com/*", zone_name = "ballkour.com" }]
+
+# The site's files: the repo root, minus what's listed in /.assetsignore. Cloudflare serves them, so the
+# site doesn't need the VPS. Every request still runs worker.js first, so pages get their data baked in.
+[assets]
+directory = ".."
+binding = "ASSETS"
+not_found_handling = "404-page"
+run_worker_first = true
+
+# A test copy on workers.dev, with no route: npx wrangler deploy --env test
+[env.test]
+workers_dev = true
+routes = []

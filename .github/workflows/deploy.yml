@@ -30,23 +30,10 @@ jobs:
             exit 1
           fi
 
-      - name: Set up SSH
-        env:
-          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
-          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
-        run: |
-          install -m 700 -d ~/.ssh
-          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy
-          chmod 600 ~/.ssh/deploy
-          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
-
-      # The deploy key can only run rsync into /var/www/ballkour.com, so the target path is empty
-      - name: Upload the site
-        env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-        run: |
-          rsync -rlz --checksum --delete --itemize-changes --chmod=D755,F644 \
-            --exclude '.git*' --exclude '.github/' --exclude tools/ --exclude cloudflare/ \
-            --exclude README.md --exclude LICENSE --exclude deploy.sh \
-            -e "ssh -i ~/.ssh/deploy -p 2222" \
-            ./ "ballkour-deploy@${DEPLOY_HOST}:"
+      # Publishes the site's files and cloudflare/worker.js together (see cloudflare/wrangler.toml)
+      - name: Deploy to Cloudflare
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: cloudflare
