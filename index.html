@@ -392,6 +392,15 @@ select option, select optgroup { background: var(--menu); color: var(--ink); }
 .steps b { font-weight: 600; color: var(--ink); }
 .step-aside { margin-inline-start: .3em; }
 /* A menu path ("Play → More → Custom Games → Create") shows as one bar, its last stop in mint (see renderPaths()) */
+/* Chips in running text (menu paths, the example code, keycaps, the hint colors) share one look and one height
+   (24px), so they line up with each other and with the text around them */
+.path, .steps code, .faq-intro kbd, .qa-a kbd, .qa-legend .fg {
+  border: 1px solid var(--line-hi);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, .04);
+  font: 600 14px/22px var(--body);
+  color: var(--ink);
+}
 .path {
   max-width: 100%;
   display: inline-flex;
@@ -399,18 +408,13 @@ select option, select optgroup { background: var(--menu); color: var(--ink); }
   align-items: center;
   gap: 0 6px;
   margin-block: 1px;
-  padding: 2px 10px;
-  border: 1px solid var(--line-hi);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, .04);
-  font: 600 14px/1.65 var(--body);
-  color: var(--ink);
+  padding: 0 9px;
 }
 /* Each stop keeps the › before it, so a long path wraps between stops and no line ends on a › */
 .path-stop { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .path .sep { width: 12px; height: 12px; color: var(--ink-3); transform: rotate(-90deg); }
 .path-end { color: var(--volt); }
-.steps code { padding: 1px 5px; border: 1px solid var(--line-hi); border-radius: 5px; font: 600 13px/1 var(--mono); letter-spacing: .05em; color: var(--ink); }
+.steps code { display: inline-block; padding: 0 7px; font-family: var(--mono); font-size: 13px; letter-spacing: .05em; }
 
 /* Courses */
 .group { padding: 4px 0 10px; }
@@ -682,17 +686,14 @@ a.stat:hover .play { color: var(--volt); }
 .qa-a .fg { font-weight: 600; }
 /* <b> marks the game's own labels (controls, HUD and lobby names) in the house orange */
 .qa-a b, .qa-q b { font-weight: 600; color: var(--ember); white-space: nowrap; }
-/* Controls (the keybind that opens the FAQ, the shield bounce's button) are drawn as keycaps */
+/* Controls (the keybind that opens the FAQ, the shield bounce's button) are keycaps: chips, one per key, with a
+   thicker bottom edge */
 .faq-intro b { font-weight: 600; color: var(--ink-2); white-space: nowrap; }
-.faq-intro kbd, .qa-a kbd {
-  display: inline-block; padding: 1px 7px; vertical-align: 1px;
-  border: 1px solid var(--line-hi); border-bottom-width: 2px; border-radius: 6px;
-  background: var(--glass-hi); font: 600 13px/1.4 var(--body); color: var(--ink);
-}
+.faq-intro kbd, .qa-a kbd { display: inline-block; margin: 0 2px; padding: 0 8px; border-bottom-width: 2px; line-height: 21px; vertical-align: 1px; }
 .faq-intro .tag { vertical-align: 1px; }
 /* A row of colored words (the hint colors) shows as a legend of chips */
 .qa-legend { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 10px; }
-.qa-legend .fg { display: inline-flex; align-items: center; padding: 4px 9px; border: 1px solid var(--line); border-radius: 7px; background: rgba(255, 255, 255, .03); font: 600 13px/1.2 var(--body); }
+.qa-legend .fg { display: inline-flex; align-items: center; padding: 0 9px; }
 /* The questions past the first 5 fold behind a "Show all" row */
 .faq-rest { border-top: 1px solid var(--line); }
 .faq-rest[hidden] { border-top: 0; }
