@@ -21,7 +21,7 @@
      npx wrangler secret put DISCORD_BOT_TOKEN   Ballkyrie's bot token, for the player names
      npx wrangler secret put GITHUB_TOKEN        optional: any GitHub token, for GitHub's higher rate limits
 
-   Board and answer links (/leaderboards/6-dorado, /faq/pause) get the home page, like /leaderboards and /faq do; the
+   Board and answer links (/leaderboards/6, /faq/pausing) get the home page, like /leaderboards and /faq do; the
    page opens the board or answer itself.
 
    /code/game and /code/site (also /code/website) redirect to the game's and this website's GitHub repos, and
@@ -265,7 +265,7 @@ async function page(request, env, ctx) {
   const headers = new Headers(request.headers);
   headers.delete("If-None-Match");
   headers.delete("If-Modified-Since");
-  // /leaderboards/6-dorado and /faq/pause are the home page
+  // /leaderboards/6 and /faq/pausing are the home page
   const url = new URL(request.url);
   if (DEEP_LINK.test(url.pathname)) url.pathname = "/";
   const [res, widget, gameData, players] = await Promise.all([
