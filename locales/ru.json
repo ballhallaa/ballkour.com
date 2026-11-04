@@ -91,7 +91,6 @@
   "lb.new": "Новый",
   "lb.congrats.one": "Поздравляем {names} с новым результатом в топ-10!",
   "lb.congrats.other": "Поздравляем {names} с новыми результатами в топ-10!",
-  "lb.datesNote": "Даты (ГГГГ-ММ-ДД) — день отправки забега по UTC.",
   "dc.voice": "{channel} · в голосовом: {count}",
   "dc.voiceMore": "ещё {count}",
   "faq.all": "Показать все вопросы ({count})",

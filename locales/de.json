@@ -91,7 +91,6 @@
   "lb.new": "Neu",
   "lb.congrats.one": "Glückwunsch an {names} zur neuen Top-10-Zeit!",
   "lb.congrats.other": "Glückwunsch an {names} zu den neuen Top-10-Zeiten!",
-  "lb.datesNote": "Daten (JJJJ-MM-TT) geben an, wann der Lauf eingereicht wurde, in UTC.",
   "dc.voice": "{channel} · {count} im Sprachkanal",
   "dc.voiceMore": "+{count} weitere",
   "faq.all": "Alle {count} Fragen anzeigen",
