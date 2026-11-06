@@ -37,7 +37,10 @@ const DISCORD_API = "https://discord.com/api/v10";
 const STALE_FOR = 7 * 24 * 60 * 60; // seconds: how long the last good copy is kept for when a source is down
 
 /* ---------- Caching ---------- */
-const cacheKey = (name, stale) => new Request(`https://ballkour.com/__cache/${name}${stale ? "?stale" : ""}`);
+// Bump the version whenever what a copy holds changes. The last good copy is reused for as long as its source can't be
+// reached, so under the same key a copy saved by an older Worker can outlive the change.
+const CACHE_VERSION = 2;
+const cacheKey = (name, stale) => new Request(`https://ballkour.com/__cache/v${CACHE_VERSION}/${name}${stale ? "?stale" : ""}`);
 
 // The cached copy of `name` if it's fresh, else rebuilt by build(previous) and cached for `ttl` seconds. When the
 // rebuild fails, the last good copy is served (and rebuilding is tried again on the next request).
@@ -67,6 +70,11 @@ async function peek(name, ttl, ctx, build) {
   ctx.waitUntil(cached(name, ttl, ctx, build).catch(() => {}));
   const old = await caches.default.match(cacheKey(name, true));
   return old ? old.text() : null;
+}
+// Whatever copy is cached right now, fresh or not, without rebuilding it
+async function stored(name) {
+  const copy = (await caches.default.match(cacheKey(name))) || (await caches.default.match(cacheKey(name, true)));
+  return copy ? copy.text() : null;
 }
 
 // For copies baked into a page: the cached copy if it's fresh. If not, it's rebuilt right away and the page waits up
@@ -205,8 +213,9 @@ async function lookUp(token, id) {
 }
 async function buildPlayers(env, ctx, previous) {
   if (!env.DISCORD_BOT_TOKEN) throw new Error("no DISCORD_BOT_TOKEN secret");
-  // Every Discord ID on any board: `# discord: ID` in the .opy files and "discord": "ID" in the .json files
-  const { files } = JSON.parse(await game(env, ctx));
+  // Every Discord ID on any board: `# discord: ID` in the .opy files and "discord": "ID" in the .json files. They come
+  // from whatever game data is cached, so refreshing the names doesn't fetch the game data from GitHub again too.
+  const { files } = JSON.parse((await stored("game")) ?? (await game(env, ctx)));
   const ids = new Set();
   for (const text of Object.values(files)) if (text) for (const m of text.matchAll(/discord"?\s*:\s*"?(\d{17,20})\b/gi)) ids.add(m[1]);
   const found = {};
@@ -268,12 +277,18 @@ async function page(request, env, ctx) {
   // /leaderboards/6 and /faq/pausing are the home page
   const url = new URL(request.url);
   if (DEEP_LINK.test(url.pathname)) url.pathname = "/";
+  // Cloudflare's free plan allows 50 fetches per request. Refreshing the game data takes about 20 and the player names
+  // one or two per player, so a page load only refreshes the names when the game data is fresh. Past the limit, the
+  // releases (fetched last) can't be refreshed and every page keeps getting the last list.
+  const freshGame = await caches.default.match(cacheKey("game"));
   const [res, widget, gameData, players] = await Promise.all([
     file(new Request(url, { method: "GET", headers, redirect: "manual" }), env),
     // The online count is worth a short wait (Discord answers in well under the 1.5 s limit), so it's never stale
     cached("widget", 60, ctx, (prev) => buildWidget(prev)).catch(() => null),
-    soon("game", 60, ctx, (prev) => buildGame(env, prev), 2500),
-    env.DISCORD_BOT_TOKEN ? peek("players", 60 * 60, ctx, (prev) => buildPlayers(env, ctx, prev)) : null,
+    freshGame ? freshGame.text() : soon("game", 60, ctx, (prev) => buildGame(env, prev), 2500),
+    !env.DISCORD_BOT_TOKEN ? null
+      : freshGame ? peek("players", 60 * 60, ctx, (prev) => buildPlayers(env, ctx, prev))
+      : stored("players"),
   ]);
   if (!res.ok || !(res.headers.get("Content-Type") || "").includes("text/html")) return res;
   if (!widget && !gameData && !players) return res;
