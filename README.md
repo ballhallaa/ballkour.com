@@ -108,7 +108,7 @@ To turn it on:
    npx wrangler secret put SESSION_SECRET                     # any long random string, e.g. from: openssl rand -base64 32
    npx wrangler secret put GITHUB_APP_ID                      # the App ID
    npx wrangler secret put GITHUB_APP_PRIVATE_KEY < key.pem   # the .pem file (then delete it, or keep it somewhere safe)
-   npx wrangler secret put SUBMIT_WEBHOOK                     # optional: a channel's webhook URL, to log every run sent from the site
+   npx wrangler secret put SUBMIT_CHANNEL                     # optional: a channel's ID, where Ballkyrie logs every run sent from the site
    ```
 
 Until those are set, the form stays hidden and the Discord ticket is the only way. (A `GITHUB_TOKEN` that can write the game repo works instead of the app, but then runs are committed as its owner, who has to be allowed past the rules.) The test copy needs its own secrets, and its `…workers.dev/api/login/callback` address added as a redirect too.
