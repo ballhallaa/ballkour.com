@@ -12,6 +12,8 @@
    /data/players.json  Players' Discord names and pictures for the leaderboards (also at /players.json):
                          { "<discord id>": { "name": "server nickname, display name or username", "avatar": "https://cdn.discordapp.com/…" } }
                        Looked up with Ballkyrie's token, only for players on a board. Refreshed at most once an hour.
+   /api/…              Signing in with Discord, and runs sent from the form under Submit a run, which go on the boards
+                       straight away. See "Signing in with Discord, and runs sent from the website" below.
 
    Each page also gets the latest copy of all three in <head> as <script type="application/json"> blocks, and its
    "• N members" pills already filled in, so nothing pops in after the page loads. If GitHub or Discord can't be
@@ -19,7 +21,12 @@
 
    Secrets (set once from this folder; each asks you to paste the value):
      npx wrangler secret put DISCORD_BOT_TOKEN   Ballkyrie's bot token, for the player names
-     npx wrangler secret put GITHUB_TOKEN        optional: any GitHub token, for GitHub's higher rate limits
+     npx wrangler secret put GITHUB_TOKEN        a GitHub token that can write the game repo's contents, for saving runs
+                                                 sent from the website (and GitHub's higher rate limits)
+     npx wrangler secret put DISCORD_CLIENT_ID      Ballkyrie's application ID, for signing in with Discord
+     npx wrangler secret put DISCORD_CLIENT_SECRET  Ballkyrie's OAuth2 client secret
+     npx wrangler secret put SESSION_SECRET         any long random string, for signing the sign-in cookie
+     npx wrangler secret put SUBMIT_WEBHOOK      optional: a channel's webhook URL, where runs sent from the website are logged
 
    Board and answer links (/leaderboards/6, /leaderboards/3/legacy, /faq/pausing) get the home page, like /leaderboards and /faq do; the
    page opens the board or answer itself.
@@ -39,7 +46,7 @@ const STALE_FOR = 7 * 24 * 60 * 60; // seconds: how long the last good copy is k
 /* ---------- Caching ---------- */
 // Bump the version whenever what a copy holds changes. The last good copy is reused for as long as its source can't be
 // reached, so under the same key a copy saved by an older Worker can outlive the change.
-const CACHE_VERSION = 2;
+const CACHE_VERSION = 3;
 const cacheKey = (name, stale) => new Request(`https://ballkour.com/__cache/v${CACHE_VERSION}/${name}${stale ? "?stale" : ""}`);
 
 // The cached copy of `name` if it's fresh, else rebuilt by build(previous) and cached for `ttl` seconds. When the
@@ -109,15 +116,22 @@ const githubHeaders = (env) => ({
 async function buildGame(env, previous) {
   const headers = githubHeaders(env);
   const get = async (path) => {
-    const r = await fetch(`${GAME}/${encodeURI(path)}`, { headers, signal: AbortSignal.timeout(5000) });
+    // runs.json changes with every run sent from the website, so it's read through GitHub's API, which always has
+    // the newest copy (raw files can be a few minutes behind)
+    const viaApi = path === RUNS_FILE && env.GITHUB_TOKEN;
+    const r = await fetch(viaApi ? `https://api.github.com/repos/${REPO}/contents/${encodeURI(path)}?ref=develop` : `${GAME}/${encodeURI(path)}`, {
+      headers: viaApi ? { ...headers, Accept: "application/vnd.github.raw+json" } : headers,
+      signal: AbortSignal.timeout(5000),
+    });
     if (!r.ok) throw new Error(`${path}: ${r.status}`);
     return r.text();
   };
-  // The leaderboard files are listed in the leaderboard bot's courses.json
+  // The leaderboard files are listed in the leaderboard bot's courses.json. runs.json has the runs that never made a
+  // top 10 and the runs taken off the boards, for the boards' "Show all" and the player ratings.
   let paths = previous ? Object.keys(previous.files) : [];
   try {
     const courses = JSON.parse(await get("tools/leaderboard-bot/courses.json")).courses;
-    paths = ["leaderboards/history.json", "src/engine/faq.opy", ...courses.map((c) => c.file)];
+    paths = ["leaderboards/history.json", RUNS_FILE, "src/engine/faq.opy", ...courses.map((c) => c.file)];
   } catch (e) {
     if (!paths.length) throw e;
   }
@@ -228,6 +242,288 @@ async function buildPlayers(env, ctx, previous) {
   return JSON.stringify(found);
 }
 
+/* ---------- Signing in with Discord, and runs sent from the website ----------
+   Players sign in with Discord (OAuth2 with the "identify" scope: their ID, name and picture, nothing else) to send a
+   run from the form under Submit a run. The run goes on the boards straight away: it's saved under their Discord ID
+   in leaderboards/runs.json on the game repo's develop branch (one commit per run), and the leaderboard bot picks that
+   up to post the board and give out roles. Nobody can send a run as someone else: it's always the sender's, whatever
+   in-game name they type (in-game names aren't unique, so they're never checked against other players').
+     GET  /api/login     Discord's sign-in page, then /api/login/callback, then back to /submit
+     GET  /api/me        { on, user: { id, name, avatar } | null }: whether sending runs is set up, and who's signed in
+     POST /api/logout
+     POST /api/submit    { course, name, time, mistakes, video } → { ok: true, run, saved } (saved is false when that
+                         exact run was already in) or { error }, the error saying
+                         what to fix: login (not signed in), course, name, time, miss, video, rate (too many), off
+                         (not set up, or GitHub didn't take it) or bad
+   The session is a cookie signed with SESSION_SECRET that lasts 30 days. Nothing about it is stored here.
+   Secrets: DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET (Ballkyrie's app in Discord's Developer Portal, OAuth2 page,
+   with https://ballkour.com/api/login/callback added as a redirect), SESSION_SECRET (any long random string) and
+   GITHUB_TOKEN, which has to be able to write the game repo's contents. Without all four, the form stays hidden.
+   SUBMIT_WEBHOOK is optional: a Discord channel's webhook URL, where every run sent from the website is logged.
+   SUBMIT_LIMIT (wrangler.toml) allows 5 sends a minute from one Discord account, and runs.json at most 20 a day. */
+const RUNS_FILE = "leaderboards/runs.json";
+const SESSION_DAYS = 30;
+const loginOn = (env) => !!(env.DISCORD_CLIENT_ID && env.DISCORD_CLIENT_SECRET && env.SESSION_SECRET && env.GITHUB_TOKEN);
+// The same checks as the page's. Names can't have commas or quotes, which the in-game boards' files use.
+const NAME_OK = /^[^\u0000-\u001f\u007f"`\\,<>]{1,32}$/u;
+const toSeconds = (t) => t.split(":").reduce((sum, part) => sum * 60 + Number(part), 0);
+// "4:05.81" (or "1:04:05.81", or with a decimal comma) → "4:05.81", or "" if it isn't a time
+function cleanTime(v) {
+  const m = /^(?:(\d{1,2}):)?(\d{1,2}):(\d{2})[.,](\d{2})$/.exec(v.trim());
+  if (!m || Number(m[3]) > 59 || (m[1] && Number(m[2]) > 59)) return "";
+  const out = m[1] ? `${Number(m[1])}:${m[2].padStart(2, "0")}:${m[3]}.${m[4]}` : `${Number(m[2])}:${m[3]}.${m[4]}`;
+  return toSeconds(out) > 0 ? out : "";
+}
+// A link to the video (https:// is added if it's left off), or "" if it isn't one. Brackets are escaped, so the
+// link can't turn into a Discord [masked link](…).
+function cleanVideo(v) {
+  v = v.trim();
+  if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(v)) v = "https://" + v;
+  try {
+    const u = new URL(v);
+    if (u.protocol !== "https:" || !/\.[a-z]{2,}$/i.test(u.hostname) || v.length > 300 || /[\s"'<>`]/.test(v)) return "";
+    return u.href.replace(/[[\]()]/g, (c) => "%" + c.charCodeAt(0).toString(16).toUpperCase());
+  } catch (e) { return ""; }
+}
+const answer = (status, body, cookies = []) => {
+  const headers = new Headers({ "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
+  cookies.forEach((c) => headers.append("Set-Cookie", c));
+  return new Response(JSON.stringify(body), { status, headers });
+};
+const mdSafe = (s) => String(s).replace(/([\\*_~`|>#[\]()-])/g, "\\$1");
+
+// Base64 for text and bytes, and the URL-safe kind for cookies
+const utf8 = new TextEncoder();
+function base64(bytes) {
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+const unbase64 = (s) => Uint8Array.from(atob(s.replace(/\s/g, "")), (c) => c.charCodeAt(0));
+const b64url = (bytes) => base64(bytes).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const unb64url = (s) => unbase64(s.replace(/-/g, "+").replace(/_/g, "/"));
+const text = (bytes) => new TextDecoder().decode(bytes);
+
+/* The session cookie: the Discord account, signed so it can't be made up */
+const hmacKey = (env) => crypto.subtle.importKey("raw", utf8.encode(env.SESSION_SECRET), { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]);
+const cookie = (name, value, maxAge, path = "/") => `${name}=${value}; Path=${path}; Max-Age=${maxAge}; HttpOnly; Secure; SameSite=Lax`;
+async function signSession(env, user) {
+  const body = b64url(utf8.encode(JSON.stringify({ ...user, exp: Date.now() + SESSION_DAYS * 864e5 })));
+  return `${body}.${b64url(new Uint8Array(await crypto.subtle.sign("HMAC", await hmacKey(env), utf8.encode(body))))}`;
+}
+async function readSession(request, env) {
+  if (!loginOn(env)) return null;
+  const m = /(?:^|;\s*)bk_session=([\w-]+)\.([\w-]+)/.exec(request.headers.get("Cookie") || "");
+  if (!m) return null;
+  try {
+    if (!(await crypto.subtle.verify("HMAC", await hmacKey(env), unb64url(m[2]), utf8.encode(m[1])))) return null;
+    const user = JSON.parse(text(unb64url(m[1])));
+    return user && user.exp > Date.now() && /^\d{17,20}$/.test(user.id) ? user : null;
+  } catch (e) { return null; }
+}
+// Where to go back to after signing in: a page of the site, with its language
+const backTo = (to) => (/^\/[\w/-]*(\?lang=[\w-]+)?$/.test(to || "") ? to : "/submit");
+
+async function login(request, env) {
+  const url = new URL(request.url);
+  if (!loginOn(env)) return Response.redirect(`${url.origin}/submit`, 302);
+  const state = b64url(crypto.getRandomValues(new Uint8Array(18)));
+  const auth = new URL("https://discord.com/oauth2/authorize");
+  auth.search = new URLSearchParams({
+    client_id: env.DISCORD_CLIENT_ID, response_type: "code", scope: "identify", prompt: "none", state,
+    redirect_uri: `${url.origin}/api/login/callback`,
+  });
+  // The state comes back from Discord and has to match, so nobody can sign someone in with their own account
+  const headers = new Headers({ Location: auth.href });
+  headers.append("Set-Cookie", cookie("bk_login", `${state}.${b64url(utf8.encode(backTo(url.searchParams.get("to"))))}`, 600, "/api/login"));
+  return new Response(null, { status: 302, headers });
+}
+async function loginCallback(request, env) {
+  const url = new URL(request.url);
+  const m = /(?:^|;\s*)bk_login=([\w-]+)\.([\w-]+)/.exec(request.headers.get("Cookie") || "");
+  let to = "/submit";
+  try { if (m) to = backTo(text(unb64url(m[2]))); } catch (e) { /* stays /submit */ }
+  const back = (session) => {
+    const headers = new Headers({ Location: url.origin + to });
+    headers.append("Set-Cookie", cookie("bk_login", "", 0, "/api/login"));
+    if (session) headers.append("Set-Cookie", cookie("bk_session", session, SESSION_DAYS * 86400));
+    return new Response(null, { status: 302, headers });
+  };
+  const code = url.searchParams.get("code");
+  if (!loginOn(env) || !m || !code || url.searchParams.get("state") !== m[1]) return back(null); // cancelled, or a stale link
+  const token = await fetch("https://discord.com/api/oauth2/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: env.DISCORD_CLIENT_ID, client_secret: env.DISCORD_CLIENT_SECRET, grant_type: "authorization_code", code,
+      redirect_uri: `${url.origin}/api/login/callback`,
+    }),
+    signal: AbortSignal.timeout(5000),
+  }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  const me = token && token.access_token
+    ? await fetch(`${DISCORD_API}/users/@me`, { headers: { Authorization: `Bearer ${token.access_token}` }, signal: AbortSignal.timeout(5000) })
+      .then((r) => (r.ok ? r.json() : null)).catch(() => null)
+    : null;
+  if (!me || !/^\d{17,20}$/.test(me.id)) {
+    console.error("login: Discord didn't hand over the account");
+    return back(null);
+  }
+  const avatar = me.avatar ? `https://cdn.discordapp.com/avatars/${me.id}/${me.avatar}.png?size=64`
+    : `https://cdn.discordapp.com/embed/avatars/${Number((BigInt(me.id) >> 22n) % 6n)}.png`;
+  return back(await signSession(env, { id: me.id, name: me.global_name || me.username, avatar }));
+}
+async function whoAmI(request, env) {
+  const user = await readSession(request, env);
+  return answer(200, { on: loginOn(env), user: user && { id: user.id, name: user.name, avatar: user.avatar } });
+}
+
+/* Saving a run */
+// One run per line, so runs.json stays easy to read and edit by hand
+function dumpRuns(data) {
+  const run = (r) => (r && typeof r === "object" && !Array.isArray(r)
+    ? "{" + Object.entries(r).map(([k, v]) => `${JSON.stringify(k)}: ${JSON.stringify(v)}`).join(", ") + "}"
+    : JSON.stringify(r));
+  const group = (obj) => {
+    const keys = Object.keys(obj && typeof obj === "object" ? obj : {}).filter((k) => Array.isArray(obj[k]))
+      .sort((a, b) => Number(a) - Number(b) || (a < b ? -1 : 1));
+    return keys.length ? "{\n" + keys.map((k) => `    ${JSON.stringify(k)}: [` +
+      (obj[k].length ? "\n" + obj[k].map((r) => "      " + run(r)).join(",\n") + "\n    " : "") + "]").join(",\n") + "\n  }" : "{}";
+  };
+  const others = Object.entries(data).filter(([k]) => k !== "runs" && k !== "removed");
+  return `{\n  "runs": ${group(data.runs)},\n  "removed": ${group(data.removed)}` +
+    others.map(([k, v]) => `,\n  ${JSON.stringify(k)}: ${JSON.stringify(v)}`).join("") + "\n}\n";
+}
+// Adds the run to runs.json on develop through GitHub's API, reading it again if someone else saved in between.
+// → { text } (the new runs.json, or null if this exact run was already in), or { error, status }
+async function saveRun(env, n, run) {
+  const api = `https://api.github.com/repos/${REPO}/contents/${RUNS_FILE}`;
+  const headers = { ...githubHeaders(env), Accept: "application/vnd.github+json" };
+  let why = "";
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const got = await fetch(`${api}?ref=develop`, { headers, signal: AbortSignal.timeout(5000) });
+    if (!got.ok && got.status !== 404) { why = `reading it: ${got.status} ${(await got.text()).slice(0, 200)}`; break; }
+    const meta = got.ok ? await got.json() : null;
+    let data;
+    try { data = meta ? JSON.parse(text(unbase64(meta.content))) : {}; } catch (e) { why = "it isn't valid JSON"; break; }
+    if (!data || typeof data !== "object" || Array.isArray(data)) { why = "it isn't a JSON object"; break; }
+    if (!data.runs || typeof data.runs !== "object") data.runs = {};
+    if (!data.removed || typeof data.removed !== "object") data.removed = {};
+    const list = Array.isArray(data.runs[n]) ? data.runs[n] : (data.runs[n] = []);
+    // The same run sent twice is only saved once
+    if (list.some((r) => r && r.discord === run.discord && r.time === run.time && r.mistakes === run.mistakes)) return { text: null };
+    const today = Object.values(data.runs).flat().filter((r) => r && r.discord === run.discord && r.date === run.date).length;
+    if (today >= 20) return { error: "rate", status: 429 };
+    list.push(run);
+    const next = dumpRuns(data);
+    const put = await fetch(api, {
+      method: "PUT",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: `chore(leaderboard): add ${run.name}'s ${run.time} on course ${n} from ballkour.com`,
+        content: base64(utf8.encode(next)),
+        branch: "develop",
+        ...(meta ? { sha: meta.sha } : {}),
+      }),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (put.ok) return { text: next };
+    why = `saving it: ${put.status} ${(await put.text()).slice(0, 300)}`;
+    if (put.status !== 409) break; // 409: runs.json changed since it was read, so read it again
+  }
+  console.error(`submit: couldn't save to ${RUNS_FILE}, ${why}`);
+  return { error: "off", status: 502 };
+}
+// The site shows a saved run straight away: the cached game data gets the new runs.json, and the player's Discord
+// name and picture go in until the hourly lookup has them. (Copies from GitHub have the run too: runs.json is read
+// through GitHub's API, which doesn't serve old copies the way raw files can.)
+async function putCached(name, ttl, body) {
+  await Promise.all([
+    caches.default.put(cacheKey(name), new Response(body, { headers: { "Cache-Control": `public, max-age=${ttl}` } })),
+    caches.default.put(cacheKey(name, true), new Response(body, { headers: { "Cache-Control": `public, max-age=${STALE_FOR}` } })),
+  ]);
+}
+async function showSaved(runsText, user) {
+  const gameCopy = await stored("game");
+  if (gameCopy && runsText) {
+    const d = JSON.parse(gameCopy);
+    d.files[RUNS_FILE] = runsText;
+    await putCached("game", 60, JSON.stringify(d));
+  }
+  const playersCopy = await stored("players");
+  if (playersCopy) {
+    const d = JSON.parse(playersCopy);
+    if (!d[user.id]) { d[user.id] = { name: user.name, avatar: user.avatar }; await putCached("players", 60 * 60, JSON.stringify(d)); }
+  }
+}
+// A line in the log channel for every run sent from the website, if there is one
+async function logRun(env, n, file, run, user) {
+  if (!env.SUBMIT_WEBHOOK) return;
+  const res = await fetch(env.SUBMIT_WEBHOOK, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      username: "ballkour.com",
+      allowed_mentions: { parse: [] }, // shows who sent it without pinging them
+      embeds: [{
+        title: `New run on course ${n}${file ? ` (${file.replace(/^leaderboards\//, "")})` : ""}`,
+        url: `https://ballkour.com/leaderboards/${n}`,
+        color: 0x00e697,
+        fields: [
+          { name: "Player", value: mdSafe(run.name), inline: true },
+          { name: "Time", value: run.time, inline: true },
+          { name: "Mistakes", value: String(run.mistakes), inline: true },
+          { name: "Sent by", value: `<@${user.id}> (${mdSafe(user.name)})`, inline: true },
+          { name: "Video", value: `<${run.video}>` },
+        ],
+        footer: { text: `Saved to ${RUNS_FILE}. To take it off, move it to "removed" there.` },
+        timestamp: new Date().toISOString(),
+      }],
+    }),
+    signal: AbortSignal.timeout(5000),
+  }).catch((e) => ({ ok: false, status: String((e && e.message) || e) }));
+  if (!res.ok) console.error(`submit: the log webhook said ${res.status}`);
+}
+
+async function submit(request, env, ctx) {
+  if (request.method !== "POST") return answer(405, { error: "bad" });
+  const url = new URL(request.url);
+  if (request.headers.get("Origin") !== url.origin) return answer(403, { error: "bad" });
+  if (!loginOn(env)) return answer(503, { error: "off" });
+  const user = await readSession(request, env);
+  if (!user) return answer(401, { error: "login" });
+  if (env.SUBMIT_LIMIT && !(await env.SUBMIT_LIMIT.limit({ key: user.id })).success) return answer(429, { error: "rate" });
+
+  let body;
+  try {
+    const raw = await request.text();
+    body = raw.length <= 4096 ? JSON.parse(raw) : null;
+  } catch (e) { body = null; }
+  if (!body || typeof body !== "object") return answer(400, { error: "bad" });
+  const n = Number(body.course);
+  const name = String(body.name ?? "").trim();
+  const time = cleanTime(String(body.time ?? ""));
+  const mistakes = Number(body.mistakes);
+  const video = cleanVideo(String(body.video ?? ""));
+  if (!Number.isInteger(n) || n < 1 || n > 99) return answer(400, { error: "course" });
+  if (!NAME_OK.test(name)) return answer(400, { error: "name" });
+  if (!time) return answer(400, { error: "time" });
+  if (!Number.isInteger(mistakes) || mistakes < 0 || mistakes > 9999) return answer(400, { error: "miss" });
+  if (!video) return answer(400, { error: "video" });
+
+  // The course has to have a board, going by whatever game data is cached (fetched if there's none yet)
+  let files = null;
+  try { files = JSON.parse((await stored("game")) ?? (await game(env, ctx))).files; } catch (e) { files = null; }
+  const file = files && Object.keys(files).find((k) => k.startsWith(`leaderboards/${n}-`) && /\.(opy|json)$/.test(k));
+  if (files && !file) return answer(400, { error: "course" });
+
+  const run = { name: name.toUpperCase(), discord: user.id, time, mistakes, date: new Date().toISOString().slice(0, 10), video };
+  const saved = await saveRun(env, n, run);
+  if (saved.error) return answer(saved.status, { error: saved.error });
+  await showSaved(saved.text, user).catch((e) => console.error(`submit: couldn't update the cached copy: ${(e && e.message) || e}`));
+  if (saved.text) ctx.waitUntil(logRun(env, n, file, run, user));
+  return answer(200, { ok: true, run, saved: !!saved.text });
+}
+
 /* ---------- Short links ---------- */
 // ballkour.com/code/game → the game repo, /code/site (or /code/website) → this repo.
 // ballkour.com/releases (or /releases/game) → the game's release notes, /releases/site (or /releases/website) → this
@@ -291,7 +587,8 @@ async function page(request, env, ctx) {
       : stored("players"),
   ]);
   if (!res.ok || !(res.headers.get("Content-Type") || "").includes("text/html")) return res;
-  if (!widget && !gameData && !players) return res;
+  const on = loginOn(env);
+  if (!widget && !gameData && !players && !on) return res;
 
   const out = new Response(res.body, res);
   out.headers.delete("ETag");
@@ -301,6 +598,8 @@ async function page(request, env, ctx) {
   const script = (id, body) => `<script type="application/json" id="${id}">${body.replace(/</g, "\\u003c")}</script>`;
   const blocks = [["discord-widget", widget], ["game-data", gameData], ["players", players]].filter(([, body]) => body);
   let rw = new HTMLRewriter().on("head", { element(el) { el.append(blocks.map(([id, body]) => script(id, body)).join(""), { html: true }); } });
+  // Sending runs from the website is set up (see "Signing in with Discord"): the page shows the form
+  if (on) rw = rw.on("#submit", { element(el) { el.setAttribute("data-login", "on"); } });
   const count = widget && JSON.parse(widget).member_count;
   if (typeof count === "number") {
     rw = rw
@@ -311,8 +610,24 @@ async function page(request, env, ctx) {
 }
 
 async function handle(request, env, ctx) {
-  if (request.method !== "GET") return file(request, env);
   const path = new URL(request.url).pathname;
+  if (path.startsWith("/api/")) {
+    try {
+      if (path === "/api/login" && request.method === "GET") return await login(request, env);
+      if (path === "/api/login/callback" && request.method === "GET") return await loginCallback(request, env);
+      if (path === "/api/me" && request.method === "GET") return await whoAmI(request, env);
+      if (path === "/api/logout" && request.method === "POST") {
+        if (request.headers.get("Origin") !== new URL(request.url).origin) return answer(403, { error: "bad" });
+        return answer(200, { ok: true }, [cookie("bk_session", "", 0)]);
+      }
+      if (path === "/api/submit") return await submit(request, env, ctx);
+      return answer(404, { error: "bad" });
+    } catch (e) {
+      console.error(`${path}: ${(e && e.message) || e}`);
+      return answer(500, { error: "off" });
+    }
+  }
+  if (request.method !== "GET") return file(request, env);
   const short = shortLink(path);
   if (short) return short;
   try {

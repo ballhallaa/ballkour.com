@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+"""Preview the site from this folder, with the live leaderboards.
+
+    python3 tools/serve.py            # then open http://localhost:8000
+    python3 tools/serve.py 8080       # another port
+
+It serves your copy of the site at the same addresses as ballkour.com (/leaderboards/6, /faq/pausing, …) and gets
+/data/*.json (the boards, Discord names, member count) from ballkour.com, so you see your changes with real data.
+Signing in and sending runs only work on the real site, so the form shows the Discord ticket instead.
+"""
+import http.server
+import pathlib
+import re
+import sys
+import urllib.request
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
+# The addresses that are the home page, like the Worker and Cloudflare's rules serve them
+PAGES = re.compile(r"^/(courses|leaderboards|submit|features|faq|source-code|translations)(/[\w-]+(/legacy)?)?/?$", re.I)
+
+
+class Handler(http.server.SimpleHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, directory=str(ROOT), **kwargs)
+
+    def do_GET(self):
+        path = self.path.split("?", 1)[0]
+        if path.startswith("/data/"):
+            try:
+                req = urllib.request.Request("https://ballkour.com" + path, headers={"User-Agent": "ballkour.com preview"})
+                with urllib.request.urlopen(req, timeout=10) as r:
+                    body = r.read()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+            except Exception as e:  # offline: the page falls back to the runs written into it
+                self.send_error(503, f"ballkour.com can't be reached: {e}")
+            return
+        if PAGES.match(path):
+            self.path = "/index.html"
+        super().do_GET()
+
+    def end_headers(self):
+        self.send_header("Cache-Control", "no-cache")  # always your newest edits
+        super().end_headers()
+
+
+print(f"Previewing {ROOT} at http://localhost:{PORT}  (Ctrl+C to stop)")
+http.server.ThreadingHTTPServer(("", PORT), Handler).serve_forever()

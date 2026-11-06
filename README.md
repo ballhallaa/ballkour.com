@@ -15,15 +15,24 @@ cloudflare/              the Worker that serves the site, plus the GitHub and Di
 .github/workflows/       deploys the site on every push to main
 ```
 
-Keep everything out of `/discord`, `/gameplay`, `/code`, `/releases`, `/courses`, `/leaderboards`, `/submit`, `/features`, `/faq`, `/source-code` and `/translations`. Cloudflare redirects `/discord`, `/gameplay`, and `/releases/v*` and `/releases/site/v*` (to that release of the game or website on GitHub, which is where the version chips link), and the Worker redirects `/code/game` and `/code/site` (or `/code/website`) to the game's and this website's GitHub repos, and `/releases` and `/releases/site` (or `/releases/website`) to their release notes. Cloudflare rewrites the others (with or without a trailing slash) to the home page, which scrolls to that section; `/leaderboards` also opens Gibraltar's top 10.
+Keep everything out of `/discord`, `/gameplay`, `/code`, `/releases`, `/courses`, `/leaderboards`, `/submit`, `/features`, `/faq`, `/source-code`, `/translations`, `/api` and `/data`. Cloudflare redirects `/discord`, `/gameplay`, and `/releases/v*` and `/releases/site/v*` (to that release of the game or website on GitHub, which is where the version chips link), and the Worker redirects `/code/game` and `/code/site` (or `/code/website`) to the game's and this website's GitHub repos, and `/releases` and `/releases/site` (or `/releases/website`) to their release notes. Cloudflare rewrites the others (with or without a trailing slash) to the home page, which scrolls to that section; `/leaderboards` also opens Gibraltar's top 10.
 
 Links can go deeper, and the address shows them while a board or answer is open:
 
 - **A course's board:** `ballkour.com/leaderboards/6`, and `ballkour.com/leaderboards/3/legacy` for a course's Legacy tab. The leaderboard bot links its posts this way, and older links with the course's name after the number (`/leaderboards/6-dorado`) still work. The Worker serves the page at these addresses.
+- **The player ratings:** `ballkour.com/leaderboards/ratings`.
 - **An FAQ answer:** `ballkour.com/faq/pausing`. The link names are in `FAQ_LINKS`, and older links that used the translation keys (`/faq/pause`) still work.
 
 The older `#6-dorado` and `#pause` forms still work too.
 - **A language:** `ballkour.com/?lang=ja` opens the page in Japanese; it works with any of the links above. Picking a language puts it in the address.
+
+## Previewing
+
+```
+python3 tools/serve.py
+```
+
+then open http://localhost:8000. It serves this folder at the site's own addresses (`/leaderboards/6`, `/faq/pausing`, …) with the live leaderboards from ballkour.com, so you see your changes with real data. Signing in and sending runs only work on the real site (or the test copy below), so the Submit section shows the Discord ticket.
 
 ## Deploying
 
@@ -60,6 +69,7 @@ The test copy doesn't have the Worker's secrets, so player names and pictures ar
 
   Anything after these carries over, e.g. `/code/game/issues`. A release's own page is `/releases/v2026.10.14-0` or `/releases/site/v2026.11.02.6`, which Cloudflare redirects before the Worker sees it.
 - `/data/players.json`: the Discord name and picture of every player whose run has a Discord ID, looked up with Ballkyrie's token. Refreshed at most once an hour.
+- `/api/…`: signing in with Discord, and runs sent from the form under Submit a run. See [Runs sent from the website](#runs-sent-from-the-website).
 
 Each page also gets the latest copy of all three as it's served, with the "• N members" counts already filled in, so nothing pops in after the page loads. If GitHub or Discord can't be reached, the last copy that worked is served for up to a week.
 
@@ -70,8 +80,32 @@ It's deployed together with the site (see Deploying). It uses two secrets, which
 ```
 npx wrangler login
 npx wrangler secret put DISCORD_BOT_TOKEN   # Ballkyrie's bot token, for the player names
-npx wrangler secret put GITHUB_TOKEN        # optional: any GitHub token, for GitHub's higher rate limits
+npx wrangler secret put GITHUB_TOKEN        # a GitHub token for the game repo (see Runs sent from the website)
 ```
+
+### Runs sent from the website
+
+Players sign in with Discord (one click, no new account) and send their run from the form under Submit a run. It goes on the board straight away: the Worker saves it under their Discord ID in `leaderboards/runs.json` on the game repo's `develop` branch, one commit per run. The site shows it at once, and the leaderboard bot posts the board on Discord and updates roles. A run is always the sender's own, whatever in-game name they type, so nobody can send one as someone else. Each Discord account can send 5 runs a minute (`SUBMIT_LIMIT` in `wrangler.toml`) and 20 a day.
+
+To take a run off, move it from `"runs"` to `"removed"` in `runs.json` (see [Courses and leaderboards](#courses-and-leaderboards)).
+
+To turn it on:
+
+1. In Discord's Developer Portal, open Ballkyrie's application → OAuth2. Add `https://ballkour.com/api/login/callback` under Redirects, and copy the Client ID and Client Secret.
+2. On GitHub, make a fine-grained token (Settings → Developer settings → Personal access tokens) for just `ballhallaa/ballkour`, with **Contents: Read and write**. `develop`'s rules have to let it push, like the bot's deploy key for `history.json`. Runs are committed as the token's owner.
+3. From the `cloudflare/` folder, save the secrets:
+
+   ```
+   npx wrangler secret put DISCORD_CLIENT_ID      # the Client ID
+   npx wrangler secret put DISCORD_CLIENT_SECRET  # the Client Secret
+   npx wrangler secret put SESSION_SECRET         # any long random string, e.g. from: openssl rand -base64 32
+   npx wrangler secret put GITHUB_TOKEN           # the token from step 2 (it replaces the old read-only one)
+   npx wrangler secret put SUBMIT_WEBHOOK         # optional: a channel's webhook URL, to log every run sent from the site
+   ```
+
+Until all four are set, the form stays hidden and the Discord ticket is the only way. The test copy needs its own secrets, and its `…workers.dev/api/login/callback` address added as a redirect too.
+
+The remakes' in-game top 10s are part of the game, so they only change with a release. Before one, run `node tools/leaderboard-bot/game-boards.mjs` in the game repo: it prints the `lb[…]` and `lbRunInfo(…)` lines for every `.opy` file that's behind its board.
 
 ## Fonts
 
@@ -89,6 +123,21 @@ Leaderboards load live from the game repo's `develop` branch (through the Worker
 - **Classic courses (4–15):** `leaderboards/<n>-<slug>.json` (the slugs are in `CLASSIC_FILES`)
 
 The runs written into `COURSES` are only a fallback for when GitHub can't be reached.
+
+Each course's board ranks every run in its file and in `"runs"` in `leaderboards/runs.json` (runs sent from the website, and runs that never made a top 10), once each per player with their best run. A player is their Discord ID, or their in-game name on a run without one. The board shows the top 10, and **Show all** lists everyone else, including players who dropped out of the top 10, from the boards in `leaderboards/history.json`. To take a run off for good, delete it where it is (or move it, from `"runs"`) and add it to `"removed"`, so it doesn't come back from an old board:
+
+```json
+{
+  "runs": { "1": [{ "name": "NAME", "discord": "ID", "time": "9:01.50", "mistakes": 3, "date": "2026-11-06", "video": "https://youtu.be/…" }] },
+  "removed": { "1": [{ "name": "NAME", "discord": "ID", "time": "6:55.00" }] }
+}
+```
+
+A run from an old board also only shows if it's slower than today's #10, since a faster one must have been taken off.
+
+**Player ratings** (`ballkour.com/leaderboards/ratings`) rate everyone over every course. Each course is worth up to 10,000 points: the record gets all of them, and the further behind it a run is, the fewer it gets (10000 × ln(1 + (e − 1) × record ÷ time)², lucio.surf's curve for a player who has run every map). A rating is the average over every course that isn't broken, with 0 for courses a player hasn't run (courses nobody has run yet included), so a new or faster run never lowers it, and the first run on a course changes nobody else's rating. A player's Top % is their place divided by the number of rated players.
+
+The leaderboard bot posts the same boards and gives out the same Top % as roles on Discord (Top 0.1% to Top 90%, and Rated for everyone below, one each), with its own copy of the boards and ratings in `tools/leaderboard-bot/ratings.mjs` in the game repo. Change both together.
 
 ## Translations
 
