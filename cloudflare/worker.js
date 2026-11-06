@@ -27,7 +27,7 @@
      npx wrangler secret put DISCORD_CLIENT_ID      Ballkyrie's application ID, for signing in with Discord
      npx wrangler secret put DISCORD_CLIENT_SECRET  Ballkyrie's OAuth2 client secret
      npx wrangler secret put SESSION_SECRET         any long random string, for signing the sign-in cookie
-     npx wrangler secret put SUBMIT_WEBHOOK      optional: a channel's webhook URL, where runs sent from the website are logged
+     npx wrangler secret put SUBMIT_CHANNEL      optional: the channel ID where Ballkyrie logs runs sent from the website
 
    Board and answer links (/leaderboards/6, /leaderboards/3/legacy, /faq/pausing) get the home page, like /leaderboards and /faq do; the
    page opens the board or answer itself.
@@ -159,10 +159,13 @@ async function buildGame(env, previous) {
   };
   // The leaderboard files are listed in the leaderboard bot's courses.json. runs.json has the runs that never made a
   // top 10 and the runs taken off the boards, for the boards' "Show all" and the player ratings.
+  // Its course names are kept too, for the log of runs sent from the website.
   let paths = previous ? Object.keys(previous.files) : [];
+  let names = (previous && previous.names) || {};
   try {
     const courses = JSON.parse(await get("tools/leaderboard-bot/courses.json")).courses;
     paths = ["leaderboards/history.json", RUNS_FILE, "src/engine/faq.opy", ...courses.map((c) => c.file)];
+    names = Object.fromEntries(courses.map((c) => [c.n, c.name]));
   } catch (e) {
     if (!paths.length) throw e;
   }
@@ -201,7 +204,7 @@ async function buildGame(env, previous) {
     releasesOf(REPO, previous ? previous.releases : null),
     releasesOf(SITE_REPO, previous ? previous.siteReleases ?? null : null),
   ]);
-  return JSON.stringify({ files, releases, siteReleases });
+  return JSON.stringify({ files, names, releases, siteReleases });
 }
 const game = (env, ctx) => cached("game", 60, ctx, (prev) => buildGame(env, prev));
 
@@ -307,7 +310,8 @@ async function buildPlayers(env, ctx, previous) {
    with https://ballkour.com/api/login/callback added as a redirect), SESSION_SECRET (any long random string) and
    the GitHub App that saves the runs (GITHUB_APP_ID and GITHUB_APP_PRIVATE_KEY, see above), or else a GITHUB_TOKEN
    that can write the game repo's contents. Without them, the form stays hidden.
-   SUBMIT_WEBHOOK is optional: a Discord channel's webhook URL, where every run sent from the website is logged.
+   SUBMIT_CHANNEL is optional: a Discord channel's ID, where Ballkyrie logs every run sent from the website
+   (SUBMIT_WEBHOOK, a webhook URL, does the same without the bot).
    SUBMIT_LIMIT (wrangler.toml) allows 5 sends a minute from one Discord account, and runs.json at most 20 a day. */
 const RUNS_FILE = "leaderboards/runs.json";
 const SESSION_DAYS = 30;
@@ -509,33 +513,35 @@ async function showSaved(runsText, user) {
     if (!d[user.id]) { d[user.id] = { name: user.name, avatar: user.avatar }; await putCached("players", 60 * 60, JSON.stringify(d)); }
   }
 }
-// A line in the log channel for every run sent from the website, if there is one
-async function logRun(env, n, file, run, user) {
-  if (!env.SUBMIT_WEBHOOK) return;
-  const res = await fetch(env.SUBMIT_WEBHOOK, {
+// A line in the log channel for every run sent from the website, if there is one: posted by Ballkyrie in the
+// SUBMIT_CHANNEL channel (it needs to be able to see it, send messages and embed links there), or else through the
+// SUBMIT_WEBHOOK webhook
+async function logRun(env, n, courseName, run, user) {
+  const byBot = !!(env.SUBMIT_CHANNEL && env.DISCORD_BOT_TOKEN);
+  if (!byBot && !env.SUBMIT_WEBHOOK) return;
+  const message = {
+    allowed_mentions: { parse: [] }, // shows who sent it without pinging them
+    embeds: [{
+      title: `New run on Course ${n}${courseName ? ` · ${courseName}` : ""}`,
+      url: `https://ballkour.com/leaderboards/${n}`,
+      color: 0x00e697,
+      fields: [
+        { name: "Player", value: mdSafe(run.name), inline: true },
+        { name: "Time", value: run.time, inline: true },
+        { name: "Mistakes", value: String(run.mistakes), inline: true },
+        { name: "Sent by", value: `<@${user.id}> (${mdSafe(user.name)})`, inline: true },
+        { name: "Video", value: `<${run.video}>` },
+      ],
+      timestamp: new Date().toISOString(),
+    }],
+  };
+  const res = await fetch(byBot ? `${DISCORD_API}/channels/${env.SUBMIT_CHANNEL}/messages` : env.SUBMIT_WEBHOOK, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      username: "ballkour.com",
-      allowed_mentions: { parse: [] }, // shows who sent it without pinging them
-      embeds: [{
-        title: `New run on course ${n}${file ? ` (${file.replace(/^leaderboards\//, "")})` : ""}`,
-        url: `https://ballkour.com/leaderboards/${n}`,
-        color: 0x00e697,
-        fields: [
-          { name: "Player", value: mdSafe(run.name), inline: true },
-          { name: "Time", value: run.time, inline: true },
-          { name: "Mistakes", value: String(run.mistakes), inline: true },
-          { name: "Sent by", value: `<@${user.id}> (${mdSafe(user.name)})`, inline: true },
-          { name: "Video", value: `<${run.video}>` },
-        ],
-        footer: { text: `Saved to ${RUNS_FILE}. To take it off, move it to "removed" there.` },
-        timestamp: new Date().toISOString(),
-      }],
-    }),
+    headers: { "Content-Type": "application/json", ...(byBot ? { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` } : {}) },
+    body: JSON.stringify(byBot ? message : { username: "ballkour.com", ...message }),
     signal: AbortSignal.timeout(5000),
-  }).catch((e) => ({ ok: false, status: String((e && e.message) || e) }));
-  if (!res.ok) console.error(`submit: the log webhook said ${res.status}`);
+  }).catch((e) => ({ ok: false, status: String((e && e.message) || e), text: async () => "" }));
+  if (!res.ok) console.error(`submit: ${byBot ? `Ballkyrie couldn't post in channel ${env.SUBMIT_CHANNEL}` : "the log webhook"} said ${res.status} ${(await res.text()).slice(0, 200)}`);
 }
 
 async function submit(request, env, ctx) {
@@ -566,7 +572,8 @@ async function submit(request, env, ctx) {
 
   // The course has to have a board, going by whatever game data is cached (fetched if there's none yet)
   let files = null;
-  try { files = JSON.parse((await stored("game")) ?? (await game(env, ctx))).files; } catch (e) { files = null; }
+  let names = {};
+  try { ({ files, names = {} } = JSON.parse((await stored("game")) ?? (await game(env, ctx)))); } catch (e) { files = null; }
   const file = files && Object.keys(files).find((k) => k.startsWith(`leaderboards/${n}-`) && /\.(opy|json)$/.test(k));
   if (files && !file) return answer(400, { error: "course" });
 
@@ -574,7 +581,7 @@ async function submit(request, env, ctx) {
   const saved = await saveRun(env, n, run);
   if (saved.error) return answer(saved.status, { error: saved.error });
   await showSaved(saved.text, user).catch((e) => console.error(`submit: couldn't update the cached copy: ${(e && e.message) || e}`));
-  if (saved.text) ctx.waitUntil(logRun(env, n, file, run, user));
+  if (saved.text) ctx.waitUntil(logRun(env, n, names[n], run, user));
   return answer(200, { ok: true, run, saved: !!saved.text });
 }
 
