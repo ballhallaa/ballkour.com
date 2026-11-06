@@ -1351,7 +1351,7 @@ a.link-copy { text-decoration: none; }
   "lb.all": "Show all {count} players",
   "lb.sortBy": "Sort by",
   "pic.button": "Picture",
-  "pic.title": "Picture of {course}",
+  "pic.title": "Picture of Course {n} · {course}",
   "pic.drawing": "Drawing the picture…",
   "pic.fail": "The picture couldn’t be drawn in this browser.",
   "pic.save": "Save",
@@ -2736,8 +2736,7 @@ a.link-copy { text-decoration: none; }
   // The picture, in a window with Save, Copy and Share
   async function openPicture(c) {
     const d = picBoard(c);
-    const label = `${c.n} ${c.name}`;
-    pic.innerHTML = `<div class="pic-head"><h2 class="pic-title" id="pic-title">${esc(t("pic.title", { course: label }))}</h2>` +
+    pic.innerHTML = `<div class="pic-head"><h2 class="pic-title" id="pic-title">${esc(t("pic.title", { n: c.n, course: c.name }))}</h2>` +
       `<button class="pl-close" type="button" data-pic-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button></div>` +
       `<p class="pic-wait">${esc(t("pic.drawing"))}</p>`;
     if (!pic.open) pic.showModal();
