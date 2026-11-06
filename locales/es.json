@@ -129,7 +129,7 @@
   "faq.grayed.q": "¿Por qué algunos controles están <fg808080FF>en gris</fg>?",
   "faq.grayed.a": "Ahora no se pueden usar: <b>CP anterior</b> en el primer CP, <b>CP siguiente</b> en el último, y los controles de espectador cuando no hay nadie a quien espectar. <b>Volver a seguir</b> necesita <b>Cámara libre</b> mientras espectas a un jugador. <b>Jugador en la mira</b> necesita <b>Cámara libre</b>.",
   "faq.scorecard.q": "¿Qué muestra el marcador?",
-  "faq.scorecard.a": "El CP, tiempo y errores de cada jugador, primero el más avanzado y luego el más rápido. Las partidas en <fgFF4646FF>rojo</fg>, marcadas con <fgFF4646FF>×</fg>, están descalificadas.",
+  "faq.scorecard.a": "El CP, tiempo y errores de cada jugador, primero el más avanzado y luego el más rápido. Debajo, los jugadores en <fgCB87FFFF>Modo libre</fg> aparecen en <fgCB87FFFF>morado</fg>, y los que están en <fg00BEFFFF>Espectar</fg>, en <fg00BEFFFF>azul</fg>. Las partidas descalificadas se marcan con <fgFF4646FF>×</fg> y, entre los que están corriendo, van en <fgFF4646FF>rojo</fg>.",
   "faq.shield.q": "¿Qué es un <fg00BEFFFF>rebote con escudo</fg>?",
   "faq.shield.a": "Escudo adaptable (<kbd>Habilidad 2</kbd>) te impulsa hacia arriba y hacia delante. Cuanto más rápido vas, menos te eleva. Tienes uno cada vez que sales del CP, en los CP que lo permiten, y todos los que quieras en <fgCB87FFFF>Modo libre</fg>.",
   "faq.hints.q": "¿Qué significan los colores de las pistas?",

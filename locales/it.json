@@ -129,7 +129,7 @@
   "faq.grayed.q": "Perché alcuni comandi sono <fg808080FF>in grigio</fg>?",
   "faq.grayed.a": "Ora non si possono usare: <b>CP prec.</b> sul primo CP, <b>CP succ.</b> sull'ultimo, e i comandi spettatore quando non c'è nessuno da osservare. <b>Torna a seguire</b> richiede <b>Telecamera libera</b> mentre osservi un giocatore. <b>Giocatore mirato</b> richiede <b>Telecamera libera</b>.",
   "faq.scorecard.q": "Cosa mostrano i punteggi?",
-  "faq.scorecard.a": "CP, tempo ed errori di ogni giocatore, prima il più avanti, poi il più veloce. Le partite in <fgFF4646FF>rosso</fg>, segnate con <fgFF4646FF>×</fg>, sono squalificate.",
+  "faq.scorecard.a": "CP, tempo ed errori di ogni giocatore, prima il più avanti, poi il più veloce. Sotto, i giocatori in <fgCB87FFFF>Modalità libera</fg> sono in <fgCB87FFFF>viola</fg> e quelli in <fg00BEFFFF>Osserva</fg> in <fg00BEFFFF>blu</fg>. Le partite squalificate sono segnate con <fgFF4646FF>×</fg>, e in <fgFF4646FF>rosso</fg> tra chi è in corsa.",
   "faq.shield.q": "Cos'è un <fg00BEFFFF>rimbalzo con scudo</fg>?",
   "faq.shield.a": "Scudo adattivo (<kbd>Abilità 2</kbd>) ti spinge in alto e in avanti. Più vai veloce, meno ti solleva. Ne hai uno ogni volta che lasci il CP, sui CP che lo consentono, e quanti ne vuoi in <fgCB87FFFF>Modalità libera</fg>.",
   "faq.hints.q": "Cosa significano i colori dei suggerimenti?",
