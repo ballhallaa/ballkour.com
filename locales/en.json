@@ -117,7 +117,7 @@
   "lb.all": "Show all {count} players",
   "lb.sortBy": "Sort by",
   "pic.button": "Picture",
-  "pic.title": "Picture of {course}",
+  "pic.title": "Picture of Course {n} · {course}",
   "pic.drawing": "Drawing the picture…",
   "pic.fail": "The picture couldn’t be drawn in this browser.",
   "pic.save": "Save",
