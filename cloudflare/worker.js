@@ -175,22 +175,38 @@ async function buildGame(env, previous) {
 const game = (env, ctx) => cached("game", 60, ctx, (prev) => buildGame(env, prev));
 
 /* ---------- Discord widget ---------- */
-// The member count comes from the server's invite (the widget only counts who's online); the voice channels come
-// from the widget. Either one can fail on its own: the other still goes out, and a missing member count keeps the
-// last one that worked.
-async function buildWidget(previous) {
-  const [widget, invite] = await Promise.allSettled([
+// The member count comes from the server itself, asked with Ballkyrie's token (Discord often turns down the public
+// invite lookup from Cloudflare), or from the server's invite without the token. The voice channels come from the
+// widget. Either can fail on its own: the other still goes out, and a missing member count keeps the last one that
+// worked.
+async function memberCountOf(env) {
+  if (env.DISCORD_BOT_TOKEN) {
+    const r = await fetch(`${DISCORD_API}/guilds/${GUILD_ID}?with_counts=true`, {
+      headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
+      signal: AbortSignal.timeout(1500),
+    }).catch(() => null);
+    const d = r && r.ok ? await r.json().catch(() => null) : null;
+    if (d && typeof d.approximate_member_count === "number") return d.approximate_member_count;
+    console.error(`member count: Discord said ${r ? r.status : "nothing"} with the bot token; trying the invite`);
+  }
+  const r = await fetch(`${DISCORD_API}/invites/${INVITE}?with_counts=true`, {
+    headers: { "User-Agent": "DiscordBot (https://ballkour.com, 1.0)" },
+    signal: AbortSignal.timeout(1500),
+  });
+  if (!r.ok) throw new Error(`invite: ${r.status}`);
+  const d = await r.json();
+  if (typeof d.approximate_member_count !== "number") throw new Error("invite: no member count");
+  return d.approximate_member_count;
+}
+async function buildWidget(env, previous) {
+  const [widget, count] = await Promise.allSettled([
     fetch(`https://discord.com/api/guilds/${GUILD_ID}/widget.json`, { signal: AbortSignal.timeout(1500) })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`widget: ${r.status}`)))),
-    fetch(`${DISCORD_API}/invites/${INVITE}?with_counts=true`, {
-      headers: { "User-Agent": "DiscordBot (https://ballkour.com, 1.0)" },
-      signal: AbortSignal.timeout(1500),
-    }).then((r) => (r.ok ? r.json() : Promise.reject(new Error(`invite: ${r.status}`)))),
+    memberCountOf(env),
   ]);
   const d = widget.status === "fulfilled" ? widget.value : null;
-  const memberCount = invite.status === "fulfilled" && typeof invite.value.approximate_member_count === "number"
-    ? invite.value.approximate_member_count
-    : previous && previous.member_count;
+  if (count.status === "rejected") console.error(`member count: ${count.reason.message}`);
+  const memberCount = count.status === "fulfilled" ? count.value : previous && previous.member_count;
   if (typeof memberCount !== "number" && widget.status === "rejected") throw widget.reason;
   // Only what the page uses: the member count, the channel names, and which channel each member is in
   return JSON.stringify({
@@ -580,7 +596,7 @@ async function page(request, env, ctx) {
   const [res, widget, gameData, players] = await Promise.all([
     file(new Request(url, { method: "GET", headers, redirect: "manual" }), env),
     // The online count is worth a short wait (Discord answers in well under the 1.5 s limit), so it's never stale
-    cached("widget", 60, ctx, (prev) => buildWidget(prev)).catch(() => null),
+    cached("widget", 60, ctx, (prev) => buildWidget(env, prev)).catch(() => null),
     freshGame ? freshGame.text() : soon("game", 60, ctx, (prev) => buildGame(env, prev), 2500),
     !env.DISCORD_BOT_TOKEN ? null
       : freshGame ? peek("players", 60 * 60, ctx, (prev) => buildPlayers(env, ctx, prev))
@@ -632,7 +648,7 @@ async function handle(request, env, ctx) {
   if (short) return short;
   try {
     if (path === "/data/game.json") return json(await game(env, ctx), 60);
-    if (path === "/data/widget.json") return json(await cached("widget", 60, ctx, (prev) => buildWidget(prev)), 60);
+    if (path === "/data/widget.json") return json(await cached("widget", 60, ctx, (prev) => buildWidget(env, prev)), 60);
     if (path === "/data/players.json" || path === "/players.json") {
       if (!env.DISCORD_BOT_TOKEN) return unavailable("The DISCORD_BOT_TOKEN secret isn't set");
       return json(await cached("players", 60 * 60, ctx, (prev) => buildPlayers(env, ctx, prev)), 300);
