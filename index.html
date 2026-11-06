@@ -770,6 +770,21 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .sub-form [aria-invalid="true"] { border-color: var(--coral); }
 #sub-time, #sub-miss { font-family: var(--mono); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
 .sub-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px 14px; }
+/* Runs to check, for reviewers: one card per run, the one a Verify link picked out in gold */
+.sub-review { margin: 0 18px 16px; padding: 12px 14px; border: 1px solid rgba(255, 213, 79, .28); border-radius: 12px; background: rgba(255, 213, 79, .045); }
+.rev-title { margin: 0; display: flex; align-items: center; gap: 8px; font: 600 12px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink); }
+.rev-title .icon { width: 15px; height: 15px; color: var(--gold); }
+.rev-count { padding: 2px 7px; border-radius: 999px; background: rgba(255, 213, 79, .16); color: var(--gold); }
+.rev-note, .rev-empty { margin: 10px 0 0; font: 400 14px/1.45 var(--body); color: var(--ink-2); }
+.rev-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
+.rev-run { display: grid; gap: 5px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: rgba(0, 0, 0, .25); }
+.rev-run.picked { border-color: rgba(255, 213, 79, .6); box-shadow: 0 0 0 1px rgba(255, 213, 79, .25); }
+.rev-course { font: 500 11.5px/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.rev-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; font: 700 16px/1.2 var(--body); letter-spacing: .02em; }
+.rev-line .stat { font: 600 14px/1 var(--mono); }
+.rev-meta { font: 400 12.5px/1.3 var(--mono); color: var(--ink-3); }
+.rev-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 3px; }
+.rev-actions .icon { width: 15px; height: 15px; }
 /* Signing in: Discord's own blurple, then who's signed in above the fields */
 .sub-signin { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 0 18px 16px; }
 .sub-signin .field-hint { flex: 1 1 220px; }
@@ -1101,6 +1116,7 @@ a.link-copy { text-decoration: none; }
             <span class="lr-sub" id="sub-intro" data-i18n="lb.submit.web">Send it here and it goes straight on the board, with your video for everyone to watch.</span>
           </span>
         </div>
+        <div class="sub-review" id="sub-review" hidden></div>
         <div class="sub-signin" id="sub-signin" hidden>
           <a class="btn btn-sm btn-discord" id="sub-login" href="/api/login?to=/submit"><svg class="icon" aria-hidden="true"><use href="#i-discord"/></svg><span data-i18n="sub.signin">Sign in with Discord</span></a>
           <span class="field-hint" data-i18n="sub.signinWhy">No new account needed. It puts the run under your Discord, so nobody else can send one as you.</span>
@@ -1413,6 +1429,18 @@ a.link-copy { text-decoration: none; }
   "sub.sentSlower": "Your run is saved. Your best on {course} is still {time} (#{rank}).",
   "sub.sentPlain": "Your run is up!",
   "sub.sentAgain": "That run is already on the board: you’re #{rank} on {course}.",
+  "sub.held": "Your run would put you #{rank} on {course}! Top 10 times are checked before they go up, so it’ll be on the board once a moderator has watched your video.",
+  "rev.title": "Runs to check",
+  "rev.course": "Course {n}",
+  "rev.none": "No runs to check right now.",
+  "rev.would": "Would be #{rank}",
+  "rev.watch": "Watch",
+  "rev.approve": "Approve",
+  "rev.decline": "Turn down",
+  "rev.approved": "Approved: {name}’s {time} is on the board now.",
+  "rev.declined": "Turned down {name}’s {time}.",
+  "rev.gone": "Someone already checked {name}’s {time}.",
+  "rev.fail": "That didn’t go through. Try again in a moment.",
   "sub.err.course": "Pick the course you ran.",
   "sub.err.name": "Enter your name as it shows in Overwatch, without commas or quotes.",
   "sub.err.time": "Enter your time as it shows on the finish screen, like 4:05.81.",
@@ -3344,7 +3372,10 @@ a.link-copy { text-decoration: none; }
     sel.innerHTML = `<option value="">${esc(t("sub.pick"))}</option>` +
       COURSES.filter((c) => !c.broken).map((c) => `<option value="${c.n}">${c.n} · ${esc(c.name)}</option>`).join("");
     sel.value = was;
-    $("#sub-login").href = "/api/login?to=" + encodeURIComponent("/submit" + (lang === "en" ? "" : `?lang=${lang}`));
+    const back = new URLSearchParams();
+    if (lang !== "en") back.set("lang", lang);
+    if (checkParam) back.set("check", checkParam);
+    $("#sub-login").href = "/api/login?to=" + encodeURIComponent("/submit" + (back.toString() ? `?${back}` : ""));
     $("#sub-signin").hidden = !loginOn || !!me;
     subForm.hidden = !loginOn || !me;
     if (me) {
@@ -3368,7 +3399,59 @@ a.link-copy { text-decoration: none; }
     if (me && !PLAYERS.has(me.id)) PLAYERS.set(me.id, { name: me.name, avatar: me.avatar });
     renderSubmit();
     fillName();
+    loadReview();
   }
+  /* Reviewers (REVIEWERS in cloudflare/wrangler.toml) see the top 10 runs waiting for a check above the form: each with
+     its video, Approve (onto the board) and Turn down. Verify under a run to check in the log channel links here with
+     ?check=<its id>, and that run is picked out. */
+  let reviewRuns = [];
+  const checkParam = (() => { try { return new URLSearchParams(location.search).get("check") || ""; } catch (e) { return ""; } })();
+  async function loadReview() {
+    if (!me || !me.reviewer) { renderReview(); return; }
+    try { reviewRuns = (await fetch("/api/pending", { cache: "no-store" }).then((r) => r.json())).runs || []; } catch (e) { reviewRuns = []; }
+    renderReview();
+  }
+  let reviewScrolled = false;
+  function renderReview(note) {
+    const box = $("#sub-review");
+    box.hidden = !(me && me.reviewer);
+    if (box.hidden) return;
+    const row = (r) => {
+      const c = course(r.course);
+      const who = r.discord && PLAYERS.get(r.discord);
+      const act = (approve, ico, key, primary) => `<button class="btn btn-sm${primary ? " btn-primary" : ""}" type="button" data-review="${esc(r.id)}" data-course="${r.course}" data-approve="${approve ? 1 : ""}">${icon(ico)}<span>${esc(t(key))}</span></button>`;
+      return `<li class="rev-run${r.id === checkParam ? " picked" : ""}" id="rev-${esc(r.id)}">` +
+        `<span class="rev-course">${esc(`${t("rev.course", { n: r.course })} · ${c ? c.name : r.courseName}`)}</span>` +
+        `<span class="rev-line"><b>${esc(r.name)}</b><span class="stat time">${icon("bolt")}${esc(r.time)}</span><span class="stat miss">${icon("skull")}${esc(r.mistakes)}</span>` +
+        `<span class="tag tag-wr">${esc(t("rev.would", { rank: r.rank }))}</span></span>` +
+        `<span class="rev-meta">${esc(t("lb.submittedOn", { date: formatDate(r.date) }))}${who ? ` · ${esc(who.name)}` : ""}</span>` +
+        `<span class="rev-actions"><a class="btn btn-sm" href="${esc(r.video)}" target="_blank" rel="noopener">${icon("play")}<span>${esc(t("rev.watch"))}</span></a>` +
+        act(true, "check", "rev.approve", true) + act(false, "x", "rev.decline", false) + `</span></li>`;
+    };
+    box.innerHTML = `<p class="rev-title">${icon("eye")}<span>${esc(t("rev.title"))}</span><span class="rev-count">${reviewRuns.length}</span></p>` +
+      (note ? `<p class="rev-note">${note}</p>` : "") +
+      (reviewRuns.length ? `<ul class="rev-list">${reviewRuns.map(row).join("")}</ul>` : `<p class="rev-empty">${esc(t("rev.none"))}</p>`);
+    const picked = checkParam && !reviewScrolled && box.querySelector(".rev-run.picked");
+    if (picked) { reviewScrolled = true; picked.scrollIntoView({ block: "center" }); }
+  }
+  $("#sub-review").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-review]");
+    if (!b) return;
+    const r = reviewRuns.find((x) => x.id === b.dataset.review);
+    if (!r) return;
+    const approve = !!b.dataset.approve;
+    b.closest(".rev-actions").querySelectorAll("button").forEach((x) => { x.disabled = true; });
+    let out = {};
+    try {
+      const res = await fetch("/api/review", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ course: r.course, id: r.id, approve }) });
+      out = await res.json().catch(() => ({}));
+    } catch (err) { out = {}; }
+    if (out.ok || out.error === "gone") {
+      reviewRuns = reviewRuns.filter((x) => x.id !== r.id);
+      if (out.ok && approve) await reloadRuns();
+      renderReview(esc(t(out.ok ? (approve ? "rev.approved" : "rev.declined") : "rev.gone", { name: r.name, time: r.time })));
+    } else renderReview(esc(t("rev.fail")));
+  });
   if (loginOn) {
     $("#sub-signin").hidden = false;
     fetch("/api/me", { cache: "no-store" }).then((r) => r.json()).then((d) => signedIn(d && d.user)).catch(() => {});
@@ -3533,7 +3616,16 @@ a.link-copy { text-decoration: none; }
         body: JSON.stringify({ ...run, mistakes: Number(run.mistakes) }),
       });
       const out = await res.json().catch(() => ({}));
-      if (res.ok && out.ok) {
+      if (res.ok && out.ok && out.pending) {
+        // A top 10 run waits for a check before it goes on the board
+        ["time", "miss", "video"].forEach((id) => { subField(id).value = ""; });
+        try { localStorage.setItem("ballkour-submit", JSON.stringify({ name: run.name })); } catch (err) { /* private mode */ }
+        const c = course(run.course);
+        const where = `<a href="/leaderboards/${c.n}" data-board="${c.n}">${esc(`${t("rev.course", { n: c.n })} · ${c.name}`)}</a>`;
+        subStatus.className = "sub-status field-wide ok res";
+        subStatus.innerHTML = `<p class="res-title">${icon("eye")}<span>${esc(t("sub.held", { rank: out.rank, course: "\u0000" })).replace("\u0000", where)}</span></p>`;
+        loadReview();
+      } else if (res.ok && out.ok) {
         ["time", "miss", "video"].forEach((id) => { subField(id).value = ""; });
         try { localStorage.setItem("ballkour-submit", JSON.stringify({ name: run.name })); } catch (err) { /* private mode */ }
         await reloadRuns();
