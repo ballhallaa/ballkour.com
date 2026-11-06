@@ -129,7 +129,7 @@
   "faq.grayed.q": "Por que alguns controles estão <fg808080FF>em cinza</fg>?",
   "faq.grayed.a": "Eles não podem ser usados agora: <b>CP anterior</b> no primeiro CP, <b>Próximo CP</b> no último, e os controles de espectador quando não há ninguém para assistir. <b>Voltar a seguir</b> precisa da <b>Câmera livre</b> enquanto você assiste a um jogador. <b>Jogador na mira</b> precisa da <b>Câmera livre</b>.",
   "faq.scorecard.q": "O que o placar mostra?",
-  "faq.scorecard.a": "O CP, tempo e erros de cada jogador, primeiro o mais avançado, depois o mais rápido. Partidas em <fgFF4646FF>vermelho</fg>, marcadas com <fgFF4646FF>×</fg>, estão desclassificadas.",
+  "faq.scorecard.a": "O CP, tempo e erros de cada jogador, primeiro o mais avançado, depois o mais rápido. Abaixo, jogadores no <fgCB87FFFF>Modo livre</fg> aparecem em <fgCB87FFFF>roxo</fg>, e quem está em <fg00BEFFFF>Assistir</fg>, em <fg00BEFFFF>azul</fg>. Partidas desclassificadas são marcadas com <fgFF4646FF>×</fg>, e ficam em <fgFF4646FF>vermelho</fg> entre quem está correndo.",
   "faq.shield.q": "O que é um <fg00BEFFFF>quique com escudo</fg>?",
   "faq.shield.a": "Escudo Adaptável (<kbd>Habilidade 2</kbd>) te joga para cima e para frente. Quanto mais rápido você estiver, menos ele te levanta. Você ganha um sempre que sai do CP, nos CPs que permitem, e quantos quiser no <fgCB87FFFF>Modo livre</fg>.",
   "faq.hints.q": "O que significam as cores das dicas?",

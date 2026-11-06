@@ -129,7 +129,7 @@
   "faq.grayed.q": "Dlaczego niektóre sterowania są <fg808080FF>wyszarzone</fg>?",
   "faq.grayed.a": "Nie można ich teraz użyć: <b>Poprz. CP</b> na pierwszym CP, <b>Nast. CP</b> na ostatnim, a sterowania obserwatora, gdy nie ma kogo obserwować. <b>Wróć do gracza</b> wymaga trybu <b>Wolna kamera</b> podczas obserwowania gracza. <b>Gracz w celowniku</b> wymaga trybu <b>Wolna kamera</b>.",
   "faq.scorecard.q": "Co pokazują wyniki?",
-  "faq.scorecard.a": "CP, czas i błędy każdego gracza, najpierw najdalej, potem najszybciej. <fgFF4646FF>Czerwone</fg> podejścia, oznaczone <fgFF4646FF>×</fg>, są zdyskwalifikowane.",
+  "faq.scorecard.a": "CP, czas i błędy każdego gracza, najpierw najdalej, potem najszybciej. Niżej gracze w <fgCB87FFFF>Trybie swobodnym</fg> są wyświetlani na <fgCB87FFFF>fioletowo</fg>, a gracze z włączonym <fg00BEFFFF>Obserwuj</fg> na <fg00BEFFFF>niebiesko</fg>. Zdyskwalifikowane podejścia są oznaczone <fgFF4646FF>×</fg>, a gdy gracz jest w trakcie podejścia, są <fgFF4646FF>czerwone</fg>.",
   "faq.shield.q": "Czym jest <fg00BEFFFF>odbicie tarczą</fg>?",
   "faq.shield.a": "Adaptacyjna tarcza (<kbd>Umiejętność 2</kbd>) wybija w górę i do przodu. Im większa prędkość, tym niżej unosi. Można jej użyć raz po każdym opuszczeniu CP (na CP, które na to pozwalają), a w <fgCB87FFFF>Trybie swobodnym</fg> dowolnie wiele razy.",
   "faq.hints.q": "Co znaczą kolory podpowiedzi?",
