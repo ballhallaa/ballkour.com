@@ -21,8 +21,9 @@
 
    Secrets (set once from this folder; each asks you to paste the value):
      npx wrangler secret put DISCORD_BOT_TOKEN   Ballkyrie's bot token, for the player names
-     npx wrangler secret put GITHUB_TOKEN        a GitHub token that can write the game repo's contents, for saving runs
-                                                 sent from the website (and GitHub's higher rate limits)
+     npx wrangler secret put GITHUB_TOKEN        optional: any GitHub token, for GitHub's higher rate limits
+     npx wrangler secret put GITHUB_APP_ID          the GitHub App that saves runs sent from the website to the game repo
+     npx wrangler secret put GITHUB_APP_PRIVATE_KEY < key.pem   its private key, the .pem file as GitHub hands it out
      npx wrangler secret put DISCORD_CLIENT_ID      Ballkyrie's application ID, for signing in with Discord
      npx wrangler secret put DISCORD_CLIENT_SECRET  Ballkyrie's OAuth2 client secret
      npx wrangler secret put SESSION_SECRET         any long random string, for signing the sign-in cookie
@@ -113,14 +114,44 @@ const githubHeaders = (env) => ({
   ...(env.GITHUB_TOKEN ? { Authorization: `token ${env.GITHUB_TOKEN}` } : {}),
 });
 
+/* The GitHub App that saves runs sent from the website to the game repo, as itself (ballkour.com's bot, not a person).
+   It's the one thing besides deploy keys allowed past develop's pull request rule. Secrets: GITHUB_APP_ID and
+   GITHUB_APP_PRIVATE_KEY (the .pem GitHub hands out, as it is). The app needs Contents: Read and write, and to be
+   installed on the game repo. A token is made each time one's needed (each lasts an hour), so none is kept. */
+const appOn = (env) => !!(env.GITHUB_APP_ID && env.GITHUB_APP_PRIVATE_KEY);
+// GitHub's keys are PKCS#1 ("BEGIN RSA PRIVATE KEY"), and Web Crypto only reads PKCS#8, which wraps one
+function pkcs8(pem) {
+  const der = Uint8Array.from(atob(pem.replace(/-----[^-]+-----|\s/g, "")), (c) => c.charCodeAt(0));
+  if (/BEGIN PRIVATE KEY/.test(pem)) return der;
+  const len = (n) => (n < 128 ? [n] : n < 256 ? [0x81, n] : [0x82, n >> 8, n & 255]);
+  const rsa = [0x30, 0x0d, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x01, 0x05, 0x00]; // rsaEncryption
+  const body = [0x02, 0x01, 0x00, ...rsa, 0x04, ...len(der.length), ...der];
+  return new Uint8Array([0x30, ...len(body.length), ...body]);
+}
+async function appToken(env) {
+  const key = await crypto.subtle.importKey("pkcs8", pkcs8(env.GITHUB_APP_PRIVATE_KEY), { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["sign"]);
+  const now = Math.floor(Date.now() / 1000);
+  const part = (o) => b64url(utf8.encode(JSON.stringify(o)));
+  const unsigned = `${part({ alg: "RS256", typ: "JWT" })}.${part({ iat: now - 60, exp: now + 540, iss: String(env.GITHUB_APP_ID) })}`;
+  const jwt = `${unsigned}.${b64url(new Uint8Array(await crypto.subtle.sign("RSASSA-PKCS1-v1_5", key, utf8.encode(unsigned))))}`;
+  const headers = { "User-Agent": "ballkour.com", Accept: "application/vnd.github+json", Authorization: `Bearer ${jwt}` };
+  const where = await fetch(`https://api.github.com/repos/${REPO}/installation`, { headers, signal: AbortSignal.timeout(5000) });
+  if (!where.ok) throw new Error(`the GitHub App isn't installed on ${REPO} (${where.status} ${(await where.text()).slice(0, 120)})`);
+  const made = await fetch(`https://api.github.com/app/installations/${(await where.json()).id}/access_tokens`, { method: "POST", headers, signal: AbortSignal.timeout(5000) });
+  if (!made.ok) throw new Error(`the GitHub App got no token (${made.status} ${(await made.text()).slice(0, 120)})`);
+  return (await made.json()).token;
+}
+
 async function buildGame(env, previous) {
   const headers = githubHeaders(env);
   const get = async (path) => {
     // runs.json changes with every run sent from the website, so it's read through GitHub's API, which always has
     // the newest copy (raw files can be a few minutes behind)
-    const viaApi = path === RUNS_FILE && env.GITHUB_TOKEN;
+    // (with GITHUB_TOKEN if it's set, or else as the GitHub App)
+    const viaApi = path === RUNS_FILE && (env.GITHUB_TOKEN || appOn(env));
+    const auth = viaApi && !env.GITHUB_TOKEN ? { Authorization: `Bearer ${await appToken(env)}` } : {};
     const r = await fetch(viaApi ? `https://api.github.com/repos/${REPO}/contents/${encodeURI(path)}?ref=develop` : `${GAME}/${encodeURI(path)}`, {
-      headers: viaApi ? { ...headers, Accept: "application/vnd.github.raw+json" } : headers,
+      headers: viaApi ? { ...headers, ...auth, Accept: "application/vnd.github.raw+json" } : headers,
       signal: AbortSignal.timeout(5000),
     });
     if (!r.ok) throw new Error(`${path}: ${r.status}`);
@@ -274,12 +305,13 @@ async function buildPlayers(env, ctx, previous) {
    The session is a cookie signed with SESSION_SECRET that lasts 30 days. Nothing about it is stored here.
    Secrets: DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET (Ballkyrie's app in Discord's Developer Portal, OAuth2 page,
    with https://ballkour.com/api/login/callback added as a redirect), SESSION_SECRET (any long random string) and
-   GITHUB_TOKEN, which has to be able to write the game repo's contents. Without all four, the form stays hidden.
+   the GitHub App that saves the runs (GITHUB_APP_ID and GITHUB_APP_PRIVATE_KEY, see above), or else a GITHUB_TOKEN
+   that can write the game repo's contents. Without them, the form stays hidden.
    SUBMIT_WEBHOOK is optional: a Discord channel's webhook URL, where every run sent from the website is logged.
    SUBMIT_LIMIT (wrangler.toml) allows 5 sends a minute from one Discord account, and runs.json at most 20 a day. */
 const RUNS_FILE = "leaderboards/runs.json";
 const SESSION_DAYS = 30;
-const loginOn = (env) => !!(env.DISCORD_CLIENT_ID && env.DISCORD_CLIENT_SECRET && env.SESSION_SECRET && env.GITHUB_TOKEN);
+const loginOn = (env) => !!(env.DISCORD_CLIENT_ID && env.DISCORD_CLIENT_SECRET && env.SESSION_SECRET && (appOn(env) || env.GITHUB_TOKEN));
 // The same checks as the page's. Names can't have commas or quotes, which the in-game boards' files use.
 const NAME_OK = /^[^\u0000-\u001f\u007f"`\\,<>]{1,32}$/u;
 const toSeconds = (t) => t.split(":").reduce((sum, part) => sum * 60 + Number(part), 0);
@@ -413,7 +445,13 @@ function dumpRuns(data) {
 // → { text } (the new runs.json, or null if this exact run was already in), or { error, status }
 async function saveRun(env, n, run) {
   const api = `https://api.github.com/repos/${REPO}/contents/${RUNS_FILE}`;
-  const headers = { ...githubHeaders(env), Accept: "application/vnd.github+json" };
+  let headers;
+  try {
+    headers = { ...githubHeaders(env), ...(appOn(env) ? { Authorization: `Bearer ${await appToken(env)}` } : {}), Accept: "application/vnd.github+json" };
+  } catch (e) {
+    console.error(`submit: ${e.message}`);
+    return { error: "off", status: 502 };
+  }
   let why = "";
   for (let attempt = 0; attempt < 3; attempt++) {
     const got = await fetch(`${api}?ref=develop`, { headers, signal: AbortSignal.timeout(5000) });

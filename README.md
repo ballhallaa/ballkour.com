@@ -80,7 +80,7 @@ It's deployed together with the site (see Deploying). It uses two secrets, which
 ```
 npx wrangler login
 npx wrangler secret put DISCORD_BOT_TOKEN   # Ballkyrie's bot token, for the player names
-npx wrangler secret put GITHUB_TOKEN        # a GitHub token for the game repo (see Runs sent from the website)
+npx wrangler secret put GITHUB_TOKEN        # optional: any GitHub token, for GitHub's higher rate limits
 ```
 
 ### Runs sent from the website
@@ -92,18 +92,26 @@ To take a run off, move it from `"runs"` to `"removed"` in `runs.json` (see [Cou
 To turn it on:
 
 1. In Discord's Developer Portal, open Ballkyrie's application → OAuth2. Add `https://ballkour.com/api/login/callback` under Redirects, and copy the Client ID and Client Secret.
-2. On GitHub, make a fine-grained token (Settings → Developer settings → Personal access tokens) for just `ballhallaa/ballkour`, with **Contents: Read and write**. `develop`'s rules have to let it push, like the bot's deploy key for `history.json`. Runs are committed as the token's owner.
-3. From the `cloudflare/` folder, save the secrets:
+2. Make the GitHub App that saves the runs, at https://github.com/settings/apps/new:
+   - **GitHub App name:** anything free, like `ballkour-com`. Runs are committed as its bot (`ballkour-com[bot]`).
+   - **Homepage URL:** `https://ballkour.com`. Under **Webhook**, untick **Active**.
+   - **Repository permissions → Contents:** Read and write.
+   - **Where can this GitHub App be installed?** Only on this account.
+
+   Then, on the app's page: copy its **App ID**, **Generate a private key** (it downloads a `.pem` file), and under **Install App**, install it on just `ballhallaa/ballkour`.
+3. Let the app past `develop`'s rules: in the game repo's Settings → Rules → **Protect Main & Develop** → Bypass list, **Add bypass** → the app → **Always allow**.
+4. From the `cloudflare/` folder, save the secrets:
 
    ```
-   npx wrangler secret put DISCORD_CLIENT_ID      # the Client ID
-   npx wrangler secret put DISCORD_CLIENT_SECRET  # the Client Secret
-   npx wrangler secret put SESSION_SECRET         # any long random string, e.g. from: openssl rand -base64 32
-   npx wrangler secret put GITHUB_TOKEN           # the token from step 2 (it replaces the old read-only one)
-   npx wrangler secret put SUBMIT_WEBHOOK         # optional: a channel's webhook URL, to log every run sent from the site
+   npx wrangler secret put DISCORD_CLIENT_ID                  # the Client ID
+   npx wrangler secret put DISCORD_CLIENT_SECRET              # the Client Secret
+   npx wrangler secret put SESSION_SECRET                     # any long random string, e.g. from: openssl rand -base64 32
+   npx wrangler secret put GITHUB_APP_ID                      # the App ID
+   npx wrangler secret put GITHUB_APP_PRIVATE_KEY < key.pem   # the .pem file (then delete it, or keep it somewhere safe)
+   npx wrangler secret put SUBMIT_WEBHOOK                     # optional: a channel's webhook URL, to log every run sent from the site
    ```
 
-Until all four are set, the form stays hidden and the Discord ticket is the only way. The test copy needs its own secrets, and its `…workers.dev/api/login/callback` address added as a redirect too.
+Until those are set, the form stays hidden and the Discord ticket is the only way. (A `GITHUB_TOKEN` that can write the game repo works instead of the app, but then runs are committed as its owner, who has to be allowed past the rules.) The test copy needs its own secrets, and its `…workers.dev/api/login/callback` address added as a redirect too.
 
 The remakes' in-game top 10s are part of the game, so they only change with a release. Before one, run `node tools/leaderboard-bot/game-boards.mjs` in the game repo: it prints the `lb[…]` and `lbRunInfo(…)` lines for every `.opy` file that's behind its board.
 
