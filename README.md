@@ -87,6 +87,8 @@ npx wrangler secret put GITHUB_TOKEN        # optional: any GitHub token, for Gi
 
 Players sign in with Discord (one click, no new account) and send their run from the form under Submit a run. It goes on the board straight away: the Worker saves it under their Discord ID in `leaderboards/runs.json` on the game repo's `develop` branch, one commit per run. The site shows it at once, and the leaderboard bot posts the board on Discord and updates roles. A run is always the sender's own, whatever in-game name they type, so nobody can send one as someone else. Each Discord account can send 5 runs a minute (`SUBMIT_LIMIT` in `wrangler.toml`) and 20 a day.
 
+**Top 10 runs are checked first.** A run that would put its player on a course's top 10 waits in `"pending"` in `runs.json` instead of going on the board. Ballkyrie posts it in the log channel (`SUBMIT_CHANNEL`) with a **Verify** button, which opens it in **Runs to check** at ballkour.com/submit: watch the video, then **Approve** (it goes on the board, and the bot posts it) or **Turn down** (it's dropped). Every other run goes on the board straight away. Who can check runs is `REVIEWERS` in `cloudflare/wrangler.toml`: Discord IDs, separated by commas.
+
 To take a run off, move it from `"runs"` to `"removed"` in `runs.json` (see [Courses and leaderboards](#courses-and-leaderboards)).
 
 To turn it on:

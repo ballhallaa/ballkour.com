@@ -150,7 +150,7 @@ async function buildGame(env, previous) {
     // (with GITHUB_TOKEN if it's set, or else as the GitHub App)
     const viaApi = path === RUNS_FILE && (env.GITHUB_TOKEN || appOn(env));
     const auth = viaApi && !env.GITHUB_TOKEN ? { Authorization: `Bearer ${await appToken(env)}` } : {};
-    const r = await fetch(viaApi ? `https://api.github.com/repos/${REPO}/contents/${encodeURI(path)}?ref=develop` : `${GAME}/${encodeURI(path)}`, {
+    const r = await fetch(viaApi ? `https://api.github.com/repos/${REPO}/contents/${encodeURI(path)}?ref=${runsBranch(env)}` : `${GAME}/${encodeURI(path)}`, {
       headers: viaApi ? { ...headers, ...auth, Accept: "application/vnd.github.raw+json" } : headers,
       signal: AbortSignal.timeout(5000),
     });
@@ -301,10 +301,12 @@ async function buildPlayers(env, ctx, previous) {
      GET  /api/login     Discord's sign-in page, then /api/login/callback, then back to /submit
      GET  /api/me        { on, user: { id, name, avatar } | null }: whether sending runs is set up, and who's signed in
      POST /api/logout
-     POST /api/submit    { course, name, time, mistakes, video } → { ok: true, run, saved } (saved is false when that
-                         exact run was already in) or { error }, the error saying
+     POST /api/submit    { course, name, time, mistakes, video } → { ok: true, run, saved, pending, rank } (saved is
+                         false when that exact run was already in, and pending is true when it's a top 10 run that
+                         waits for a check, see "Saving a run, and checking top 10 runs") or { error }, the error saying
                          what to fix: login (not signed in), course, name, time, miss, video, rate (too many), off
                          (not set up, or GitHub didn't take it) or bad
+   GET /api/pending and POST /api/review are for checking top 10 runs (see below).
    The session is a cookie signed with SESSION_SECRET that lasts 30 days. Nothing about it is stored here.
    Secrets: DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET (Ballkyrie's app in Discord's Developer Portal, OAuth2 page,
    with https://ballkour.com/api/login/callback added as a redirect), SESSION_SECRET (any long random string) and
@@ -314,6 +316,9 @@ async function buildPlayers(env, ctx, previous) {
    (SUBMIT_WEBHOOK, a webhook URL, does the same without the bot).
    SUBMIT_LIMIT (wrangler.toml) allows 5 sends a minute from one Discord account, and runs.json at most 20 a day. */
 const RUNS_FILE = "leaderboards/runs.json";
+// The game repo's branch runs.json is read from and saved to: develop, or RUNS_BRANCH (the test copy's own
+// test-runs, so trying it out never touches the real boards)
+const runsBranch = (env) => env.RUNS_BRANCH || "develop";
 const SESSION_DAYS = 30;
 const loginOn = (env) => !!(env.DISCORD_CLIENT_ID && env.DISCORD_CLIENT_SECRET && env.SESSION_SECRET && (appOn(env) || env.GITHUB_TOKEN));
 // The same checks as the page's. Names can't have commas or quotes, which the in-game boards' files use.
@@ -374,7 +379,7 @@ async function readSession(request, env) {
   } catch (e) { return null; }
 }
 // Where to go back to after signing in: a page of the site, with its language
-const backTo = (to) => (/^\/[\w/-]*(\?lang=[\w-]+)?$/.test(to || "") ? to : "/submit");
+const backTo = (to) => (/^\/[\w/-]*(\?[\w=&-]*)?$/.test(to || "") ? to : "/submit");
 
 async function login(request, env) {
   const url = new URL(request.url);
@@ -426,69 +431,102 @@ async function loginCallback(request, env) {
 }
 async function whoAmI(request, env) {
   const user = await readSession(request, env);
-  return answer(200, { on: loginOn(env), user: user && { id: user.id, name: user.name, avatar: user.avatar } });
+  return answer(200, { on: loginOn(env), user: user && { id: user.id, name: user.name, avatar: user.avatar, reviewer: isReviewer(env, user) } });
 }
 
-/* Saving a run */
+/* Saving a run, and checking top 10 runs
+   A run that would put its player on a course's top 10 (their new best, faster than the #10's) isn't put on the board
+   straight away: it waits in runs.json's "pending" until a reviewer checks its video at ballkour.com/submit, then goes
+   on the board (Approve) or away (Turn down). Every other run goes on the board straight away. Reviewers are the
+   Discord IDs in REVIEWERS (wrangler.toml). The leaderboard bot and the website only read "runs" and "removed", so a
+   waiting run is on no board until it's approved.
+     GET  /api/pending   the runs waiting for a check (reviewers only)
+     POST /api/review    { course, id, approve } (reviewers only) */
+const isReviewer = (env, user) => !!user && String(env.REVIEWERS || "").split(/[\s,]+/).includes(user.id);
+const runKey = (r) => (r.discord ? "d:" + r.discord : "n:" + String(r.name).toUpperCase());
+const sameRunAs = (a, b) => a.time === b.time && (a.discord && b.discord ? a.discord === b.discord : String(a.name).toUpperCase() === String(b.name).toUpperCase());
+const runByTime = (a, b) => toSeconds(a.time) - toSeconds(b.time) || a.mistakes - b.mistakes;
+// The runs in a course's own file (its .opy top 10, or its .json), from the cached game data
+function fileRuns(file, body) {
+  if (!file || typeof body !== "string") return [];
+  if (file.endsWith(".opy")) {
+    const out = [];
+    for (const m of body.matchAll(/lb\[\d+\]\s*=\s*"([^"]*)"(?:[ \t]*#[ \t]*discord:[ \t]*(\d{17,20}))?/g)) {
+      const [name, time, miss] = m[1].split(",").map((s) => s.trim());
+      if (name && /^(\d{1,2}:)?\d{1,2}:\d{2}\.\d{2}$/.test(time) && /^\d+$/.test(miss)) out.push({ name, discord: m[2] || "", time, mistakes: Number(miss) });
+    }
+    return out;
+  }
+  try {
+    const runs = JSON.parse(body);
+    return Array.isArray(runs) ? runs.filter((r) => r && typeof r.name === "string" && typeof r.time === "string" && Number.isInteger(r.mistakes)) : [];
+  } catch (e) { return []; }
+}
+// Where a run would place on its course's board (1 + the other players whose best is faster), and whether it's its
+// player's new best there, which is the only way it changes the board
+function placeOf(run, pool, removed) {
+  const best = new Map();
+  let mine = null;
+  for (const r of pool) {
+    if (!r || typeof r.time !== "string" || typeof r.name !== "string" || removed.some((x) => sameRunAs(x, r))) continue;
+    if (runKey(r) === runKey(run)) { if (!mine || runByTime(r, mine) < 0) mine = r; continue; }
+    const had = best.get(runKey(r));
+    if (!had || runByTime(r, had) < 0) best.set(runKey(r), r);
+  }
+  return { rank: 1 + [...best.values()].filter((r) => runByTime(r, run) < 0).length, newBest: !mine || runByTime(run, mine) < 0 };
+}
 // One run per line, so runs.json stays easy to read and edit by hand
 function dumpRuns(data) {
   const run = (r) => (r && typeof r === "object" && !Array.isArray(r)
     ? "{" + Object.entries(r).map(([k, v]) => `${JSON.stringify(k)}: ${JSON.stringify(v)}`).join(", ") + "}"
     : JSON.stringify(r));
   const group = (obj) => {
-    const keys = Object.keys(obj && typeof obj === "object" ? obj : {}).filter((k) => Array.isArray(obj[k]))
+    const keys = Object.keys(obj && typeof obj === "object" ? obj : {}).filter((k) => Array.isArray(obj[k]) && obj[k].length)
       .sort((a, b) => Number(a) - Number(b) || (a < b ? -1 : 1));
-    return keys.length ? "{\n" + keys.map((k) => `    ${JSON.stringify(k)}: [` +
-      (obj[k].length ? "\n" + obj[k].map((r) => "      " + run(r)).join(",\n") + "\n    " : "") + "]").join(",\n") + "\n  }" : "{}";
+    return keys.length ? "{\n" + keys.map((k) => `    ${JSON.stringify(k)}: [\n` + obj[k].map((r) => "      " + run(r)).join(",\n") + "\n    ]").join(",\n") + "\n  }" : "{}";
   };
-  const others = Object.entries(data).filter(([k]) => k !== "runs" && k !== "removed");
-  return `{\n  "runs": ${group(data.runs)},\n  "removed": ${group(data.removed)}` +
+  const others = Object.entries(data).filter(([k]) => !["runs", "pending", "removed"].includes(k));
+  return `{\n  "runs": ${group(data.runs)},\n  "pending": ${group(data.pending)},\n  "removed": ${group(data.removed)}` +
     others.map(([k, v]) => `,\n  ${JSON.stringify(k)}: ${JSON.stringify(v)}`).join("") + "\n}\n";
 }
-// Adds the run to runs.json on develop through GitHub's API, reading it again if someone else saved in between.
-// → { text } (the new runs.json, or null if this exact run was already in), or { error, status }
-async function saveRun(env, n, run) {
-  const api = `https://api.github.com/repos/${REPO}/contents/${RUNS_FILE}`;
-  let headers;
-  try {
-    headers = { ...githubHeaders(env), ...(appOn(env) ? { Authorization: `Bearer ${await appToken(env)}` } : {}), Accept: "application/vnd.github+json" };
-  } catch (e) {
-    console.error(`submit: ${e.message}`);
-    return { error: "off", status: 502 };
-  }
-  let why = "";
+async function runsApi(env) {
+  return { ...githubHeaders(env), ...(appOn(env) ? { Authorization: `Bearer ${await appToken(env)}` } : {}), Accept: "application/vnd.github+json" };
+}
+// runs.json as it is on develop, with "runs", "pending" and "removed" always there, and its sha (null if there's none)
+async function readRuns(env, headers) {
+  const got = await fetch(`https://api.github.com/repos/${REPO}/contents/${RUNS_FILE}?ref=${runsBranch(env)}`, { headers, signal: AbortSignal.timeout(5000) });
+  if (!got.ok && got.status !== 404) throw new Error(`reading it: ${got.status} ${(await got.text()).slice(0, 200)}`);
+  const meta = got.ok ? await got.json() : null;
+  let data;
+  try { data = meta ? JSON.parse(text(unbase64(meta.content))) : {}; } catch (e) { throw new Error("it isn't valid JSON"); }
+  if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("it isn't a JSON object");
+  for (const k of ["runs", "pending", "removed"]) if (!data[k] || typeof data[k] !== "object" || Array.isArray(data[k])) data[k] = {};
+  return { data, sha: meta && meta.sha };
+}
+const listIn = (group, n) => (Array.isArray(group[n]) ? group[n] : (group[n] = []));
+// Changes runs.json on develop through GitHub's API: edit(data) changes it and says what to commit ({ message }), or
+// that nothing needs saving ({ skip: true }), or what went wrong ({ error, status }). It's read again and redone if
+// someone else saved in between. → what edit said, and the new runs.json as { text } (null when nothing was saved)
+async function editRuns(env, edit) {
+  let headers, why = "";
+  try { headers = await runsApi(env); } catch (e) { console.error(`runs.json: ${e.message}`); return { error: "off", status: 502 }; }
   for (let attempt = 0; attempt < 3; attempt++) {
-    const got = await fetch(`${api}?ref=develop`, { headers, signal: AbortSignal.timeout(5000) });
-    if (!got.ok && got.status !== 404) { why = `reading it: ${got.status} ${(await got.text()).slice(0, 200)}`; break; }
-    const meta = got.ok ? await got.json() : null;
-    let data;
-    try { data = meta ? JSON.parse(text(unbase64(meta.content))) : {}; } catch (e) { why = "it isn't valid JSON"; break; }
-    if (!data || typeof data !== "object" || Array.isArray(data)) { why = "it isn't a JSON object"; break; }
-    if (!data.runs || typeof data.runs !== "object") data.runs = {};
-    if (!data.removed || typeof data.removed !== "object") data.removed = {};
-    const list = Array.isArray(data.runs[n]) ? data.runs[n] : (data.runs[n] = []);
-    // The same run sent twice is only saved once
-    if (list.some((r) => r && r.discord === run.discord && r.time === run.time && r.mistakes === run.mistakes)) return { text: null };
-    const today = Object.values(data.runs).flat().filter((r) => r && r.discord === run.discord && r.date === run.date).length;
-    if (today >= 20) return { error: "rate", status: 429 };
-    list.push(run);
+    let data, sha;
+    try { ({ data, sha } = await readRuns(env, headers)); } catch (e) { why = e.message; break; }
+    const out = edit(data);
+    if (out.error || out.skip) return { ...out, text: null };
     const next = dumpRuns(data);
-    const put = await fetch(api, {
+    const put = await fetch(`https://api.github.com/repos/${REPO}/contents/${RUNS_FILE}`, {
       method: "PUT",
       headers: { ...headers, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message: `chore(leaderboard): add ${run.name}'s ${run.time} on course ${n} from ballkour.com`,
-        content: base64(utf8.encode(next)),
-        branch: "develop",
-        ...(meta ? { sha: meta.sha } : {}),
-      }),
+      body: JSON.stringify({ message: out.message, content: base64(utf8.encode(next)), branch: runsBranch(env), ...(sha ? { sha } : {}) }),
       signal: AbortSignal.timeout(8000),
     });
-    if (put.ok) return { text: next };
+    if (put.ok) return { ...out, text: next };
     why = `saving it: ${put.status} ${(await put.text()).slice(0, 300)}`;
     if (put.status !== 409) break; // 409: runs.json changed since it was read, so read it again
   }
-  console.error(`submit: couldn't save to ${RUNS_FILE}, ${why}`);
+  console.error(`runs.json: couldn't save it, ${why}`);
   return { error: "off", status: 502 };
 }
 // The site shows a saved run straight away: the cached game data gets the new runs.json, and the player's Discord
@@ -507,33 +545,50 @@ async function showSaved(runsText, user) {
     d.files[RUNS_FILE] = runsText;
     await putCached("game", 60, JSON.stringify(d));
   }
-  const playersCopy = await stored("players");
+  const playersCopy = user && (await stored("players"));
   if (playersCopy) {
     const d = JSON.parse(playersCopy);
     if (!d[user.id]) { d[user.id] = { name: user.name, avatar: user.avatar }; await putCached("players", 60 * 60, JSON.stringify(d)); }
   }
 }
+// The cached game data's course files and names (fetched if there's none yet)
+async function gameInfo(env, ctx) {
+  try {
+    const { files = null, names = {} } = JSON.parse((await stored("game")) ?? (await game(env, ctx)));
+    return { files, names };
+  } catch (e) { return { files: null, names: {} }; }
+}
+const courseFile = (files, n) => files && Object.keys(files).find((k) => k.startsWith(`leaderboards/${n}-`) && /\.(opy|json)$/.test(k));
 // A line in the log channel for every run sent from the website, if there is one: posted by Ballkyrie in the
 // SUBMIT_CHANNEL channel (it needs to be able to see it, send messages and embed links there), or else through the
-// SUBMIT_WEBHOOK webhook
-async function logRun(env, n, courseName, run, user) {
+// SUBMIT_WEBHOOK webhook. kind: "new" (on the board), "check" (waiting for a check, at place rank), "approved" or
+// "declined" (by reviewer).
+async function logRun(env, { n, courseName, run, kind, rank, reviewer, site = "https://ballkour.com" }) {
   const byBot = !!(env.SUBMIT_CHANNEL && env.DISCORD_BOT_TOKEN);
   if (!byBot && !env.SUBMIT_WEBHOOK) return;
+  const where = `Course ${n}${courseName ? ` · ${courseName}` : ""}`;
+  const look = {
+    new: [`New run on ${where}`, 0x00e697],
+    check: [`Run to check on ${where}`, 0xffd54f],
+    approved: [`Approved run on ${where}`, 0x00e697],
+    declined: [`Turned down run on ${where}`, 0xff6a4f],
+  }[kind];
+  const fields = [
+    { name: "Player", value: mdSafe(run.name), inline: true },
+    { name: "Time", value: run.time, inline: true },
+    { name: "Mistakes", value: String(run.mistakes), inline: true },
+    { name: "Sent by", value: `<@${run.discord}>`, inline: true },
+    ...(kind === "check" ? [{ name: "Would be", value: `#${rank}`, inline: true }] : []),
+    ...(reviewer ? [{ name: "Checked by", value: `<@${reviewer.id}>`, inline: true }] : []),
+    { name: "Video", value: `<${run.video}>` },
+    // Webhooks can't have buttons, so they get the link
+    ...(kind === "check" && !byBot ? [{ name: "Check it", value: `${site}/submit?check=${run.id}` }] : []),
+  ];
   const message = {
     allowed_mentions: { parse: [] }, // shows who sent it without pinging them
-    embeds: [{
-      title: `New run on Course ${n}${courseName ? ` · ${courseName}` : ""}`,
-      url: `https://ballkour.com/leaderboards/${n}`,
-      color: 0x00e697,
-      fields: [
-        { name: "Player", value: mdSafe(run.name), inline: true },
-        { name: "Time", value: run.time, inline: true },
-        { name: "Mistakes", value: String(run.mistakes), inline: true },
-        { name: "Sent by", value: `<@${user.id}> (${mdSafe(user.name)})`, inline: true },
-        { name: "Video", value: `<${run.video}>` },
-      ],
-      timestamp: new Date().toISOString(),
-    }],
+    embeds: [{ title: look[0], url: `${site}/leaderboards/${n}`, color: look[1], fields, timestamp: new Date().toISOString() }],
+    // Verify opens the run in the reviewers' list on ballkour.com/submit, to approve or turn down
+    ...(kind === "check" && byBot ? { components: [{ type: 1, components: [{ type: 2, style: 5, label: "Verify", url: `${site}/submit?check=${run.id}` }] }] } : {}),
   };
   const res = await fetch(byBot ? `${DISCORD_API}/channels/${env.SUBMIT_CHANNEL}/messages` : env.SUBMIT_WEBHOOK, {
     method: "POST",
@@ -541,7 +596,7 @@ async function logRun(env, n, courseName, run, user) {
     body: JSON.stringify(byBot ? message : { username: "ballkour.com", ...message }),
     signal: AbortSignal.timeout(5000),
   }).catch((e) => ({ ok: false, status: String((e && e.message) || e), text: async () => "" }));
-  if (!res.ok) console.error(`submit: ${byBot ? `Ballkyrie couldn't post in channel ${env.SUBMIT_CHANNEL}` : "the log webhook"} said ${res.status} ${(await res.text()).slice(0, 200)}`);
+  if (!res.ok) console.error(`log: ${byBot ? `Ballkyrie couldn't post in channel ${env.SUBMIT_CHANNEL}` : "the log webhook"} said ${res.status} ${(await res.text()).slice(0, 200)}`);
 }
 
 async function submit(request, env, ctx) {
@@ -570,19 +625,73 @@ async function submit(request, env, ctx) {
   if (!Number.isInteger(mistakes) || mistakes < 0 || mistakes > 9999) return answer(400, { error: "miss" });
   if (!video) return answer(400, { error: "video" });
 
-  // The course has to have a board, going by whatever game data is cached (fetched if there's none yet)
-  let files = null;
-  let names = {};
-  try { ({ files, names = {} } = JSON.parse((await stored("game")) ?? (await game(env, ctx)))); } catch (e) { files = null; }
-  const file = files && Object.keys(files).find((k) => k.startsWith(`leaderboards/${n}-`) && /\.(opy|json)$/.test(k));
+  // The course has to have a board
+  const { files, names } = await gameInfo(env, ctx);
+  const file = courseFile(files, n);
   if (files && !file) return answer(400, { error: "course" });
+  const board = fileRuns(file, file && files[file]);
 
   const run = { name: name.toUpperCase(), discord: user.id, time, mistakes, date: new Date().toISOString().slice(0, 10), video };
-  const saved = await saveRun(env, n, run);
+  const saved = await editRuns(env, (data) => {
+    const list = listIn(data.runs, n), waiting = listIn(data.pending, n);
+    // The same run sent twice is only saved once
+    if ([...list, ...waiting].some((r) => r && r.discord === run.discord && r.time === run.time && r.mistakes === run.mistakes)) return { skip: true };
+    const today = [...Object.values(data.runs), ...Object.values(data.pending)].flat().filter((r) => r && r.discord === run.discord && r.date === run.date).length;
+    if (today >= 20) return { error: "rate", status: 429 };
+    const { rank, newBest } = placeOf(run, [...board, ...list], Array.isArray(data.removed[n]) ? data.removed[n] : []);
+    if (rank <= 10 && newBest) {
+      const id = b64url(crypto.getRandomValues(new Uint8Array(6)));
+      waiting.push({ ...run, id });
+      return { message: `chore(leaderboard): hold ${run.name}'s ${run.time} on course ${n} for a check`, pending: true, rank, id };
+    }
+    list.push(run);
+    return { message: `chore(leaderboard): add ${run.name}'s ${run.time} on course ${n} from ballkour.com`, pending: false, rank };
+  });
   if (saved.error) return answer(saved.status, { error: saved.error });
   await showSaved(saved.text, user).catch((e) => console.error(`submit: couldn't update the cached copy: ${(e && e.message) || e}`));
-  if (saved.text) ctx.waitUntil(logRun(env, n, names[n], run, user));
-  return answer(200, { ok: true, run, saved: !!saved.text });
+  if (saved.text) ctx.waitUntil(logRun(env, { n, courseName: names[n], run: { ...run, id: saved.id }, kind: saved.pending ? "check" : "new", rank: saved.rank, site: url.origin }));
+  return answer(200, { ok: true, run, saved: !!saved.text, pending: !!saved.pending, rank: saved.rank || null });
+}
+
+// The runs waiting for a check, oldest first, each with where it would place now
+async function pending(request, env, ctx) {
+  const user = await readSession(request, env);
+  if (!isReviewer(env, user)) return answer(403, { error: "bad" });
+  let data;
+  try { ({ data } = await readRuns(env, await runsApi(env))); } catch (e) { console.error(`pending: ${e.message}`); return answer(502, { error: "off" }); }
+  const { files, names } = await gameInfo(env, ctx);
+  const runs = Object.entries(data.pending).flatMap(([n, list]) => (Array.isArray(list) ? list : []).filter((r) => r && r.id).map((r) => {
+    const file = courseFile(files, n);
+    const { rank } = placeOf(r, [...fileRuns(file, file && files[file]), ...listIn(data.runs, n)], Array.isArray(data.removed[n]) ? data.removed[n] : []);
+    return { course: Number(n), courseName: names[n] || "", rank, ...r };
+  })).sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  return answer(200, { runs });
+}
+// Approve (onto the board) or turn down (gone) a run waiting for a check
+async function review(request, env, ctx) {
+  if (request.method !== "POST") return answer(405, { error: "bad" });
+  if (request.headers.get("Origin") !== new URL(request.url).origin) return answer(403, { error: "bad" });
+  const user = await readSession(request, env);
+  if (!isReviewer(env, user)) return answer(403, { error: "bad" });
+  let body;
+  try { body = JSON.parse(await request.text()); } catch (e) { body = null; }
+  const n = Number(body && body.course), id = String((body && body.id) || ""), approve = !!(body && body.approve);
+  if (!Number.isInteger(n) || !/^[\w-]{4,16}$/.test(id)) return answer(400, { error: "bad" });
+  let run = null;
+  const done = await editRuns(env, (data) => {
+    const waiting = listIn(data.pending, n);
+    const at = waiting.findIndex((r) => r && r.id === id);
+    if (at < 0) return { error: "gone", status: 404 }; // someone else checked it already
+    const { id: _, ...taken } = waiting.splice(at, 1)[0]; // the id is only for while it waits
+    run = taken;
+    if (approve) listIn(data.runs, n).push(run);
+    return { message: `chore(leaderboard): ${approve ? "add" : "turn down"} ${run.name}'s ${run.time} on course ${n}, checked by ${user.name}` };
+  });
+  if (done.error) return answer(done.status, { error: done.error });
+  await showSaved(done.text, null).catch(() => {});
+  const { names } = await gameInfo(env, ctx);
+  ctx.waitUntil(logRun(env, { n, courseName: names[n], run, kind: approve ? "approved" : "declined", reviewer: user, site: new URL(request.url).origin }));
+  return answer(200, { ok: true, run });
 }
 
 /* ---------- Short links ---------- */
@@ -625,7 +734,10 @@ async function file(request, env) {
 }
 
 /* ---------- Pages ---------- */
-const DEEP_LINK = /^\/(?:leaderboards\/[\w-]+(?:\/legacy)?|faq\/[\w-]+)\/?$/i;
+// The sections (/submit, /faq, …) and the links into them (/leaderboards/6, /leaderboards/3/legacy, /faq/pausing) are
+// the home page. On ballkour.com a Cloudflare rule already serves the sections that way, but the test copy on
+// workers.dev has no such rule, so the Worker does it too.
+const DEEP_LINK = /^\/(?:(?:courses|leaderboards|submit|features|faq|source-code|translations)\/?|leaderboards\/[\w-]+(?:\/legacy)?\/?|faq\/[\w-]+\/?)$/i;
 async function page(request, env, ctx) {
   // Ask for the full page every time (no 304 Not Modified), so a browser never reuses old data from its cache
   const headers = new Headers(request.headers);
@@ -682,6 +794,8 @@ async function handle(request, env, ctx) {
         return answer(200, { ok: true }, [cookie("bk_session", "", 0)]);
       }
       if (path === "/api/submit") return await submit(request, env, ctx);
+      if (path === "/api/pending" && request.method === "GET") return await pending(request, env, ctx);
+      if (path === "/api/review") return await review(request, env, ctx);
       return answer(404, { error: "bad" });
     } catch (e) {
       console.error(`${path}: ${(e && e.message) || e}`);
