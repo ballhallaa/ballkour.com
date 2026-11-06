@@ -1122,7 +1122,7 @@ a.link-copy { text-decoration: none; }
           </div>
           <div class="field">
             <label class="field-label" for="sub-time" data-i18n="sub.time">Time</label>
-            <input id="sub-time" inputmode="decimal" placeholder="4:05.81" maxlength="11" autocomplete="off" spellcheck="false" required aria-describedby="sub-time-hint">
+            <input id="sub-time" inputmode="numeric" placeholder="4:05.81" maxlength="10" autocomplete="off" spellcheck="false" required aria-describedby="sub-time-hint">
             <span class="field-hint" id="sub-time-hint" data-i18n="sub.timeHint">From the finish screen</span>
           </div>
           <div class="field">
@@ -3386,6 +3386,24 @@ a.link-copy { text-decoration: none; }
     if (!sel.value && c && !c.broken) sel.value = String(c.n);
   });
   subForm.addEventListener("input", (e) => e.target.removeAttribute("aria-invalid"));
+  // The time's : and . fill themselves in from the right as the digits are typed, like a stopwatch: 40581 is 4:05.81,
+  // and 1234567 is 1:23:45.67. Typing or pasting them yourself works too, since only the digits are kept.
+  function timeFromDigits(d) {
+    if (d.length <= 2) return d;
+    const cc = d.slice(-2), rest = d.slice(0, -2);
+    if (rest.length <= 2) return `${rest}.${cc}`;
+    const ss = rest.slice(-2), mins = rest.slice(0, -2);
+    if (mins.length <= 2) return `${Number(mins)}:${ss}.${cc}`;
+    return `${Number(mins.slice(0, -2))}:${mins.slice(-2)}:${ss}.${cc}`;
+  }
+  subField("time").addEventListener("input", (e) => {
+    const el = e.target;
+    const atEnd = el.selectionStart === el.value.length;
+    const formatted = timeFromDigits(el.value.replace(/\D/g, "").replace(/^0+(?=\d{5})/, "").slice(0, 7));
+    if (formatted === el.value) return;
+    el.value = formatted;
+    if (atEnd) el.setSelectionRange(formatted.length, formatted.length);
+  });
 
   const FIELDS = ["course", "name", "time", "miss", "video"];
   function showStatus(kind, html, field) {
