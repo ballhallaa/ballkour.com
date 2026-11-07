@@ -941,6 +941,12 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .rev-meta { font: 400 12.5px/1.3 var(--mono); color: var(--ink-3); }
 .rev-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 3px; }
 .rev-actions .icon { width: 15px; height: 15px; }
+/* Approve and Turn down ask first, in the run's row: the question, then Yes and Cancel */
+.rev-ask { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; width: 100%; }
+.rev-q { flex-basis: 100%; font: 600 14.5px/1.35 var(--body); color: var(--ink); }
+.rev-ask .btn[disabled] { opacity: .6; cursor: progress; transform: none; }
+.btn-warn { background: var(--coral); border-color: var(--coral); color: #2a0800; }
+.btn-warn:hover { background-color: #ff8a74; border-color: #ff8a74; }
 /* Signing in: Discord's own blurple, then who's signed in above the fields */
 .sub-signin { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 0 18px 16px; }
 .sub-signin .field-hint { flex: 1 1 220px; }
@@ -1161,7 +1167,7 @@ a.link-copy { text-decoration: none; }
   .panel, .btn, .top-btn, .sections { -webkit-backdrop-filter: none; backdrop-filter: none; }
   .panel, .top-btn { background: var(--glass-solid); }
   .sections { --bar: #090f0d; background: #090f0d; }
-  .btn:not(.btn-primary):not(.btn-discord) { background-color: var(--glass-solid); }
+  .btn:not(.btn-primary):not(.btn-discord):not(.btn-warn) { background-color: var(--glass-solid); }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -1677,6 +1683,11 @@ a.link-copy { text-decoration: none; }
   "rev.watch": "Watch",
   "rev.approve": "Approve",
   "rev.decline": "Turn down",
+  "rev.askApprove": "Put {name}’s {time} on the board?",
+  "rev.askDecline": "Turn down {name}’s {time}? It won’t go on the board.",
+  "rev.yesApprove": "Yes, approve",
+  "rev.yesDecline": "Yes, turn down",
+  "rev.cancel": "Cancel",
   "rev.approved": "Approved: {name}’s {time} is on the board now.",
   "rev.declined": "Turned down {name}’s {time}.",
   "rev.gone": "Someone already checked {name}’s {time}.",
@@ -4115,8 +4126,10 @@ a.link-copy { text-decoration: none; }
   });
   /* Reviewers (REVIEWERS in cloudflare/wrangler.toml) see the top 10 runs waiting for a check above the form: each with
      its video, Approve (onto the board) and Turn down. Verify under a run to check in the log channel links here with
-     ?check=<its id>, and that run is picked out. */
+     ?check=<its id>, and that run is picked out. Approve and Turn down ask first, in that run's row (reviewAsk): Yes
+     sends it, and Cancel or Esc puts the buttons back. */
   let reviewRuns = [];
+  let reviewAsk = null; // { id, approve, at }: the run whose row is asking, and when it started asking
   const checkParam = (() => { try { return new URLSearchParams(location.search).get("check") || ""; } catch (e) { return ""; } })();
   async function loadReview() {
     if (!me || !me.reviewer) { renderReview(); return; }
@@ -4131,14 +4144,12 @@ a.link-copy { text-decoration: none; }
     const row = (r) => {
       const c = course(r.course);
       const who = r.discord && PLAYERS.get(r.discord);
-      const act = (approve, ico, key, primary) => `<button class="btn btn-sm${primary ? " btn-primary" : ""}" type="button" data-review="${esc(r.id)}" data-course="${r.course}" data-approve="${approve ? 1 : ""}">${icon(ico)}<span>${esc(t(key))}</span></button>`;
       return `<li class="rev-run${r.id === checkParam ? " picked" : ""}" id="rev-${esc(r.id)}">` +
         `<span class="rev-course">${esc(`${t("rev.course", { n: r.course })} · ${c ? c.name : r.courseName}`)}</span>` +
         `<span class="rev-line"><b>${esc(r.name)}</b><span class="stat time">${icon("bolt")}${esc(r.time)}</span><span class="stat miss">${icon("skull")}${esc(r.mistakes)}</span>` +
         `<span class="tag tag-wr">${esc(t("rev.would", { rank: r.rank }))}</span></span>` +
         `<span class="rev-meta">${esc(t("lb.submittedOn", { date: formatDate(r.date) }))}${who ? ` · ${esc(who.name)}` : ""}</span>` +
-        `<span class="rev-actions"><a class="btn btn-sm" href="${esc(r.video)}" target="_blank" rel="noopener">${icon("play")}<span>${esc(t("rev.watch"))}</span></a>` +
-        act(true, "check", "rev.approve", true) + act(false, "x", "rev.decline", false) + `</span></li>`;
+        `<span class="rev-actions">${reviewActions(r)}</span></li>`;
     };
     box.innerHTML = `<p class="rev-title">${icon("eye")}<span>${esc(t("rev.title"))}</span><span class="rev-count">${reviewRuns.length}</span></p>` +
       (note ? `<p class="rev-note">${note}</p>` : "") +
@@ -4146,12 +4157,54 @@ a.link-copy { text-decoration: none; }
     const picked = checkParam && !reviewScrolled && box.querySelector(".rev-run.picked");
     if (picked) { reviewScrolled = true; picked.scrollIntoView({ block: "center" }); }
   }
+  // A run's buttons: Watch, Approve, and Turn down, or, while it's asking, the question with Yes and Cancel
+  function reviewActions(r) {
+    const btn = (act, ico, label, cls) => `<button class="btn btn-sm${cls ? ` ${cls}` : ""}" type="button" data-review="${esc(r.id)}" data-act="${act}">${icon(ico)}<span>${esc(label)}</span></button>`;
+    const ask = reviewAsk && reviewAsk.id === r.id ? reviewAsk : null;
+    if (!ask) {
+      return `<a class="btn btn-sm" href="${esc(r.video)}" target="_blank" rel="noopener">${icon("play")}<span>${esc(t("rev.watch"))}</span></a>` +
+        btn("approve", "check", t("rev.approve"), "btn-primary") + btn("decline", "x", t("rev.decline"));
+    }
+    const q = `rev-q-${esc(r.id)}`;
+    return `<span class="rev-ask" role="group" aria-labelledby="${q}">` +
+      `<span class="rev-q" id="${q}">${esc(t(ask.approve ? "rev.askApprove" : "rev.askDecline", { name: r.name, time: r.time }))}</span>` +
+      (ask.approve ? btn("yes", "check", t("rev.yesApprove"), "btn-primary") : btn("yes", "x", t("rev.yesDecline"), "btn-warn")) +
+      btn("cancel", "x", t("rev.cancel")) + `</span>`;
+  }
+  // Starts (or, with no run, stops) a run's row asking; only one row asks at a time
+  function askReview(r, approve) {
+    const before = reviewAsk;
+    const was = before && reviewRuns.find((x) => x.id === before.id);
+    reviewAsk = r ? { id: r.id, approve, at: performance.now() } : null;
+    const redo = (x) => {
+      const li = document.getElementById(`rev-${x.id}`);
+      const box = li && li.querySelector(".rev-actions");
+      if (box) box.innerHTML = reviewActions(x);
+      return box;
+    };
+    if (was) {
+      const box = redo(was);
+      // Cancel goes back to the button they'd pressed
+      if (!r && box) box.querySelector(`[data-act="${before.approve ? "approve" : "decline"}"]`).focus();
+    }
+    // Cancel has focus, so pressing Enter twice doesn't send it
+    if (r) { const box = redo(r); if (box) box.querySelector('[data-act="cancel"]').focus(); }
+  }
+  $("#sub-review").addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && reviewAsk && e.target.closest(".rev-ask")) { e.preventDefault(); askReview(null); }
+  });
   $("#sub-review").addEventListener("click", async (e) => {
     const b = e.target.closest("[data-review]");
     if (!b) return;
     const r = reviewRuns.find((x) => x.id === b.dataset.review);
     if (!r) return;
-    const approve = !!b.dataset.approve;
+    const act = b.dataset.act;
+    if (act === "approve" || act === "decline") { askReview(r, act === "approve"); return; }
+    if (act === "cancel") { askReview(null); return; }
+    // Yes: a double-click on Approve or Turn down, or a tap that lands twice, doesn't count as Yes too
+    if (act !== "yes" || !reviewAsk || reviewAsk.id !== r.id || performance.now() - reviewAsk.at < 500) return;
+    const approve = reviewAsk.approve;
+    reviewAsk = null;
     b.closest(".rev-actions").querySelectorAll("button").forEach((x) => { x.disabled = true; });
     let out = {};
     try {
