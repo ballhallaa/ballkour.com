@@ -706,6 +706,8 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-name { margin: 0; font: italic 800 30px/1.05 var(--display); letter-spacing: .02em; text-transform: uppercase; overflow-wrap: anywhere; }
 .pl-dc { margin-top: 7px; display: flex; align-items: center; gap: 7px; font: 600 14px/1.2 var(--body); color: #b9befc; }
 .pl-dc .run-pfp { width: 18px; height: 18px; }
+.pl-bot { display: inline-flex; align-items: center; gap: 5px; vertical-align: bottom; font-weight: 600; color: #b9befc; white-space: nowrap; }
+.pl-bot .run-pfp { width: 18px; height: 18px; }
 /* Their own panel: their Discord, and Sign out beside it */
 .pl-me { margin-top: 7px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; }
 .pl-me .pl-dc { margin-top: 0; }
@@ -2751,7 +2753,7 @@ a.link-copy { text-decoration: none; }
       return `<p class="pl-dcp"><span class="pl-dcp-ok">${icon("check")}</span><span class="pl-dcp-text">${esc(t(dcpNote || "dcp.on"))}</span>` +
         `<button class="pl-signout" type="button" data-dcp-off>${esc(t("dcp.off"))}</button></p>`;
     }
-    return `<p class="pl-dcp"><span class="pl-dcp-text">${esc(t("dcp.what"))}</span>` +
+    return `<p class="pl-dcp"><span class="pl-dcp-text">${withBot("dcp.what")}</span>` +
       `<a class="btn btn-sm btn-discord" href="${esc(loginFor("profile"))}" data-login-for="profile">${icon("discord")}<span>${esc(t("dcp.add"))}</span></a></p>`;
   }
   pl.addEventListener("click", async (e) => {
@@ -3788,6 +3790,13 @@ a.link-copy { text-decoration: none; }
   const loginOn = submitBox.dataset.login === "on";
   // Stats on Discord profiles are set up too (see "Stats on Discord profiles" in cloudflare/worker.js)
   const profilesOn = loginOn && submitBox.dataset.profiles === "on";
+  const botId = submitBox.dataset.bot || ""; // Ballkyrie's Discord ID, for its name and picture where the text mentions it
+  // A translation with Ballkyrie's name the way the boards show a Discord name: blue, with its picture when the Worker has it
+  const withBot = (key) => {
+    const p = botId && PLAYERS.get(botId);
+    const pfp = p && /^https:\/\/cdn\.discordapp\.com\//.test(p.avatar) ? `<img class="run-pfp" src="${esc(p.avatar)}" alt="" width="18" height="18">` : "";
+    return esc(t(key)).replace("Ballkyrie", `<span class="pl-bot">${pfp}<span>Ballkyrie</span></span>`);
+  };
   let me = null; // who's signed in: { id, name, avatar }
   if (loginOn) {
     $("#submit .submit-alt").hidden = true;
@@ -3902,7 +3911,7 @@ a.link-copy { text-decoration: none; }
           `<ul class="pl-perks">${perk("star", "gold", "signin.perkRole")}${perk("trophy", "volt", "signin.perkPing")}</ul>` +
           // Their stats on their Discord profile, which doesn't need the server
           (profilesOn ? `<p>${esc(t("signin.perksAnyone"))}</p><ul class="pl-perks">${perk("discord", "discord", "signin.perkProfile")}</ul>` : "")) +
-        part("signin.sharesTitle", `<p>${esc(t("signin.shares"))}</p>` +
+        part("signin.sharesTitle", `<p>${withBot("signin.shares")}</p>` +
           `<ul class="pl-shares">${share("yes", "check", "signin.sharesYes")}${share("no", "x", "signin.sharesNo")}</ul>`) +
         part("signin.nextTitle", `<ol class="pl-steps">${steps.map((k) => `<li>${esc(t(k))}</li>`).join("")}</ol>`) +
         `<div class="pl-signin-go">` +
