@@ -1031,7 +1031,7 @@ a.link-copy { text-decoration: none; }
     <symbol id="i-map" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.1 5.55a2 2 0 0 0 1.8 0l3.65-1.83A1 1 0 0 1 21 4.62v12.76a1 1 0 0 1-.55.9l-4.55 2.27a2 2 0 0 1-1.8 0l-4.2-2.1a2 2 0 0 0-1.8 0l-3.65 1.83A1 1 0 0 1 3 19.38V6.62a1 1 0 0 1 .55-.9L8.1 3.45a2 2 0 0 1 1.8 0z"/><path d="M15 5.76v15"/><path d="M9 3.24v15"/></g></symbol>
     <symbol id="i-image" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></g></symbol>
     <symbol id="i-x" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M18 6 6 18M6 6l12 12"/></symbol>
-    <symbol id="i-gauge" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></g></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" d="M11.53 2.3a.53.53 0 0 1 .94 0l2.31 4.68a2.12 2.12 0 0 0 1.6 1.16l5.16.75a.53.53 0 0 1 .3.91l-3.74 3.64a2.12 2.12 0 0 0-.61 1.88l.88 5.14a.53.53 0 0 1-.77.56l-4.62-2.43a2.12 2.12 0 0 0-1.97 0L6.4 21.01a.53.53 0 0 1-.77-.56l.88-5.14a2.12 2.12 0 0 0-.61-1.88L2.16 9.8a.53.53 0 0 1 .3-.91l5.16-.75a2.12 2.12 0 0 0 1.6-1.16z"/></symbol>
     <symbol id="i-mail" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></g></symbol>
     <symbol id="i-heart" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></symbol>
     <symbol id="i-scorecard" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></g></symbol>
@@ -1782,7 +1782,7 @@ a.link-copy { text-decoration: none; }
       timeCell +
       `<span class="stat miss" title="${esc(t("unit.mistakes", { count: r.miss }))}">${icon("skull")}${esc(r.miss)}<span class="sr-only"> ${esc(t("unit.mistakes", { count: r.miss }))}</span></span>` +
       (r.date || pts !== null ? `<span class="run-date">` +
-        (pts !== null ? `<span class="run-pts" title="${esc(t("rt.coursePoints", { points: points(pts) }))}">${icon("gauge")}${esc(points(pts))}</span>` : "") +
+        (pts !== null ? `<span class="run-pts" title="${esc(t("rt.coursePoints", { points: points(pts) }))}">${icon("star")}${esc(points(pts))}</span>` : "") +
         `${r.date ? `<span title="${esc(t("lb.submittedOn", { date: formatDate(r.date) }))}">${esc(formatDate(r.date))}</span>` : ""}</span>` : "") +
       dcHtml(r) +
       `</li>`;
@@ -2330,7 +2330,7 @@ a.link-copy { text-decoration: none; }
       ? `${icon("trophy", "icon i-trophy")}<span class="rec-time">${esc(points(top.rating))}</span><span class="rec-name">${esc(top.name)}</span>`
       : `<span class="rec-none">${esc(t("rt.none"))}</span>`;
     return `<li class="course" id="course-ratings">` +
-      `<span class="num" aria-hidden="true"></span><span class="flag rt-flag" aria-hidden="true">${icon("gauge")}</span>` +
+      `<span class="num" aria-hidden="true"></span><span class="flag rt-flag" aria-hidden="true">${icon("star")}</span>` +
       `<div class="course-info"><p class="course-name">${esc(t("rt.title"))}</p><p class="course-meta">${esc(t("rt.meta"))}</p>` +
       `<button class="rec" type="button" data-course="${RATINGS.n}" aria-expanded="${open}" aria-controls="board-ratings" aria-label="${esc(t("rt.title"))}">${body}${icon("chev", "icon chev")}</button></div>` +
       `<div class="course-board rt-board" id="board-ratings"${open ? "" : " hidden"}>${open ? ratingsHtml(r) : ""}</div></li>`;
@@ -2338,12 +2338,12 @@ a.link-copy { text-decoration: none; }
   function ratingRow(p, r) {
     const total = r.counted.length;
     const ran = t("rt.courses", { n: p.courses, total });
-    const breakdown = r.counted.filter((c) => c.n in p.points).map((c) => `${c.n} ${c.name}: ${points(p.points[c.n])}`).join("\n");
+    const breakdown = r.counted.filter((c) => c.n in p.points).map((c) => `${c.n} · ${c.name}: ${points(p.points[c.n])}`).join("\n");
     const tier = p.tier ? `<span class="tag tag-tier${p.tier <= 5 ? " elite" : ""}">${esc(t("rt.tier", { pct: p.tier.toLocaleString(htmlLang()) }))}</span>` : "";
     return `<li class="run${p.rank <= 3 ? " p" + p.rank : ""}" data-k="${esc(p.key)}">` +
       `<span class="run-rank">${p.rank}</span>` +
       `<span class="run-who"><span class="run-line">${nameButton(p.key, p.name)}${tier}</span></span>` +
-      `<span class="stat time" title="${esc(breakdown)}">${icon("gauge")}<span class="v">${esc(points(p.rating))}</span></span>` +
+      `<span class="stat time" title="${esc(breakdown)}">${icon("star")}<span class="v">${esc(points(p.rating))}</span></span>` +
       `<span class="stat miss" title="${esc(ran)}">${icon("map")}<span aria-hidden="true">${p.courses}/${total}</span><span class="sr-only">${esc(ran)}</span></span>` +
       dcHtml(p) +
       `</li>`;
@@ -2406,7 +2406,7 @@ a.link-copy { text-decoration: none; }
       `<span class="stat miss" title="${esc(t("unit.mistakes", { count: r.miss }))}">${icon("skull")}${esc(r.miss)}</span>` +
       `<span class="pl-run-tags">${isBest ? `<span class="tag tag-latest">${esc(t("pl.best"))}</span>` : ""}${legacy ? `<span class="tag tag-legacy">${esc(t("pl.legacy"))}</span>` : ""}</span>` +
       `<span class="pl-run-meta">` +
-        (pts !== null ? `<span class="run-pts" title="${esc(t("rt.coursePoints", { points: points(pts) }))}">${icon("gauge")}${esc(points(pts))}</span>` : "") +
+        (pts !== null ? `<span class="run-pts" title="${esc(t("rt.coursePoints", { points: points(pts) }))}">${icon("star")}${esc(points(pts))}</span>` : "") +
         (date ? `<span title="${esc(t("lb.submittedOn", { date }))}">${esc(date)}</span>` : "") +
       `</span></li>`;
   }
@@ -2430,7 +2430,7 @@ a.link-copy { text-decoration: none; }
       (dc ? `<span class="pl-dc">${/^https:\/\/cdn\.discordapp\.com\//.test(dc.avatar) ? `<img class="run-pfp" src="${esc(dc.avatar)}" alt="" width="18" height="18">` : ""}<span>${esc(dc.name)}</span></span>` : "") +
       `</div><button class="pl-close" type="button" data-pl-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button></div>` +
       `<div class="pl-stats">` +
-        stat(t("pl.rating"), p ? `${icon("gauge")}${esc(points(p.rating))}` : esc(t("pl.notRated"))) +
+        stat(t("pl.rating"), p ? `${icon("star")}${esc(points(p.rating))}` : esc(t("pl.notRated"))) +
         stat(t("pl.place"), p ? esc(t("res.of", { rank: p.rank, total: r.players.length })) : "—") +
         stat(t("pl.tier"), tier) +
         stat(t("pl.courses"), `${icon("map")}${p ? p.courses : 0}/${r.counted.length}`) +
@@ -2439,7 +2439,7 @@ a.link-copy { text-decoration: none; }
       const open = plOpen.has(c.n);
       const summary = best
         ? `<span class="pl-course-best"><span class="pl-place">${esc(t("res.of", { rank: at + 1, total }))}</span>${esc(best.time)}` +
-          (record ? `<span class="run-pts">${icon("gauge")}${esc(points(coursePoints(record, best)))}</span>` : "") + `</span>`
+          (record ? `<span class="run-pts">${icon("star")}${esc(points(coursePoints(record, best)))}</span>` : "") + `</span>`
         : `<span class="pl-course-best">${esc(legacy.length ? t("pl.legacyBest", { time: legacy.slice().sort(byTime)[0].time }) : t("pl.notRun"))}</span>`;
       html += `<li class="pl-course${best ? "" : " none"}">` +
         `<button class="pl-course-btn" type="button" data-pl-course="${c.n}" aria-expanded="${open}" aria-controls="pl-runs-${c.n}">` +
@@ -2530,6 +2530,7 @@ a.link-copy { text-decoration: none; }
   const EMOJI = '"Apple Color Emoji", "Noto Color Emoji", "Ballkour Emoji", "Segoe UI Emoji", sans-serif';
   const PIC_ICONS = {
     bolt: { fill: true, paths: ["M13 2 3 14h9l-1 8 10-12h-9l1-8z"] },
+    star: { fill: true, paths: ["M11.53 2.3a.53.53 0 0 1 .94 0l2.31 4.68a2.12 2.12 0 0 0 1.6 1.16l5.16.75a.53.53 0 0 1 .3.91l-3.74 3.64a2.12 2.12 0 0 0-.61 1.88l.88 5.14a.53.53 0 0 1-.77.56l-4.62-2.43a2.12 2.12 0 0 0-1.97 0L6.4 21.01a.53.53 0 0 1-.77-.56l.88-5.14a2.12 2.12 0 0 0-.61-1.88L2.16 9.8a.53.53 0 0 1 .3-.91l5.16-.75a2.12 2.12 0 0 0 1.6-1.16z"] },
     skull: { paths: ["m12.5 17-.5-1-.5 1h1z", "M15 22a1 1 0 0 0 1-1v-1a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20v1a1 1 0 0 0 1 1z"], dots: [[15, 12], [9, 12]] },
   };
   function picIcon(ctx, name, x, cy, size, color) {
@@ -2596,6 +2597,8 @@ a.link-copy { text-decoration: none; }
       ].map((f) => document.fonts.load(f, f.includes("Emoji") ? c.flag : "AZ09").catch(() => null)));
     }
     const people = d.runs.map((r) => (r.discord && PLAYERS.get(r.discord)) || null);
+    // Each player's rating over every course, beside the date like the bot's pictures (legacy boards don't count)
+    const ratingOf = d.legacy ? new Map() : new Map(ratings().players.map((p) => [p.key, p.rating]));
     const [logo, ...pfps] = await Promise.all([loadImg("/assets/logo.webp"), ...people.map((p) => (p && /^https:\/\/cdn\.discordapp\.com\//.test(p.avatar) ? loadImg(p.avatar, true) : null))]);
     const cv = document.createElement("canvas");
     cv.width = W * 2; cv.height = H * 2;
@@ -2690,7 +2693,8 @@ a.link-copy { text-decoration: none; }
       picText(ctx, String(i + 1), left, midY, tier || "#76867f");
       const who = r && people[i];
       const date = r ? formatDate(r.date) : "";
-      const two = !!(who || date);
+      const rating = r ? ratingOf.get(playerKey(r)) : undefined;
+      const two = !!(who || date || rating !== undefined);
       // Like the bot's grid: the second line is as tall as the Discord name, or the date when there's no name
       const line2 = who ? 17.6 : 13.5;
       const blockTop = y + (PIC.rowH - (27.5 + (two ? 7 + line2 : 0))) / 2;
@@ -2743,7 +2747,13 @@ a.link-copy { text-decoration: none; }
         picText(ctx, who.name, dx, y2, "#b9befc");
         ctx.restore();
       }
-      if (date) { picFont(ctx, '400 13.5px "JetBrains Mono", monospace'); picText(ctx, date, right, y2, "#76867f", "right"); }
+      picFont(ctx, '400 13.5px "JetBrains Mono", monospace');
+      const dateW = date ? picText(ctx, date, right, y2, "#76867f", "right") + 14 : 0;
+      if (rating !== undefined) {
+        const num = Math.round(rating).toLocaleString("en");
+        const numW = picText(ctx, num, right - dateW, y2, "#a7b6b0", "right");
+        picIcon(ctx, "star", right - dateW - numW - 5 - 15, y2, 15, "#ffd54f");
+      }
       ctx.restore();
     }
     // The foot: the course number, the board's link in the middle, and a note
