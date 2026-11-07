@@ -83,6 +83,8 @@ npx wrangler secret put DISCORD_BOT_TOKEN   # Ballkyrie's bot token, for the pla
 npx wrangler secret put GITHUB_TOKEN        # optional: any GitHub token, for GitHub's higher rate limits
 ```
 
+Resetting Ballkyrie's token in the Discord Developer Portal breaks the copy here too: the boards lose everyone's Discord name (except people who just sent a run from the site), the run log stops posting, and `npx wrangler tail` shows `Discord turned down DISCORD_BOT_TOKEN (401)`. Put the new token here and in the game repo's `DISCORD_BOT_TOKEN` secret, which the leaderboard bot uses. Paste just the token, without `Bot ` in front.
+
 ### Runs sent from the website
 
 Players sign in with Discord (one click, no new account) and send their run from the form under Submit a run. It goes on the board straight away: the Worker saves it under their Discord ID in `leaderboards/runs.json` on the game repo's `develop` branch, one commit per run. The site shows it at once, and the leaderboard bot posts the board on Discord and updates roles. A run is always the sender's own, whatever in-game name they type, so nobody can send one as someone else. Each Discord account can send 5 runs a minute (`SUBMIT_LIMIT` in `wrangler.toml`) and 20 a day.

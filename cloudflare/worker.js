@@ -252,9 +252,13 @@ async function buildWidget(env, previous) {
 
 /* ---------- Players' Discord names ---------- */
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// Discord says 401 when the token is wrong or was reset in the Developer Portal. Then nobody can be looked up, so the
+// rebuild fails (and `npx wrangler tail` says why) instead of saving a list with nobody on it for an hour.
+class BadToken extends Error {}
 async function discord(token, route) {
   for (let attempt = 0; attempt < 3; attempt++) {
     const r = await fetch(DISCORD_API + route, { headers: { Authorization: `Bot ${token}` } });
+    if (r.status === 401) throw new BadToken("Discord turned down DISCORD_BOT_TOKEN (401): set it again to Ballkyrie's current token");
     if (r.status === 429) { // rate limited: wait as long as Discord asks
       const wait = (await r.json().catch(() => ({}))).retry_after || 1;
       await sleep(Math.min(wait, 5) * 1000 + 250);
@@ -286,7 +290,7 @@ async function buildPlayers(env, ctx, previous) {
   const list = [...ids];
   for (let i = 0; i < list.length; i += 5) { // 5 at a time, to stay well inside Discord's rate limits
     const batch = list.slice(i, i + 5);
-    const people = await Promise.all(batch.map((id) => lookUp(env.DISCORD_BOT_TOKEN, id).catch(() => null)));
+    const people = await Promise.all(batch.map((id) => lookUp(env.DISCORD_BOT_TOKEN, id).catch((e) => { if (e instanceof BadToken) throw e; return null; })));
     batch.forEach((id, j) => { const p = people[j] || (previous && previous[id]); if (p) found[id] = p; });
   }
   return JSON.stringify(found);

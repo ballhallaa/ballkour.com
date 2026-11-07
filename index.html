@@ -352,6 +352,12 @@ select option, select optgroup { background: var(--menu); color: var(--ink); }
   transition: color .15s, background-color .15s, box-shadow .15s;
 }
 .sections a:hover { color: var(--ink); background: var(--glass-hi); }
+/* The links scroll; Find a player stays at the right end */
+.sections { display: flex; align-items: center; gap: 4px; }
+.sections-scroll { position: relative; flex: 1; min-width: 0; }
+.sections-find { flex: none; width: 38px; height: 33px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--ink-2); cursor: pointer; transition: color .15s, background-color .15s; }
+.sections-find:hover { color: var(--volt); background: var(--glass-hi); }
+.sections-find:focus-visible { outline-offset: -2px; }
 .sections a[aria-current="true"] { color: var(--ink); background: rgba(0, 230, 151, .12); box-shadow: inset 0 0 0 1px rgba(0, 230, 151, .35); }
 
 /* ---------- Panels ---------- */
@@ -369,6 +375,13 @@ select option, select optgroup { background: var(--menu); color: var(--ink); }
 .panel-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; padding: 15px 18px; border-bottom: 1px solid var(--line); }
 .panel-title { margin: 0; display: inline-flex; align-items: center; gap: 10px; font: 600 13px/1 var(--body); letter-spacing: .14em; text-transform: uppercase; color: var(--ink); }
 .panel-title .icon { color: var(--ink-2); }
+/* Find a player, by Courses: looks like a search box, and opens the real one */
+.find-btn { flex: 1 1 150px; max-width: 250px; margin-inline-start: auto; display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 6px 0 10px; border: 1px solid var(--line-hi); border-radius: 9px; background: rgba(0, 0, 0, .25); color: var(--ink-3); font: 500 14px/1 var(--body); text-align: left; cursor: pointer; transition: border-color .15s, color .15s; }
+.find-btn > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.find-btn .icon { width: 15px; height: 15px; color: var(--volt); }
+.find-btn kbd { flex: none; min-width: 22px; padding: 0 6px; border: 1px solid var(--line-hi); border-bottom-width: 2px; border-radius: 6px; font: 600 12px/18px var(--mono); text-align: center; color: var(--ink-2); }
+.find-btn:hover { border-color: var(--volt); color: var(--ink-2); }
+@media (pointer: coarse) { .find-btn kbd { display: none; } }
 .panel-body { padding: 16px 18px 18px; }
 .panel-text { margin: 0; max-width: 62ch; font: 400 15.5px/1.55 var(--body); color: var(--ink-2); }
 
@@ -636,6 +649,19 @@ a.stat:hover .play { color: var(--volt); }
 .lb-sort button[data-sort="miss"] .icon { color: var(--coral); }
 .lb-sort button:hover, .lb-pic:hover { color: var(--ink); border-color: var(--line-hi); }
 .lb-sort button[aria-pressed="true"] { color: var(--ink); background: rgba(0, 230, 151, .1); border-color: rgba(0, 230, 151, .35); }
+/* Find a player on a board by their in-game or Discord name: first in the bar, taking the room the buttons leave */
+.lb-search { position: relative; flex: 1 1 170px; min-width: 0; display: flex; align-items: center; }
+.lb-search .icon { position: absolute; inset-inline-start: 9px; width: 13px; height: 13px; color: var(--ink-3); pointer-events: none; transition: color .15s; }
+.lb-search:focus-within .icon { color: var(--volt); }
+.lb-search input { width: 100%; height: 26px; padding-inline: 28px 8px; border: 1px solid var(--line); border-radius: 7px; background: rgba(0, 0, 0, .25); color: var(--ink); font: 500 13px/1 var(--body); -webkit-appearance: none; appearance: none; transition: border-color .15s; }
+.lb-search input::-webkit-search-decoration { -webkit-appearance: none; }
+.lb-search input::placeholder { color: var(--ink-3); opacity: 1; }
+.lb-search input:hover { border-color: var(--line-hi); }
+.lb-search input:focus-visible { outline: 2px solid var(--volt); outline-offset: 1px; border-color: var(--volt); }
+/* Phones zoom in on a field with text under 16px */
+@media (pointer: coarse) { .lb-search input { height: 32px; font-size: 16px; } }
+/* Found only past the top 10: no line between the bar and them */
+.lb-rows > .board-rest:first-child { border-top: 0; }
 /* Places 4–10 stand out from 11 on: a faint mint and brighter text, while past the top 10 the text dims a little */
 .board:not(.board-rest) .run:not(.p1, .p2, .p3) { background: linear-gradient(90deg, rgba(0, 230, 151, .085), transparent 70%); }
 .board:not(.board-rest) .run:not(.p1, .p2, .p3) .run-name { color: var(--ink); }
@@ -735,6 +761,37 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pic-wait { margin: 0; padding: 60px 16px; text-align: center; font: 500 14px/1.4 var(--mono); color: var(--ink-2); }
 .pic-img { display: block; width: calc(100% - 32px); height: auto; margin: 16px 16px 0; border-radius: 10px; border: 1px solid var(--line); }
 .pic-actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 16px 0; }
+/* Find a player: a search box over everyone, each row like the Player ratings' (place, name, Top %, Discord, rating,
+   courses run). Near the top of the screen like a command palette; the whole screen on phones. */
+.pf { width: min(580px, calc(100vw - 32px)); max-width: none; max-height: min(680px, calc(100dvh - 80px)); margin: max(40px, 9vh) auto auto; padding: 0; border: 1px solid var(--line-hi); border-radius: var(--r); background: #08100d; color: var(--ink); overflow: hidden; box-shadow: 0 30px 80px rgba(0, 0, 0, .6); }
+.pf[open] { display: flex; flex-direction: column; animation: pop .16s ease-out; }
+.pf::backdrop { background: rgba(2, 5, 4, .62); }
+.pf-head { flex: none; display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 16px; border-bottom: 1px solid var(--line); transition: box-shadow .15s; }
+.pf-head:focus-within { box-shadow: inset 0 -2px 0 var(--volt); }
+.pf-head > .icon { width: 18px; height: 18px; color: var(--volt); }
+.pf-input { flex: 1; min-width: 0; height: 40px; padding: 0; border: 0; background: none; color: var(--ink); font: 500 17px/1 var(--body); -webkit-appearance: none; appearance: none; }
+.pf-input:focus { outline: none; }
+.pf-input::placeholder { color: var(--ink-3); opacity: 1; }
+.pf-input::-webkit-search-decoration { -webkit-appearance: none; }
+/* Escape empties it; one ✕ (Close) is enough */
+.pf-input::-webkit-search-cancel-button { display: none; }
+.pf-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; list-style: none; margin: 0; padding: 6px 0; }
+.pf-list:empty { display: none; }
+.pf .run { grid-template-columns: 26px minmax(0, 1fr) 78px 64px; padding: 8px 16px; cursor: pointer; }
+.pf .run .stat { justify-content: space-between; }
+.pf .stat.time .icon { color: var(--gold); }
+.pf .stat.miss .icon { color: var(--ink-3); }
+.pf .run-name { color: var(--ink); }
+.pf .pf-unrated { grid-column: 3 / 5; justify-content: flex-end; font: 500 12.5px/1.2 var(--mono); color: var(--ink-3); }
+.pf .run.active { background-color: var(--glass-hi); box-shadow: inset 2px 0 0 var(--volt); }
+.pf-empty { margin: 0; padding: 18px 16px; font: 400 15px/1.5 var(--body); color: var(--ink-2); }
+.pf-foot { flex: none; margin: 0; padding: 8px 16px; border-top: 1px solid var(--line); font: 400 12px/1.4 var(--mono); color: var(--ink-3); }
+@media (pointer: coarse) { .pf-foot { display: none; } }
+@media (max-width: 520px) {
+  .pf { width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; border: 0; border-radius: 0; }
+  .pf .run { grid-template-columns: 22px minmax(0, 1fr) 66px 50px; gap: 0 8px; padding: 8px 12px; }
+  .pf .run-line { flex-wrap: wrap; gap: 3px 7px; }
+}
 /* Player ratings: a row like a course's, its board with each player's rating, courses run and Top % tier */
 .rt-flag { display: grid; place-items: center; color: var(--gold); }
 .rt-flag .icon { width: 20px; height: 20px; }
@@ -1055,6 +1112,7 @@ a.link-copy { text-decoration: none; }
     <symbol id="i-map" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.1 5.55a2 2 0 0 0 1.8 0l3.65-1.83A1 1 0 0 1 21 4.62v12.76a1 1 0 0 1-.55.9l-4.55 2.27a2 2 0 0 1-1.8 0l-4.2-2.1a2 2 0 0 0-1.8 0l-3.65 1.83A1 1 0 0 1 3 19.38V6.62a1 1 0 0 1 .55-.9L8.1 3.45a2 2 0 0 1 1.8 0z"/><path d="M15 5.76v15"/><path d="M9 3.24v15"/></g></symbol>
     <symbol id="i-image" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></g></symbol>
     <symbol id="i-x" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4.2-4.2"/></g></symbol>
     <symbol id="i-star" viewBox="0 0 24 24"><path fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" d="M11.53 2.3a.53.53 0 0 1 .94 0l2.31 4.68a2.12 2.12 0 0 0 1.6 1.16l5.16.75a.53.53 0 0 1 .3.91l-3.74 3.64a2.12 2.12 0 0 0-.61 1.88l.88 5.14a.53.53 0 0 1-.77.56l-4.62-2.43a2.12 2.12 0 0 0-1.97 0L6.4 21.01a.53.53 0 0 1-.77-.56l.88-5.14a2.12 2.12 0 0 0-.61-1.88L2.16 9.8a.53.53 0 0 1 .3-.91l5.16-.75a2.12 2.12 0 0 0 1.6-1.16z"/></symbol>
     <symbol id="i-mail" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></g></symbol>
     <symbol id="i-heart" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></symbol>
@@ -1105,6 +1163,7 @@ a.link-copy { text-decoration: none; }
   </header>
 
   <nav class="sections" id="sections" data-i18n-aria="nav.label" aria-label="Sections">
+    <div class="sections-scroll">
     <div class="sections-track" id="sections-track">
       <a href="/courses" data-route="courses" data-i18n="courses.title">Courses</a>
       <a href="/leaderboards" data-route="leaderboards" data-i18n="nav.leaderboards">Leaderboards</a>
@@ -1117,12 +1176,16 @@ a.link-copy { text-decoration: none; }
     </div>
     <button class="sections-more left" type="button" data-dir="-1" tabindex="-1" aria-hidden="true"><svg class="icon"><use href="#i-dots"/></svg></button>
     <button class="sections-more right" type="button" data-dir="1" tabindex="-1" aria-hidden="true"><svg class="icon"><use href="#i-dots"/></svg></button>
+    </div>
+    <!-- Find a player, from anywhere on the page (see "Finding a player") -->
+    <button class="sections-find" type="button" data-find data-i18n-aria="find.open" aria-label="Find a player"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg></button>
   </nav>
 
   <main class="column" id="main" tabindex="-1">
     <section class="panel" id="courses" aria-labelledby="courses-title">
       <div class="panel-head">
         <h2 class="panel-title" id="courses-title"><svg class="icon" aria-hidden="true"><use href="#i-flag"/></svg><span data-i18n="courses.title">Courses</span></h2>
+        <button class="find-btn" type="button" data-find><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg><span data-i18n="find.open">Find a player</span><kbd aria-hidden="true">/</kbd></button>
       </div>
       <ol class="steps">
         <li><span data-i18n-html="steps.goto">In Overwatch, go to <b>Play → More → Custom Games → Create</b>.</span></li>
@@ -1352,6 +1415,8 @@ a.link-copy { text-decoration: none; }
 <dialog class="pl" id="pl" aria-labelledby="pl-name"></dialog>
 <!-- A board's picture, from Picture above it (see "Board pictures") -->
 <dialog class="pic" id="pic" aria-labelledby="pic-title"></dialog>
+<!-- Find a player: everyone who has run a course, by name (see "Finding a player") -->
+<dialog class="pf" id="pf"></dialog>
 
 <!-- English for text the script builds. Translations override these keys too. -->
 <script type="application/json" id="i18n-dynamic">
@@ -1408,6 +1473,14 @@ a.link-copy { text-decoration: none; }
   "lb.sortedTime": "Sorted by time",
   "lb.sortedMiss": "Sorted by mistakes, fewest first",
   "lb.fewer": "Show the top 10 only",
+  "lb.search": "Player or Discord name",
+  "lb.searchLabel": "Find a player on this board by in-game or Discord name",
+  "lb.noMatch": "No players on this board match “{query}”",
+  "lb.found": "Players found: {count}",
+  "find.label": "Find a player by in-game or Discord name",
+  "find.none": "No players match “{query}”",
+  "find.unrated": "Not rated",
+  "find.keys": "↑ ↓ to pick, Enter to see their stats. Press / anywhere on the site to open this.",
   "rt.group": "Every course",
   "rt.title": "Player ratings",
   "rt.meta": "All courses in one rating",
@@ -1817,6 +1890,61 @@ a.link-copy { text-decoration: none; }
       dcHtml(r) +
       `</li>`;
   }
+  /* ---------- Searching a board ----------
+     Every board (and the Player ratings) has a box that finds players by their in-game or Discord name, anywhere on
+     it: past the top 10 too, each in their own place. Capitals and accents don't matter (e finds É). Typing only
+     redraws the rows under the box, so the box keeps focus, and a word still being typed with a Japanese, Chinese
+     or Korean keyboard isn't cut off. What's typed stays with the board until the page is left. */
+  const fold = (s) => String(s || "").normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase();
+  const queryOf = (row) => fold(viewOf(row).q).trim();
+  function found(x, q) {
+    const dc = x.discord && PLAYERS.get(x.discord);
+    return fold(x.name).includes(q) || (!!dc && fold(dc.name).includes(q));
+  }
+  const searchHtml = (row) => `<label class="lb-search">${icon("search")}<input type="search" data-course="${row.n}" value="${esc(viewOf(row).q || "")}" ` +
+    `placeholder="${esc(t("lb.search"))}" aria-label="${esc(t("lb.searchLabel"))}" autocomplete="off" spellcheck="false" enterkeyhint="search"></label>`;
+  // A board's rows: its top 10, then the rest behind "Show all". draw(x, i) draws whoever is in place i (from 0).
+  // While the board is searched, it's just the players found, the top 10's apart from the rest's.
+  function rowsHtml(row, top, rest, draw) {
+    const q = queryOf(row);
+    if (!q) {
+      return `<div class="lb-rows"><ol class="board">${top.map((x, i) => draw(x, i)).join("")}</ol>` +
+        moreHtml(row, () => rest.map((x, j) => draw(x, top.length + j)), top.length + rest.length, rest.length) + `</div>`;
+    }
+    const hits = (list, from) => list.map((x, j) => (found(x, q) ? draw(x, from + j) : "")).join("");
+    const inTop = hits(top, 0);
+    const inRest = hits(rest, top.length);
+    return `<div class="lb-rows">` + (inTop || inRest
+      ? (inTop ? `<ol class="board">${inTop}</ol>` : "") + (inRest ? `<ol class="board board-rest">${inRest}</ol>` : "")
+      : `<p class="board-empty">${esc(t("lb.noMatch", { query: viewOf(row).q.trim() }))}</p>`) + `</div>`;
+  }
+  // Typing in a board's box: only its rows are drawn again, from a fresh copy of the whole board
+  function searchBoard(input) {
+    const row = rowOf(input.dataset.course);
+    const rows = row && input.closest(".course-board")?.querySelector(".lb-rows");
+    if (!rows) return;
+    viewOf(row).q = input.value;
+    const copy = document.createElement("template");
+    copy.innerHTML = boardHtml(row);
+    const next = copy.content.querySelector(".lb-rows");
+    if (!next) return;
+    rows.replaceWith(next);
+    announce.textContent = queryOf(row) ? t("lb.found", { count: next.querySelectorAll(".run").length.toLocaleString(htmlLang()) }) : "";
+  }
+  document.addEventListener("input", (e) => {
+    if (e.target instanceof HTMLInputElement && e.target.closest(".lb-search")) searchBoard(e.target);
+  });
+  // Escape empties the box (in every browser, not just the ones that do it themselves). On a phone, the keyboard's
+  // Search key puts the keyboard away so the players found can be seen.
+  document.addEventListener("keydown", (e) => {
+    const input = e.target instanceof HTMLInputElement && e.target.closest(".lb-search") ? e.target : null;
+    if (!input || e.isComposing) return;
+    if (e.key === "Escape" && input.value) {
+      e.preventDefault();
+      input.value = "";
+      searchBoard(input);
+    } else if (e.key === "Enter" && matchMedia("(pointer: coarse)").matches) input.blur();
+  });
   function runsHtml(c, runs, fresh, rest) {
     rest = rest || [];
     if (!runs.length && !rest.length) return `<p class="board-empty">${esc(t(c.broken ? "lb.emptyBroken" : "lb.empty"))}</p>`;
@@ -1836,18 +1964,18 @@ a.link-copy { text-decoration: none; }
     if (shown.some((r) => r.video)) notes.push(t("lb.videoHint"));
     if (shown.some((r) => r.date)) notes.push(t("lb.datesFormat"));
     if (!c.broken && !c.latestBroken) notes.push(t("lb.pointsNote"));
-    return sortHtml(c) + `<ol class="board">${top.map((r, i) => runRow(r, i, fresh, false, record, podium(r))).join("")}</ol>` +
-      moreHtml(c, () => rest.map((r, j) => runRow(r, top.length + j, null, false, record, podium(r))), top.length + rest.length, rest.length) +
+    return sortHtml(c) + rowsHtml(c, top, rest, (r, i) => runRow(r, i, i < top.length ? fresh : null, false, record, podium(r))) +
       (notes.length ? `<p class="lb-foot">${notes.map((s) => `<span>${esc(s)}</span>`).join("")}</p>` : "");
   }
   // Boards are sorted by time (the leaderboard itself) or by mistakes, fewest first and then fastest. The choice holds
   // for every course's board until the page is left.
   let boardSort = "time";
   const byMistakes = (a, b) => a.miss - b.miss || toSeconds(a.time) - toSeconds(b.time);
-  // The bar above a board: its picture (see "Board pictures") on the left, how it's sorted on the right
+  // The bar above a board: its search (see "Searching a board") and picture (see "Board pictures") on the left, how
+  // it's sorted on the right
   function sortHtml(c) {
     const b = (key, ico, label) => `<button type="button" data-sort="${key}" data-course="${c.n}" aria-pressed="${boardSort === key}">${icon(ico)}<span>${esc(t(label))}</span></button>`;
-    return `<div class="lb-bar"><button class="lb-pic" type="button" data-course="${c.n}">${icon("image")}<span>${esc(t("pic.button"))}</span></button>` +
+    return `<div class="lb-bar">${searchHtml(c)}<button class="lb-pic" type="button" data-course="${c.n}">${icon("image")}<span>${esc(t("pic.button"))}</span></button>` +
       `<div class="lb-sort" role="group" aria-label="${esc(t("lb.sortBy"))}"><span class="lb-sort-label" aria-hidden="true">${esc(t("lb.sortBy"))}</span>` +
       b("time", "bolt", "lb.sort.time") + b("miss", "skull", "lb.sort.miss") + `</div></div>`;
   }
@@ -1870,8 +1998,7 @@ a.link-copy { text-decoration: none; }
     const rest = sorted.slice(10);
     const podium = (r) => (byMiss ? best.slice(0, 3).indexOf(r) : undefined);
     return `<div class="board-meta"><span>${esc(t("lb.legacy.title"))}</span></div>` + sortHtml(c) +
-      `<ol class="board">${top.map((r, i) => runRow(r, i, null, true, null, podium(r))).join("")}</ol>` +
-      moreHtml(c, () => rest.map((r, j) => runRow(r, top.length + j, null, true, null, podium(r))), sorted.length, rest.length) +
+      rowsHtml(c, top, rest, (r, i) => runRow(r, i, null, true, null, podium(r))) +
       `<p class="lb-foot"><span>${esc(t("lb.legacy.note"))}</span></p>`;
   }
   // "‹ ▮▮▮▮ ›": one tick per board, the selected one in mint, the ones that set a new #1 in gold
@@ -1932,7 +2059,13 @@ a.link-copy { text-decoration: none; }
     if (a.classList.contains("lb-more")) return ".lb-more";
     if (a.closest(".lb-sort")) return `.lb-sort [data-sort="${a.dataset.sort}"]`;
     if (a.classList.contains("lb-pic")) return ".lb-pic";
+    if (a.closest(".lb-search")) return ".lb-search input";
     return null;
+  }
+  // Focus back where it was after a redraw; in a board's search, with the cursor after what's typed
+  function refocus(el) {
+    el.focus({ preventScroll: true });
+    if (el instanceof HTMLInputElement) el.setSelectionRange(el.value.length, el.value.length);
   }
   // Redraws one course row (or the Player ratings row) in place, keeping keyboard focus where it was. Any change to
   // a course's runs can change the ratings, so they're redrawn too, once for however many courses changed together.
@@ -1944,11 +2077,11 @@ a.link-copy { text-decoration: none; }
       const spot = focusSpot(el);
       el.outerHTML = c === RATINGS ? ratingsRow() : courseRow(c);
       const back = spot && document.querySelector(`#course-${c.n} ${spot}`);
-      if (back) back.focus({ preventScroll: true });
+      if (back) refocus(back);
     }
     if (c !== RATINGS && !ratingsQueued) {
       ratingsQueued = true;
-      queueMicrotask(() => { ratingsQueued = false; refreshCourse(RATINGS); renderPlayer(); });
+      queueMicrotask(() => { ratingsQueued = false; refreshCourse(RATINGS); renderPlayer(); if (pf.open) renderFinder(); });
     }
   }
   // Redraws just an open board; rows that are on both boards slide to their new rank, new ones fade in
@@ -1973,7 +2106,7 @@ a.link-copy { text-decoration: none; }
       });
     }
     const f = focusSel && box.querySelector(focusSel);
-    if (f) f.focus({ preventScroll: true });
+    if (f) refocus(f);
   }
   function showBoard(n, at, from) {
     const c = course(n);
@@ -2383,8 +2516,7 @@ a.link-copy { text-decoration: none; }
     const top = r.players.slice(0, 10);
     const rest = r.players.slice(10);
     const courses = r.counted.map((c) => `${c.n} ${c.name}`).join(" · ");
-    return `<ol class="board">${top.map((p) => ratingRow(p, r)).join("")}</ol>` +
-      moreHtml(RATINGS, () => rest.map((p) => ratingRow(p, r)), r.players.length, rest.length) +
+    return `<div class="lb-bar">${searchHtml(RATINGS)}</div>` + rowsHtml(RATINGS, top, rest, (p) => ratingRow(p, r)) +
       `<p class="lb-foot"><span>${esc(t("rt.how"))}</span><span>${esc(t("rt.tiers", { count: r.players.length.toLocaleString(htmlLang()) }))}</span>` +
       `<span>${esc(t("rt.counted", { courses }))}</span></p>`;
   }
@@ -2540,6 +2672,130 @@ a.link-copy { text-decoration: none; }
     if (e.target === pl && (e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom)) pl.close();
   });
   pl.addEventListener("close", () => { plKey = ""; });
+
+  /* ---------- Finding a player ----------
+     Find a player (the magnifier in the section bar, the box by Courses, or the / key anywhere) lists everyone who
+     has run a course: the rated players by place, with their Top %, Discord, rating and courses run, then everyone
+     else (runs only on broken courses, or only before May 2026) by name. Typing narrows it by in-game or Discord name,
+     the same way a board's search does, with names that start with it first. The arrow keys and Enter, or a click,
+     pick one, and their panel opens (see "A player's runs"). */
+  const pf = $("#pf");
+  let pfList = [];
+  let pfActive = 0;
+  const pfInput = () => $("#pf-input");
+  function everyone() {
+    const r = ratings();
+    const rated = r.players.map((p) => ({ key: p.key, name: p.name, discord: p.discord, p }));
+    const seen = new Set(rated.map((x) => x.key));
+    const others = [];
+    // Unrated: runs only on broken courses, or else only on the legacy boards (where a name without a Discord ID is
+    // its own player, so someone can be listed twice: rated, and Legacy)
+    const add = (run, legacy) => {
+      const key = playerKey(run);
+      if (seen.has(key)) return;
+      seen.add(key);
+      others.push({ key, name: run.name, discord: run.discord || "", p: null, legacy });
+    };
+    COURSES.forEach((c) => { const { top, rest } = standingsOf(c); top.concat(rest).forEach((run) => add(run, false)); });
+    COURSES.forEach((c) => (HISTORY[c.n] ? HISTORY[c.n].legacy : []).forEach((run) => add(run, true)));
+    others.sort((a, b) => fold(a.name).localeCompare(fold(b.name)));
+    return { all: rated.concat(others), r };
+  }
+  function finderOption(x, i, r) {
+    const p = x.p;
+    const total = r.counted.length;
+    const dc = x.discord && PLAYERS.get(x.discord);
+    const ran = p ? t("rt.courses", { n: p.courses, total }) : "";
+    const tier = p && p.tier ? t("rt.tier", { pct: p.tier.toLocaleString(htmlLang()) }) : "";
+    const unrated = t(x.legacy ? "pl.legacy" : "find.unrated");
+    // Read out as "BALLMYBLOVED, ball シ, #1 of 16, Rating 1,818, Top 10%, 2 of 11 courses run"
+    const label = [x.name, dc && dc.name, ...(p ? [t("res.of", { rank: p.rank, total: r.players.length }), `${t("pl.rating")} ${points(p.rating)}`, tier, ran] : [unrated])]
+      .filter(Boolean).join(", ");
+    return `<li class="run${p && p.rank <= 3 ? " p" + p.rank : ""}${i === pfActive ? " active" : ""}" role="option" id="pf-opt-${i}" aria-selected="${i === pfActive}" aria-label="${esc(label)}">` +
+      `<span class="run-rank">${p ? p.rank : "–"}</span>` +
+      `<span class="run-who"><span class="run-line"><span class="run-name">${esc(x.name)}</span>` +
+        (tier ? `<span class="tag tag-tier${p.tier <= 5 ? " elite" : ""}">${esc(tier)}</span>` : "") + `</span></span>` +
+      (p ? `<span class="stat time">${icon("star")}<span class="v">${esc(points(p.rating))}</span></span>` +
+          `<span class="stat miss">${icon("map")}<span>${p.courses}/${total}</span></span>`
+        : `<span class="stat pf-unrated">${x.legacy ? `<span class="tag tag-legacy">${esc(unrated)}</span>` : esc(unrated)}</span>`) +
+      dcHtml(x) + `</li>`;
+  }
+  // The list, for what's typed so far
+  function renderFinder() {
+    const input = pfInput();
+    if (!input) return;
+    const { all, r } = everyone();
+    const q = fold(input.value).trim();
+    let list = all;
+    if (q) {
+      const starts = (x) => { const dc = x.discord && PLAYERS.get(x.discord); return fold(x.name).startsWith(q) || (!!dc && fold(dc.name).startsWith(q)); };
+      const hits = all.filter((x) => found(x, q));
+      list = hits.filter(starts).concat(hits.filter((x) => !starts(x)));
+    }
+    pfList = list;
+    pfActive = Math.min(pfActive, Math.max(0, list.length - 1));
+    $("#pf-list").innerHTML = list.map((x, i) => finderOption(x, i, r)).join("");
+    const empty = $("#pf-empty");
+    empty.hidden = list.length > 0;
+    empty.textContent = q ? t("find.none", { query: input.value.trim() }) : t("rt.empty");
+    if (list.length) input.setAttribute("aria-activedescendant", `pf-opt-${pfActive}`); else input.removeAttribute("aria-activedescendant");
+    announce.textContent = q ? t("lb.found", { count: list.length.toLocaleString(htmlLang()) }) : "";
+  }
+  function pickActive(i, scroll) {
+    if (!pfList.length) return;
+    pfActive = Math.max(0, Math.min(pfList.length - 1, i));
+    $$("#pf-list > .run", pf).forEach((o, j) => { o.classList.toggle("active", j === pfActive); o.setAttribute("aria-selected", String(j === pfActive)); });
+    pfInput().setAttribute("aria-activedescendant", `pf-opt-${pfActive}`);
+    if (scroll) $(`#pf-opt-${pfActive}`).scrollIntoView({ block: "nearest" });
+  }
+  function openFinder() {
+    if (pf.open) { pfInput().select(); return; }
+    pf.setAttribute("aria-label", t("find.open"));
+    pf.innerHTML = `<div class="pf-head">${icon("search")}` +
+      `<input class="pf-input" id="pf-input" type="search" role="combobox" aria-expanded="true" aria-controls="pf-list" aria-autocomplete="list" ` +
+        `aria-label="${esc(t("find.label"))}" placeholder="${esc(t("lb.search"))}" autocomplete="off" spellcheck="false" enterkeyhint="go">` +
+      `<button class="pl-close" type="button" data-pf-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button></div>` +
+      `<ul class="pf-list" id="pf-list" role="listbox" aria-label="${esc(t("find.open"))}"></ul><p class="pf-empty" id="pf-empty" hidden></p>` +
+      `<p class="pf-foot">${esc(t("find.keys"))}</p>`;
+    pfActive = 0;
+    renderFinder();
+    pf.showModal();
+    pfInput().focus();
+  }
+  // Their panel opens in its place; closing it goes back to wherever Find a player was opened from
+  function pickPlayer(i) {
+    const x = pfList[i];
+    if (!x) return;
+    pf.close();
+    openPlayer(x.key, 0);
+  }
+  document.addEventListener("click", (e) => { if (e.target.closest("[data-find]")) openFinder(); });
+  // "/" anywhere opens it, except while typing in a box or with a window already open
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "/" || e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented) return;
+    if (e.target instanceof Element && e.target.closest("input, textarea, select, [contenteditable]")) return;
+    if (document.querySelector("dialog[open]")) return;
+    e.preventDefault();
+    openFinder();
+  });
+  pf.addEventListener("input", (e) => { if (e.target.id === "pf-input") { pfActive = 0; renderFinder(); } });
+  pf.addEventListener("keydown", (e) => {
+    if (e.target.id !== "pf-input" || e.isComposing) return;
+    const step = { ArrowDown: 1, ArrowUp: -1, PageDown: 8, PageUp: -8 }[e.key];
+    if (step) { e.preventDefault(); pickActive(pfActive + step, true); }
+    else if (e.key === "Enter") { e.preventDefault(); pickPlayer(pfActive); }
+    // Escape empties the box first, then closes
+    else if (e.key === "Escape" && e.target.value) { e.preventDefault(); e.target.value = ""; pfActive = 0; renderFinder(); }
+  });
+  pf.addEventListener("pointermove", (e) => { const o = e.target.closest("#pf-list > .run"); if (o) pickActive(Number(o.id.slice(7)), false); });
+  pf.addEventListener("click", (e) => {
+    if (e.target.closest("[data-pf-close]")) { pf.close(); return; }
+    const o = e.target.closest("#pf-list > .run");
+    if (o) { pickPlayer(Number(o.id.slice(7))); return; }
+    // A click on the dimmed page around it closes it
+    const box = pf.getBoundingClientRect();
+    if (e.target === pf && (e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom)) pf.close();
+  });
   // A board link (in a player's panel or a run's result) opens the board right here
   function openBoard(n) {
     const c = course(n);
