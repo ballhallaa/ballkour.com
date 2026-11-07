@@ -1633,23 +1633,23 @@ a.link-copy { text-decoration: none; }
   "pl.legacyBest": "Legacy: {time}",
   "pl.board": "See the board",
   "pl.mineEmpty": "No runs yet. Send your first one and your places, times and rating show up here.",
-  "dcp.what": "Show your Top %, rating, and top 10s on your Discord profile. Discord asks if Ballkyrie can update them, and they keep up with the boards from then on.",
+  "dcp.what": "Show your Top %, rating, and top 10s on your Discord profile. Discord asks if Ballkyrie can update them, and they keep up to date with the boards from then on.",
   "dcp.add": "Show on my Discord profile",
-  "dcp.on": "Ballkyrie is connected and keeps your stats up with the boards.",
-  "dcp.set": "Your stats are on your Discord profile, and they keep up with the boards on their own. Discord can take a few minutes to show them the first time.",
+  "dcp.on": "Ballkyrie is connected and keeps your stats up to date with the boards.",
+  "dcp.set": "Your stats are on your Discord profile, and they keep up to date with the boards on their own. Discord can take a few minutes to show them the first time.",
   "dcp.off": "Take them off",
   "dcp.offFail": "Couldn’t take them off just now. Try again in a minute.",
   "dcp.flaky": "Heads up: Discord has a bug right now that hides boxes like this from profiles now and then, for every app, not just ours. Your stats stay on Discord the whole time, and the box comes back on its own.",
   "dcpi.title": "Your Discord profile",
   "dcpi.lead": "Your Top %, rating, and top 10s go under Apps on your Discord profile, where anyone who opens it can see them.",
   "dcpi.lookTitle": "How it looks",
-  "dcpi.lookNote": "With your stats as they are now. They keep up with the boards on their own, and you can take them off here any time.",
+  "dcpi.lookNote": "With your stats as they are now. They keep up to date with the boards on their own, and you can take them off here any time.",
   "dcpi.asksTitle": "What Discord asks",
   "dcpi.asks": "Discord lists “Update your connection and metadata for this application”. In plain words:",
   "dcpi.connection": "Your connection is the Ballkour box above, on your profile",
   "dcpi.metadata": "Its metadata is the numbers in it, from your rating to the courses you’ve run",
   "dcpi.nothingElse": "Nothing else: it can’t read your messages, post as you, or change anything else on your account",
-  "dcpi.step1": "Discord opens and asks about Ballkyrie again, this time with “Update your connection and metadata” on the list.",
+  "dcpi.step1": "Tap Continue with Discord below. Discord opens and asks about Ballkyrie again, this time with “Update your connection and metadata” on the list.",
   "dcpi.step2": "Tap Authorize.",
   "dcpi.step3": "You’re back here. To show your stats on your profile, finish up on our Discord server:",
   "dcpi.step4": "Click the server name {server}, then Linked Roles {linkedRoles}, then Discord Profile App {role}.",
@@ -1657,7 +1657,7 @@ a.link-copy { text-decoration: none; }
   "dcpi.step6": "Back in Discord, click Finish {finish}. Discord can take a few minutes to show your stats the first time.",
   "dcpi.linkedRoles": "Linked Roles",
   "dcpi.finish": "Finish",
-  "dcp.role": "To show your stats on your profile, get the Discord Profile App role on our Discord server:",
+  "dcp.role": "To finish showing your stats on your profile, get the Discord Profile App role on our Discord server:",
   "me.signin": "Sign in with Discord to see your stats",
   "signin.forMine": "See your rating, your rank on every course, and all your runs.",
   "signin.forSubmit": "Send your runs from here. They go on the board under your Discord, so nobody else can send one as you.",
@@ -1672,7 +1672,7 @@ a.link-copy { text-decoration: none; }
   "signin.sharesYes": "Your Discord ID, name, and picture",
   "signin.sharesNo": "Never your email, password, servers, or messages",
   "signin.nextTitle": "What happens next",
-  "signin.step1": "Discord opens. Log in there first if it asks.",
+  "signin.step1": "Tap Continue with Discord below, and Discord opens. Log in there first if it asks.",
   "signin.step2": "Tap Authorize. If you’ve signed in here before, Discord skips this step.",
   "signin.step3Mine": "You’re back here with your stats open.",
   "signin.step3Submit": "You’re back here, ready to send your run.",
@@ -2827,9 +2827,9 @@ a.link-copy { text-decoration: none; }
   /* Their own panel: their stats on their Discord profile (see "Stats on Discord profiles" in cloudflare/worker.js),
      or a way to put them there, through Discord and back to this panel. me.profile is null when that isn't set up.
      Once they're on, Discord only shows them on their profile when they also have the Discord Profile App role on our
-     server. Until they come back from getting it (me.role, which the Worker knows from Linked Roles opening
-     /api/profile), the box leads with how to, with the explainer's steps 4 to 6, and Ballkyrie being connected goes
-     small underneath. After that, it just says they're on. */
+     server. Until they have it (me.role, which the Worker asks Discord about), the box leads with how to get it, with
+     the explainer's steps 4 to 6, and Ballkyrie being connected goes small underneath. After that, it just says
+     they're on. */
   let dcpNote = "";
   /* Discord has been hiding app boxes like this one from profiles now and then (November 2026), for every app: the
      box comes and goes while Discord still has the stats. Until that's fixed, the panel and the explainer say so.
@@ -2957,6 +2957,14 @@ a.link-copy { text-decoration: none; }
     dcpNote = ok ? "" : "dcp.offFail";
     renderPlayer(ok ? "[data-login-for=profile]" : "[data-dcp-off]");
     dcpNote = "";
+  });
+  // Back on this tab from getting the role in Discord: their panel asks again, and says they're all set once they are
+  document.addEventListener("visibilitychange", async () => {
+    if (document.hidden || !pl.open || !me || !me.profile || me.role || plKey !== "d:" + me.id) return;
+    const d = await fetch("/api/me", { cache: "no-store" }).then((r) => r.json()).catch(() => null);
+    if (!(d && d.user && d.user.role && me && d.user.id === me.id)) return;
+    me.role = true;
+    renderPlayer();
   });
   function renderPlayer(focusSel) {
     if (!plKey || !pl.open) return;
