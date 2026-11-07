@@ -151,6 +151,8 @@ A run from an old board also only shows if it's slower than today's #10, since a
 
 **Player ratings** (`ballkour.com/leaderboards/ratings`) rate everyone over every course. Each course is worth up to 10,000 points: the record gets all of them, and the further behind it a run is, the fewer it gets (10000 × ln(1 + (e − 1) × record ÷ time)², lucio.surf's curve for a player who has run every map). A rating is the average over every course that isn't broken, with 0 for courses a player hasn't run (courses nobody has run yet included), so a new or faster run never lowers it, and the first run on a course changes nobody else's rating. A player's Top % is their place divided by the number of rated players.
 
+Every board, and its picture, shows each player's rating beside their run's date. The newest board shows today's ratings. An older board from the history shows the ratings players had at the end of that board's day, worked out from the boards posted by then, so scrolling back shows how they stood at the time. A course's own rating, how close a run is to its record, is in the player's panel, by each course they've run.
+
 The leaderboard bot posts the same boards and gives out the same Top % as roles on Discord (Top 0.1% to Top 90%, and Rated for everyone below, one each), with its own copy of the boards and ratings in `tools/leaderboard-bot/ratings.mjs` in the game repo. Change both together.
 
 ## Translations
