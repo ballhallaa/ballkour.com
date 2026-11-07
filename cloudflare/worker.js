@@ -47,20 +47,22 @@ const STALE_FOR = 7 * 24 * 60 * 60; // seconds: how long the last good copy is k
 /* ---------- Caching ---------- */
 // Bump the version whenever what a copy holds changes. The last good copy is reused for as long as its source can't be
 // reached, so under the same key a copy saved by an older Worker can outlive the change.
-const CACHE_VERSION = 3;
+const CACHE_VERSION = 4;
 const cacheKey = (name, stale) => new Request(`https://ballkour.com/__cache/v${CACHE_VERSION}/${name}${stale ? "?stale" : ""}`);
 
 // The cached copy of `name` if it's fresh, else rebuilt by build(previous) and cached for `ttl` seconds. When the
-// rebuild fails, the last good copy is served (and rebuilding is tried again on the next request).
+// rebuild fails, the last good copy is served (and rebuilding is tried again on the next request). A build that only
+// partly worked can return { body, ttl } to be kept for less time, so it's tried again sooner.
 async function cached(name, ttl, ctx, build) {
   const fresh = await caches.default.match(cacheKey(name));
   if (fresh) return fresh.text();
   const old = await caches.default.match(cacheKey(name, true));
   const previous = old ? await old.text() : null;
   try {
-    const body = await build(previous ? JSON.parse(previous) : null);
+    const built = await build(previous ? JSON.parse(previous) : null);
+    const { body, ttl: keep = ttl } = typeof built === "string" ? { body: built } : built;
     ctx.waitUntil(Promise.all([
-      caches.default.put(cacheKey(name), new Response(body, { headers: { "Cache-Control": `public, max-age=${ttl}` } })),
+      caches.default.put(cacheKey(name), new Response(body, { headers: { "Cache-Control": `public, max-age=${keep}` } })),
       caches.default.put(cacheKey(name, true), new Response(body, { headers: { "Cache-Control": `public, max-age=${STALE_FOR}` } })),
     ]));
     return body;
@@ -255,18 +257,22 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // Discord says 401 when the token is wrong or was reset in the Developer Portal. Then nobody can be looked up, so the
 // rebuild fails (and `npx wrangler tail` says why) instead of saving a list with nobody on it for an hour.
 class BadToken extends Error {}
+// What Discord answered, or null when it has nobody by that ID (or isn't letting Ballkyrie see them). Anything else
+// (rate limits, Discord being down, a timeout) throws and says why, so the player can be looked up again soon.
 async function discord(token, route) {
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const r = await fetch(DISCORD_API + route, { headers: { Authorization: `Bot ${token}` } });
+  for (let attempt = 0; ; attempt++) {
+    const r = await fetch(DISCORD_API + route, { headers: { Authorization: `Bot ${token}` }, signal: AbortSignal.timeout(5000) });
+    if (r.ok) return r.json();
     if (r.status === 401) throw new BadToken("Discord turned down DISCORD_BOT_TOKEN (401): set it again to Ballkyrie's current token");
-    if (r.status === 429) { // rate limited: wait as long as Discord asks
-      const wait = (await r.json().catch(() => ({}))).retry_after || 1;
-      await sleep(Math.min(wait, 5) * 1000 + 250);
-      continue;
-    }
-    return r.ok ? r.json() : null;
+    if (r.status === 403 || r.status === 404) return null;
+    const text = await r.text().catch(() => "");
+    let wait = NaN;
+    try { wait = Number(JSON.parse(text).retry_after); } catch (e) { /* not JSON: Cloudflare's block page */ }
+    // Rate limited: wait as long as Discord asks, if that's a few seconds. Longer, or no answer at all, means Discord
+    // has blocked Cloudflare's address for a while, and waiting here won't help.
+    if (r.status === 429 && attempt < 2 && wait <= 5) { await sleep(wait * 1000 + 250); continue; }
+    throw new Error(`${r.status} ${text.replace(/\s+/g, " ").slice(0, 100)}`);
   }
-  return null;
 }
 // The name people see in the server (server nickname, then Discord display name, then username) and their picture.
 // Someone who left the server keeps their Discord name and picture.
@@ -287,13 +293,22 @@ async function buildPlayers(env, ctx, previous) {
   const ids = new Set();
   for (const text of Object.values(files)) if (text) for (const m of text.matchAll(/discord"?\s*:\s*"?(\d{17,20})\b/gi)) ids.add(m[1]);
   const found = {};
+  const failed = [];
   const list = [...ids];
   for (let i = 0; i < list.length; i += 5) { // 5 at a time, to stay well inside Discord's rate limits
     const batch = list.slice(i, i + 5);
-    const people = await Promise.all(batch.map((id) => lookUp(env.DISCORD_BOT_TOKEN, id).catch((e) => { if (e instanceof BadToken) throw e; return null; })));
+    const people = await Promise.all(batch.map((id) => lookUp(env.DISCORD_BOT_TOKEN, id).catch((e) => {
+      if (e instanceof BadToken) throw e;
+      failed.push((e && e.message) || String(e));
+      return null;
+    })));
     batch.forEach((id, j) => { const p = people[j] || (previous && previous[id]); if (p) found[id] = p; });
   }
-  return JSON.stringify(found);
+  if (!failed.length) return JSON.stringify(found);
+  // Whoever Discord didn't answer for keeps their last name, or goes without one for now. Kept for an hour, a list
+  // like that would hide them until the next hour, so it's tried again in a few minutes instead.
+  console.error(`players: Discord didn't answer for ${failed.length} of ${list.length} players, trying again in 5 minutes. First: ${failed[0]}`);
+  return { body: JSON.stringify(found), ttl: 5 * 60 };
 }
 
 /* ---------- Signing in with Discord, and runs sent from the website ----------
@@ -534,8 +549,9 @@ async function editRuns(env, edit) {
   return { error: "off", status: 502 };
 }
 // The site shows a saved run straight away: the cached game data gets the new runs.json, and the player's Discord
-// name and picture go in until the hourly lookup has them. (Copies from GitHub have the run too: runs.json is read
-// through GitHub's API, which doesn't serve old copies the way raw files can.)
+// name and picture go in until the next lookup has them. That copy is only kept for a few minutes, so adding someone
+// never puts off the lookup for everyone else. (Copies from GitHub have the run too: runs.json is read through
+// GitHub's API, which doesn't serve old copies the way raw files can.)
 async function putCached(name, ttl, body) {
   await Promise.all([
     caches.default.put(cacheKey(name), new Response(body, { headers: { "Cache-Control": `public, max-age=${ttl}` } })),
@@ -552,7 +568,7 @@ async function showSaved(runsText, user) {
   const playersCopy = user && (await stored("players"));
   if (playersCopy) {
     const d = JSON.parse(playersCopy);
-    if (!d[user.id]) { d[user.id] = { name: user.name, avatar: user.avatar }; await putCached("players", 60 * 60, JSON.stringify(d)); }
+    if (!d[user.id]) { d[user.id] = { name: user.name, avatar: user.avatar }; await putCached("players", 5 * 60, JSON.stringify(d)); }
   }
 }
 // The cached game data's course files and names (fetched if there's none yet)
