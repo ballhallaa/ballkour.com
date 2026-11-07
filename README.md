@@ -32,7 +32,7 @@ The older `#6-dorado` and `#pause` forms still work too.
 python3 tools/serve.py
 ```
 
-then open http://localhost:8000. It serves this folder at the site's own addresses (`/leaderboards/6`, `/faq/pausing`, …) with the live leaderboards from ballkour.com, so you see your changes with real data. Signing in and sending runs only work on the real site (or the test copy below), so the Submit section shows the Discord ticket.
+then open http://localhost:8000. It serves this folder at the site's own addresses (`/leaderboards/6`, `/faq/pausing`, …) with the live leaderboards from ballkour.com, so you see your changes with real data. Signing in and sending runs only work on the real site (or the test copy below), so the Submit section shows the Discord ticket and **My stats** is hidden.
 
 ## Deploying
 
@@ -86,6 +86,8 @@ npx wrangler secret put GITHUB_TOKEN        # optional: any GitHub token, for Gi
 ### Runs sent from the website
 
 Players sign in with Discord (one click, no new account) and send their run from the form under Submit a run. It goes on the board straight away: the Worker saves it under their Discord ID in `leaderboards/runs.json` on the game repo's `develop` branch, one commit per run. The site shows it at once, and the leaderboard bot posts the board on Discord and updates roles. A run is always the sender's own, whatever in-game name they type, so nobody can send one as someone else. Each Discord account can send 5 runs a minute (`SUBMIT_LIMIT` in `wrangler.toml`) and 20 a day.
+
+**My stats** opens a signed-in player's own panel, the same one a click on their name on a board opens: their rating, place, Top % and every course, with Sign out in it too. It's by the language picker, next to Sign out, and under a run's result. Signed out, the one by the language picker signs them in with Discord first and comes back to the same page with `?me=1`, which opens it. It finds their runs by Discord ID, so runs saved under just an in-game name don't show there.
 
 **Top 10 runs are checked first.** A run that would put its player on a course's top 10 waits in `"pending"` in `runs.json` instead of going on the board. Ballkyrie posts it in the log channel (`SUBMIT_CHANNEL`) with a **Verify** button, which opens it in **Runs to check** at ballkour.com/submit: watch the video, then **Approve** (it goes on the board, and the bot posts it) or **Turn down** (it's dropped). Every other run goes on the board straight away. Who can check runs is `REVIEWERS` in `cloudflare/wrangler.toml`: Discord IDs, separated by commas.
 
