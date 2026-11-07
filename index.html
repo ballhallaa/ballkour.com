@@ -129,10 +129,10 @@ main:focus { outline: none; }
 #balls { z-index: 20; }
 .page { position: relative; z-index: 1; }
 
-/* ---------- Language picker ---------- */
-.topbar { max-width: 780px; margin: 0 auto; padding-block: 14px 0; display: flex; justify-content: flex-end; }
+/* ---------- Language picker, and My stats beside it ---------- */
+.topbar { max-width: 780px; margin: 0 auto; padding-block: 14px 0; display: flex; justify-content: flex-end; align-items: flex-start; gap: 8px; }
 .lang-wrap { position: relative; z-index: 30; }
-.lang-pick {
+.lang-pick, .me-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -148,8 +148,14 @@ main:focus { outline: none; }
   cursor: pointer;
   transition: border-color .15s ease;
 }
-.lang-pick:hover, .lang-pick[aria-expanded="true"] { border-color: var(--volt); }
+.lang-pick:hover, .lang-pick[aria-expanded="true"], .me-btn:hover { border-color: var(--volt); }
 .lang-pick #lang-current { color: var(--ink); }
+.me-wrap { min-width: 0; animation: fade-in .2s ease-out; }
+@keyframes fade-in { from { opacity: 0; } }
+.me-btn { max-width: 100%; padding: 0 12px 0 10px; color: var(--ink); text-decoration: none; }
+.me-btn > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.me-btn .icon { color: #b9befc; }
+.me-btn .run-pfp { width: 22px; height: 22px; }
 .lang-pick .chev { width: 14px; height: 14px; transition: transform .2s ease; }
 .lang-pick[aria-expanded="true"] .chev { transform: rotate(180deg); }
 .menu {
@@ -196,8 +202,12 @@ main:focus { outline: none; }
    opens in the page flow on narrower ones so it never covers the logo */
 .lang-menu { width: 244px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; }
 @media (max-width: 919px) {
-  .lang-wrap { width: 100%; display: flex; flex-direction: column; align-items: flex-end; }
-  .lang-menu { position: static; width: min(340px, 100%); margin-top: 8px; }
+  /* My stats and the language button on one line, the menu under both */
+  .topbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; justify-items: end; gap: 0 8px; }
+  .lang-wrap { display: contents; }
+  .me-wrap { grid-column: 1; max-width: 100%; }
+  .lang-pick { grid-column: 2; }
+  .lang-menu { grid-column: 1 / -1; position: static; width: min(340px, 100%); margin-top: 8px; }
 }
 select option, select optgroup { background: var(--menu); color: var(--ink); }
 
@@ -669,6 +679,9 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-name { margin: 0; font: italic 800 30px/1.05 var(--display); letter-spacing: .02em; text-transform: uppercase; overflow-wrap: anywhere; }
 .pl-dc { margin-top: 7px; display: flex; align-items: center; gap: 7px; font: 600 14px/1.2 var(--body); color: #b9befc; }
 .pl-dc .run-pfp { width: 18px; height: 18px; }
+/* Their own panel: their Discord, and Sign out beside it */
+.pl-me { margin-top: 7px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; }
+.pl-me .pl-dc { margin-top: 0; }
 .pl-close { flex: none; width: 36px; height: 36px; display: grid; place-items: center; padding: 0; border: 1px solid var(--line-hi); border-radius: 10px; background: rgba(255, 255, 255, .03); color: var(--ink-2); cursor: pointer; transition: border-color .15s, color .15s; }
 .pl-close:hover { border-color: var(--volt); color: var(--ink); }
 .pl-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding: 14px 18px 16px; }
@@ -706,6 +719,10 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-run.best { background: rgba(0, 230, 151, .06); box-shadow: inset 2px 0 0 var(--volt); }
 .pl-run.best .stat { color: var(--ink); }
 .pl-empty { margin: 0; padding: 4px 10px; font: 400 14px/1.4 var(--body); color: var(--ink-3); }
+/* Their own panel before their first run */
+.pl-mine-empty { margin: 0 18px 16px; padding: 12px 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; border: 1px dashed var(--line-hi); border-radius: 10px; font: 400 14px/1.45 var(--body); color: var(--ink-2); }
+.pl-mine-empty > span { flex: 1 1 220px; }
+.pl-mine-empty .btn { text-decoration: none; }
 .pl-board { display: inline-flex; align-items: center; gap: 4px; margin: 8px 10px 0; font: 500 13px/1.3 var(--mono); color: var(--volt); text-decoration: none; }
 .pl-board:hover { text-decoration: underline; text-underline-offset: 3px; }
 .pl-board .icon { width: 13px; height: 13px; transform: rotate(-90deg); }
@@ -790,12 +807,17 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .sub-signin .field-hint { flex: 1 1 220px; }
 .btn-discord { background: #5865f2; border-color: #5865f2; color: #fff; box-shadow: 0 10px 30px -10px rgba(88, 101, 242, .7); }
 .btn-discord:hover { background-color: #6d78f5; border-color: #6d78f5; }
-.sub-me { display: flex; align-items: center; gap: 8px; min-width: 0; font: 500 14.5px/1.3 var(--body); color: var(--ink-2); }
-.sub-me #sub-me-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sub-me { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; font: 500 14.5px/1.3 var(--body); color: var(--ink-2); }
+/* Their name takes the line; on a narrow screen My stats and Sign out move under it, together */
+.sub-me #sub-me-name { flex: 1 1 150px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sub-me b { color: #b9befc; font-weight: 600; }
 .sub-me .run-pfp { width: 22px; height: 22px; }
-.sub-logout { margin-inline-start: auto; flex: none; padding: 4px 2px; border: 0; background: none; font: 500 13px/1 var(--mono); color: var(--ink-3); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
-.sub-logout:hover { color: var(--ink); }
+.sub-me-actions { margin-inline-start: auto; flex: none; display: inline-flex; align-items: center; gap: 10px; }
+.sub-mine { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 9px; border: 1px solid var(--line-hi); border-radius: 8px; background: rgba(255, 255, 255, .03); font: 600 13px/1 var(--mono); color: var(--ink); cursor: pointer; transition: border-color .15s; }
+.sub-mine:hover { border-color: var(--volt); }
+.sub-mine .icon { width: 14px; height: 14px; color: var(--gold); }
+.sub-logout, .pl-signout { flex: none; padding: 4px 2px; border: 0; background: none; font: 500 13px/1 var(--mono); color: var(--ink-3); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.sub-logout:hover, .pl-signout:hover { color: var(--ink); }
 .sub-send[disabled] { opacity: .6; cursor: progress; transform: none; }
 .sub-status { margin: 0; display: flex; gap: 9px; align-items: flex-start; padding: 9px 11px; border: 1px solid var(--line); border-radius: 9px; font: 500 14.5px/1.45 var(--body); color: var(--ink-2); }
 .sub-status:empty { display: none; }
@@ -822,6 +844,8 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .res-note { grid-column: 1 / -1; font: 400 13px/1.4 var(--body); color: var(--ink-2); }
 .res-foot { margin: 6px 0 0; padding-top: 10px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; border-top: 1px solid var(--line); font: 400 13px/1.4 var(--body); color: var(--ink-2); }
 .res-foot .btn { color: var(--ink); font-weight: 600; text-decoration: none; }
+.res-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-inline-start: auto; }
+.res-actions .btn .icon-star { width: 14px; height: 14px; margin-top: 0; color: var(--gold); }
 @media (max-width: 420px) {
   .res-row { grid-template-columns: minmax(0, 1fr) auto; }
   .res-row .res-delta { grid-column: 2; }
@@ -992,8 +1016,8 @@ a.link-copy { text-decoration: none; }
 .link-copy:hover .ext { color: var(--volt); transform: translate(1px, -1px); }
 /* Blurring glass over a moving canvas is costly on phones: use solid glass there */
 @media (max-width: 700px), (pointer: coarse) {
-  .panel, .btn, .lang-pick, .sections { -webkit-backdrop-filter: none; backdrop-filter: none; }
-  .panel, .lang-pick { background: var(--glass-solid); }
+  .panel, .btn, .lang-pick, .me-btn, .sections { -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .panel, .lang-pick, .me-btn { background: var(--glass-solid); }
   .sections { --bar: #090f0d; background: #090f0d; }
   .btn:not(.btn-primary) { background-color: var(--glass-solid); }
 }
@@ -1051,6 +1075,7 @@ a.link-copy { text-decoration: none; }
 <div class="page">
   <a class="skip" href="#main" data-i18n="a11y.skip">Skip to content</a>
   <div class="topbar">
+    <div class="me-wrap" id="me-wrap" hidden></div>
     <div class="lang-wrap" id="lang-wrap">
       <button class="lang-pick" id="lang-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="lang-menu">
         <svg class="icon" aria-hidden="true"><use href="#i-langs"/></svg>
@@ -1125,7 +1150,10 @@ a.link-copy { text-decoration: none; }
           <div class="sub-me field-wide">
             <img class="run-pfp" id="sub-pfp" src="data:," alt="" width="22" height="22">
             <span id="sub-me-name"></span>
-            <button class="sub-logout" type="button" id="sub-logout" data-i18n="sub.signout">Sign out</button>
+            <span class="sub-me-actions">
+              <button class="sub-mine" type="button" data-my-stats><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg><span data-i18n="me.button">My stats</span></button>
+              <button class="sub-logout" type="button" id="sub-logout" data-i18n="sub.signout">Sign out</button>
+            </span>
           </div>
           <div class="field field-wide">
             <label class="field-label" for="sub-course" data-i18n="sub.course">Course</label>
@@ -1424,6 +1452,8 @@ a.link-copy { text-decoration: none; }
   "pl.legacy": "Legacy",
   "pl.legacyBest": "Legacy: {time}",
   "pl.board": "See the board",
+  "pl.mineEmpty": "No runs yet. Send your first one and your places, times and rating show up here.",
+  "me.signin": "Sign in with Discord to see your stats",
   "rt.coursePoints": "{points} course rating points",
   "lb.pointsNote": "Course rating: up to 10,000 points, all of them for the record",
   "sub.sentSlower": "Your run is saved. Your best on {course} is still {time} (#{rank}).",
@@ -2424,17 +2454,24 @@ a.link-copy { text-decoration: none; }
     const named = p || rows.map((x) => x.best || x.runs[0] || x.legacy[0]).find(Boolean) || { name: "" };
     const discord = key.startsWith("d:") ? key.slice(2) : "";
     const dc = discord && PLAYERS.get(discord);
+    // Their own panel (My stats) opens before their first run too: it's named after their Discord, with a way to send one
+    const mine = !!me && key === "d:" + me.id;
+    const ranNone = !rows.some((x) => x.best || x.runs.length || x.legacy.length);
     const stat = (label, value) => `<div class="pl-stat"><span class="pl-stat-label">${esc(label)}</span><span class="pl-stat-value">${value}</span></div>`;
     const tier = p ? `<span class="tag tag-tier${p.tier !== null && p.tier <= 5 ? " elite" : ""}">${esc(p.tier === null ? t("rt.rated") : t("rt.tier", { pct: p.tier.toLocaleString(htmlLang()) }))}</span>` : "—";
-    let html = `<div class="pl-head"><div class="pl-who"><h2 class="pl-name" id="pl-name">${esc(named.name)}</h2>` +
-      (dc ? `<span class="pl-dc">${/^https:\/\/cdn\.discordapp\.com\//.test(dc.avatar) ? `<img class="run-pfp" src="${esc(dc.avatar)}" alt="" width="18" height="18">` : ""}<span>${esc(dc.name)}</span></span>` : "") +
+    const dcLine = dc && named.name ? `<span class="pl-dc">${/^https:\/\/cdn\.discordapp\.com\//.test(dc.avatar) ? `<img class="run-pfp" src="${esc(dc.avatar)}" alt="" width="18" height="18">` : ""}<span>${esc(dc.name)}</span></span>` : "";
+    let html = `<div class="pl-head"><div class="pl-who"><h2 class="pl-name" id="pl-name">${esc(named.name || (dc ? dc.name : ""))}</h2>` +
+      (mine ? `<div class="pl-me">${dcLine}<button class="pl-signout" type="button" data-sign-out>${esc(t("sub.signout"))}</button></div>` : dcLine) +
       `</div><button class="pl-close" type="button" data-pl-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button></div>` +
       `<div class="pl-stats">` +
         stat(t("pl.rating"), p ? `${icon("star")}${esc(points(p.rating))}` : esc(t("pl.notRated"))) +
         stat(t("pl.place"), p ? esc(t("res.of", { rank: p.rank, total: r.players.length })) : "—") +
         stat(t("pl.tier"), tier) +
         stat(t("pl.courses"), `${icon("map")}${p ? p.courses : 0}/${r.counted.length}`) +
-      `</div><ul class="pl-courses">`;
+      `</div>` +
+      (mine && ranNone ? `<p class="pl-mine-empty"><span>${esc(t("pl.mineEmpty"))}</span>` +
+        `<a class="btn btn-sm btn-primary" href="/submit" data-route="submit">${icon("upload")}<span>${esc(t("nav.submit"))}</span></a></p>` : "") +
+      `<ul class="pl-courses">`;
     rows.forEach(({ c, at, best, total, record, runs, legacy }) => {
       const open = plOpen.has(c.n);
       const summary = best
@@ -2489,6 +2526,8 @@ a.link-copy { text-decoration: none; }
   });
   pl.addEventListener("click", (e) => {
     if (e.target.closest("[data-pl-close]")) { pl.close(); return; }
+    // Submit a run (in their own empty panel): the page goes there, so the panel gets out of the way
+    if (e.target.closest("a[data-route]")) { pl.close(); return; }
     const toggle = e.target.closest("[data-pl-course]");
     if (toggle) {
       const n = Number(toggle.dataset.plCourse);
@@ -3392,6 +3431,7 @@ a.link-copy { text-decoration: none; }
       $("#sub-pfp").src = /^https:\/\/cdn\.discordapp\.com\//.test(me.avatar) ? me.avatar : "data:,";
       $("#sub-me-name").innerHTML = esc(t("sub.as", { name: "\u0000" })).replace("\u0000", `<b>${esc(me.name)}</b>`);
     }
+    renderMe();
   }
   // Their in-game name: the one they used last time on this device, or on their newest run
   function fillName() {
@@ -3405,12 +3445,52 @@ a.link-copy { text-decoration: none; }
   }
   function signedIn(user) {
     me = user && /^\d{17,20}$/.test(user.id) ? user : null;
+    meKnown = true;
     // Their Discord name and picture show on their runs before the hourly lookup has them
     if (me && !PLAYERS.has(me.id)) PLAYERS.set(me.id, { name: me.name, avatar: me.avatar });
     renderSubmit();
     fillName();
     loadReview();
+    // Back from signing in through My stats: their panel opens
+    if (me && wantMine) { wantMine = false; openMine(); }
   }
+  /* My stats: their own player panel, the one a click on their name on any board opens, with Sign out in it too. It's
+     by the language picker, next to Sign out and under a run's result. Signed out, the one by the language picker signs
+     them in with Discord first, and comes back with ?me=1 to open the panel. */
+  const meWrap = $("#me-wrap");
+  let meKnown = false; // whether /api/me has answered, so the chip doesn't flip from signed out to signed in
+  let wantMine = (() => {
+    try {
+      const u = new URL(location.href);
+      if (!u.searchParams.has("me")) return false;
+      u.searchParams.delete("me");
+      history.replaceState(history.state, "", u.pathname + u.search + u.hash);
+      return true;
+    } catch (e) { return false; }
+  })();
+  function openMine() { if (me) openPlayer("d:" + me.id, 0); }
+  // Signing in comes back to the same page, in the same language
+  function loginForMine() {
+    const back = new URLSearchParams();
+    if (lang !== "en") back.set("lang", lang);
+    back.set("me", "1");
+    const path = /^\/[\w/-]*$/.test(location.pathname) ? location.pathname : "/";
+    return "/api/login?to=" + encodeURIComponent(`${path}?${back}`);
+  }
+  function renderMe() {
+    meWrap.hidden = !loginOn || !meKnown;
+    if (meWrap.hidden) return;
+    const label = `<span>${esc(t("me.button"))}</span>`;
+    meWrap.innerHTML = me
+      ? `<button class="me-btn" type="button" data-my-stats><img class="run-pfp" src="${/^https:\/\/cdn\.discordapp\.com\//.test(me.avatar) ? esc(me.avatar) : "data:,"}" alt="" width="22" height="22">${label}</button>`
+      : `<a class="me-btn" href="${esc(loginForMine())}" data-my-login title="${esc(t("me.signin"))}">${icon("discord")}${label}</a>`;
+  }
+  document.addEventListener("click", (e) => {
+    if (e.target.closest("[data-my-stats]")) { openMine(); return; }
+    // The address changes as the page scrolls, so where to come back to is worked out on the click
+    const a = e.target.closest("a[data-my-login]");
+    if (a) a.href = loginForMine();
+  });
   /* Reviewers (REVIEWERS in cloudflare/wrangler.toml) see the top 10 runs waiting for a check above the form: each with
      its video, Approve (onto the board) and Turn down. Verify under a run to check in the log channel links here with
      ?check=<its id>, and that run is picked out. */
@@ -3464,13 +3544,20 @@ a.link-copy { text-decoration: none; }
   });
   if (loginOn) {
     $("#sub-signin").hidden = false;
-    fetch("/api/me", { cache: "no-store" }).then((r) => r.json()).then((d) => signedIn(d && d.user)).catch(() => {});
+    fetch("/api/me", { cache: "no-store" }).then((r) => r.json()).then((d) => signedIn(d && d.user)).catch(() => signedIn(null));
   }
-  $("#sub-logout").addEventListener("click", () => {
+  function signOut(focusAfter) {
     fetch("/api/logout", { method: "POST" }).catch(() => {});
     subStatus.textContent = "";
     signedIn(null);
-    $("#sub-login").focus();
+    focusAfter();
+  }
+  $("#sub-logout").addEventListener("click", () => signOut(() => $("#sub-login").focus()));
+  // Sign out in their own panel: the panel closes and the page stays where it is
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest("[data-sign-out]")) return;
+    pl.close();
+    signOut(() => { const b = $("#me-wrap .me-btn"); if (b) b.focus({ preventScroll: true }); });
   });
   // The course whose board is open is picked already
   subForm.addEventListener("focusin", () => {
@@ -3586,8 +3673,9 @@ a.link-copy { text-decoration: none; }
         newTier ? `<span class="res-delta ${b ? "up" : "new"}">${esc(t(b ? "res.newRole" : "res.new"))}</span>` : "",
         newTier ? esc(t("res.roleNote")) : "");
     }
-    html += `</div><p class="res-foot"><span>${after.at < 10 ? esc(t("res.discord")) : ""}</span>` +
-      `<a class="btn btn-sm" href="/leaderboards/${c.n}" data-board="${c.n}">${esc(t("res.board"))}</a></p>`;
+    html += `</div><p class="res-foot"><span>${after.at < 10 ? esc(t("res.discord")) : ""}</span><span class="res-actions">` +
+      `<button class="btn btn-sm" type="button" data-my-stats>${icon("star", "icon icon-star")}<span>${esc(t("me.button"))}</span></button>` +
+      `<a class="btn btn-sm" href="/leaderboards/${c.n}" data-board="${c.n}">${esc(t("res.board"))}</a></span></p>`;
     return html;
   }
   // A record, the podium or a better Top %: a few balls fly out of the button
