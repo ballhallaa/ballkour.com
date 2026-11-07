@@ -129,35 +129,39 @@ main:focus { outline: none; }
 #balls { z-index: 20; }
 .page { position: relative; z-index: 1; }
 
-/* ---------- Language picker, and My stats beside it ---------- */
-.topbar { max-width: 780px; margin: 0 auto; padding-block: 14px 0; display: flex; justify-content: flex-end; align-items: flex-start; gap: 8px; }
-.lang-wrap { position: relative; z-index: 30; }
-.lang-pick, .me-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+/* ---------- Find a player, My stats and the language picker ---------- */
+/* Three square buttons: Find a player, My stats and the language. Icons only, so no language's longer words get cut
+   off; their names are in aria-label and in the tooltip on hover. At the right, lined up with the panels. Spaced with
+   margins rather than a gap, so there's no extra space where My stats is when signing in isn't set up. The language
+   menu drops down over the page from their right edge, so nothing below moves when it opens (on a phone, it opens in
+   the page instead: see the language menu). */
+.topbar { position: relative; max-width: var(--col); margin: 0 auto; padding-block: 14px 0; display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; align-items: start; }
+.lang-wrap { display: contents; }
+.top-find { grid-column: 2; }
+.me-wrap { grid-column: 3; margin-inline-start: 8px; }
+.lang-pick { grid-column: 4; margin-inline-start: 8px; }
+.top-btn {
+  width: 38px;
   height: 38px;
-  padding: 0 10px 0 12px;
+  display: grid;
+  place-items: center;
+  padding: 0;
   border: 1px solid var(--line-hi);
   border-radius: 10px;
   background: var(--glass);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   color: var(--ink-2);
-  font: 600 14.5px/1 var(--body);
   cursor: pointer;
   transition: border-color .15s ease;
 }
-.lang-pick:hover, .lang-pick[aria-expanded="true"], .me-btn:hover { border-color: var(--volt); }
-.lang-pick #lang-current { color: var(--ink); }
-.me-wrap { min-width: 0; animation: fade-in .2s ease-out; }
-@keyframes fade-in { from { opacity: 0; } }
-.me-btn { max-width: 100%; padding: 0 12px 0 10px; color: var(--ink); text-decoration: none; }
-.me-btn > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.top-btn:hover, .top-btn[aria-expanded="true"] { border-color: var(--volt); }
+.top-find .icon { color: var(--volt); }
 .me-btn .icon { color: #b9befc; }
-.me-btn .run-pfp { width: 22px; height: 22px; }
-.lang-pick .chev { width: 14px; height: 14px; transition: transform .2s ease; }
-.lang-pick[aria-expanded="true"] .chev { transform: rotate(180deg); }
+/* Until the page knows whether they're signed in, My stats holds its place unseen, so the others don't move */
+.me-wrap.waiting { visibility: hidden; }
+.me-wrap:not(.waiting) { animation: fade-in .2s ease-out; }
+@keyframes fade-in { from { opacity: 0; } }
 .menu {
   position: absolute;
   top: calc(100% + 8px);
@@ -198,16 +202,13 @@ main:focus { outline: none; }
 .menu-group { padding: 10px 10px 4px; font: 600 10.5px/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
 .menu-group:first-child { padding-top: 6px; }
 
-/* Languages: a compact two-column grid that stays right of the logo on wide screens, and
-   opens in the page flow on narrower ones so it never covers the logo */
-.lang-menu { width: 244px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; }
-@media (max-width: 919px) {
-  /* My stats and the language button on one line, the menu under both */
-  .topbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; justify-items: end; gap: 0 8px; }
-  .lang-wrap { display: contents; }
-  .me-wrap { grid-column: 1; max-width: 100%; }
-  .lang-pick { grid-column: 2; }
-  .lang-menu { grid-column: 1 / -1; position: static; width: min(340px, 100%); margin-top: 8px; }
+/* Languages: a two-column grid that drops down centred under the language button (the last 38px of the top bar), or
+   further left if that would come closer than 24px to the screen's edge (room for a scrollbar too). From 800px wide
+   that still clears the logo. Under 800px there's no room for it right of the logo, so there it opens in the page under
+   the buttons instead, as wide as fits, and pushes the page down. */
+.lang-menu { width: 244px; max-width: 100%; left: min(100% - 19px - 122px, 50% + 50vw - 24px - 244px); right: auto; transform-origin: top center; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; }
+@media (max-width: 799px) {
+  .lang-menu { grid-column: 1 / -1; justify-self: end; position: static; width: min(340px, 100%); margin-top: 8px; }
 }
 select option, select optgroup { background: var(--menu); color: var(--ink); }
 
@@ -505,7 +506,6 @@ select option, select optgroup { background: var(--menu); color: var(--ink); }
 .note { margin: 0; padding: 12px 18px 16px; border-top: 1px solid var(--line); font: 400 13px/1.45 var(--body); color: var(--ink-3); }
 
 /* Leaderboards: each course row has a record button that opens its top 10 under it */
-.lang-pick .chev { width: 14px; height: 14px; transition: transform .2s ease; }
 .rec {
   margin-top: 7px;
   max-width: 100%;
@@ -749,6 +749,21 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-mine-empty { margin: 0 18px 16px; padding: 12px 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; border: 1px dashed var(--line-hi); border-radius: 10px; font: 400 14px/1.45 var(--body); color: var(--ink-2); }
 .pl-mine-empty > span { flex: 1 1 220px; }
 .pl-mine-empty .btn { text-decoration: none; }
+/* My stats while signed out: what signing in with Discord is for and what it shares, before going there */
+.pl-lead { margin: 8px 0 0; font: 400 15px/1.45 var(--body); color: var(--ink-2); }
+.pl-signin { padding: 0 18px; }
+.pl-why { padding: 16px 0; border-bottom: 1px solid var(--line); }
+.pl-why h3 { margin: 0 0 6px; font: 600 11px/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+.pl-why p { margin: 0; font: 400 15px/1.55 var(--body); color: var(--ink-2); }
+.pl-shares { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; font: 500 15px/1.4 var(--body); }
+.pl-shares li { display: flex; align-items: flex-start; gap: 9px; }
+.pl-shares .icon { width: 16px; height: 16px; margin-top: 2px; }
+.pl-shares .yes { color: var(--ink); }
+.pl-shares .yes .icon { color: var(--volt); }
+.pl-shares .no { color: var(--ink-2); }
+.pl-shares .no .icon { color: var(--ember); }
+.pl-signin-go { display: flex; flex-wrap: wrap; gap: 10px; padding-top: 18px; }
+.pl-signin-go .btn { text-decoration: none; }
 .pl-board { display: inline-flex; align-items: center; gap: 4px; margin: 8px 10px 0; font: 500 13px/1.3 var(--mono); color: var(--volt); text-decoration: none; }
 .pl-board:hover { text-decoration: underline; text-underline-offset: 3px; }
 .pl-board .icon { width: 13px; height: 13px; transform: rotate(-90deg); }
@@ -1073,10 +1088,10 @@ a.link-copy { text-decoration: none; }
 .link-copy:hover .ext { color: var(--volt); transform: translate(1px, -1px); }
 /* Blurring glass over a moving canvas is costly on phones: use solid glass there */
 @media (max-width: 700px), (pointer: coarse) {
-  .panel, .btn, .lang-pick, .me-btn, .sections { -webkit-backdrop-filter: none; backdrop-filter: none; }
-  .panel, .lang-pick, .me-btn { background: var(--glass-solid); }
+  .panel, .btn, .top-btn, .sections { -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .panel, .top-btn { background: var(--glass-solid); }
   .sections { --bar: #090f0d; background: #090f0d; }
-  .btn:not(.btn-primary) { background-color: var(--glass-solid); }
+  .btn:not(.btn-primary):not(.btn-discord) { background-color: var(--glass-solid); }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -1112,6 +1127,7 @@ a.link-copy { text-decoration: none; }
     <symbol id="i-map" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.1 5.55a2 2 0 0 0 1.8 0l3.65-1.83A1 1 0 0 1 21 4.62v12.76a1 1 0 0 1-.55.9l-4.55 2.27a2 2 0 0 1-1.8 0l-4.2-2.1a2 2 0 0 0-1.8 0l-3.65 1.83A1 1 0 0 1 3 19.38V6.62a1 1 0 0 1 .55-.9L8.1 3.45a2 2 0 0 1 1.8 0z"/><path d="M15 5.76v15"/><path d="M9 3.24v15"/></g></symbol>
     <symbol id="i-image" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></g></symbol>
     <symbol id="i-x" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-stats" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M8 17v-4"/><path d="M13 17V6"/><path d="M18 17v-7"/></g></symbol>
     <symbol id="i-search" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4.2-4.2"/></g></symbol>
     <symbol id="i-star" viewBox="0 0 24 24"><path fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" d="M11.53 2.3a.53.53 0 0 1 .94 0l2.31 4.68a2.12 2.12 0 0 0 1.6 1.16l5.16.75a.53.53 0 0 1 .3.91l-3.74 3.64a2.12 2.12 0 0 0-.61 1.88l.88 5.14a.53.53 0 0 1-.77.56l-4.62-2.43a2.12 2.12 0 0 0-1.97 0L6.4 21.01a.53.53 0 0 1-.77-.56l.88-5.14a2.12 2.12 0 0 0-.61-1.88L2.16 9.8a.53.53 0 0 1 .3-.91l5.16-.75a2.12 2.12 0 0 0 1.6-1.16z"/></symbol>
     <symbol id="i-mail" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></g></symbol>
@@ -1133,13 +1149,13 @@ a.link-copy { text-decoration: none; }
 <div class="page">
   <a class="skip" href="#main" data-i18n="a11y.skip">Skip to content</a>
   <div class="topbar">
+    <!-- Find a player, at the top too (see "Finding a player") -->
+    <button class="top-btn top-find" type="button" data-find data-i18n-aria="find.open" aria-label="Find a player"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg></button>
     <div class="me-wrap" id="me-wrap" hidden></div>
     <div class="lang-wrap" id="lang-wrap">
-      <button class="lang-pick" id="lang-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="lang-menu">
+      <button class="top-btn lang-pick" id="lang-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="lang-menu">
         <svg class="icon" aria-hidden="true"><use href="#i-langs"/></svg>
-        <span class="sr-only" data-i18n="lang.label">Language</span>
-        <span id="lang-current">English</span>
-        <svg class="icon chev" aria-hidden="true"><use href="#i-chev"/></svg>
+        <span class="sr-only"><span data-i18n="lang.label">Language</span> <span id="lang-current">English</span></span>
       </button>
       <ul class="menu lang-menu" id="lang-menu" role="listbox" tabindex="-1" hidden></ul>
     </div>
@@ -1527,6 +1543,17 @@ a.link-copy { text-decoration: none; }
   "pl.board": "See the board",
   "pl.mineEmpty": "No runs yet. Send your first one and your places, times and rating show up here.",
   "me.signin": "Sign in with Discord to see your stats",
+  "me.intro": "Your rating, your rank on every course, and all your runs.",
+  "me.whyTitle": "Why Discord?",
+  "me.why": "Runs on the boards are linked to their runner’s Discord account, so signing in is how the site knows which runs are yours. If you’re on our Discord server, it also gets you a role for your rating, and a ping in the course’s leaderboard channel when you make its top 10. There’s no new account or password to make.",
+  "me.sharesTitle": "What it shares",
+  "me.shares": "Discord asks if Ballkyrie, our Discord bot, can see who you are. That gives the site:",
+  "me.sharesYes": "Your Discord ID, name, and picture",
+  "me.sharesNo": "Never your email, password, servers, or messages",
+  "me.nextTitle": "What happens next",
+  "me.next": "Discord opens (log in there first if it asks), you tap Authorize, and you’re back here with your stats open. If you’ve signed in here before, Discord skips the Authorize step.",
+  "me.continue": "Continue with Discord",
+  "me.notNow": "Not now",
   "rt.coursePoints": "{points} course rating points",
   "lb.rating": "Rating over every course: {points}",
   "lb.ratingNote": "Ratings: each player’s rating over every course",
@@ -1811,6 +1838,9 @@ a.link-copy { text-decoration: none; }
     const cur = LANGS.find((l) => l[0] === lang) || LANGS[0];
     $("#lang-current").textContent = cur[1];
     $("#lang-current").setAttribute("lang", cur[2]);
+    // The top bar's buttons are icons only, so hovering one says what it is
+    $(".top-find").title = `${t("find.open")} (/)`;
+    $("#lang-btn").title = `${t("lang.label")}: ${cur[1]}`;
     langMenu.setAttribute("aria-label", t("lang.label"));
     langPicker.select(lang);
     $$("#lang-chips button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
@@ -2712,11 +2742,11 @@ a.link-copy { text-decoration: none; }
   pl.addEventListener("close", () => { plKey = ""; });
 
   /* ---------- Finding a player ----------
-     Find a player (the magnifier in the section bar, the box by Courses, or the / key anywhere) lists everyone who
-     has run a course: the rated players by place, with their Top %, Discord, rating and courses run, then everyone
-     else (runs only on broken courses, or only before May 2026) by name. Typing narrows it by in-game or Discord name,
-     the same way a board's search does, with names that start with it first. The arrow keys and Enter, or a click,
-     pick one, and their panel opens (see "A player's runs"). */
+     Find a player (the box at the top, the magnifier in the section bar, the box by Courses, or the / key anywhere)
+     lists everyone who has run a course: the rated players by place, with their Top %, Discord, rating and courses
+     run, then everyone else (runs only on broken courses, or only before May 2026) by name. Typing narrows it by
+     in-game or Discord name, the same way a board's search does, with names that start with it first. The arrow keys
+     and Enter, or a click, pick one, and their panel opens (see "A player's runs"). */
   const pf = $("#pf");
   let pfList = [];
   let pfActive = 0;
@@ -3747,12 +3777,15 @@ a.link-copy { text-decoration: none; }
     renderSubmit();
     fillName();
     loadReview();
-    // Back from signing in through My stats: their panel opens
-    if (me && wantMine) { wantMine = false; openMine(); }
+    // Back from signing in through My stats: their panel opens. Back without signing in (they cancelled on Discord):
+    // the panel that explains it opens again, where they left off.
+    if (wantMine) { wantMine = false; openMine(); }
   }
   /* My stats: their own player panel, the one a click on their name on any board opens, with Sign out in it too. It's
-     by the language picker, next to Sign out and under a run's result. Signed out, the one by the language picker signs
-     them in with Discord first, and comes back with ?me=1 to open the panel. */
+     by the language picker, next to Sign out and under a run's result. Signed out, the one by the language picker
+     first opens a panel saying what signing in with Discord is for and what it shares (so being sent to Discord, and
+     asked about Ballkyrie there, doesn't come out of nowhere). Continue with Discord there signs them in, and comes
+     back with ?me=1 to open their panel. */
   const meWrap = $("#me-wrap");
   let meKnown = false; // whether /api/me has answered, so the chip doesn't flip from signed out to signed in
   let wantMine = (() => {
@@ -3764,7 +3797,31 @@ a.link-copy { text-decoration: none; }
       return true;
     } catch (e) { return false; }
   })();
-  function openMine() { if (me) openPlayer("d:" + me.id, 0); }
+  function openMine() {
+    if (me) openPlayer("d:" + me.id, 0);
+    else if (loginOn) openSignIn();
+  }
+  // In the player panel's place. It's drawn once: nothing on the page can change while it's open.
+  function openSignIn() {
+    plKey = "";
+    const part = (title, body) => `<section class="pl-why"><h3>${esc(t(title))}</h3>${body}</section>`;
+    const line = (ico, key, cls) => `<li class="${cls}">${icon(ico)}<span>${esc(t(key))}</span></li>`;
+    pl.innerHTML = `<div class="pl-head"><div class="pl-who"><h2 class="pl-name" id="pl-name">${esc(t("me.button"))}</h2>` +
+        `<p class="pl-lead">${esc(t("me.intro"))}</p></div>` +
+        `<button class="pl-close" type="button" data-pl-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button></div>` +
+      `<div class="pl-signin">` +
+        part("me.whyTitle", `<p>${esc(t("me.why"))}</p>`) +
+        part("me.sharesTitle", `<p>${esc(t("me.shares"))}</p><ul class="pl-shares">${line("check", "me.sharesYes", "yes")}${line("x", "me.sharesNo", "no")}</ul>`) +
+        part("me.nextTitle", `<p>${esc(t("me.next"))}</p>`) +
+        `<div class="pl-signin-go">` +
+          `<a class="btn btn-discord" href="${esc(loginForMine())}" data-my-login>${icon("discord")}<span>${esc(t("me.continue"))}</span></a>` +
+          `<button class="btn" type="button" data-pl-close>${esc(t("me.notNow"))}</button>` +
+        `</div>` +
+      `</div>`;
+    if (!pl.open) pl.showModal();
+    pl.scrollTop = 0;
+    pl.querySelector("a[data-my-login]").focus();
+  }
   // Signing in comes back to the same page, in the same language
   function loginForMine() {
     const back = new URLSearchParams();
@@ -3774,12 +3831,12 @@ a.link-copy { text-decoration: none; }
     return "/api/login?to=" + encodeURIComponent(`${path}?${back}`);
   }
   function renderMe() {
-    meWrap.hidden = !loginOn || !meKnown;
+    meWrap.hidden = !loginOn;
     if (meWrap.hidden) return;
-    const label = `<span>${esc(t("me.button"))}</span>`;
-    meWrap.innerHTML = me
-      ? `<button class="me-btn" type="button" data-my-stats><img class="run-pfp" src="${/^https:\/\/cdn\.discordapp\.com\//.test(me.avatar) ? esc(me.avatar) : "data:,"}" alt="" width="22" height="22">${label}</button>`
-      : `<a class="me-btn" href="${esc(loginForMine())}" data-my-login title="${esc(t("me.signin"))}">${icon("discord")}${label}</a>`;
+    meWrap.classList.toggle("waiting", !meKnown);
+    // Just the bars, signed in or not: its name is in aria-label, and hovering says it (or that it signs them in)
+    meWrap.innerHTML = `<button class="top-btn me-btn" type="button" data-my-stats aria-label="${esc(t("me.button"))}" ` +
+      `title="${esc(t(me ? "me.button" : "me.signin"))}">${icon("stats")}</button>`;
   }
   document.addEventListener("click", (e) => {
     if (e.target.closest("[data-my-stats]")) { openMine(); return; }
