@@ -758,6 +758,19 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-dcp .btn { text-decoration: none; }
 .pl-dcp-ok { flex: none; width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; background: var(--volt); color: var(--on-volt); }
 .pl-dcp-ok .icon { width: 13px; height: 13px; }
+/* Show on my Discord profile, before going to Discord: the box as Discord shows it, with their stats right now */
+.dcp-card { display: flex; gap: 12px; padding: 14px; border-radius: 10px; background: #232428; box-shadow: 0 0 0 1px rgba(255, 255, 255, .06); }
+.dcp-card-icon { flex: none; width: 40px; height: 40px; border-radius: 10px; object-fit: cover; }
+.dcp-card-body { flex: 1; min-width: 0; }
+.dcp-card-name { font: 600 16px/1.3 var(--body); color: #f2f3f5; }
+.dcp-card-user { font: 600 14px/1.3 var(--body); color: #f2f3f5; overflow-wrap: anywhere; }
+.dcp-card-by { margin-top: 2px; font: 400 12px/1.3 var(--body); color: #b5bac1; }
+.dcp-card-stats { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 2px 10px; font: 400 13px/1.5 var(--body); color: #dbdee1; }
+.dcp-card-stats span { white-space: nowrap; }
+.pl-why .dcp-card-note { margin-top: 10px; font-size: 13.5px; color: var(--ink-3); }
+/* While Discord keeps hiding app boxes now and then: a heads-up in the panel and the explainer (DISCORD_FLAKY) */
+.dcp-flaky { display: block; flex: 1 1 100%; padding: 9px 11px; border: 1px solid rgba(255, 154, 46, .32); border-radius: 8px; background: rgba(255, 154, 46, .07); font: 400 13.5px/1.45 var(--body); color: var(--ink-2); }
+.pl-why .dcp-flaky { margin-top: 12px; }
 /* Signing in with Discord, from My stats or the form's Sign in with Discord: what it's for, what it shares, and what
    happens, before going there. Continue with Discord stays in view at the bottom while the rest scrolls. */
 .pl:has(.pl-signin) { padding-bottom: 0; }
@@ -1579,9 +1592,22 @@ a.link-copy { text-decoration: none; }
   "pl.mineEmpty": "No runs yet. Send your first one and your places, times and rating show up here.",
   "dcp.what": "Show your Top %, rating, and top 10s on your Discord profile. Discord asks if Ballkyrie can update them, and they keep up with the boards from then on.",
   "dcp.add": "Show on my Discord profile",
-  "dcp.on": "Your stats are on your Discord profile, and they keep up with the boards on their own.",
+  "dcp.on": "Your stats are on your Discord profile, and they keep up with the boards on their own. Discord can take a few minutes to show them the first time.",
   "dcp.off": "Take them off",
   "dcp.offFail": "Couldn’t take them off just now. Try again in a minute.",
+  "dcp.flaky": "Heads up: Discord has a bug right now that hides boxes like this from profiles now and then, for every app, not just ours. Your stats stay on Discord the whole time, and the box comes back on its own.",
+  "dcpi.title": "Your Discord profile",
+  "dcpi.lead": "Your Top %, rating, and top 10s go under Apps on your Discord profile, where anyone who opens it can see them.",
+  "dcpi.lookTitle": "How it looks",
+  "dcpi.lookNote": "With your stats as they are now. They keep up with the boards on their own, and you can take them off here any time.",
+  "dcpi.asksTitle": "What Discord asks",
+  "dcpi.asks": "Discord lists “Update your connection and metadata for this application”. In plain words:",
+  "dcpi.connection": "Your connection is the Ballkour box above, on your profile",
+  "dcpi.metadata": "Its metadata is the numbers in it, from your rating to the courses you’ve run",
+  "dcpi.nothingElse": "Nothing else: it can’t read your messages, post as you, or change anything else on your account",
+  "dcpi.step1": "Discord opens and asks about Ballkyrie again, this time with “Update your connection and metadata” on the list.",
+  "dcpi.step2": "Tap Authorize.",
+  "dcpi.step3": "You’re back here. Discord can take a few minutes to show your stats the first time.",
   "me.signin": "Sign in with Discord to see your stats",
   "signin.forMine": "See your rating, your rank on every course, and all your runs.",
   "signin.forSubmit": "Send your runs from here. They go on the board under your Discord, so nobody else can send one as you.",
@@ -2747,16 +2773,89 @@ a.link-copy { text-decoration: none; }
   /* Their own panel: their stats on their Discord profile (see "Stats on Discord profiles" in cloudflare/worker.js),
      or a way to put them there, through Discord and back to this panel. me.profile is null when that isn't set up. */
   let dcpNote = "";
+  /* Discord has been hiding app boxes like this one from profiles now and then (November 2026), for every app: the
+     box comes and goes while Discord still has the stats. Until that's fixed, the panel and the explainer say so.
+     Once it is, set this to false (and dcp.flaky can go). */
+  const DISCORD_FLAKY = true;
+  const flakyHtml = (tag) => (DISCORD_FLAKY ? `<${tag} class="dcp-flaky">${esc(t("dcp.flaky"))}</${tag}>` : "");
   function profileHtml() {
     if (typeof me.profile !== "boolean") return "";
     if (me.profile) {
       return `<p class="pl-dcp"><span class="pl-dcp-ok">${icon("check")}</span><span class="pl-dcp-text">${esc(t(dcpNote || "dcp.on"))}</span>` +
-        `<button class="pl-signout" type="button" data-dcp-off>${esc(t("dcp.off"))}</button></p>`;
+        `<button class="pl-signout" type="button" data-dcp-off>${esc(t("dcp.off"))}</button>${flakyHtml("span")}</p>`;
     }
     return `<p class="pl-dcp"><span class="pl-dcp-text">${withBot("dcp.what")}</span>` +
-      `<a class="btn btn-sm btn-discord" href="${esc(loginFor("profile"))}" data-login-for="profile">${icon("discord")}<span>${esc(t("dcp.add"))}</span></a></p>`;
+      `<a class="btn btn-sm btn-discord" href="${esc(loginFor("profile"))}" data-login-for="profile" data-dcp-info>${icon("discord")}<span>${esc(t("dcp.add"))}</span></a></p>`;
+  }
+  /* Show on my Discord profile, before it goes to Discord: what goes on their profile (the box as Discord shows it,
+     with their stats right now), what Discord's "Update your connection and metadata for this application" means,
+     and what happens next. Like the sign-in panel, so Discord's question doesn't come out of nowhere, and drawn once
+     like it. Not now goes back to their panel. */
+  function profileCardHtml() {
+    // Worked out like profilesFrom() in cloudflare/worker.js, and in English, the way Discord shows it
+    const key = "d:" + me.id;
+    const p = ratings().players.find((x) => x.key === key) || null;
+    const n = { top10s: 0, podiums: 0, records: 0, name: "" };
+    COURSES.forEach((c) => {
+      const { top, rest } = standingsOf(c);
+      top.concat(rest).forEach((r, i) => {
+        if (playerKey(r) !== key) return;
+        if (i < 10) n.top10s++;
+        if (i < 3) n.podiums++;
+        if (i === 0) n.records++;
+        n.name = n.name || r.name;
+      });
+    });
+    // As in PROFILE_FIELDS in cloudflare/worker.js
+    const stats = [[p ? Math.round(p.rating) : 0, "⭐ Rating"], [n.top10s, "⚡ Top 10s"], [n.podiums, "🏆 Podiums"], [n.records, "👑 Records"], [p ? p.courses : 0, "🗺️ Courses run"]];
+    const bot = botId && PLAYERS.get(botId);
+    const pic = bot && /^https:\/\/cdn\.discordapp\.com\//.test(bot.avatar) ? bot.avatar : "/assets/logo.webp";
+    return `<div class="dcp-card" lang="en">` +
+      `<img class="dcp-card-icon" src="${esc(pic)}" alt="" width="40" height="40">` +
+      `<div class="dcp-card-body">` +
+        `<div class="dcp-card-name">Ballkour · ${!p ? "Unrated" : p.tier === null ? "Rated" : `Top ${p.tier}%`}</div>` +
+        `<div class="dcp-card-user">${esc(p ? `${p.name} · #${p.rank}` : n.name || "No runs yet")}</div>` +
+        `<div class="dcp-card-by">Powered by Ballkyrie</div>` +
+        `<div class="dcp-card-stats">${stats.map(([v, name]) => `<span>${v} ${name}</span>`).join("")}</div>` +
+      `</div></div>`;
+  }
+  function openProfileInfo() {
+    if (!me) return;
+    plKey = "";
+    const part = (title, body) => `<section class="pl-why"><h3>${esc(t(title))}</h3>${body}</section>`;
+    const share = (cls, ico, key) => `<li class="${cls}"><span class="mark">${icon(ico)}</span><span>${esc(t(key))}</span></li>`;
+    pl.innerHTML = `<div class="pl-head"><div class="pl-who">` +
+        `<p class="pl-eyebrow">${icon("stats")}<span>${esc(t("me.button"))}</span></p>` +
+        `<h2 class="pl-name" id="pl-name">${esc(t("dcpi.title"))}</h2>` +
+        `<p class="pl-lead">${esc(t("dcpi.lead"))}</p></div>` +
+        `<button class="pl-close" type="button" data-pl-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button></div>` +
+      `<div class="pl-signin">` +
+        part("dcpi.lookTitle", profileCardHtml() + `<p class="dcp-card-note">${esc(t("dcpi.lookNote"))}</p>` + flakyHtml("div")) +
+        part("dcpi.asksTitle", `<p>${esc(t("dcpi.asks"))}</p>` +
+          `<ul class="pl-shares">${share("yes", "check", "dcpi.connection")}${share("yes", "check", "dcpi.metadata")}${share("no", "x", "dcpi.nothingElse")}</ul>`) +
+        part("signin.nextTitle", `<ol class="pl-steps">${["dcpi.step1", "dcpi.step2", "dcpi.step3"].map((k) => `<li><span>${withBot(k)}</span></li>`).join("")}</ol>`) +
+        `<div class="pl-signin-go">` +
+          `<a class="btn btn-discord" href="${esc(loginFor("profile"))}" data-login-for="profile">${icon("discord")}<span>${esc(t("signin.continue"))}</span></a>` +
+          `<button class="btn" type="button" data-dcp-back>${esc(t("signin.notNow"))}</button>` +
+        `</div>` +
+      `</div>`;
+    pl.scrollTop = 0;
+    pl.querySelector("a[data-login-for]").focus();
   }
   pl.addEventListener("click", async (e) => {
+    // Show on my Discord profile says what it does first (a middle click or Ctrl+click still goes straight to Discord)
+    if (e.target.closest("[data-dcp-info]") && !(e.ctrlKey || e.metaKey || e.shiftKey || e.altKey)) {
+      e.preventDefault();
+      openProfileInfo();
+      return;
+    }
+    // Not now: back to their panel, on the same button
+    if (e.target.closest("[data-dcp-back]") && me) {
+      openPlayer("d:" + me.id, 0);
+      const again = pl.querySelector("[data-dcp-info]");
+      if (again) again.focus();
+      return;
+    }
     const b = e.target.closest("[data-dcp-off]");
     if (!b || !me) return;
     b.disabled = true;
