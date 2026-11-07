@@ -203,6 +203,8 @@
   "dcpi.step1": "Discord opens and asks about Ballkyrie again, this time with “Update your connection and metadata” on the list.",
   "dcpi.step2": "Tap Authorize.",
   "dcpi.step3": "You’re back here. Discord can take a few minutes to show your stats the first time.",
+  "dcpi.step4": "On our Discord server, you can also get the Discord Profile App role: click the server name, then Linked Roles, then Discord Profile App.",
+  "dcp.role": "On our Discord server, get the Discord Profile App role from the server name → Linked Roles. If you take your stats off and put them back, claim it there again.",
   "me.signin": "Sign in with Discord to see your stats",
   "signin.forMine": "See your rating, your rank on every course, and all your runs.",
   "signin.forSubmit": "Send your runs from here. They go on the board under your Discord, so nobody else can send one as you.",
