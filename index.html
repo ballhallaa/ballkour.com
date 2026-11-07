@@ -4246,16 +4246,22 @@ a.link-copy { text-decoration: none; }
   start();
   if (startRoute) {
     // The section, or the board or answer the link names
+    // Straight there, never a smooth glide: the Player ratings are far down the page, and a long glide toward a spot
+    // that moves as the page loads stops short of it
     const jump = () => {
       goTo(startRoute, false);
       const el = startBoard ? document.getElementById(`course-${startBoard.n}`) : startFaq ? $(`.qa[data-id="${startFaq}"]`) : null;
-      if (el) el.scrollIntoView({ block: "start" });
+      if (el) el.scrollIntoView({ block: "start", behavior: "instant" });
     };
     jump();
-    // Web fonts and the game data can shift the page as they load: jump again once they're in, unless the visitor
-    // has scrolled
+    // Web fonts, the game data, Discord names and pictures, and translations all change the page's height as they
+    // arrive: jump again whenever it does, until the visitor scrolls or clicks on their own (or 15 s have passed)
     let moved = false;
-    ["wheel", "touchstart", "keydown"].forEach((ev) => addEventListener(ev, () => { moved = true; }, { once: true, passive: true }));
+    const settle = new ResizeObserver(() => { if (!moved) jump(); });
+    const stopSettling = () => { moved = true; settle.disconnect(); };
+    settle.observe(document.body);
+    ["wheel", "touchstart", "keydown", "mousedown"].forEach((ev) => addEventListener(ev, stopSettling, { once: true, passive: true }));
+    setTimeout(stopSettling, 15000);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (!moved) jump(); });
     gameData.then(() => requestAnimationFrame(() => { if (!moved) jump(); }), () => {});
   }
