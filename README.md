@@ -135,6 +135,10 @@ The first line is their Top % (Rated for the bottom 10%), the second their in-ga
 
 Everyone's stats catch up with the boards every 30 minutes (the cron in `cloudflare/wrangler.toml`), and a player's own stats update as soon as their run goes on a board. **Take them off** in the same panel removes them. So does removing Ballkyrie under Authorized Apps in Discord's settings.
 
+**Show on my Discord profile** first opens a panel that explains it: a preview of the box with the player's own stats, what Discord's "Update your connection and metadata for this application" means, and what happens next. Discord can take a few minutes to show the box the first time.
+
+Since November 2026, Discord has been hiding app boxes like this from profiles now and then, for every app, while still keeping the stats (reported to Discord's developer support). Until it's fixed, the panel and the explainer say so. Once Discord fixes it, set `DISCORD_FLAKY` in `index.html` to `false`.
+
 They're worked out by `cloudflare/ratings.js`, a copy of the leaderboard bot's `ratings.mjs`, so the profile always agrees with the Top % roles.
 
 To turn it on:
