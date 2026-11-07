@@ -771,6 +771,8 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 /* While Discord keeps hiding app boxes now and then: a heads-up in the panel and the explainer (DISCORD_FLAKY) */
 .dcp-flaky { display: block; flex: 1 1 100%; padding: 9px 11px; border: 1px solid rgba(255, 154, 46, .32); border-radius: 8px; background: rgba(255, 154, 46, .07); font: 400 13.5px/1.45 var(--body); color: var(--ink-2); }
 .pl-why .dcp-flaky { margin-top: 12px; }
+/* Their own panel, with their stats on: where to get the linked role on our server (Discord never gives it out itself) */
+.dcp-tip { display: block; flex: 1 1 100%; font: 400 13.5px/1.45 var(--body); color: var(--ink-3); }
 /* Signing in with Discord, from My stats or the form's Sign in with Discord: what it's for, what it shares, and what
    happens, before going there. Continue with Discord stays in view at the bottom while the rest scrolls. */
 .pl:has(.pl-signin) { padding-bottom: 0; }
@@ -1608,6 +1610,8 @@ a.link-copy { text-decoration: none; }
   "dcpi.step1": "Discord opens and asks about Ballkyrie again, this time with “Update your connection and metadata” on the list.",
   "dcpi.step2": "Tap Authorize.",
   "dcpi.step3": "You’re back here. Discord can take a few minutes to show your stats the first time.",
+  "dcpi.step4": "On our Discord server, you can also get the Discord Profile App role: click the server name, then Linked Roles, then Discord Profile App.",
+  "dcp.role": "On our Discord server, get the Discord Profile App role from the server name → Linked Roles. If you take your stats off and put them back, claim it there again.",
   "me.signin": "Sign in with Discord to see your stats",
   "signin.forMine": "See your rating, your rank on every course, and all your runs.",
   "signin.forSubmit": "Send your runs from here. They go on the board under your Discord, so nobody else can send one as you.",
@@ -2782,7 +2786,7 @@ a.link-copy { text-decoration: none; }
     if (typeof me.profile !== "boolean") return "";
     if (me.profile) {
       return `<p class="pl-dcp"><span class="pl-dcp-ok">${icon("check")}</span><span class="pl-dcp-text">${esc(t(dcpNote || "dcp.on"))}</span>` +
-        `<button class="pl-signout" type="button" data-dcp-off>${esc(t("dcp.off"))}</button>${flakyHtml("span")}</p>`;
+        `<button class="pl-signout" type="button" data-dcp-off>${esc(t("dcp.off"))}</button><span class="dcp-tip">${esc(t("dcp.role"))}</span>${flakyHtml("span")}</p>`;
     }
     return `<p class="pl-dcp"><span class="pl-dcp-text">${withBot("dcp.what")}</span>` +
       `<a class="btn btn-sm btn-discord" href="${esc(loginFor("profile"))}" data-login-for="profile" data-dcp-info>${icon("discord")}<span>${esc(t("dcp.add"))}</span></a></p>`;
@@ -2833,7 +2837,7 @@ a.link-copy { text-decoration: none; }
         part("dcpi.lookTitle", profileCardHtml() + `<p class="dcp-card-note">${esc(t("dcpi.lookNote"))}</p>` + flakyHtml("div")) +
         part("dcpi.asksTitle", `<p>${esc(t("dcpi.asks"))}</p>` +
           `<ul class="pl-shares">${share("yes", "check", "dcpi.connection")}${share("yes", "check", "dcpi.metadata")}${share("no", "x", "dcpi.nothingElse")}</ul>`) +
-        part("signin.nextTitle", `<ol class="pl-steps">${["dcpi.step1", "dcpi.step2", "dcpi.step3"].map((k) => `<li><span>${withBot(k)}</span></li>`).join("")}</ol>`) +
+        part("signin.nextTitle", `<ol class="pl-steps">${["dcpi.step1", "dcpi.step2", "dcpi.step3", "dcpi.step4"].map((k) => `<li><span>${withBot(k)}</span></li>`).join("")}</ol>`) +
         `<div class="pl-signin-go">` +
           `<a class="btn btn-discord" href="${esc(loginFor("profile"))}" data-login-for="profile">${icon("discord")}<span>${esc(t("signin.continue"))}</span></a>` +
           `<button class="btn" type="button" data-dcp-back>${esc(t("signin.notNow"))}</button>` +
