@@ -2716,9 +2716,10 @@ a.link-copy { text-decoration: none; }
         stat(t("pl.tier"), tier) +
         stat(t("pl.courses"), `${icon("map")}${p ? p.courses : 0}/${r.counted.length}`) +
       `</div>` +
-      (mine && (!ranNone || me.profile) ? profileHtml() : "") +
       (mine && ranNone ? `<p class="pl-mine-empty"><span>${esc(t("pl.mineEmpty"))}</span>` +
         `<a class="btn btn-sm btn-primary" href="/submit" data-route="submit">${icon("upload")}<span>${esc(t("nav.submit"))}</span></a></p>` : "") +
+      // Everyone can put their stats on their profile, runs or not: before their first, it says they're unrated
+      (mine ? profileHtml() : "") +
       `<ul class="pl-courses">`;
     rows.forEach(({ c, at, best, total, record, runs, legacy }) => {
       const open = plOpen.has(c.n);
