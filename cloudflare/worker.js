@@ -299,6 +299,8 @@ async function buildPlayers(env, ctx, previous) {
   const { files } = JSON.parse((await stored("game")) ?? (await game(env, ctx)));
   const ids = new Set();
   for (const text of Object.values(files)) if (text) for (const m of text.matchAll(/discord"?\s*:\s*"?(\d{17,20})\b/gi)) ids.add(m[1]);
+  // Ballkyrie too (a bot's user ID is its app's ID), for its name and picture where the sign-in panel mentions it
+  if (botId(env)) ids.add(botId(env));
   const found = {};
   const failed = [];
   const list = [...ids];
@@ -348,6 +350,8 @@ const RUNS_FILE = "leaderboards/runs.json";
 // test-runs, so trying it out never touches the real boards)
 const runsBranch = (env) => env.RUNS_BRANCH || "develop";
 const SESSION_DAYS = 30;
+// Ballkyrie's own Discord ID, which is the same as its app's ID
+const botId = (env) => (/^\d{17,20}$/.test(env.DISCORD_CLIENT_ID || "") ? env.DISCORD_CLIENT_ID : "");
 const loginOn = (env) => !!(env.DISCORD_CLIENT_ID && env.DISCORD_CLIENT_SECRET && env.SESSION_SECRET && (appOn(env) || env.GITHUB_TOKEN));
 // The same checks as the page's. Names can't have commas or quotes, which the in-game boards' files use.
 const NAME_OK = /^[^\u0000-\u001f\u007f"`\\,<>]{1,32}$/u;
@@ -1022,7 +1026,11 @@ async function page(request, env, ctx) {
   // stats on Discord profiles (see "Stats on Discord profiles"): the sign-in panel tells people about them.
   if (on) {
     const profiles = profileOn(env);
-    rw = rw.on("#submit", { element(el) { el.setAttribute("data-login", "on"); if (profiles) el.setAttribute("data-profiles", "on"); } });
+    rw = rw.on("#submit", { element(el) {
+      el.setAttribute("data-login", "on");
+      if (profiles) el.setAttribute("data-profiles", "on");
+      if (botId(env)) el.setAttribute("data-bot", botId(env));
+    } });
   }
   const count = widget && JSON.parse(widget).member_count;
   if (typeof count === "number") {
