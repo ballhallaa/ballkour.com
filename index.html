@@ -554,7 +554,7 @@ select option, select optgroup { background: var(--menu); color: var(--ink); }
 .run .stat.miss { grid-area: miss; }
 .run-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 16px/1.2 var(--body); letter-spacing: .03em; text-transform: uppercase; color: var(--ink-2); }
 .run-date { grid-area: date; justify-self: end; display: flex; align-items: center; gap: 10px; margin-top: 3px; font: 400 11.5px/1.2 var(--mono); color: var(--ink-3); }
-/* A run's course rating, beside its date */
+/* A rating beside a run's date: the player's over every course on a board, the course's in a player's panel */
 .run-pts { display: inline-flex; align-items: center; gap: 4px; color: var(--ink-2); }
 .run-pts .icon { width: 12px; height: 12px; color: var(--gold); }
 .run-dc { grid-area: dc; min-width: 0; display: flex; align-items: center; gap: 6px; margin-top: 3px; font: 600 13px/1.2 var(--body); color: #b9befc; }
@@ -1528,7 +1528,9 @@ a.link-copy { text-decoration: none; }
   "pl.mineEmpty": "No runs yet. Send your first one and your places, times and rating show up here.",
   "me.signin": "Sign in with Discord to see your stats",
   "rt.coursePoints": "{points} course rating points",
-  "lb.pointsNote": "Course rating: up to 10,000 points, all of them for the record",
+  "lb.rating": "Rating over every course: {points}",
+  "lb.ratingNote": "Ratings: each player’s rating over every course",
+  "lb.ratingThen": "Ratings: each player’s rating over every course, as it was on {date}",
   "sub.sentSlower": "Your run is saved. Your best on {course} is still {time} (#{rank}).",
   "sub.sentPlain": "Your run is up!",
   "sub.sentAgain": "That run is already on the board: you’re #{rank} on {course}.",
@@ -1854,7 +1856,8 @@ a.link-copy { text-decoration: none; }
     if (!list) return runsHtml(c, top, null, rest);
     const at = v.at < 0 || v.at >= list.length ? list.length - 1 : v.at;
     const fresh = freshAt(list, at);
-    return (list.length > 1 ? historyHtml(c, list, at) : "") + congratsHtml(list[at], fresh) + runsHtml(c, list[at], fresh, at === list.length - 1 ? rest : []);
+    const newest = at === list.length - 1;
+    return (list.length > 1 ? historyHtml(c, list, at) : "") + congratsHtml(list[at], fresh) + runsHtml(c, list[at], fresh, newest ? rest : [], !newest);
   }
   // The player's Discord name and picture, from /data/players.json (the Cloudflare Worker looks them up)
   const PLAYERS = new Map();
@@ -1866,13 +1869,13 @@ a.link-copy { text-decoration: none; }
   }
   // A name on a board: opens the player's runs (see "A player's runs")
   const nameButton = (key, name) => `<button class="run-name" type="button" data-player="${esc(key)}" title="${esc(t("lb.playerOpen", { player: name }))}">${esc(name)}</button>`;
-  // A run on a board. record: the board's #1, for the run's course rating (none on legacy boards). podium: the
-  // run's place on the board by time when it's sorted by mistakes, so the fastest three keep their gold, silver and
-  // bronze wherever they are
-  function runRow(r, i, fresh, legacy, record, podium) {
+  // A run on a board. ratingOf: each player's rating over every course (see ratingsBy), beside the date like on the
+  // board pictures (none on legacy boards). podium: the run's place on the board by time when it's sorted by
+  // mistakes, so the fastest three keep their gold, silver and bronze wherever they are
+  function runRow(r, i, fresh, legacy, ratingOf, podium) {
     const place = podium === undefined ? i : podium;
     const isNew = !!fresh && fresh.has(r);
-    const pts = record ? coursePoints(record, r) : null;
+    const rating = ratingOf ? ratingOf.get(playerKey(r)) : undefined;
     const split = legacy ? /^(.*?)(\.--)?$/.exec(r.time) : null;
     const shown = split ? esc(split[1]) + (split[2] ? `<span class="na">.--</span>` : "") : esc(r.time);
     const time = `${icon("bolt")}<span class="v">${shown}</span>`;
@@ -1884,8 +1887,8 @@ a.link-copy { text-decoration: none; }
       `<span class="run-who"><span class="run-line">${nameButton(playerKey(r), r.name)}${isNew ? `<span class="tag tag-new">${esc(t("lb.new"))}</span>` : ""}</span></span>` +
       timeCell +
       `<span class="stat miss" title="${esc(t("unit.mistakes", { count: r.miss }))}">${icon("skull")}${esc(r.miss)}<span class="sr-only"> ${esc(t("unit.mistakes", { count: r.miss }))}</span></span>` +
-      (r.date || pts !== null ? `<span class="run-date">` +
-        (pts !== null ? `<span class="run-pts" title="${esc(t("rt.coursePoints", { points: points(pts) }))}">${icon("star")}${esc(points(pts))}</span>` : "") +
+      (r.date || rating !== undefined ? `<span class="run-date">` +
+        (rating !== undefined ? `<span class="run-pts" title="${esc(t("lb.rating", { points: points(rating) }))}">${icon("star")}${esc(points(rating))}</span>` : "") +
         `${r.date ? `<span title="${esc(t("lb.submittedOn", { date: formatDate(r.date) }))}">${esc(formatDate(r.date))}</span>` : ""}</span>` : "") +
       dcHtml(r) +
       `</li>`;
@@ -1945,11 +1948,12 @@ a.link-copy { text-decoration: none; }
       searchBoard(input);
     } else if (e.key === "Enter" && matchMedia("(pointer: coarse)").matches) input.blur();
   });
-  function runsHtml(c, runs, fresh, rest) {
+  // old: the board is an older one from the history, so its ratings are as they were on its day, not today's
+  function runsHtml(c, runs, fresh, rest, old) {
     rest = rest || [];
     if (!runs.length && !rest.length) return `<p class="board-empty">${esc(t(c.broken ? "lb.emptyBroken" : "lb.empty"))}</p>`;
-    // Course ratings go by the board's #1, and broken courses have none (they don't count toward ratings)
-    const record = c.broken || c.latestBroken ? null : runs[0];
+    const day = old ? boardDate(runs) : "";
+    const ratingOf = ratingsBy(old ? { day, c, runs } : null);
     let top = runs.slice(0, 10);
     // Sorted by mistakes, everyone on it is ranked again (the newest board's top 10 can then take players from past it)
     const byMiss = boardSort === "miss";
@@ -1963,8 +1967,8 @@ a.link-copy { text-decoration: none; }
     const notes = [];
     if (shown.some((r) => r.video)) notes.push(t("lb.videoHint"));
     if (shown.some((r) => r.date)) notes.push(t("lb.datesFormat"));
-    if (!c.broken && !c.latestBroken) notes.push(t("lb.pointsNote"));
-    return sortHtml(c) + rowsHtml(c, top, rest, (r, i) => runRow(r, i, i < top.length ? fresh : null, false, record, podium(r))) +
+    if (shown.some((r) => ratingOf.has(playerKey(r)))) notes.push(day ? t("lb.ratingThen", { date: day }) : t("lb.ratingNote"));
+    return sortHtml(c) + rowsHtml(c, top, rest, (r, i) => runRow(r, i, i < top.length ? fresh : null, false, ratingOf, podium(r))) +
       (notes.length ? `<p class="lb-foot">${notes.map((s) => `<span>${esc(s)}</span>`).join("")}</p>` : "");
   }
   // Boards are sorted by time (the leaderboard itself) or by mistakes, fewest first and then fastest. The choice holds
@@ -2068,21 +2072,34 @@ a.link-copy { text-decoration: none; }
     if (el instanceof HTMLInputElement) el.setSelectionRange(el.value.length, el.value.length);
   }
   // Redraws one course row (or the Player ratings row) in place, keeping keyboard focus where it was. Any change to
-  // a course's runs can change the ratings, so they're redrawn too, once for however many courses changed together.
-  let ratingsQueued = false;
+  // a course's runs can change the ratings, so they're redrawn too, once for however many courses changed together,
+  // and so is the open board (its players' ratings) if it wasn't one of them.
+  let changed = null; // the courses redrawn since the ratings last were
+  function drawRow(c) {
+    const el = document.getElementById(`course-${c.n}`);
+    if (!el) return;
+    const spot = focusSpot(el);
+    el.outerHTML = c === RATINGS ? ratingsRow() : courseRow(c);
+    const back = spot && document.querySelector(`#course-${c.n} ${spot}`);
+    if (back) refocus(back);
+  }
   function refreshCourse(c) {
     if (!c) return;
-    const el = document.getElementById(`course-${c.n}`);
-    if (el) {
-      const spot = focusSpot(el);
-      el.outerHTML = c === RATINGS ? ratingsRow() : courseRow(c);
-      const back = spot && document.querySelector(`#course-${c.n} ${spot}`);
-      if (back) refocus(back);
+    drawRow(c);
+    if (c === RATINGS) return;
+    if (!changed) {
+      changed = new Set();
+      queueMicrotask(() => {
+        const drawn = changed;
+        changed = null;
+        drawRow(RATINGS);
+        const open = typeof openCourse === "number" ? course(openCourse) : null;
+        if (open && !drawn.has(open)) drawRow(open);
+        renderPlayer();
+        if (pf.open) renderFinder();
+      });
     }
-    if (c !== RATINGS && !ratingsQueued) {
-      ratingsQueued = true;
-      queueMicrotask(() => { ratingsQueued = false; refreshCourse(RATINGS); renderPlayer(); if (pf.open) renderFinder(); });
-    }
+    changed.add(c);
   }
   // Redraws just an open board; rows that are on both boards slide to their new rank, new ones fade in
   function refreshBoard(c, focusSel) {
@@ -2423,7 +2440,9 @@ a.link-copy { text-decoration: none; }
      gets all of them (lucio.surf's curve for a player who has run every map). A rating is the average over every course
      that isn't broken, with 0 for the ones a player hasn't run (and for courses nobody has run yet), so a new or
      faster run never lowers it, and the first run on a course changes nobody else's rating. Their tier is their place over the number of rated players (#4 of 40 is in the Top 10%),
-     and the bottom 10% are just Rated. The leaderboard bot posts the same boards and gives out the same tiers as roles
+     and the bottom 10% are just Rated. Each board (and its picture) shows its players' ratings beside their dates:
+     today's on the newest board, and on an older one, the ones they had at the end of its day (see standingsOn).
+     The leaderboard bot posts the same boards and gives out the same tiers as roles
      on Discord, worked out by tools/leaderboard-bot/ratings.mjs in the game repo: keep the two in step. */
   const TIERS = [0.1, 1, 5, 10, 25, 50, 75, 90];
   const playerKey = (r) => (r.discord ? "d:" + r.discord : "n:" + r.name.toUpperCase());
@@ -2452,14 +2471,31 @@ a.link-copy { text-decoration: none; }
   }
   // A run's course rating: up to 10,000 points, all of them for the record
   const coursePoints = (record, r) => 10000 * Math.log(1 + (Math.E - 1) * toSeconds(record.time) / toSeconds(r.time)) ** 2;
+  /* A course's board as it was at the end of a day ("2026-06-11"), for the ratings back then: its last board posted
+     by that day (board: or this one, the older board on screen), then the players past its #10 with runs sent by
+     that day, only slower than its #10 as on today's board. A course without boards then has the runs sent by that
+     day. Runs taken off for good never count, then or now. */
+  function standingsOn(c, day, board) {
+    const gone = REMOVED[c.n] || [];
+    const kept = (r) => !gone.some((x) => sameRun(x, r));
+    const sent = (r) => { const d = formatDate(r.date); return /^\d{4}-\d{2}-\d{2}$/.test(d) && d <= day && kept(r); };
+    const known = [...c.runs, ...(MORE[c.n] || []), ...(HISTORY[c.n] ? HISTORY[c.n].boards.flat() : [])].filter(sent);
+    board = board || (boardsOf(c) || []).filter((b) => boardDate(b) <= day).pop();
+    if (!board) return bestEach(known);
+    const top = bestEach(board.filter(kept));
+    const last = top.length >= 10 ? top[9] : null;
+    return bestEach([...top, ...(last ? known.filter((r) => byTime(r, last) >= 0) : [])]);
+  }
+  // then: { day, c, runs } for the ratings as they were on an older board's day (c's board being runs), or none for
+  // today's
   // → { counted: [course, …], players: [{ key, name, discord, rating, points: { n: points }, courses, rank, tier }] }
-  function ratings() {
+  function ratings(then) {
     const counted = [];
     const players = new Map();
     COURSES.forEach((c) => {
       if (c.broken || c.latestBroken) return;
       counted.push(c);
-      const { top, rest } = standingsOf(c);
+      const { top, rest } = then ? { top: standingsOn(c, then.day, c === then.c ? then.runs : null), rest: [] } : standingsOf(c);
       const all = top.concat(rest);
       all.forEach((r) => {
         const key = playerKey(r);
@@ -2484,6 +2520,8 @@ a.link-copy { text-decoration: none; }
     });
     return { counted, players: list };
   }
+  // Each player's rating over every course, by player (see playerKey): today's, or then's (see ratings)
+  const ratingsBy = (then) => new Map(ratings(then).players.map((p) => [p.key, p.rating]));
   const points = (n) => Math.round(n).toLocaleString(htmlLang());
   function ratingsRow() {
     const r = ratings();
@@ -2881,7 +2919,9 @@ a.link-copy { text-decoration: none; }
     const at = list ? (v.at < 0 || v.at >= list.length ? list.length - 1 : v.at) : -1;
     const runs = list ? list[at] : top;
     const pool = byMiss ? runs.slice(0, 10).concat(!list || at === list.length - 1 ? rest : []).sort(byMistakes) : runs;
-    return { legacy: false, byMiss, runs: pool.slice(0, 10), podium: (r) => runs.slice(0, 3).indexOf(r), fresh: list ? freshAt(list, at) : new Set(), board: list ? at + 1 : 0, date: boardDate(runs) };
+    // An older board's ratings are as they were on its day, like on the page
+    const then = list && at < list.length - 1 ? { day: boardDate(runs), c, runs } : null;
+    return { legacy: false, byMiss, runs: pool.slice(0, 10), podium: (r) => runs.slice(0, 3).indexOf(r), fresh: list ? freshAt(list, at) : new Set(), board: list ? at + 1 : 0, date: boardDate(runs), then };
   }
   async function drawPicture(c, d) {
     const W = PIC.w, rowsTop = PIC.top + PIC.head + 22, footY = rowsTop + 5 * PIC.rowH + 4 * PIC.gap + 18, H = Math.round(footY + 17 + 26);
@@ -2893,7 +2933,7 @@ a.link-copy { text-decoration: none; }
     }
     const people = d.runs.map((r) => (r.discord && PLAYERS.get(r.discord)) || null);
     // Each player's rating over every course, beside the date like the bot's pictures (legacy boards don't count)
-    const ratingOf = d.legacy ? new Map() : new Map(ratings().players.map((p) => [p.key, p.rating]));
+    const ratingOf = d.legacy ? new Map() : ratingsBy(d.then);
     const [logo, ...pfps] = await Promise.all([loadImg("/assets/logo.webp"), ...people.map((p) => (p && /^https:\/\/cdn\.discordapp\.com\//.test(p.avatar) ? loadImg(p.avatar, true) : null))]);
     const cv = document.createElement("canvas");
     cv.width = W * 2; cv.height = H * 2;
