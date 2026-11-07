@@ -771,6 +771,18 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 /* While Discord keeps hiding app boxes now and then: a heads-up in the panel and the explainer (DISCORD_FLAKY) */
 .dcp-flaky { display: block; flex: 1 1 100%; padding: 9px 11px; border: 1px solid rgba(255, 154, 46, .32); border-radius: 8px; background: rgba(255, 154, 46, .07); font: 400 13.5px/1.45 var(--body); color: var(--ink-2); }
 .pl-why .dcp-flaky { margin-top: 12px; }
+/* Step 4 of the explainer: the box on their Discord profile again, under the step */
+/* Step 4's little pictures of where to click in Discord, the way Discord shows them */
+.dcp-ui { display: inline-flex; align-items: center; gap: 6px; margin: 0 1px; padding: 1px 8px 1px 6px; border-radius: 6px; background: #2b2d31; box-shadow: 0 0 0 1px rgba(255, 255, 255, .08); font-weight: 600; color: #f2f3f5; white-space: nowrap; vertical-align: baseline; }
+.dcp-ui img { width: 16px; height: 16px; border-radius: 50%; }
+.dcp-ui .icon { width: 12px; height: 12px; color: #b5bac1; }
+.dcp-ui-link { width: 14px; height: 14px; color: #b5bac1; }
+.dcp-ui-role { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: #5865f2; }
+.dcp-ui-role .dcp-ui-link { width: 11px; height: 11px; color: #fff; }
+.pl-steps .dcp-card { margin-top: 10px; }
+/* The Discord Profile App role, as a role pill in the sentence that mentions it. The dot is the role's color on our server. */
+.dcp-role { display: inline-flex; align-items: center; gap: 5px; margin: 0 1px; padding: 0 7px 0 6px; border-radius: 6px; background: #232428; box-shadow: 0 0 0 1px rgba(255, 255, 255, .08); font-weight: 500; color: #dbdee1; white-space: nowrap; vertical-align: baseline; }
+.dcp-role-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: #5865f2; }
 /* Their own panel, with their stats on: where to get the linked role on our server (Discord never gives it out itself) */
 .dcp-tip { display: block; flex: 1 1 100%; font: 400 13.5px/1.45 var(--body); color: var(--ink-3); }
 /* Signing in with Discord, from My stats or the form's Sign in with Discord: what it's for, what it shares, and what
@@ -799,6 +811,8 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-perks li { display: flex; align-items: center; gap: 12px; font: 500 15px/1.4 var(--body); color: var(--ink); }
 .pl-perks .f-icon { width: 34px; height: 34px; }
 .pl-perks .f-icon .icon { width: 17px; height: 17px; }
+.pl-perk-link { color: var(--volt); text-decoration: underline; text-underline-offset: 3px; }
+.pl-perk-link:hover { color: var(--volt-hi); }
 .pl-shares { list-style: none; margin: 12px 0 0; padding: 0; border: 1px solid var(--line); border-radius: 12px; background: rgba(255, 255, 255, .025); font: 500 15px/1.4 var(--body); }
 .pl-shares li { display: flex; align-items: flex-start; gap: 11px; padding: 11px 14px; }
 .pl-shares li + li { border-top: 1px solid var(--line); }
@@ -1610,8 +1624,9 @@ a.link-copy { text-decoration: none; }
   "dcpi.step1": "Discord opens and asks about Ballkyrie again, this time with “Update your connection and metadata” on the list.",
   "dcpi.step2": "Tap Authorize.",
   "dcpi.step3": "You’re back here. Discord can take a few minutes to show your stats the first time.",
-  "dcpi.step4": "On our Discord server, you can also get the Discord Profile App role: click the server name, then Linked Roles, then Discord Profile App.",
-  "dcp.role": "On our Discord server, get the Discord Profile App role from the server name → Linked Roles. If you take your stats off and put them back, claim it there again.",
+  "dcpi.step4": "If you want your stats to show on your Discord profile, click the server name {server}, then Linked Roles {linkedRoles}, then Discord Profile App {role}.",
+  "dcpi.linkedRoles": "Linked Roles",
+  "dcp.role": "On our Discord server, also claim the Discord Profile App role from the server name → Linked Roles. It links Ballkyrie from inside Discord too. If you take your stats off and put them back, claim it there again.",
   "me.signin": "Sign in with Discord to see your stats",
   "signin.forMine": "See your rating, your rank on every course, and all your runs.",
   "signin.forSubmit": "Send your runs from here. They go on the board under your Discord, so nobody else can send one as you.",
@@ -1620,7 +1635,6 @@ a.link-copy { text-decoration: none; }
   "signin.perks": "If you’re on our Discord server, you also get:",
   "signin.perkRole": "A role for your rating",
   "signin.perkPing": "A ping in the course’s leaderboard channel when you make its top 10",
-  "signin.perksAnyone": "Even if you’re not on the server:",
   "signin.perkProfile": "Your Top %, rating, and top 10s on your Discord profile. Turn it on in My stats.",
   "signin.sharesTitle": "What it shares",
   "signin.shares": "Discord asks if Ballkyrie, our Discord bot, can see who you are. That gives the site:",
@@ -2781,12 +2795,14 @@ a.link-copy { text-decoration: none; }
      box comes and goes while Discord still has the stats. Until that's fixed, the panel and the explainer say so.
      Once it is, set this to false (and dcp.flaky can go). */
   const DISCORD_FLAKY = true;
+  // The Discord Profile App role as a role pill, in place of the first mention of its name (the same in every language)
+  const withRole = (html) => html.replace("Discord Profile App", `<span class="dcp-role" lang="en"><span class="dcp-role-dot" aria-hidden="true"></span>Discord Profile App</span>`);
   const flakyHtml = (tag) => (DISCORD_FLAKY ? `<${tag} class="dcp-flaky">${esc(t("dcp.flaky"))}</${tag}>` : "");
   function profileHtml() {
     if (typeof me.profile !== "boolean") return "";
     if (me.profile) {
       return `<p class="pl-dcp"><span class="pl-dcp-ok">${icon("check")}</span><span class="pl-dcp-text">${esc(t(dcpNote || "dcp.on"))}</span>` +
-        `<button class="pl-signout" type="button" data-dcp-off>${esc(t("dcp.off"))}</button><span class="dcp-tip">${esc(t("dcp.role"))}</span>${flakyHtml("span")}</p>`;
+        `<button class="pl-signout" type="button" data-dcp-off>${esc(t("dcp.off"))}</button><span class="dcp-tip">${withRole(esc(t("dcp.role")))}</span>${flakyHtml("span")}</p>`;
     }
     return `<p class="pl-dcp"><span class="pl-dcp-text">${withBot("dcp.what")}</span>` +
       `<a class="btn btn-sm btn-discord" href="${esc(loginFor("profile"))}" data-login-for="profile" data-dcp-info>${icon("discord")}<span>${esc(t("dcp.add"))}</span></a></p>`;
@@ -2823,6 +2839,16 @@ a.link-copy { text-decoration: none; }
         `<div class="dcp-card-stats">${stats.map(([v, name]) => `<span>${v} ${name}</span>`).join("")}</div>` +
       `</div></div>`;
   }
+  // Step 4's little pictures of where to click in Discord, drawn the way Discord shows them: the server name, Linked
+  // Roles, and the Discord Profile App role. The text already says each one, so screen readers skip them.
+  const linkSvg = `<svg class="dcp-ui-link" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`;
+  function discordUiHtml(html) {
+    const pic = (inner) => `<span class="dcp-ui" aria-hidden="true">${inner}</span>`;
+    return html
+      .replace("{server}", pic(`<img src="/assets/logo.webp" alt="" width="16" height="16">Ballkour${icon("chev")}`))
+      .replace("{linkedRoles}", pic(`${linkSvg}${esc(t("dcpi.linkedRoles"))}`))
+      .replace("{role}", pic(`<span class="dcp-ui-role">${linkSvg}</span>Discord Profile App`));
+  }
   function openProfileInfo() {
     if (!me) return;
     plKey = "";
@@ -2837,14 +2863,14 @@ a.link-copy { text-decoration: none; }
         part("dcpi.lookTitle", profileCardHtml() + `<p class="dcp-card-note">${esc(t("dcpi.lookNote"))}</p>` + flakyHtml("div")) +
         part("dcpi.asksTitle", `<p>${esc(t("dcpi.asks"))}</p>` +
           `<ul class="pl-shares">${share("yes", "check", "dcpi.connection")}${share("yes", "check", "dcpi.metadata")}${share("no", "x", "dcpi.nothingElse")}</ul>`) +
-        part("signin.nextTitle", `<ol class="pl-steps">${["dcpi.step1", "dcpi.step2", "dcpi.step3", "dcpi.step4"].map((k) => `<li><span>${withBot(k)}</span></li>`).join("")}</ol>`) +
+        part("signin.nextTitle", `<ol class="pl-steps">${["dcpi.step1", "dcpi.step2", "dcpi.step3", "dcpi.step4"].map((k) => `<li><div>${k === "dcpi.step4" ? discordUiHtml(withBot(k)) + profileCardHtml() : withBot(k)}</div></li>`).join("")}</ol>`) +
         `<div class="pl-signin-go">` +
           `<a class="btn btn-discord" href="${esc(loginFor("profile"))}" data-login-for="profile">${icon("discord")}<span>${esc(t("signin.continue"))}</span></a>` +
           `<button class="btn" type="button" data-dcp-back>${esc(t("signin.notNow"))}</button>` +
         `</div>` +
       `</div>`;
     pl.scrollTop = 0;
-    pl.querySelector("a[data-login-for]").focus();
+    pl.querySelector(".pl-signin-go a[data-login-for]").focus();
   }
   pl.addEventListener("click", async (e) => {
     // Show on my Discord profile says what it does first (a middle click or Ctrl+click still goes straight to Discord)
@@ -3998,7 +4024,10 @@ a.link-copy { text-decoration: none; }
     plKey = "";
     const mine = kind === "mine";
     const part = (title, body) => `<section class="pl-why"><h3>${esc(t(title))}</h3>${body}</section>`;
-    const perk = (ico, color, key) => `<li><span class="f-icon" style="--c: var(--${color})">${icon(ico)}</span><span>${esc(t(key))}</span></li>`;
+    const perk = (ico, color, key, html) => `<li><span class="f-icon" style="--c: var(--${color})">${icon(ico)}</span><span>${html || esc(t(key))}</span></li>`;
+    // "Turn it on in My stats": My stats (the button's own name, in every language) signs them in and opens it
+    const myStats = esc(t("me.button"));
+    const profilePerk = esc(t("signin.perkProfile")).replace(myStats, `<a class="pl-perk-link" href="${esc(loginFor("mine"))}" data-login-for="mine">${myStats}</a>`);
     const share = (cls, ico, key) => `<li class="${cls}"><span class="mark">${icon(ico)}</span><span>${esc(t(key))}</span></li>`;
     const steps = ["signin.step1", "signin.step2", mine ? "signin.step3Mine" : "signin.step3Submit"];
     pl.innerHTML = `<div class="pl-head"><div class="pl-who">` +
@@ -4011,9 +4040,9 @@ a.link-copy { text-decoration: none; }
           `<span class="pl-link-path"><span class="pl-link-ok">${icon("check")}</span></span>` +
           `<span class="pl-link-dc">${icon("discord")}</span></div>` +
         part("signin.whyTitle", `<p>${esc(t("signin.why"))}</p><p>${esc(t("signin.perks"))}</p>` +
-          `<ul class="pl-perks">${perk("star", "gold", "signin.perkRole")}${perk("trophy", "volt", "signin.perkPing")}</ul>` +
-          // Their stats on their Discord profile, which doesn't need the server
-          (profilesOn ? `<p>${esc(t("signin.perksAnyone"))}</p><ul class="pl-perks">${perk("discord", "discord", "signin.perkProfile")}</ul>` : "")) +
+          `<ul class="pl-perks">${perk("star", "gold", "signin.perkRole")}${perk("trophy", "volt", "signin.perkPing")}` +
+          // Their stats on their Discord profile, which comes with the server's Discord Profile App role
+          (profilesOn ? perk("discord", "discord", "signin.perkProfile", profilePerk) : "") + `</ul>`) +
         part("signin.sharesTitle", `<p>${withBot("signin.shares")}</p>` +
           `<ul class="pl-shares">${share("yes", "check", "signin.sharesYes")}${share("no", "x", "signin.sharesNo")}</ul>`) +
         part("signin.nextTitle", `<ol class="pl-steps">${steps.map((k) => `<li>${esc(t(k))}</li>`).join("")}</ol>`) +
@@ -4024,7 +4053,7 @@ a.link-copy { text-decoration: none; }
       `</div>`;
     if (!pl.open) pl.showModal();
     pl.scrollTop = 0;
-    pl.querySelector("a[data-login-for]").focus();
+    pl.querySelector(".pl-signin-go a[data-login-for]").focus();
   }
   // Signing in comes back in the same language: from My stats to the same page with their panel open (?me=1), and
   // from the form to the form (with ?check= kept, for reviewers). Show on my Discord profile ("profile") comes back
