@@ -82,6 +82,7 @@
   --gold: #ffd54f;
   --silver: #d3dde2;
   --bronze: #e8a066;
+  --discord: #7c86ff;
   --menu: #0a110e;
   --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
   --body: "Barlow", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -776,7 +777,7 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-why:last-of-type { border-bottom: 0; }
 .pl-why h3 { margin: 0 0 8px; font: 600 11px/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
 .pl-why p { margin: 0; font: 400 15px/1.55 var(--body); color: var(--ink-2); }
-.pl-why p + p { margin-top: 12px; }
+.pl-why p + p, .pl-why ul + p { margin-top: 12px; }
 .pl-perks { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
 .pl-perks li { display: flex; align-items: center; gap: 12px; font: 500 15px/1.4 var(--body); color: var(--ink); }
 .pl-perks .f-icon { width: 34px; height: 34px; }
@@ -1587,6 +1588,8 @@ a.link-copy { text-decoration: none; }
   "signin.perks": "If you’re on our Discord server, you also get:",
   "signin.perkRole": "A role for your rating",
   "signin.perkPing": "A ping in the course’s leaderboard channel when you make its top 10",
+  "signin.perksAnyone": "Even if you’re not on the server:",
+  "signin.perkProfile": "Your Top %, rating, and top 10s on your Discord profile. Turn it on in My stats.",
   "signin.sharesTitle": "What it shares",
   "signin.shares": "Discord asks if Ballkyrie, our Discord bot, can see who you are. That gives the site:",
   "signin.sharesYes": "Your Discord ID, name, and picture",
@@ -3782,6 +3785,8 @@ a.link-copy { text-decoration: none; }
   const subField = (id) => $("#sub-" + id);
   const subStatus = $("#sub-status");
   const loginOn = submitBox.dataset.login === "on";
+  // Stats on Discord profiles are set up too (see "Stats on Discord profiles" in cloudflare/worker.js)
+  const profilesOn = loginOn && submitBox.dataset.profiles === "on";
   let me = null; // who's signed in: { id, name, avatar }
   if (loginOn) {
     $("#submit .submit-alt").hidden = true;
@@ -3893,7 +3898,9 @@ a.link-copy { text-decoration: none; }
           `<span class="pl-link-path"><span class="pl-link-ok">${icon("check")}</span></span>` +
           `<span class="pl-link-dc">${icon("discord")}</span></div>` +
         part("signin.whyTitle", `<p>${esc(t("signin.why"))}</p><p>${esc(t("signin.perks"))}</p>` +
-          `<ul class="pl-perks">${perk("star", "gold", "signin.perkRole")}${perk("trophy", "volt", "signin.perkPing")}</ul>`) +
+          `<ul class="pl-perks">${perk("star", "gold", "signin.perkRole")}${perk("trophy", "volt", "signin.perkPing")}</ul>` +
+          // Their stats on their Discord profile, which doesn't need the server
+          (profilesOn ? `<p>${esc(t("signin.perksAnyone"))}</p><ul class="pl-perks">${perk("discord", "discord", "signin.perkProfile")}</ul>` : "")) +
         part("signin.sharesTitle", `<p>${esc(t("signin.shares"))}</p>` +
           `<ul class="pl-shares">${share("yes", "check", "signin.sharesYes")}${share("no", "x", "signin.sharesNo")}</ul>`) +
         part("signin.nextTitle", `<ol class="pl-steps">${steps.map((k) => `<li>${esc(t(k))}</li>`).join("")}</ol>`) +
