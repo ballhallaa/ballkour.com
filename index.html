@@ -771,7 +771,7 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 /* While Discord keeps hiding app boxes now and then: a heads-up in the panel and the explainer (DISCORD_FLAKY) */
 .dcp-flaky { display: block; flex: 1 1 100%; padding: 9px 11px; border: 1px solid rgba(255, 154, 46, .32); border-radius: 8px; background: rgba(255, 154, 46, .07); font: 400 13.5px/1.45 var(--body); color: var(--ink-2); }
 .pl-why .dcp-flaky { margin-top: 12px; }
-/* Steps 4 to 6's little pictures of where to click in Discord, the way Discord shows them */
+/* The steps' little pictures of where to click in Discord, the way Discord shows them */
 .dcp-ui { display: inline-flex; align-items: center; gap: 6px; margin: 0 1px; padding: 1px 8px 1px 6px; border-radius: 6px; background: #2b2d31; box-shadow: 0 0 0 1px rgba(255, 255, 255, .08); font-weight: 600; color: #f2f3f5; white-space: nowrap; vertical-align: baseline; }
 .dcp-ui img { width: 16px; height: 16px; border-radius: 50%; }
 .dcp-ui .icon { width: 12px; height: 12px; color: #b5bac1; }
@@ -781,8 +781,9 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 /* Ballkyrie's row in Discord's "Connect your accounts", with its APP tag and the arrow to open it */
 .dcp-ui-app { padding: 0 4px; border-radius: 4px; background: #5865f2; font: 600 10px/15px var(--body); color: #fff; }
 .dcp-ui .dcp-ui-next { transform: rotate(-90deg); }
-/* Its Finish button */
+/* Its Finish button, and Continue with Discord and Authorize in steps 1 and 2 */
 .dcp-ui.dcp-ui-btn { padding: 1px 12px; background: #5865f2; box-shadow: none; color: #fff; }
+.dcp-ui.dcp-ui-btn .icon { width: 15px; height: 15px; color: #fff; }
 /* The Discord Profile App role, as a role pill in the sentence that mentions it. The dot is the role's color on our server. */
 .dcp-role { display: inline-flex; align-items: center; gap: 5px; margin: 0 1px; padding: 0 7px 0 6px; border-radius: 6px; background: #232428; box-shadow: 0 0 0 1px rgba(255, 255, 255, .08); font-weight: 500; color: #dbdee1; white-space: nowrap; vertical-align: baseline; }
 .dcp-role-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: #5865f2; }
@@ -1649,14 +1650,15 @@ a.link-copy { text-decoration: none; }
   "dcpi.connection": "Your connection is the Ballkour box above, on your profile",
   "dcpi.metadata": "Its metadata is the numbers in it, from your rating to the courses you’ve run",
   "dcpi.nothingElse": "Nothing else: it can’t read your messages, post as you, or change anything else on your account",
-  "dcpi.step1": "Tap Continue with Discord below. Discord opens and asks about Ballkyrie again, this time with “Update your connection and metadata” on the list.",
-  "dcpi.step2": "Tap Authorize.",
+  "dcpi.step1": "Tap {continue} below.",
+  "dcpi.step2": "Tap {authorize}.",
   "dcpi.step3": "You’re back here. To show your stats on your profile, finish up on our Discord server:",
   "dcpi.step4": "Click the server name {server}, then Linked Roles {linkedRoles}, then Discord Profile App {role}.",
   "dcpi.step5": "Discord asks you to connect your accounts. Click Ballkyrie {bot}, and this site opens in your browser.",
   "dcpi.step6": "Back in Discord, click Finish {finish}. Discord can take a few minutes to show your stats the first time.",
   "dcpi.linkedRoles": "Linked Roles",
   "dcpi.finish": "Finish",
+  "dcpi.authorize": "Authorize",
   "dcp.role": "To finish showing your stats on your profile, get the Discord Profile App role on our Discord server:",
   "me.signin": "Sign in with Discord to see your stats",
   "signin.forMine": "See your rating, your rank on every course, and all your runs.",
@@ -2895,13 +2897,16 @@ a.link-copy { text-decoration: none; }
     const bot = botId && PLAYERS.get(botId);
     return bot && /^https:\/\/cdn\.discordapp\.com\//.test(bot.avatar) ? bot.avatar : "/assets/logo.webp";
   };
-  // Steps 4 to 6's little pictures of where to click in Discord, drawn the way Discord shows them: the server name,
-  // Linked Roles, the Discord Profile App role, then Ballkyrie and Finish in Discord's "Connect your accounts". The
-  // text already says each one, so screen readers skip them.
+  // The steps' little pictures of where to click, drawn the way Discord shows them. Continue with Discord and Authorize
+  // stand in for their own words, so screen readers read those. Steps 4 to 6's are the server name, Linked Roles, the
+  // Discord Profile App role, then Ballkyrie and Finish in Discord's "Connect your accounts"; the text already says
+  // each one, so screen readers skip them.
   const linkSvg = `<svg class="dcp-ui-link" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`;
   function discordUiHtml(html) {
     const pic = (inner, cls = "") => `<span class="dcp-ui${cls}" aria-hidden="true">${inner}</span>`;
     return html
+      .replace("{continue}", `<span class="dcp-ui dcp-ui-btn">${icon("discord")}${esc(t("signin.continue"))}</span>`)
+      .replace("{authorize}", `<span class="dcp-ui dcp-ui-btn">${esc(t("dcpi.authorize"))}</span>`)
       .replace("{server}", pic(`<img src="/assets/logo.webp" alt="" width="16" height="16">Ballkour${icon("chev")}`))
       .replace("{linkedRoles}", pic(`${linkSvg}${esc(t("dcpi.linkedRoles"))}`))
       .replace("{role}", pic(`<span class="dcp-ui-role">${linkSvg}</span>Discord Profile App`))
@@ -2922,10 +2927,9 @@ a.link-copy { text-decoration: none; }
         part("dcpi.lookTitle", profileCardHtml() + `<p class="dcp-card-note">${esc(t("dcpi.lookNote"))}</p>` + flakyHtml("div")) +
         part("dcpi.asksTitle", `<p>${esc(t("dcpi.asks"))}</p>` +
           `<ul class="pl-shares">${share("yes", "check", "dcpi.connection")}${share("yes", "check", "dcpi.metadata")}${share("no", "x", "dcpi.nothingElse")}</ul>`) +
-        // Steps 4 to 6 are in Discord, with pictures of where to click
+        // With pictures of where to click
         part("signin.nextTitle", `<ol class="pl-steps">` +
-          ["dcpi.step1", "dcpi.step2", "dcpi.step3"].map((k) => `<li><div>${withBot(k)}</div></li>`).join("") +
-          ["dcpi.step4", "dcpi.step5", "dcpi.step6"].map((k) => `<li><div>${discordUiHtml(esc(t(k)))}</div></li>`).join("") +
+          ["dcpi.step1", "dcpi.step2", "dcpi.step3", "dcpi.step4", "dcpi.step5", "dcpi.step6"].map((k) => `<li><div>${discordUiHtml(esc(t(k)))}</div></li>`).join("") +
         `</ol>`) +
         `<div class="pl-signin-go">` +
           `<a class="btn btn-discord" href="${esc(loginFor("profile"))}" data-login-for="profile">${icon("discord")}<span>${esc(t("signin.continue"))}</span></a>` +
