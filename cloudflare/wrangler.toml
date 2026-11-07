@@ -25,10 +25,26 @@ name = "SUBMIT_LIMIT"
 namespace_id = "1001"
 simple = { limit = 5, period = 60 }
 
+# Stats on players' Discord profiles (see "Stats on Discord profiles" in worker.js): the Discord tokens of everyone who
+# turned them on, and what was last sent to their profile. Without it, the button for it doesn't show. Made once with
+#   npx wrangler kv namespace create PROFILES
+# which prints the id to put here.
+[[kv_namespaces]]
+binding = "PROFILES"
+id = "ba04c07666a6439b91466ab161b84e00"
+
+# Every 30 minutes, the stats on players' Discord profiles catch up with the boards
+[triggers]
+crons = ["*/30 * * * *"]
+
 # A test copy on workers.dev, with no route: npx wrangler deploy --env test
 [env.test]
 workers_dev = true
 routes = []
+
+# The test copy has no PROFILES (environments don't inherit it), so it has nothing to update
+[env.test.triggers]
+crons = []
 
 # The test copy saves runs sent from it to the game repo's test-runs branch, never develop, so the real boards
 # aren't touched. Environments don't inherit [vars], so its reviewers are here too.

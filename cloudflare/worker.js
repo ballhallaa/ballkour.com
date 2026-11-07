@@ -13,7 +13,8 @@
                          { "<discord id>": { "name": "server nickname, display name or username", "avatar": "https://cdn.discordapp.com/…" } }
                        Looked up with Ballkyrie's token, only for players on a board. Refreshed at most once an hour.
    /api/…              Signing in with Discord, and runs sent from the form under Submit a run, which go on the boards
-                       straight away. See "Signing in with Discord, and runs sent from the website" below.
+                       straight away. See "Signing in with Discord, and runs sent from the website" below. Players'
+                       stats on their Discord profiles too: see "Stats on Discord profiles".
 
    Each page also gets the latest copy of all three in <head> as <script type="application/json"> blocks, and its
    "• N members" pills already filled in, so nothing pops in after the page loads. If GitHub or Discord can't be
@@ -28,6 +29,7 @@
      npx wrangler secret put DISCORD_CLIENT_SECRET  Ballkyrie's OAuth2 client secret
      npx wrangler secret put SESSION_SECRET         any long random string, for signing the sign-in cookie
      npx wrangler secret put SUBMIT_CHANNEL      optional: the channel ID where Ballkyrie logs runs sent from the website
+   and the PROFILES KV namespace (wrangler.toml), for the stats on players' Discord profiles.
 
    Board and answer links (/leaderboards/6, /leaderboards/3/legacy, /faq/pausing) get the home page, like /leaderboards and /faq do; the
    page opens the board or answer itself.
@@ -35,6 +37,8 @@
    /code/game and /code/site (also /code/website) redirect to the game's and this website's GitHub repos, and
    /releases and /releases/site (also /releases/website) to their release notes. Anything after them carries over,
    so /code/game/issues goes to the game's issues. Everything else is the site's own files, which Cloudflare serves from its copy of this repo. */
+
+import { loadCourses, rate, standings, playerKey } from "./ratings.js";
 
 const GUILD_ID = "1212553452283101245";
 const INVITE = "Skz6cg9rbR";
@@ -47,7 +51,7 @@ const STALE_FOR = 7 * 24 * 60 * 60; // seconds: how long the last good copy is k
 /* ---------- Caching ---------- */
 // Bump the version whenever what a copy holds changes. The last good copy is reused for as long as its source can't be
 // reached, so under the same key a copy saved by an older Worker can outlive the change.
-const CACHE_VERSION = 4;
+const CACHE_VERSION = 5;
 const cacheKey = (name, stale) => new Request(`https://ballkour.com/__cache/v${CACHE_VERSION}/${name}${stale ? "?stale" : ""}`);
 
 // The cached copy of `name` if it's fresh, else rebuilt by build(previous) and cached for `ttl` seconds. When the
@@ -161,13 +165,16 @@ async function buildGame(env, previous) {
   };
   // The leaderboard files are listed in the leaderboard bot's courses.json. runs.json has the runs that never made a
   // top 10 and the runs taken off the boards, for the boards' "Show all" and the player ratings.
-  // Its course names are kept too, for the log of runs sent from the website.
+  // Its course names are kept too, for the log of runs sent from the website, and each course's number, file and
+  // whether it's broken, for the stats on players' Discord profiles.
   let paths = previous ? Object.keys(previous.files) : [];
   let names = (previous && previous.names) || {};
+  let list = (previous && previous.courses) || null;
   try {
     const courses = JSON.parse(await get("tools/leaderboard-bot/courses.json")).courses;
     paths = ["leaderboards/history.json", RUNS_FILE, "src/engine/faq.opy", ...courses.map((c) => c.file)];
     names = Object.fromEntries(courses.map((c) => [c.n, c.name]));
+    list = courses.map(({ n, file, broken }) => ({ n, file, broken: !!broken }));
   } catch (e) {
     if (!paths.length) throw e;
   }
@@ -206,7 +213,7 @@ async function buildGame(env, previous) {
     releasesOf(REPO, previous ? previous.releases : null),
     releasesOf(SITE_REPO, previous ? previous.siteReleases ?? null : null),
   ]);
-  return JSON.stringify({ files, names, releases, siteReleases });
+  return JSON.stringify({ files, names, ...(list ? { courses: list } : {}), releases, siteReleases });
 }
 const game = (env, ctx) => cached("game", 60, ctx, (prev) => buildGame(env, prev));
 
@@ -318,7 +325,9 @@ async function buildPlayers(env, ctx, previous) {
    up to post the board and give out roles. Nobody can send a run as someone else: it's always the sender's, whatever
    in-game name they type (in-game names aren't unique, so they're never checked against other players').
      GET  /api/login     Discord's sign-in page, then /api/login/callback, then back to /submit
-     GET  /api/me        { on, user: { id, name, avatar } | null }: whether sending runs is set up, and who's signed in
+     GET  /api/me        { on, user: { id, name, avatar, reviewer, profile } | null }: whether sending runs is set up,
+                         and who's signed in (profile: whether their stats are on their Discord profile, see "Stats on
+                         Discord profiles")
      POST /api/logout
      POST /api/submit    { course, name, time, mistakes, video } → { ok: true, run, saved, pending, rank } (saved is
                          false when that exact run was already in, and pending is true when it's a top 10 run that
@@ -398,23 +407,27 @@ async function readSession(request, env) {
   } catch (e) { return null; }
 }
 // Where to go back to after signing in: a page of the site, with its language
-const backTo = (to) => (/^\/[\w/-]*(\?[\w=&-]*)?$/.test(to || "") ? to : "/submit");
+const backTo = (to, otherwise = "/submit") => (/^\/[\w/-]*(\?[\w=&-]*)?$/.test(to || "") ? to : otherwise);
 
-async function login(request, env) {
+// profile: also ask to put their stats on their Discord profile (/api/profile, see "Stats on Discord profiles"),
+// which comes back to their own panel unless it says where
+async function login(request, env, profile = false) {
   const url = new URL(request.url);
+  const to = backTo(url.searchParams.get("to"), profile ? "/?me=1" : "/submit");
   if (!loginOn(env)) return Response.redirect(`${url.origin}/submit`, 302);
+  if (profile && !profileOn(env)) return Response.redirect(url.origin + to, 302);
   const state = b64url(crypto.getRandomValues(new Uint8Array(18)));
   const auth = new URL("https://discord.com/oauth2/authorize");
   auth.search = new URLSearchParams({
-    client_id: env.DISCORD_CLIENT_ID, response_type: "code", scope: "identify", prompt: "none", state,
+    client_id: env.DISCORD_CLIENT_ID, response_type: "code", scope: profile ? `identify ${PROFILE_SCOPE}` : "identify", prompt: "none", state,
     redirect_uri: `${url.origin}/api/login/callback`,
   });
   // The state comes back from Discord and has to match, so nobody can sign someone in with their own account
   const headers = new Headers({ Location: auth.href });
-  headers.append("Set-Cookie", cookie("bk_login", `${state}.${b64url(utf8.encode(backTo(url.searchParams.get("to"))))}`, 600, "/api/login"));
+  headers.append("Set-Cookie", cookie("bk_login", `${state}.${b64url(utf8.encode(to))}`, 600, "/api/login"));
   return new Response(null, { status: 302, headers });
 }
-async function loginCallback(request, env) {
+async function loginCallback(request, env, ctx) {
   const url = new URL(request.url);
   const m = /(?:^|;\s*)bk_login=([\w-]+)\.([\w-]+)/.exec(request.headers.get("Cookie") || "");
   let to = "/submit";
@@ -446,11 +459,18 @@ async function loginCallback(request, env) {
   }
   const avatar = me.avatar ? `https://cdn.discordapp.com/avatars/${me.id}/${me.avatar}.png?size=64`
     : `https://cdn.discordapp.com/embed/avatars/${Number((BigInt(me.id) >> 22n) % 6n)}.png`;
+  // From /api/profile: their stats go on their Discord profile now (Discord only hands over this scope when it was
+  // asked for, and they said yes)
+  if (String(token.scope || "").split(/\s+/).includes(PROFILE_SCOPE) && profileOn(env)) {
+    await connectProfile(env, ctx, me.id, tokensFrom(token)).catch((e) => console.error(`profile of ${me.id}: couldn't put it on: ${(e && e.message) || e}`));
+  }
   return back(await signSession(env, { id: me.id, name: me.global_name || me.username, avatar }));
 }
+// profile: whether their stats are on their Discord profile, or null when that isn't set up
 async function whoAmI(request, env) {
   const user = await readSession(request, env);
-  return answer(200, { on: loginOn(env), user: user && { id: user.id, name: user.name, avatar: user.avatar, reviewer: isReviewer(env, user) } });
+  const profile = user && profileOn(env) ? !!(await env.PROFILES.get(profileKey(user.id)).catch(() => null)) : null;
+  return answer(200, { on: loginOn(env), user: user && { id: user.id, name: user.name, avatar: user.avatar, reviewer: isReviewer(env, user), profile } });
 }
 
 /* Saving a run, and checking top 10 runs
@@ -670,6 +690,7 @@ async function submit(request, env, ctx) {
   if (saved.error) return answer(saved.status, { error: saved.error });
   await showSaved(saved.text, user).catch((e) => console.error(`submit: couldn't update the cached copy: ${(e && e.message) || e}`));
   if (saved.text) ctx.waitUntil(logRun(env, { n, courseName: names[n], run: { ...run, id: saved.id }, kind: saved.pending ? "check" : "new", rank: saved.rank, site: url.origin }));
+  if (saved.text && !saved.pending) ctx.waitUntil(profileAfterRun(env, ctx, user.id));
   return answer(200, { ok: true, run, saved: !!saved.text, pending: !!saved.pending, rank: saved.rank || null });
 }
 
@@ -711,7 +732,213 @@ async function review(request, env, ctx) {
   await showSaved(done.text, null).catch(() => {});
   const { names } = await gameInfo(env, ctx);
   ctx.waitUntil(logRun(env, { n, courseName: names[n], run, kind: approve ? "approved" : "declined", reviewer: user, site: new URL(request.url).origin }));
+  if (approve && run.discord) ctx.waitUntil(profileAfterRun(env, ctx, run.discord));
   return answer(200, { ok: true, run });
+}
+
+/* ---------- Stats on Discord profiles ----------
+   Players can put their stats on their Discord profile, under Apps, like a linked game account. It's Discord's
+   "role connection", which shows as:
+     Ballkour · Top 0.1%          their Top % (Rated for the bottom 10%, Unrated before they have a rating)
+     DUCKLING · #3                their in-game name and place in the player ratings
+     8123 ⭐ Rating  4 ⚡ Top 10s  2 🏆 Podiums  1 👑 Records  12 🗺️ Courses run
+   PROFILE_FIELDS are the numbers on the last line. Discord allows at most 5 per app, whole numbers only (so Top %,
+   with its 0.1, goes in the text above), and shows each as "<number> <name>", so each name's emoji comes right
+   after its number. Changing a name only needs a deploy: Discord gets the new names, and everyone's profile shows
+   them straight away. Server owners can also use them for
+   linked roles (Server Settings → Linked Roles), like "Top 10s: at least 1". The numbers are the same as the site's
+   and the leaderboard bot's: Top 10s, Podiums and Records count every course's board, broken ones too, like the
+   bot's Top 10 role, and Courses run counts the courses in the ratings, like the player panel's.
+     GET  /api/profile      Discord's sign-in page, also asking to update their connection, then back to the page
+                            (to=…, or their own panel), signed in and with their stats on their profile. It's also
+                            the app's Linked Roles Verification URL in the Developer Portal.
+     POST /api/profile/off  takes them off: their Discord authorization is revoked and their tokens deleted
+   /api/me says whether a signed-in player's stats are on their profile.
+
+   Discord only takes a player's stats with their own token, so their tokens (the access and refresh tokens, which
+   allow nothing else) are kept in the PROFILES KV namespace under profile:<discord id>, with what was last sent
+   (in the key's metadata). Every 30 minutes (the cron in wrangler.toml) everyone's stats are worked out again and
+   whoever's changed is sent, at most PROFILE_FETCHES fetches' worth at a time, which keeps the Worker under
+   Cloudflare's 50 fetches; anyone left over goes next time. A player's own stats are also sent as soon as their run
+   goes on a board. Someone who took the app off in Discord is dropped the next time there's something to send them.
+   The fields' names are sent to Discord by the Worker too (with Ballkyrie's bot token), the first time and again
+   whenever PROFILE_FIELDS changes. Needs everything for signing in, DISCORD_BOT_TOKEN, and PROFILES. */
+const PROFILE_SCOPE = "role_connections.write";
+const PROFILE_FETCHES = 24;
+// type 2: a whole number, which linked roles check with "at least". Keys can't change without everyone's profile
+// losing that number until they're sent again.
+const PROFILE_FIELDS = [
+  { key: "rating", name: "⭐ Rating", description: "Their player rating over every course, out of 10,000" },
+  { key: "top10s", name: "⚡ Top 10s", description: "How many courses they're on the top 10 of" },
+  { key: "podiums", name: "🏆 Podiums", description: "How many courses they're in the top 3 of" },
+  { key: "records", name: "👑 Records", description: "How many courses they hold the record on" },
+  { key: "courses", name: "🗺️ Courses run", description: "How many of the rated courses they've run" },
+].map((f) => ({ type: 2, ...f }));
+const profileOn = (env) => loginOn(env) && !!env.PROFILES && !!env.DISCORD_BOT_TOKEN;
+const profileKey = (id) => `profile:${id}`;
+const tokensFrom = (t) => ({ access: t.access_token, refresh: t.refresh_token, expires: Date.now() + (Number(t.expires_in) || 0) * 1000 });
+
+// Tells Discord the fields' names, unless it has these already (what was sent is kept in PROFILES as "fields")
+async function registerFields(env) {
+  const want = JSON.stringify(PROFILE_FIELDS);
+  if ((await env.PROFILES.get("fields")) === want) return;
+  const r = await fetch(`${DISCORD_API}/applications/${env.DISCORD_CLIENT_ID}/role-connections/metadata`, {
+    method: "PUT",
+    headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`, "Content-Type": "application/json" },
+    body: want,
+    signal: AbortSignal.timeout(5000),
+  });
+  if (!r.ok) throw new Error(`Discord didn't take the profile fields (${r.status} ${(await r.text()).slice(0, 200)})`);
+  await env.PROFILES.put("fields", want);
+}
+
+// The game data → (Discord ID → what goes on their profile, as it's sent to Discord). Everyone's at once, for the cron.
+function profilesFrom(data) {
+  if (!data || !data.files || !Array.isArray(data.courses)) throw new Error("the game data has no course list yet");
+  const courses = loadCourses(data.files, data.courses);
+  const rated = new Map(rate(courses).players.map((p) => [p.key, p]));
+  const boards = new Map(); // player → { top10s, podiums, records, name }
+  for (const c of courses) {
+    const { top, rest } = standings(c);
+    [...top, ...rest].forEach((r, i) => {
+      const k = playerKey(r);
+      const b = boards.get(k) || { top10s: 0, podiums: 0, records: 0, name: r.name, date: "" };
+      if (i < 10) b.top10s++;
+      if (i < 3) b.podiums++;
+      if (i === 0) b.records++;
+      if ((r.date || "") > b.date) { b.date = r.date; b.name = r.name; } // named as on their newest run
+      boards.set(k, b);
+    });
+  }
+  return (id) => {
+    const p = rated.get("d:" + id);
+    const b = boards.get("d:" + id) || { top10s: 0, podiums: 0, records: 0, name: "" };
+    return JSON.stringify({
+      platform_name: `Ballkour · ${!p ? "Unrated" : p.tier === null ? "Rated" : `Top ${p.tier}%`}`,
+      platform_username: p ? `${p.name} · #${p.rank}` : b.name || "No runs yet",
+      metadata: { rating: p ? Math.round(p.rating) : 0, top10s: b.top10s, podiums: b.podiums, records: b.records, courses: p ? p.courses : 0 },
+    });
+  };
+}
+
+// New tokens for a player's old ones (the old refresh token is spent), or null when Discord says they're no good
+// any more: they took the app off, or it was revoked
+async function refreshTokens(env, tokens) {
+  const r = await fetch("https://discord.com/api/oauth2/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ client_id: env.DISCORD_CLIENT_ID, client_secret: env.DISCORD_CLIENT_SECRET, grant_type: "refresh_token", refresh_token: tokens.refresh }),
+    signal: AbortSignal.timeout(5000),
+  });
+  if (r.ok) return tokensFrom(await r.json());
+  const why = await r.text().catch(() => "");
+  // Only invalid_grant means the player's tokens are dead. Anything else (a reset client secret, Discord being down)
+  // mustn't drop everyone.
+  if (r.status === 400 && /invalid_grant/.test(why)) return null;
+  throw new Error(`refreshing their tokens: ${r.status} ${why.slice(0, 200)}`);
+}
+// Sends a player's profile (body, from profilesFrom) to Discord with their tokens, which are renewed first when
+// they have less than a day left, and keeps both. spend() is called before each fetch.
+// → "sent", or "gone" when their tokens are dead (they're dropped)
+async function sendProfile(env, id, tokens, body, spend = () => {}) {
+  const key = profileKey(id);
+  const keep = (t, sent) => env.PROFILES.put(key, JSON.stringify(t), { metadata: { sent } });
+  let renewed = false;
+  const renew = async () => {
+    spend();
+    tokens = await refreshTokens(env, tokens);
+    renewed = true;
+    if (tokens) await keep(tokens, ""); // straight away: the old refresh token doesn't work any more
+    else await env.PROFILES.delete(key);
+    return !!tokens;
+  };
+  if (tokens.expires - Date.now() < 864e5 && !(await renew())) return "gone";
+  for (;;) {
+    spend();
+    const r = await fetch(`${DISCORD_API}/users/@me/applications/${env.DISCORD_CLIENT_ID}/role-connection`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${tokens.access}`, "Content-Type": "application/json" },
+      body,
+      signal: AbortSignal.timeout(5000),
+    });
+    if (r.ok) { await keep(tokens, body); return "sent"; }
+    if (r.status === 401 && !renewed) { if (!(await renew())) return "gone"; continue; }
+    if (r.status === 401) { await env.PROFILES.delete(key); return "gone"; }
+    throw new Error(`Discord said ${r.status} ${(await r.text()).slice(0, 200)}`);
+  }
+}
+// The game data as it's cached, or else fetched
+async function gameData(env, ctx) {
+  try { return JSON.parse((await stored("game")) ?? (await game(env, ctx))); }
+  catch (e) { return JSON.parse(await buildGame(env, null)); } // the cache isn't there (from the cron, say)
+}
+// From the callback, once they've said yes: their stats go on their profile, and their tokens are kept
+async function connectProfile(env, ctx, id, tokens) {
+  await registerFields(env);
+  await sendProfile(env, id, tokens, profilesFrom(await gameData(env, ctx))(id));
+}
+// Sends whoever's stats have changed since they were last sent: everyone with their stats on, or only these IDs
+async function updateProfiles(env, ctx, only = null) {
+  if (!profileOn(env)) return;
+  const profileOf = profilesFrom(await gameData(env, ctx));
+  await registerFields(env);
+  const due = [];
+  if (only) {
+    for (const id of only) {
+      const { metadata } = await env.PROFILES.getWithMetadata(profileKey(id));
+      if (metadata && metadata.sent !== profileOf(id)) due.push(id);
+    }
+  } else {
+    let cursor;
+    do {
+      const page = await env.PROFILES.list({ prefix: "profile:", cursor });
+      for (const k of page.keys) {
+        const id = k.name.slice("profile:".length);
+        if (!(k.metadata && k.metadata.sent === profileOf(id))) due.push(id);
+      }
+      cursor = page.list_complete ? null : page.cursor;
+    } while (cursor);
+  }
+  let spent = 0, sent = 0, gone = 0, failed = 0;
+  for (const id of due) {
+    if (spent + 3 > PROFILE_FETCHES) break; // a send takes 3 fetches at most
+    const tokens = await env.PROFILES.get(profileKey(id), "json");
+    if (!tokens) continue;
+    try {
+      if ((await sendProfile(env, id, tokens, profileOf(id), () => spent++)) === "sent") sent++; else gone++;
+    } catch (e) {
+      failed++;
+      console.error(`profile of ${id}: ${(e && e.message) || e}`);
+    }
+  }
+  if (due.length) console.log(`profiles: ${sent} sent, ${gone} dropped, ${failed} failed, ${due.length - sent - gone - failed} left for next time`);
+}
+// Right after a run goes on a board: its player's profile catches up straight away (everyone else's with the cron)
+const profileAfterRun = (env, ctx, id) => updateProfiles(env, ctx, [id]).catch((e) => console.error(`profile of ${id}: ${(e && e.message) || e}`));
+
+// Takes their stats off their profile: revoking the token ends Ballkyrie's authorization, which takes the
+// connection off with it (and signs the site out of nothing: its own session doesn't use Discord's tokens)
+async function profileOff(request, env) {
+  if (request.method !== "POST") return answer(405, { error: "bad" });
+  if (request.headers.get("Origin") !== new URL(request.url).origin) return answer(403, { error: "bad" });
+  const user = await readSession(request, env);
+  if (!user) return answer(401, { error: "login" });
+  if (!profileOn(env)) return answer(503, { error: "off" });
+  const tokens = await env.PROFILES.get(profileKey(user.id), "json");
+  if (tokens) {
+    const r = await fetch("https://discord.com/api/oauth2/token/revoke", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ client_id: env.DISCORD_CLIENT_ID, client_secret: env.DISCORD_CLIENT_SECRET, token: tokens.refresh, token_type_hint: "refresh_token" }),
+      signal: AbortSignal.timeout(5000),
+    }).catch((e) => ({ ok: false, status: String((e && e.message) || e), text: async () => "" }));
+    if (!r.ok) {
+      console.error(`profile of ${user.id}: Discord didn't revoke the token (${r.status} ${(await r.text()).slice(0, 200)})`);
+      return answer(502, { error: "off" });
+    }
+    await env.PROFILES.delete(profileKey(user.id));
+  }
+  return answer(200, { ok: true });
 }
 
 /* ---------- Short links ---------- */
@@ -807,7 +1034,9 @@ async function handle(request, env, ctx) {
   if (path.startsWith("/api/")) {
     try {
       if (path === "/api/login" && request.method === "GET") return await login(request, env);
-      if (path === "/api/login/callback" && request.method === "GET") return await loginCallback(request, env);
+      if (path === "/api/login/callback" && request.method === "GET") return await loginCallback(request, env, ctx);
+      if (path === "/api/profile" && request.method === "GET") return await login(request, env, true);
+      if (path === "/api/profile/off") return await profileOff(request, env);
       if (path === "/api/me" && request.method === "GET") return await whoAmI(request, env);
       if (path === "/api/logout" && request.method === "POST") {
         if (request.headers.get("Origin") !== new URL(request.url).origin) return answer(403, { error: "bad" });
@@ -847,5 +1076,9 @@ export default {
       console.error(`serving the plain file instead: ${(e && e.message) || e}`);
       return secure(await file(request, env));
     }
+  },
+  // Every 30 minutes (the cron in wrangler.toml): the stats on players' Discord profiles catch up with the boards
+  async scheduled(controller, env, ctx) {
+    await updateProfiles(env, ctx).catch((e) => console.error(`profiles: ${(e && e.message) || e}`));
   },
 };
