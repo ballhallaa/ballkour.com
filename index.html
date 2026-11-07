@@ -749,6 +749,12 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-mine-empty { margin: 0 18px 16px; padding: 12px 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; border: 1px dashed var(--line-hi); border-radius: 10px; font: 400 14px/1.45 var(--body); color: var(--ink-2); }
 .pl-mine-empty > span { flex: 1 1 220px; }
 .pl-mine-empty .btn { text-decoration: none; }
+/* Their own panel: their stats on their Discord profile, or the button that puts them there */
+.pl-dcp { margin: 0 18px 16px; padding: 12px 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; border: 1px solid rgba(88, 101, 242, .35); border-radius: 10px; background: rgba(88, 101, 242, .07); font: 400 14px/1.45 var(--body); color: var(--ink-2); }
+.pl-dcp-text { flex: 1 1 220px; }
+.pl-dcp .btn { text-decoration: none; }
+.pl-dcp-ok { flex: none; width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; background: var(--volt); color: var(--on-volt); }
+.pl-dcp-ok .icon { width: 13px; height: 13px; }
 /* Signing in with Discord, from My stats or the form's Sign in with Discord: what it's for, what it shares, and what
    happens, before going there. Continue with Discord stays in view at the bottom while the rest scrolls. */
 .pl:has(.pl-signin) { padding-bottom: 0; }
@@ -1568,6 +1574,11 @@ a.link-copy { text-decoration: none; }
   "pl.legacyBest": "Legacy: {time}",
   "pl.board": "See the board",
   "pl.mineEmpty": "No runs yet. Send your first one and your places, times and rating show up here.",
+  "dcp.what": "Show your Top %, rating, and top 10s on your Discord profile. Discord asks if Ballkyrie can update them, and they keep up with the boards from then on.",
+  "dcp.add": "Show on my Discord profile",
+  "dcp.on": "Your stats are on your Discord profile, and they keep up with the boards on their own.",
+  "dcp.off": "Take them off",
+  "dcp.offFail": "Couldn’t take them off just now. Try again in a minute.",
   "me.signin": "Sign in with Discord to see your stats",
   "signin.forMine": "See your rating, your rank on every course, and all your runs.",
   "signin.forSubmit": "Send your runs from here. They go on the board under your Discord, so nobody else can send one as you.",
@@ -2702,6 +2713,7 @@ a.link-copy { text-decoration: none; }
         stat(t("pl.tier"), tier) +
         stat(t("pl.courses"), `${icon("map")}${p ? p.courses : 0}/${r.counted.length}`) +
       `</div>` +
+      (mine && (!ranNone || me.profile) ? profileHtml() : "") +
       (mine && ranNone ? `<p class="pl-mine-empty"><span>${esc(t("pl.mineEmpty"))}</span>` +
         `<a class="btn btn-sm btn-primary" href="/submit" data-route="submit">${icon("upload")}<span>${esc(t("nav.submit"))}</span></a></p>` : "") +
       `<ul class="pl-courses">`;
@@ -2726,6 +2738,28 @@ a.link-copy { text-decoration: none; }
     });
     return html + `</ul>`;
   }
+  /* Their own panel: their stats on their Discord profile (see "Stats on Discord profiles" in cloudflare/worker.js),
+     or a way to put them there, through Discord and back to this panel. me.profile is null when that isn't set up. */
+  let dcpNote = "";
+  function profileHtml() {
+    if (typeof me.profile !== "boolean") return "";
+    if (me.profile) {
+      return `<p class="pl-dcp"><span class="pl-dcp-ok">${icon("check")}</span><span class="pl-dcp-text">${esc(t(dcpNote || "dcp.on"))}</span>` +
+        `<button class="pl-signout" type="button" data-dcp-off>${esc(t("dcp.off"))}</button></p>`;
+    }
+    return `<p class="pl-dcp"><span class="pl-dcp-text">${esc(t("dcp.what"))}</span>` +
+      `<a class="btn btn-sm btn-discord" href="${esc(loginFor("profile"))}" data-login-for="profile">${icon("discord")}<span>${esc(t("dcp.add"))}</span></a></p>`;
+  }
+  pl.addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-dcp-off]");
+    if (!b || !me) return;
+    b.disabled = true;
+    const ok = await fetch("/api/profile/off", { method: "POST" }).then((r) => r.ok).catch(() => false);
+    if (ok) me.profile = false;
+    dcpNote = ok ? "" : "dcp.offFail";
+    renderPlayer(ok ? "[data-login-for=profile]" : "[data-dcp-off]");
+    dcpNote = "";
+  });
   function renderPlayer(focusSel) {
     if (!plKey || !pl.open) return;
     const spot = focusSel || (pl.contains(document.activeElement) && document.activeElement.dataset.plCourse ? `[data-pl-course="${document.activeElement.dataset.plCourse}"]` : null);
@@ -3873,16 +3907,17 @@ a.link-copy { text-decoration: none; }
     pl.querySelector("a[data-login-for]").focus();
   }
   // Signing in comes back in the same language: from My stats to the same page with their panel open (?me=1), and
-  // from the form to the form (with ?check= kept, for reviewers)
+  // from the form to the form (with ?check= kept, for reviewers). Show on my Discord profile ("profile") comes back
+  // to their panel like My stats.
   function loginFor(kind) {
     const back = new URLSearchParams();
     if (lang !== "en") back.set("lang", lang);
     let path = "/submit";
-    if (kind === "mine") {
+    if (kind === "mine" || kind === "profile") {
       back.set("me", "1");
       path = /^\/[\w/-]*$/.test(location.pathname) ? location.pathname : "/";
     } else if (checkParam) back.set("check", checkParam);
-    return "/api/login?to=" + encodeURIComponent(path + (back.toString() ? `?${back}` : ""));
+    return (kind === "profile" ? "/api/profile" : "/api/login") + "?to=" + encodeURIComponent(path + (back.toString() ? `?${back}` : ""));
   }
   function renderMe() {
     meWrap.hidden = !loginOn;

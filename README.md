@@ -69,7 +69,7 @@ The test copy doesn't have the Worker's secrets, so player names and pictures ar
 
   Anything after these carries over, e.g. `/code/game/issues`. A release's own page is `/releases/v2026.10.14-0` or `/releases/site/v2026.11.02.6`, which Cloudflare redirects before the Worker sees it.
 - `/data/players.json`: the Discord name and picture of every player whose run has a Discord ID, looked up with Ballkyrie's token. Refreshed at most once an hour.
-- `/api/…`: signing in with Discord, and runs sent from the form under Submit a run. See [Runs sent from the website](#runs-sent-from-the-website).
+- `/api/…`: signing in with Discord, and runs sent from the form under Submit a run. See [Runs sent from the website](#runs-sent-from-the-website). Also players' stats on their Discord profiles: see [Stats on Discord profiles](#stats-on-discord-profiles).
 
 Each page also gets the latest copy of all three as it's served, with the "• N members" counts already filled in, so nothing pops in after the page loads. If GitHub or Discord can't be reached, the last copy that worked is served for up to a week.
 
@@ -121,6 +121,35 @@ Until those are set, the form stays hidden and the Discord ticket is the only wa
 
 The remakes' in-game top 10s are part of the game, so they only change with a release. Before one, run `node tools/leaderboard-bot/game-boards.mjs` in the game repo: it prints the `lb[…]` and `lbRunInfo(…)` lines for every `.opy` file that's behind its board.
 
+### Stats on Discord profiles
+
+Players can show their Ballkour stats on their Discord profile, under **Apps**, the same way a linked game account shows there. **Show on my Discord profile** in their own panel (My stats) sends them to Discord, which asks if Ballkyrie can update their connection, and brings them back. It shows:
+
+```
+Ballkour · Top 0.1%
+DUCKLING · #3
+8123 ⭐ Rating   4 ⚡ Top 10s   2 🏆 Podiums   1 👑 Records   12 🗺️ Courses run
+```
+
+The first line is their Top % (Rated for the bottom 10%), the second their in-game name and place in the player ratings. Discord allows only 5 numbers per app, whole numbers only, which is why Top % is in the text: 0.1 isn't a whole number. The numbers and their names are `PROFILE_FIELDS` in `cloudflare/worker.js`. Server owners can also use them for linked roles (Server Settings → Linked Roles), like a role for anyone with at least one top 10.
+
+Everyone's stats catch up with the boards every 30 minutes (the cron in `cloudflare/wrangler.toml`), and a player's own stats update as soon as their run goes on a board. **Take them off** in the same panel removes them. So does removing Ballkyrie under Authorized Apps in Discord's settings.
+
+They're worked out by `cloudflare/ratings.js`, a copy of the leaderboard bot's `ratings.mjs`, so the profile always agrees with the Top % roles.
+
+To turn it on:
+
+1. From the `cloudflare/` folder, make the KV namespace that keeps each player's Discord tokens (Discord only takes a player's stats with their own token):
+
+   ```
+   npx wrangler kv namespace create PROFILES
+   ```
+
+   and put the id it prints in `wrangler.toml`, in the `[[kv_namespaces]]` block for `PROFILES` (take the `#` off its three lines).
+2. In Discord's Developer Portal, open Ballkyrie's application → General Information, and set **Linked Roles Verification URL** to `https://ballkour.com/api/profile`. Discord opens that when someone connects Ballkyrie from a server's Linked Roles.
+
+It uses the sign-in's secrets and `DISCORD_BOT_TOKEN`, which tells Discord the numbers' names; no new secrets. Until the namespace is there, the button doesn't show.
+
 ## Fonts
 
 The fonts in `assets/fonts` come from [Fontsource](https://fontsource.org) (the same files Google Fonts serves, split by script so a page only downloads what it uses): Barlow, Barlow Condensed, JetBrains Mono, and a flags-only cut of Noto Color Emoji for Windows, whose own emoji have no flags. Apple devices use their own emoji, and Linux and Android use a local Noto Color Emoji when there is one.
@@ -153,7 +182,7 @@ A run from an old board also only shows if it's slower than today's #10, since a
 
 Every board, and its picture, shows each player's rating beside their run's date. The newest board shows today's ratings. An older board from the history shows the ratings players had at the end of that board's day, worked out from the boards posted by then, so scrolling back shows how they stood at the time. A course's own rating, how close a run is to its record, is in the player's panel, by each course they've run.
 
-The leaderboard bot posts the same boards and gives out the same Top % as roles on Discord (Top 0.1% to Top 90%, and Rated for everyone below, one each), with its own copy of the boards and ratings in `tools/leaderboard-bot/ratings.mjs` in the game repo. Change both together.
+The leaderboard bot posts the same boards and gives out the same Top % as roles on Discord (Top 0.1% to Top 90%, and Rated for everyone below, one each), with its own copy of the boards and ratings in `tools/leaderboard-bot/ratings.mjs` in the game repo. The stats on players' Discord profiles use a third copy, `cloudflare/ratings.js`. Change all three together.
 
 ## Translations
 
