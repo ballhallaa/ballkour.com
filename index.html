@@ -786,8 +786,17 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 /* The Discord Profile App role, as a role pill in the sentence that mentions it. The dot is the role's color on our server. */
 .dcp-role { display: inline-flex; align-items: center; gap: 5px; margin: 0 1px; padding: 0 7px 0 6px; border-radius: 6px; background: #232428; box-shadow: 0 0 0 1px rgba(255, 255, 255, .08); font-weight: 500; color: #dbdee1; white-space: nowrap; vertical-align: baseline; }
 .dcp-role-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: #5865f2; }
-/* Their own panel, with their stats on: where to get the linked role on our server (Discord never gives it out itself) */
-.dcp-tip { display: block; flex: 1 1 100%; font: 400 13.5px/1.45 var(--body); color: var(--ink-3); }
+/* Their own panel, with their stats on: how to get the linked role on our server first and biggest, since Discord
+   only shows the stats once they have it (and never gives it out itself), then Ballkyrie being connected, small */
+.pl-dcp.pl-dcp-on { flex-direction: column; align-items: stretch; gap: 12px; padding: 14px 16px; }
+.dcp-next { margin: 0; font: 600 16px/1.4 var(--body); color: var(--ink); }
+.dcp-next-steps { list-style: none; margin: -2px 0 0; padding: 0; display: grid; gap: 8px; counter-reset: step; }
+.dcp-next-steps li { display: flex; align-items: baseline; gap: 10px; counter-increment: step; font: 400 14px/1.6 var(--body); color: var(--ink-2); }
+.dcp-next-steps li::before { content: counter(step); flex: none; width: 20px; height: 20px; display: grid; place-items: center; border-radius: 6px; background: #5865f2; color: #fff; font: 700 11px/1 var(--mono); }
+.dcp-done { margin: 0; padding-top: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; border-top: 1px solid rgba(88, 101, 242, .25); font: 400 13.5px/1.45 var(--body); color: var(--ink-3); }
+.dcp-done .pl-dcp-ok { align-self: flex-start; margin-top: 1px; width: 18px; height: 18px; }
+.dcp-done .pl-dcp-ok .icon { width: 11px; height: 11px; }
+.dcp-done .pl-dcp-text { flex: 1 1 200px; }
 /* Signing in with Discord, from My stats or the form's Sign in with Discord: what it's for, what it shares, and what
    happens, before going there. Continue with Discord stays in view at the bottom while the rest scrolls. */
 .pl:has(.pl-signin) { padding-bottom: 0; }
@@ -1626,7 +1635,8 @@ a.link-copy { text-decoration: none; }
   "pl.mineEmpty": "No runs yet. Send your first one and your places, times and rating show up here.",
   "dcp.what": "Show your Top %, rating, and top 10s on your Discord profile. Discord asks if Ballkyrie can update them, and they keep up with the boards from then on.",
   "dcp.add": "Show on my Discord profile",
-  "dcp.on": "Your stats are on your Discord profile, and they keep up with the boards on their own. Discord can take a few minutes to show them the first time.",
+  "dcp.on": "Ballkyrie is connected and keeps your stats up with the boards.",
+  "dcp.set": "Your stats are on your Discord profile, and they keep up with the boards on their own. Discord can take a few minutes to show them the first time.",
   "dcp.off": "Take them off",
   "dcp.offFail": "Couldn’t take them off just now. Try again in a minute.",
   "dcp.flaky": "Heads up: Discord has a bug right now that hides boxes like this from profiles now and then, for every app, not just ours. Your stats stay on Discord the whole time, and the box comes back on its own.",
@@ -1641,13 +1651,13 @@ a.link-copy { text-decoration: none; }
   "dcpi.nothingElse": "Nothing else: it can’t read your messages, post as you, or change anything else on your account",
   "dcpi.step1": "Discord opens and asks about Ballkyrie again, this time with “Update your connection and metadata” on the list.",
   "dcpi.step2": "Tap Authorize.",
-  "dcpi.step3": "You’re back here. Discord can take a few minutes to show your stats the first time.",
+  "dcpi.step3": "You’re back here. To show your stats on your profile, finish up on our Discord server:",
   "dcpi.step4": "Click the server name {server}, then Linked Roles {linkedRoles}, then Discord Profile App {role}.",
   "dcpi.step5": "Discord asks you to connect your accounts. Click Ballkyrie {bot}, and this site opens in your browser.",
-  "dcpi.step6": "Back in Discord, click Finish {finish}.",
+  "dcpi.step6": "Back in Discord, click Finish {finish}. Discord can take a few minutes to show your stats the first time.",
   "dcpi.linkedRoles": "Linked Roles",
   "dcpi.finish": "Finish",
-  "dcp.role": "On our Discord server, also claim the Discord Profile App role from the server name → Linked Roles. It links Ballkyrie from inside Discord too. If you take your stats off and put them back, claim it there again.",
+  "dcp.role": "To show your stats on your profile, get the Discord Profile App role on our Discord server:",
   "me.signin": "Sign in with Discord to see your stats",
   "signin.forMine": "See your rating, your rank on every course, and all your runs.",
   "signin.forSubmit": "Send your runs from here. They go on the board under your Discord, so nobody else can send one as you.",
@@ -2815,7 +2825,11 @@ a.link-copy { text-decoration: none; }
     return html + `</ul>`;
   }
   /* Their own panel: their stats on their Discord profile (see "Stats on Discord profiles" in cloudflare/worker.js),
-     or a way to put them there, through Discord and back to this panel. me.profile is null when that isn't set up. */
+     or a way to put them there, through Discord and back to this panel. me.profile is null when that isn't set up.
+     Once they're on, Discord only shows them on their profile when they also have the Discord Profile App role on our
+     server. Until they come back from getting it (me.role, which the Worker knows from Linked Roles opening
+     /api/profile), the box leads with how to, with the explainer's steps 4 to 6, and Ballkyrie being connected goes
+     small underneath. After that, it just says they're on. */
   let dcpNote = "";
   /* Discord has been hiding app boxes like this one from profiles now and then (November 2026), for every app: the
      box comes and goes while Discord still has the stats. Until that's fixed, the panel and the explainer say so.
@@ -2826,9 +2840,16 @@ a.link-copy { text-decoration: none; }
   const flakyHtml = (tag) => (DISCORD_FLAKY ? `<${tag} class="dcp-flaky">${esc(t("dcp.flaky"))}</${tag}>` : "");
   function profileHtml() {
     if (typeof me.profile !== "boolean") return "";
+    if (me.profile && me.role) {
+      return `<p class="pl-dcp"><span class="pl-dcp-ok">${icon("check")}</span><span class="pl-dcp-text">${esc(t(dcpNote || "dcp.set"))}</span>` +
+        `<button class="pl-signout" type="button" data-dcp-off>${esc(t("dcp.off"))}</button>${flakyHtml("span")}</p>`;
+    }
     if (me.profile) {
-      return `<p class="pl-dcp"><span class="pl-dcp-ok">${icon("check")}</span><span class="pl-dcp-text">${esc(t(dcpNote || "dcp.on"))}</span>` +
-        `<button class="pl-signout" type="button" data-dcp-off>${esc(t("dcp.off"))}</button><span class="dcp-tip">${withRole(esc(t("dcp.role")))}</span>${flakyHtml("span")}</p>`;
+      return `<div class="pl-dcp pl-dcp-on">` +
+        `<p class="dcp-next">${withRole(esc(t("dcp.role")))}</p>` +
+        `<ol class="dcp-next-steps">${["dcpi.step4", "dcpi.step5", "dcpi.step6"].map((k) => `<li><div>${discordUiHtml(esc(t(k)))}</div></li>`).join("")}</ol>` +
+        `<p class="dcp-done"><span class="pl-dcp-ok">${icon("check")}</span><span class="pl-dcp-text">${withBot(dcpNote || "dcp.on")}</span>` +
+        `<button class="pl-signout" type="button" data-dcp-off>${esc(t("dcp.off"))}</button></p>${flakyHtml("div")}</div>`;
     }
     return `<p class="pl-dcp"><span class="pl-dcp-text">${withBot("dcp.what")}</span>` +
       `<a class="btn btn-sm btn-discord" href="${esc(loginFor("profile"))}" data-login-for="profile" data-dcp-info>${icon("discord")}<span>${esc(t("dcp.add"))}</span></a></p>`;
@@ -2932,7 +2953,7 @@ a.link-copy { text-decoration: none; }
     if (!b || !me) return;
     b.disabled = true;
     const ok = await fetch("/api/profile/off", { method: "POST" }).then((r) => r.ok).catch(() => false);
-    if (ok) me.profile = false;
+    if (ok) me.profile = me.role = false;
     dcpNote = ok ? "" : "dcp.offFail";
     renderPlayer(ok ? "[data-login-for=profile]" : "[data-dcp-off]");
     dcpNote = "";
@@ -3968,7 +3989,7 @@ a.link-copy { text-decoration: none; }
     const pfp = p && /^https:\/\/cdn\.discordapp\.com\//.test(p.avatar) ? `<img class="run-pfp" src="${esc(p.avatar)}" alt="" width="18" height="18">` : "";
     return esc(t(key)).replace("Ballkyrie", `<span class="pl-bot">${pfp}<span>Ballkyrie</span></span>`);
   };
-  let me = null; // who's signed in: { id, name, avatar }
+  let me = null; // who's signed in: { id, name, avatar, reviewer, profile, role } from /api/me
   if (loginOn) {
     $("#submit .submit-alt").hidden = true;
   } else {

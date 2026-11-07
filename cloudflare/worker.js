@@ -327,9 +327,9 @@ async function buildPlayers(env, ctx, previous) {
    up to post the board and give out roles. Nobody can send a run as someone else: it's always the sender's, whatever
    in-game name they type (in-game names aren't unique, so they're never checked against other players').
      GET  /api/login     Discord's sign-in page, then /api/login/callback, then back to /submit
-     GET  /api/me        { on, user: { id, name, avatar, reviewer, profile } | null }: whether sending runs is set up,
-                         and who's signed in (profile: whether their stats are on their Discord profile, see "Stats on
-                         Discord profiles")
+     GET  /api/me        { on, user: { id, name, avatar, reviewer, profile, role } | null }: whether sending runs is set
+                         up, and who's signed in (profile: whether their stats are on their Discord profile, and role:
+                         whether they got the Discord Profile App role for it, see "Stats on Discord profiles")
      POST /api/logout
      POST /api/submit    { course, name, time, mistakes, video } → { ok: true, run, saved, pending, rank } (saved is
                          false when that exact run was already in, and pending is true when it's a top 10 run that
@@ -414,10 +414,12 @@ async function readSession(request, env) {
 const backTo = (to, otherwise = "/submit") => (/^\/[\w/-]*(\?[\w=&-]*)?$/.test(to || "") ? to : otherwise);
 
 // profile: also ask to put their stats on their Discord profile (/api/profile, see "Stats on Discord profiles"),
-// which comes back to their own panel unless it says where
+// which comes back to their own panel unless it says where. Without a to=, it's Discord's Linked Roles that opened it
+// (the site's own links always have one), so they're getting the Discord Profile App role: that's kept in bk_login too.
 async function login(request, env, profile = false) {
   const url = new URL(request.url);
   const to = backTo(url.searchParams.get("to"), profile ? "/?me=1" : "/submit");
+  const fromRoles = profile && !url.searchParams.has("to");
   if (!loginOn(env)) return Response.redirect(`${url.origin}/submit`, 302);
   if (profile && !profileOn(env)) return Response.redirect(url.origin + to, 302);
   const state = b64url(crypto.getRandomValues(new Uint8Array(18)));
@@ -428,12 +430,12 @@ async function login(request, env, profile = false) {
   });
   // The state comes back from Discord and has to match, so nobody can sign someone in with their own account
   const headers = new Headers({ Location: auth.href });
-  headers.append("Set-Cookie", cookie("bk_login", `${state}.${b64url(utf8.encode(to))}`, 600, "/api/login"));
+  headers.append("Set-Cookie", cookie("bk_login", `${state}.${b64url(utf8.encode(to))}${fromRoles ? ".r" : ""}`, 600, "/api/login"));
   return new Response(null, { status: 302, headers });
 }
 async function loginCallback(request, env, ctx) {
   const url = new URL(request.url);
-  const m = /(?:^|;\s*)bk_login=([\w-]+)\.([\w-]+)/.exec(request.headers.get("Cookie") || "");
+  const m = /(?:^|;\s*)bk_login=([\w-]+)\.([\w-]+)(\.r)?/.exec(request.headers.get("Cookie") || "");
   let to = "/submit";
   try { if (m) to = backTo(text(unb64url(m[2]))); } catch (e) { /* stays /submit */ }
   const back = (session) => {
@@ -464,17 +466,21 @@ async function loginCallback(request, env, ctx) {
   const avatar = me.avatar ? `https://cdn.discordapp.com/avatars/${me.id}/${me.avatar}.png?size=64`
     : `https://cdn.discordapp.com/embed/avatars/${Number((BigInt(me.id) >> 22n) % 6n)}.png`;
   // From /api/profile: their stats go on their Discord profile now (Discord only hands over this scope when it was
-  // asked for, and they said yes)
+  // asked for, and they said yes). From Linked Roles, they're getting the role too; from the site's button, they
+  // aren't yet, even if they had it before taking their stats off.
   if (String(token.scope || "").split(/\s+/).includes(PROFILE_SCOPE) && profileOn(env)) {
-    await connectProfile(env, ctx, me.id, tokensFrom(token)).catch((e) => console.error(`profile of ${me.id}: couldn't put it on: ${(e && e.message) || e}`));
+    const tokens = { ...tokensFrom(token), ...(m[3] && { role: true }) };
+    await connectProfile(env, ctx, me.id, tokens).catch((e) => console.error(`profile of ${me.id}: couldn't put it on: ${(e && e.message) || e}`));
   }
   return back(await signSession(env, { id: me.id, name: me.global_name || me.username, avatar }));
 }
-// profile: whether their stats are on their Discord profile, or null when that isn't set up
+// profile: whether their stats are on their Discord profile, or null when that isn't set up. role: whether they got
+// the Discord Profile App role from Linked Roles since putting them there.
 async function whoAmI(request, env) {
   const user = await readSession(request, env);
-  const profile = user && profileOn(env) ? !!(await env.PROFILES.get(profileKey(user.id)).catch(() => null)) : null;
-  return answer(200, { on: loginOn(env), user: user && { id: user.id, name: user.name, avatar: user.avatar, reviewer: isReviewer(env, user), profile } });
+  const saved = user && profileOn(env) ? await env.PROFILES.get(profileKey(user.id), "json").catch(() => null) : null;
+  const profile = user && profileOn(env) ? !!saved : null;
+  return answer(200, { on: loginOn(env), user: user && { id: user.id, name: user.name, avatar: user.avatar, reviewer: isReviewer(env, user), profile, role: !!(saved && saved.role) } });
 }
 
 /* Saving a run, and checking top 10 runs
@@ -755,13 +761,17 @@ async function review(request, env, ctx) {
    bot's Top 10 role, and Courses run counts the courses in the ratings, like the player panel's.
      GET  /api/profile      Discord's sign-in page, also asking to update their connection, then back to the page
                             (to=…, or their own panel), signed in and with their stats on their profile. It's also
-                            the app's Linked Roles Verification URL in the Developer Portal.
+                            the app's Linked Roles Verification URL in the Developer Portal, which Discord opens with
+                            no to=: that's how the site knows they're getting the Discord Profile App role.
      POST /api/profile/off  takes them off: their Discord authorization is revoked and their tokens deleted
    /api/me says whether a signed-in player's stats are on their profile.
 
+   Discord only shows them on a profile once its owner also has the Discord Profile App role on our server, and Discord
+   never says who does, so their own panel walks them through getting it, until they come back from Linked Roles.
+
    Discord only takes a player's stats with their own token, so their tokens (the access and refresh tokens, which
-   allow nothing else) are kept in the PROFILES KV namespace under profile:<discord id>, with what was last sent
-   (in the key's metadata). Every 30 minutes (the cron in wrangler.toml) everyone's stats are worked out again and
+   allow nothing else) are kept in the PROFILES KV namespace under profile:<discord id>, with role: true once they
+   came from Linked Roles, and what was last sent (in the key's metadata). Every 30 minutes (the cron in wrangler.toml) everyone's stats are worked out again and
    whoever's changed is sent, at most PROFILE_FETCHES fetches' worth at a time, which keeps the Worker under
    Cloudflare's 50 fetches; anyone left over goes next time. A player's own stats are also sent as soon as their run
    goes on a board. Someone who took the app off in Discord is dropped the next time there's something to send them.
@@ -825,8 +835,8 @@ function profilesFrom(data) {
   };
 }
 
-// New tokens for a player's old ones (the old refresh token is spent), or null when Discord says they're no good
-// any more: they took the app off, or it was revoked
+// New tokens for a player's old ones (the old refresh token is spent), keeping their role, or null when Discord says
+// they're no good any more: they took the app off, or it was revoked
 async function refreshTokens(env, tokens) {
   const r = await fetch("https://discord.com/api/oauth2/token", {
     method: "POST",
@@ -834,7 +844,7 @@ async function refreshTokens(env, tokens) {
     body: new URLSearchParams({ client_id: env.DISCORD_CLIENT_ID, client_secret: env.DISCORD_CLIENT_SECRET, grant_type: "refresh_token", refresh_token: tokens.refresh }),
     signal: AbortSignal.timeout(5000),
   });
-  if (r.ok) return tokensFrom(await r.json());
+  if (r.ok) return { ...tokensFrom(await r.json()), ...(tokens.role && { role: true }) };
   const why = await r.text().catch(() => "");
   // Only invalid_grant means the player's tokens are dead. Anything else (a reset client secret, Discord being down)
   // mustn't drop everyone.
