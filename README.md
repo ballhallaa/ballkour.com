@@ -137,7 +137,7 @@ The first line is their Top % (Rated for the bottom 10%), the second their in-ga
 
 Everyone's stats catch up with the boards every 30 minutes (the cron in `cloudflare/wrangler.toml`), and a player's own stats update as soon as their run goes on a board. **Take them off** in the same panel removes them. So does removing Ballkyrie under Authorized Apps in Discord's settings.
 
-**Show on my Discord profile** first opens a panel that explains it: a preview of the box with the player's own stats, what Discord's "Update your connection and metadata for this application" means, and what happens next. Discord can take a few minutes to show the box the first time.
+**Show on my Discord profile** first opens a panel that explains it: a preview of the box with the player's own stats, what Discord's "Update your connection and metadata for this application" means, and what happens next. The box only shows on their profile once they also have the Discord Profile App linked role on our Discord server, so once their stats are on, their panel leads with how to get it. When they get it, Discord's Linked Roles opens `/api/profile` without the `to=` the site's own button adds, which is how the Worker knows; from then on, their panel just says their stats are on. Taking them off forgets it, since they need the role again after putting them back. Discord can take a few minutes to show the box the first time.
 
 Since November 2026, Discord has been hiding app boxes like this from profiles now and then, for every app, while still keeping the stats (reported to Discord's developer support). Until it's fixed, the panel and the explainer say so. Once Discord fixes it, set `DISCORD_FLAKY` in `index.html` to `false`.
 
