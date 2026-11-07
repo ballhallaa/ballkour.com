@@ -475,19 +475,33 @@ async function loginCallback(request, env, ctx) {
 async function whoAmI(request, env, ctx) {
   const user = await readSession(request, env);
   const profile = user && profileOn(env) ? !!(await env.PROFILES.get(profileKey(user.id)).catch(() => null)) : null;
-  const role = profile ? await hasProfileRole(env, ctx, user.id) : false;
-  return answer(200, { on: loginOn(env), user: user && { id: user.id, name: user.name, avatar: user.avatar, reviewer: isReviewer(env, user), profile, role } });
+  const [role, reviewer] = await Promise.all([profile ? hasProfileRole(env, ctx, user.id) : false, isReviewer(env, user)]);
+  return answer(200, { on: loginOn(env), user: user && { id: user.id, name: user.name, avatar: user.avatar, reviewer, profile, role } });
 }
 
 /* Saving a run, and checking top 10 runs
    A run that would put its player on a course's top 10 (their new best, faster than the #10's) isn't put on the board
    straight away: it waits in runs.json's "pending" until a reviewer checks its video at ballkour.com/submit, then goes
-   on the board (Approve) or away (Turn down). Every other run goes on the board straight away. Reviewers are the
-   Discord IDs in REVIEWERS (wrangler.toml). The leaderboard bot and the website only read "runs" and "removed", so a
+   on the board (Approve) or away (Turn down). Every other run goes on the board straight away. Reviewers are
+   everyone on the server with a role in REVIEWER_ROLES (wrangler.toml). Discord is asked each time, so taking someone's
+   role away takes their reviewing away too. The leaderboard bot and the website only read "runs" and "removed", so a
    waiting run is on no board until it's approved.
      GET  /api/pending   the runs waiting for a check (reviewers only)
      POST /api/review    { course, id, approve } (reviewers only) */
-const isReviewer = (env, user) => !!user && String(env.REVIEWERS || "").split(/[\s,]+/).includes(user.id);
+const idList = (s) => String(s || "").split(/[\s,]+/).filter(Boolean);
+// Discord not answering counts as no, so nobody gets in by a hiccup
+async function isReviewer(env, user) {
+  if (!user) return false;
+  const roles = idList(env.REVIEWER_ROLES);
+  if (!roles.length || !env.DISCORD_BOT_TOKEN) return false;
+  try {
+    const member = await discord(env.DISCORD_BOT_TOKEN, `/guilds/${GUILD_ID}/members/${user.id}`);
+    return !!member && (member.roles || []).some((r) => roles.includes(r));
+  } catch (e) {
+    console.error(`reviewer ${user.id}: couldn't tell if they have a reviewer role: ${(e && e.message) || e}`);
+    return false;
+  }
+}
 const runKey = (r) => (r.discord ? "d:" + r.discord : "n:" + String(r.name).toUpperCase());
 const sameRunAs = (a, b) => a.time === b.time && (a.discord && b.discord ? a.discord === b.discord : String(a.name).toUpperCase() === String(b.name).toUpperCase());
 const runByTime = (a, b) => toSeconds(a.time) - toSeconds(b.time) || a.mistakes - b.mistakes;
@@ -703,7 +717,7 @@ async function submit(request, env, ctx) {
 // The runs waiting for a check, oldest first, each with where it would place now
 async function pending(request, env, ctx) {
   const user = await readSession(request, env);
-  if (!isReviewer(env, user)) return answer(403, { error: "bad" });
+  if (!(await isReviewer(env, user))) return answer(403, { error: "bad" });
   let data;
   try { ({ data } = await readRuns(env, await runsApi(env))); } catch (e) { console.error(`pending: ${e.message}`); return answer(502, { error: "off" }); }
   const { files, names } = await gameInfo(env, ctx);
@@ -719,7 +733,7 @@ async function review(request, env, ctx) {
   if (request.method !== "POST") return answer(405, { error: "bad" });
   if (request.headers.get("Origin") !== new URL(request.url).origin) return answer(403, { error: "bad" });
   const user = await readSession(request, env);
-  if (!isReviewer(env, user)) return answer(403, { error: "bad" });
+  if (!(await isReviewer(env, user))) return answer(403, { error: "bad" });
   let body;
   try { body = JSON.parse(await request.text()); } catch (e) { body = null; }
   const n = Number(body && body.course), id = String((body && body.id) || ""), approve = !!(body && body.approve);

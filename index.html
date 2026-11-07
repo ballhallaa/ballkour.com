@@ -4153,7 +4153,7 @@ a.link-copy { text-decoration: none; }
     const a = e.target.closest("a[data-login-for]");
     if (a) a.href = loginFor(a.dataset.loginFor);
   });
-  /* Reviewers (REVIEWERS in cloudflare/wrangler.toml) see the top 10 runs waiting for a check above the form: each with
+  /* Reviewers (REVIEWER_ROLES in cloudflare/wrangler.toml) see the top 10 runs waiting for a check above the form: each with
      its video, Approve (onto the board) and Turn down. Verify under a run to check in the log channel links here with
      ?check=<its id>, and that run is picked out. Approve and Turn down ask first, in that run's row (reviewAsk): Yes
      sends it, and Cancel or Esc puts the buttons back. */
