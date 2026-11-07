@@ -150,5 +150,7 @@
   "me.button": "Моя статистика",
   "sub.signout": "Выйти",
   "sub.course": "Трасса",
-  "find.open": "Найти игрока"
+  "find.open": "Найти игрока",
+  "sub.time": "Время",
+  "sub.miss": "Ошибки"
 }
