@@ -1018,8 +1018,12 @@ async function page(request, env, ctx) {
   const script = (id, body) => `<script type="application/json" id="${id}">${body.replace(/</g, "\\u003c")}</script>`;
   const blocks = [["discord-widget", widget], ["game-data", gameData], ["players", players]].filter(([, body]) => body);
   let rw = new HTMLRewriter().on("head", { element(el) { el.append(blocks.map(([id, body]) => script(id, body)).join(""), { html: true }); } });
-  // Sending runs from the website is set up (see "Signing in with Discord"): the page shows the form
-  if (on) rw = rw.on("#submit", { element(el) { el.setAttribute("data-login", "on"); } });
+  // Sending runs from the website is set up (see "Signing in with Discord"): the page shows the form. So are the
+  // stats on Discord profiles (see "Stats on Discord profiles"): the sign-in panel tells people about them.
+  if (on) {
+    const profiles = profileOn(env);
+    rw = rw.on("#submit", { element(el) { el.setAttribute("data-login", "on"); if (profiles) el.setAttribute("data-profiles", "on"); } });
+  }
   const count = widget && JSON.parse(widget).member_count;
   if (typeof count === "number") {
     rw = rw

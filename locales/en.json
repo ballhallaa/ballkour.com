@@ -198,6 +198,8 @@
   "signin.perks": "If you’re on our Discord server, you also get:",
   "signin.perkRole": "A role for your rating",
   "signin.perkPing": "A ping in the course’s leaderboard channel when you make its top 10",
+  "signin.perksAnyone": "Even if you’re not on the server:",
+  "signin.perkProfile": "Your Top %, rating, and top 10s on your Discord profile. Turn it on in My stats.",
   "signin.sharesTitle": "What it shares",
   "signin.shares": "Discord asks if Ballkyrie, our Discord bot, can see who you are. That gives the site:",
   "signin.sharesYes": "Your Discord ID, name, and picture",
