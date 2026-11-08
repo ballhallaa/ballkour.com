@@ -15,13 +15,14 @@ cloudflare/              the Worker that serves the site, plus the GitHub and Di
 .github/workflows/       deploys the site on every push to main
 ```
 
-Keep everything out of `/discord`, `/gameplay`, `/code`, `/releases`, `/courses`, `/leaderboards`, `/submit`, `/features`, `/faq`, `/source-code`, `/translations`, `/api` and `/data`. Cloudflare redirects `/discord`, `/gameplay`, and `/releases/v*` and `/releases/site/v*` (to that release of the game or website on GitHub, which is where the version chips link), and the Worker redirects `/code/game` and `/code/site` (or `/code/website`) to the game's and this website's GitHub repos, and `/releases` and `/releases/site` (or `/releases/website`) to their release notes. Cloudflare rewrites the others (with or without a trailing slash) to the home page, which scrolls to that section; `/leaderboards` also opens Gibraltar's top 10.
+Keep everything out of `/discord`, `/gameplay`, `/code`, `/releases`, `/courses`, `/leaderboards`, `/submit`, `/features`, `/faq`, `/source-code`, `/translations`, `/runs`, `/api` and `/data`. Cloudflare redirects `/discord`, `/gameplay`, and `/releases/v*` and `/releases/site/v*` (to that release of the game or website on GitHub, which is where the version chips link), and the Worker redirects `/code/game` and `/code/site` (or `/code/website`) to the game's and this website's GitHub repos, and `/releases` and `/releases/site` (or `/releases/website`) to their release notes. Cloudflare rewrites the others (with or without a trailing slash) to the home page, which scrolls to that section; `/leaderboards` also opens Gibraltar's top 10.
 
 Links can go deeper, and the address shows them while a board or answer is open:
 
 - **A course's board:** `ballkour.com/leaderboards/6`, and `ballkour.com/leaderboards/3/legacy` for a course's Legacy tab. The leaderboard bot links its posts this way, and older links with the course's name after the number (`/leaderboards/6-dorado`) still work. The Worker serves the page at these addresses.
 - **The player ratings:** `ballkour.com/leaderboards/ratings`.
 - **An FAQ answer:** `ballkour.com/faq/pausing`. The link names are in `FAQ_LINKS`, and older links that used the translation keys (`/faq/pause`) still work.
+- **A run sent from the website:** `ballkour.com/runs/<id>`. Ballkyrie's post for it in the run submissions channel links here (see [Runs sent from the website](#runs-sent-from-the-website)), and `ballkour.com/runs` goes to the list of every one. The Worker serves the page at these addresses.
 
 The older `#6-dorado` and `#pause` forms still work too.
 - **A language:** `ballkour.com/?lang=ja` opens the page in Japanese; it works with any of the links above. Picking a language puts it in the address.
@@ -32,7 +33,7 @@ The older `#6-dorado` and `#pause` forms still work too.
 python3 tools/serve.py
 ```
 
-then open http://localhost:8000. It serves this folder at the site's own addresses (`/leaderboards/6`, `/faq/pausing`, …) with the live leaderboards from ballkour.com, so you see your changes with real data. Signing in and sending runs only work on the real site (or the test copy below), so the Submit section shows the Discord ticket and **My stats** is hidden.
+then open http://localhost:8000. It serves this folder at the site's own addresses (`/leaderboards/6`, `/faq/pausing`, `/runs/<id>`, …) with the live leaderboards from ballkour.com, so you see your changes with real data. Signing in and sending runs only work on the real site (or the test copy below), so the Submit section shows the Discord ticket and **My stats** is hidden.
 
 ## Deploying
 
@@ -93,7 +94,15 @@ Players sign in with Discord (one click, no new account) and send their run from
 
 **My stats** opens a signed-in player's own panel, the same one a click on their name on a board opens: their rating, place, Top % and every course, with Sign out in it too. It's by the language picker, next to Sign out, and under a run's result. Signed out, the one by the language picker signs them in with Discord first and comes back to the same page with `?me=1`, which opens it. It finds their runs by Discord ID, so runs saved under just an in-game name don't show there.
 
-**Top 10 runs are checked first.** A run that would put its player on a course's top 10 waits in `"pending"` in `runs.json` instead of going on the board. Ballkyrie posts it in the log channel (`SUBMIT_CHANNEL`) with a **Verify** button, which opens it in **Runs to check** at ballkour.com/submit: watch the video, then **Approve** (it goes on the board, and the bot posts it) or **Turn down** (it's dropped). Both ask first in the run's row (**Yes** or **Cancel**), so a stray click doesn't count. Every other run goes on the board straight away. Who can check runs is everyone on the server with a role in `REVIEWER_ROLES` in `cloudflare/wrangler.toml` (the mod role): role IDs, separated by commas.
+**Every run gets its own page** at `ballkour.com/runs/<id>`, and Ballkyrie posts every run in the run submissions channel (`RUNS_CHANNEL` in `cloudflare/wrangler.toml`) with the player, time, mistakes, who sent it, where it would place or placed, the video, and a **View run** button to its page. Ballkyrie needs to be able to see that channel, send messages, and embed links there. The post stays as it was sent, even after a run is checked.
+
+A run's page shows the course, the player, the time and mistakes, where the run is now (on the board, waiting for a check, turned down, taken off, or not the player's best), and its video. YouTube, Twitch, and Streamable videos play right on the page, but nothing loads from those sites until someone presses play; other links get a button to the video. Under it is what the run did to the boards, in two tabs: **When sent** (worked out by the Worker as the run was sent, and kept in the `PROFILES` KV namespace so it never changes) and **Today** (worked out from today's boards, so it changes as other runs come in). For a run waiting for a check, **Today** is **If approved now**: what approving it would do right now. While nothing on the boards has changed since the run was sent, the two are the same, so the page shows them as one view and says so.
+
+**Top 10 runs are checked first.** A run that would put its player on a course's top 10 waits in `"pending"` in `runs.json` instead of going on the board. On its page, moderators get **Approve** (it goes on the board, and the bot posts it) and **Turn down** (it goes into `"declined"`, so its page still says what happened). Both ask first (**Yes** or **Cancel**), so a stray click doesn't count. Every other run goes on the board straight away. Who can check runs is everyone on the server with a role in `REVIEWER_ROLES` in `cloudflare/wrangler.toml` (the mod role): role IDs, separated by commas.
+
+Moderators also get **Runs to check** above the form at ballkour.com/submit: every run waiting, with **View run**, **Approve**, and **Turn down**. Each checked run in `runs.json` keeps who checked it and when (`checkedBy` and `checkedAt`). Old `/submit?check=<id>` links, from the **Verify** buttons before runs had pages, open the run's page too.
+
+**Everyone can see every run** under the form, in **Submitted runs** (`ballkour.com/runs`, and **All runs** on any run's page goes there too): newest first, with where each run is now, each opening its page. Moderators also see who checked each one there. It's hidden until a run has been sent from the website.
 
 To take a run off, move it from `"runs"` to `"removed"` in `runs.json` (see [Courses and leaderboards](#courses-and-leaderboards)).
 
@@ -116,7 +125,6 @@ To turn it on:
    npx wrangler secret put SESSION_SECRET                     # any long random string, e.g. from: openssl rand -base64 32
    npx wrangler secret put GITHUB_APP_ID                      # the App ID
    npx wrangler secret put GITHUB_APP_PRIVATE_KEY < key.pem   # the .pem file (then delete it, or keep it somewhere safe)
-   npx wrangler secret put SUBMIT_CHANNEL                     # optional: a channel's ID, where Ballkyrie logs every run sent from the site
    ```
 
 Until those are set, the form stays hidden and the Discord ticket is the only way. (A `GITHUB_TOKEN` that can write the game repo works instead of the app, but then runs are committed as its owner, who has to be allowed past the rules.) The test copy needs its own secrets, and its `…workers.dev/api/login/callback` address added as a redirect too.
@@ -183,6 +191,8 @@ Each course's board ranks every run in its file and in `"runs"` in `leaderboards
 ```
 
 A run from an old board also only shows if it's slower than today's #10, since a faster one must have been taken off.
+
+Runs sent from the website also have an `id` (for their page) and `sentAt`, and `runs.json` keeps two more groups that are on no board: `"pending"` (waiting for a check) and `"declined"` (turned down). Moving a run's whole line to `"removed"` keeps its page working, and the page says it was taken off.
 
 **Player ratings** (`ballkour.com/leaderboards/ratings`) rate everyone over every course. Each course is worth up to 10,000 points: the record gets all of them, and the further behind it a run is, the fewer it gets (10000 × ln(1 + (e − 1) × record ÷ time)², lucio.surf's curve for a player who has run every map). A rating is the average over every course that isn't broken, with 0 for courses a player hasn't run (courses nobody has run yet included), so a new or faster run never lowers it, and the first run on a course changes nobody else's rating. A player's Top % is their place divided by the number of rated players. The foot of the Player ratings board shows the course rating's and the rating's formulas (`rt.mathCourse` and `rt.mathRating` in `index.html`), with an example; reword them if the math changes.
 

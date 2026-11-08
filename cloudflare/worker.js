@@ -15,6 +15,8 @@
    /api/…              Signing in with Discord, and runs sent from the form under Submit a run, which go on the boards
                        straight away. See "Signing in with Discord, and runs sent from the website" below. Players'
                        stats on their Discord profiles too: see "Stats on Discord profiles".
+   /runs/<id>          A run sent from the website: the home page, which opens the run's page. Ballkyrie's post for
+                       it in the run submissions channel links here. See "Each run's page".
 
    Each page also gets the latest copy of all three in <head> as <script type="application/json"> blocks, and its
    "• N members" pills already filled in, so nothing pops in after the page loads. If GitHub or Discord can't be
@@ -28,11 +30,11 @@
      npx wrangler secret put DISCORD_CLIENT_ID      Ballkyrie's application ID, for signing in with Discord
      npx wrangler secret put DISCORD_CLIENT_SECRET  Ballkyrie's OAuth2 client secret
      npx wrangler secret put SESSION_SECRET         any long random string, for signing the sign-in cookie
-     npx wrangler secret put SUBMIT_CHANNEL      optional: the channel ID where Ballkyrie logs runs sent from the website
-   and the PROFILES KV namespace (wrangler.toml), for the stats on players' Discord profiles.
+   and the PROFILES KV namespace (wrangler.toml), for the stats on players' Discord profiles and each run's numbers from
+   when it was sent.
 
-   Board and answer links (/leaderboards/6, /leaderboards/3/legacy, /faq/pausing) get the home page, like /leaderboards and /faq do; the
-   page opens the board or answer itself.
+   Board, answer and run links (/leaderboards/6, /leaderboards/3/legacy, /faq/pausing, /runs/<id>) get the home page,
+   like /leaderboards and /faq do; the page opens the board, answer or run itself.
 
    /code/game and /code/site (also /code/website) redirect to the game's and this website's GitHub repos, and
    /releases and /releases/site (also /releases/website) to their release notes. Anything after them carries over,
@@ -294,11 +296,12 @@ async function lookUp(token, id) {
 }
 async function buildPlayers(env, ctx, previous) {
   if (!env.DISCORD_BOT_TOKEN) throw new Error("no DISCORD_BOT_TOKEN secret");
-  // Every Discord ID on any board: `# discord: ID` in the .opy files and "discord": "ID" in the .json files. They come
-  // from whatever game data is cached, so refreshing the names doesn't fetch the game data from GitHub again too.
+  // Every Discord ID on any board: `# discord: ID` in the .opy files and "discord": "ID" in the .json files, plus the
+  // reviewers who checked runs in runs.json ("checkedBy": "ID"), for the reviewers' list of every run. They come from
+  // whatever game data is cached, so refreshing the names doesn't fetch the game data from GitHub again too.
   const { files } = JSON.parse((await stored("game")) ?? (await game(env, ctx)));
   const ids = new Set();
-  for (const text of Object.values(files)) if (text) for (const m of text.matchAll(/discord"?\s*:\s*"?(\d{17,20})\b/gi)) ids.add(m[1]);
+  for (const text of Object.values(files)) if (text) for (const m of text.matchAll(/(?:discord|checkedBy)"?\s*:\s*"?(\d{17,20})\b/gi)) ids.add(m[1]);
   // Ballkyrie too (a bot's user ID is its app's ID), for its name and picture where the sign-in panel mentions it
   if (botId(env)) ids.add(botId(env));
   const found = {};
@@ -336,14 +339,15 @@ async function buildPlayers(env, ctx, previous) {
                          waits for a check, see "Saving a run, and checking top 10 runs") or { error }, the error saying
                          what to fix: login (not signed in), course, name, time, miss, video, rate (too many), off
                          (not set up, or GitHub didn't take it) or bad
-   GET /api/pending and POST /api/review are for checking top 10 runs (see below).
+   GET /api/pending and POST /api/review are for checking top 10 runs (see below), and GET /api/run is a run's numbers
+   from when it was sent (see "Each run's page").
    The session is a cookie signed with SESSION_SECRET that lasts 30 days. Nothing about it is stored here.
    Secrets: DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET (Ballkyrie's app in Discord's Developer Portal, OAuth2 page,
    with https://ballkour.com/api/login/callback added as a redirect), SESSION_SECRET (any long random string) and
    the GitHub App that saves the runs (GITHUB_APP_ID and GITHUB_APP_PRIVATE_KEY, see above), or else a GITHUB_TOKEN
    that can write the game repo's contents. Without them, the form stays hidden.
-   SUBMIT_CHANNEL is optional: a Discord channel's ID, where Ballkyrie logs every run sent from the website
-   (SUBMIT_WEBHOOK, a webhook URL, does the same without the bot).
+   RUNS_CHANNEL (wrangler.toml) is the run submissions channel, where Ballkyrie posts every run sent from the website
+   with a View run button to its page (see "Each run's page"). Without it (or DISCORD_BOT_TOKEN), nothing is posted.
    SUBMIT_LIMIT (wrangler.toml) allows 5 sends a minute from one Discord account, and runs.json at most 20 a day. */
 const RUNS_FILE = "leaderboards/runs.json";
 // The game repo's branch runs.json is read from and saved to: develop, or RUNS_BRANCH (the test copy's own
@@ -480,12 +484,15 @@ async function whoAmI(request, env, ctx) {
 }
 
 /* Saving a run, and checking top 10 runs
-   A run that would put its player on a course's top 10 (their new best, faster than the #10's) isn't put on the board
-   straight away: it waits in runs.json's "pending" until a reviewer checks its video at ballkour.com/submit, then goes
-   on the board (Approve) or away (Turn down). Every other run goes on the board straight away. Reviewers are
+   Every run sent from the website gets an id, for its page (ballkour.com/runs/<id>), and the time it was sent
+   ("sentAt"). A run that would put its player on a course's top 10 (their new best, faster than the #10's) isn't put
+   on the board straight away: it waits in runs.json's "pending" until a reviewer checks its video, on its page or at
+   ballkour.com/submit, then goes on the board (Approve, into "runs") or into "declined" (Turn down), either way with
+   who checked it and when ("checkedBy" and "checkedAt"). Every other run goes on the board straight away. Turned-down
+   runs are kept so their page can still say what happened, and reviewers can look back over every run. Reviewers are
    everyone on the server with a role in REVIEWER_ROLES (wrangler.toml). Discord is asked each time, so taking someone's
-   role away takes their reviewing away too. The leaderboard bot and the website only read "runs" and "removed", so a
-   waiting run is on no board until it's approved.
+   role away takes their reviewing away too. The leaderboard bot and the website's boards only read "runs" and
+   "removed", so a waiting or turned-down run is on no board.
      GET  /api/pending   the runs waiting for a check (reviewers only)
      POST /api/review    { course, id, approve } (reviewers only) */
 const idList = (s) => String(s || "").split(/[\s,]+/).filter(Boolean);
@@ -534,6 +541,10 @@ function placeOf(run, pool, removed) {
   }
   return { rank: 1 + [...best.values()].filter((r) => runByTime(r, run) < 0).length, newBest: !mine || runByTime(run, mine) < 0 };
 }
+// runs.json's groups of runs, by course number, in the order they're written
+const RUN_GROUPS = ["runs", "pending", "declined", "removed"];
+// Now, to the second, for "sentAt" and "checkedAt"
+const stamp = () => new Date().toISOString().slice(0, 19) + "Z";
 // One run per line, so runs.json stays easy to read and edit by hand
 function dumpRuns(data) {
   const run = (r) => (r && typeof r === "object" && !Array.isArray(r)
@@ -544,14 +555,14 @@ function dumpRuns(data) {
       .sort((a, b) => Number(a) - Number(b) || (a < b ? -1 : 1));
     return keys.length ? "{\n" + keys.map((k) => `    ${JSON.stringify(k)}: [\n` + obj[k].map((r) => "      " + run(r)).join(",\n") + "\n    ]").join(",\n") + "\n  }" : "{}";
   };
-  const others = Object.entries(data).filter(([k]) => !["runs", "pending", "removed"].includes(k));
-  return `{\n  "runs": ${group(data.runs)},\n  "pending": ${group(data.pending)},\n  "removed": ${group(data.removed)}` +
+  const others = Object.entries(data).filter(([k]) => !RUN_GROUPS.includes(k));
+  return "{\n" + RUN_GROUPS.map((k) => `  ${JSON.stringify(k)}: ${group(data[k])}`).join(",\n") +
     others.map(([k, v]) => `,\n  ${JSON.stringify(k)}: ${JSON.stringify(v)}`).join("") + "\n}\n";
 }
 async function runsApi(env) {
   return { ...githubHeaders(env), ...(appOn(env) ? { Authorization: `Bearer ${await appToken(env)}` } : {}), Accept: "application/vnd.github+json" };
 }
-// runs.json as it is on develop, with "runs", "pending" and "removed" always there, and its sha (null if there's none)
+// runs.json as it is on develop, with every group in RUN_GROUPS always there, and its sha (null if there's none)
 async function readRuns(env, headers) {
   const got = await fetch(`https://api.github.com/repos/${REPO}/contents/${RUNS_FILE}?ref=${runsBranch(env)}`, { headers, signal: AbortSignal.timeout(5000) });
   if (!got.ok && got.status !== 404) throw new Error(`reading it: ${got.status} ${(await got.text()).slice(0, 200)}`);
@@ -559,7 +570,7 @@ async function readRuns(env, headers) {
   let data;
   try { data = meta ? JSON.parse(text(unbase64(meta.content))) : {}; } catch (e) { throw new Error("it isn't valid JSON"); }
   if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("it isn't a JSON object");
-  for (const k of ["runs", "pending", "removed"]) if (!data[k] || typeof data[k] !== "object" || Array.isArray(data[k])) data[k] = {};
+  for (const k of RUN_GROUPS) if (!data[k] || typeof data[k] !== "object" || Array.isArray(data[k])) data[k] = {};
   return { data, sha: meta && meta.sha };
 }
 const listIn = (group, n) => (Array.isArray(group[n]) ? group[n] : (group[n] = []));
@@ -619,44 +630,127 @@ async function gameInfo(env, ctx) {
   } catch (e) { return { files: null, names: {} }; }
 }
 const courseFile = (files, n) => files && Object.keys(files).find((k) => k.startsWith(`leaderboards/${n}-`) && /\.(opy|json)$/.test(k));
-// A line in the log channel for every run sent from the website, if there is one: posted by Ballkyrie in the
-// SUBMIT_CHANNEL channel (it needs to be able to see it, send messages and embed links there), or else through the
-// SUBMIT_WEBHOOK webhook. kind: "new" (on the board), "check" (waiting for a check, at place rank), "approved" or
-// "declined" (by reviewer).
-async function logRun(env, { n, courseName, run, kind, rank, reviewer, site = "https://ballkour.com" }) {
-  const byBot = !!(env.SUBMIT_CHANNEL && env.DISCORD_BOT_TOKEN);
-  if (!byBot && !env.SUBMIT_WEBHOOK) return;
+/* ---------- Each run's page ----------
+   Every run sent from the website has a page, ballkour.com/runs/<id>, which the page itself draws from runs.json (see
+   "A run's page" in index.html): the run, its video, and what it did to the boards, both when it was sent and on
+   today's boards. Reviewers get Approve and Turn down there too.
+   Ballkyrie posts every run in the run submissions channel (RUNS_CHANNEL in wrangler.toml), with a View run button to
+   its page. The post stays as it was sent: approving or turning a run down doesn't change it. Ballkyrie needs to be
+   able to see the channel, send messages and embed links there.
+   What a run did when it was sent is worked out here as it's sent (runStats) and kept in PROFILES as run:<id>, so it
+   doesn't change as other runs come in.
+     GET /api/run?id=<id>   { stats } (null when there are none: PROFILES isn't set up, or it isn't saved yet) */
+const statsKey = (id) => `run:${id}`;
+// What a run did to the boards: where its player stood on its course and in the player ratings just before it, and
+// with it (a run waiting for a check, as if it were on the board already). before is runs.json as it was just before.
+// The page works out the same numbers from today's boards (statsFrom() in index.html): keep the two in step.
+//   { place, was, best, old, record, passed, points, rating, rank, of, tier, courses, counted, top10s, podiums, records }
+// place and was are their place on the course with and before the run (was is null on their first run there), best
+// and old their best time there with and before it (best isn't the run's time when it wasn't their best), passed the
+// names of the players it put them ahead of. points (the course rating), rating, rank (their place in the ratings) and
+// tier are [before, with] (before null when they weren't rated yet, the pair null when the course isn't rated), of is
+// how many players are rated, courses [before, with] the rated courses they've run out of counted, and top10s,
+// podiums and records [before, with] over every course. alone is the run by itself, for one that isn't its player's
+// best (which changes none of the above): { place } among everyone else's bests, and the course rating its time gets
+// ({ points }, null when the course isn't rated).
+function runStats(game, before, run, n) {
+  const key = playerKey(run);
+  const after = structuredClone(before);
+  listIn(after.runs, n).push(run);
+  const side = (runs) => {
+    const courses = loadCourses({ ...game.files, [RUNS_FILE]: JSON.stringify(runs) }, game.courses);
+    const medals = { top10s: 0, podiums: 0, records: 0 };
+    let board = [];
+    for (const c of courses) {
+      const { top, rest } = standings(c);
+      const all = [...top, ...rest];
+      if (c.n === n) board = all;
+      const i = all.findIndex((r) => playerKey(r) === key);
+      if (i < 0) continue;
+      if (i < 10) medals.top10s++;
+      if (i < 3) medals.podiums++;
+      if (i === 0) medals.records++;
+    }
+    const at = board.findIndex((r) => playerKey(r) === key);
+    const rated = rate(courses);
+    return { board, at, best: at >= 0 ? board[at] : null, p: rated.players.find((x) => x.key === key) || null, total: rated.players.length, counted: rated.counted.length, medals };
+  };
+  const b = side(before), a = side(after);
+  const beforeKeys = b.board.map(playerKey);
+  const wasAt = b.at >= 0 ? b.at : Infinity;
+  const rated = !(game.courses.find((c) => c.n === n) || { broken: true }).broken;
+  const record = a.board[0];
+  const pair = (get) => (a.p && get(a.p) !== undefined ? [b.p && get(b.p) !== undefined ? get(b.p) : null, get(a.p)] : null);
+  const round = (v) => (v === undefined ? undefined : Math.round(v));
+  return {
+    place: a.at >= 0 ? a.at + 1 : null,
+    was: b.at >= 0 ? b.at + 1 : null,
+    best: a.best ? a.best.time : null,
+    old: b.best ? b.best.time : null,
+    record: a.at === 0 && (!b.board[0] || runByTime(a.best, b.board[0]) < 0),
+    passed: a.at < 0 ? [] : a.board.filter((r, i) => i > a.at && playerKey(r) !== key && beforeKeys.includes(playerKey(r)) && beforeKeys.indexOf(playerKey(r)) < wasAt).map((r) => r.name),
+    points: pair((p) => round(p.points[n])),
+    rating: pair((p) => Math.round(p.rating)),
+    rank: pair((p) => p.rank),
+    of: a.total,
+    tier: pair((p) => p.tier),
+    courses: a.p ? [b.p ? b.p.courses : 0, a.p.courses] : null,
+    counted: a.counted,
+    top10s: [b.medals.top10s, a.medals.top10s],
+    podiums: [b.medals.podiums, a.medals.podiums],
+    records: [b.medals.records, a.medals.records],
+    alone: {
+      place: 1 + a.board.filter((r) => playerKey(r) !== key && runByTime(r, run) < 0).length,
+      points: rated && record ? Math.round(10000 * Math.log(1 + (Math.E - 1) * toSeconds(record.time) / toSeconds(run.time)) ** 2) : null,
+    },
+  };
+}
+// Works out what a run did as it's sent, and keeps it for its page
+async function saveStats(env, ctx, { n, run, before }) {
+  if (!env.PROFILES || !before) return;
+  const game = await gameData(env, ctx);
+  if (!game || !game.files || !Array.isArray(game.courses)) throw new Error("the game data has no course list yet");
+  await env.PROFILES.put(statsKey(run.id), JSON.stringify(runStats(game, before, run, n)));
+}
+// The run's post in the run submissions channel: the run, where it would place (waiting for a check) or placed (on the
+// board, when it's the player's new best there), and View run, which opens its page
+async function postRun(env, { n, courseName, run, pending, rank, newBest, site }) {
+  if (!env.RUNS_CHANNEL || !env.DISCORD_BOT_TOKEN) return;
   const where = `Course ${n}${courseName ? ` · ${courseName}` : ""}`;
-  const look = {
-    new: [`New run on ${where}`, 0x00e697],
-    check: [`Run to check on ${where}`, 0xffd54f],
-    approved: [`Approved run on ${where}`, 0x00e697],
-    declined: [`Turned down run on ${where}`, 0xff6a4f],
-  }[kind];
+  const page = `${site}/runs/${run.id}`;
   const fields = [
     { name: "Player", value: mdSafe(run.name), inline: true },
     { name: "Time", value: run.time, inline: true },
     { name: "Mistakes", value: String(run.mistakes), inline: true },
     { name: "Sent by", value: `<@${run.discord}>`, inline: true },
-    ...(kind === "check" ? [{ name: "Would be", value: `#${rank}`, inline: true }] : []),
-    ...(reviewer ? [{ name: "Checked by", value: `<@${reviewer.id}>`, inline: true }] : []),
+    ...(pending ? [{ name: "Would be", value: `#${rank}`, inline: true }] : newBest ? [{ name: "Place", value: `#${rank}`, inline: true }] : []),
     { name: "Video", value: `<${run.video}>` },
-    // Webhooks can't have buttons, so they get the link
-    ...(kind === "check" && !byBot ? [{ name: "Check it", value: `${site}/submit?check=${run.id}` }] : []),
   ];
   const message = {
     allowed_mentions: { parse: [] }, // shows who sent it without pinging them
-    embeds: [{ title: look[0], url: `${site}/leaderboards/${n}`, color: look[1], fields, timestamp: new Date().toISOString() }],
-    // Verify opens the run in the reviewers' list on ballkour.com/submit, to approve or turn down
-    ...(kind === "check" && byBot ? { components: [{ type: 1, components: [{ type: 2, style: 5, label: "Verify", url: `${site}/submit?check=${run.id}` }] }] } : {}),
+    embeds: [{ title: `${pending ? "Run to check" : "New run"} on ${where}`, url: page, color: pending ? 0xffd54f : 0x00e697, fields, timestamp: new Date(run.sentAt).toISOString() }],
+    components: [{ type: 1, components: [{ type: 2, style: 5, label: "View run", url: page }] }],
   };
-  const res = await fetch(byBot ? `${DISCORD_API}/channels/${env.SUBMIT_CHANNEL}/messages` : env.SUBMIT_WEBHOOK, {
+  const res = await fetch(`${DISCORD_API}/channels/${env.RUNS_CHANNEL}/messages`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", ...(byBot ? { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` } : {}) },
-    body: JSON.stringify(byBot ? message : { username: "ballkour.com", ...message }),
+    headers: { "Content-Type": "application/json", Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
+    body: JSON.stringify(message),
     signal: AbortSignal.timeout(5000),
   }).catch((e) => ({ ok: false, status: String((e && e.message) || e), text: async () => "" }));
-  if (!res.ok) console.error(`log: ${byBot ? `Ballkyrie couldn't post in channel ${env.SUBMIT_CHANNEL}` : "the log webhook"} said ${res.status} ${(await res.text()).slice(0, 200)}`);
+  if (!res.ok) console.error(`run ${run.id}: Ballkyrie couldn't post in channel ${env.RUNS_CHANNEL}, Discord said ${res.status} ${(await res.text()).slice(0, 200)}`);
+}
+// After a run is saved: its numbers first, so they're there by the time anyone opens its page from the post
+async function afterSend(env, ctx, info) {
+  await saveStats(env, ctx, info).catch((e) => console.error(`run ${info.run.id}: couldn't save what it did: ${(e && e.message) || e}`));
+  await postRun(env, info);
+}
+async function runInfo(request, env) {
+  const id = new URL(request.url).searchParams.get("id") || "";
+  if (!/^[\w-]{4,16}$/.test(id)) return answer(400, { error: "bad" });
+  const stats = env.PROFILES ? await env.PROFILES.get(statsKey(id), "json").catch(() => null) : null;
+  const res = answer(200, { stats });
+  if (stats) res.headers.set("Cache-Control", "public, max-age=86400"); // they never change
+  return res;
 }
 
 async function submit(request, env, ctx) {
@@ -691,27 +785,32 @@ async function submit(request, env, ctx) {
   if (files && !file) return answer(400, { error: "course" });
   const board = fileRuns(file, file && files[file]);
 
-  const run = { name: name.toUpperCase(), discord: user.id, time, mistakes, date: new Date().toISOString().slice(0, 10), video };
+  const sentAt = stamp();
+  const run = { name: name.toUpperCase(), discord: user.id, time, mistakes, date: sentAt.slice(0, 10), video, id: b64url(crypto.getRandomValues(new Uint8Array(6))), sentAt };
+  let before = null; // runs.json just before the run went in, for what it did (runStats)
   const saved = await editRuns(env, (data) => {
     const list = listIn(data.runs, n), waiting = listIn(data.pending, n);
-    // The same run sent twice is only saved once
-    if ([...list, ...waiting].some((r) => r && r.discord === run.discord && r.time === run.time && r.mistakes === run.mistakes)) return { skip: true };
-    const today = [...Object.values(data.runs), ...Object.values(data.pending)].flat().filter((r) => r && r.discord === run.discord && r.date === run.date).length;
+    // The same run sent twice is only saved once (a turned-down run can be sent again, with a new video, say)
+    const same = [...list, ...waiting].find((r) => r && r.discord === run.discord && r.time === run.time && r.mistakes === run.mistakes);
+    if (same) return { skip: true, id: same.id };
+    const today = ["runs", "pending", "declined"].flatMap((k) => Object.values(data[k]).flat()).filter((r) => r && r.discord === run.discord && r.date === run.date).length;
     if (today >= 20) return { error: "rate", status: 429 };
     const { rank, newBest } = placeOf(run, [...board, ...list], Array.isArray(data.removed[n]) ? data.removed[n] : []);
+    before = structuredClone(data);
     if (rank <= 10 && newBest) {
-      const id = b64url(crypto.getRandomValues(new Uint8Array(6)));
-      waiting.push({ ...run, id });
-      return { message: `chore(leaderboard): hold ${run.name}'s ${run.time} on course ${n} for a check`, pending: true, rank, id };
+      waiting.push(run);
+      return { message: `chore(leaderboard): hold ${run.name}'s ${run.time} on course ${n} for a check`, pending: true, rank, newBest };
     }
     list.push(run);
-    return { message: `chore(leaderboard): add ${run.name}'s ${run.time} on course ${n} from ballkour.com`, pending: false, rank };
+    return { message: `chore(leaderboard): add ${run.name}'s ${run.time} on course ${n} from ballkour.com`, pending: false, rank, newBest };
   });
   if (saved.error) return answer(saved.status, { error: saved.error });
   await showSaved(saved.text, user).catch((e) => console.error(`submit: couldn't update the cached copy: ${(e && e.message) || e}`));
-  if (saved.text) ctx.waitUntil(logRun(env, { n, courseName: names[n], run: { ...run, id: saved.id }, kind: saved.pending ? "check" : "new", rank: saved.rank, site: url.origin }));
+  if (saved.text) ctx.waitUntil(afterSend(env, ctx, { n, courseName: names[n], run, before, pending: saved.pending, rank: saved.rank, newBest: saved.newBest, site: url.origin }));
   if (saved.text && !saved.pending) ctx.waitUntil(profileAfterRun(env, ctx, user.id));
-  return answer(200, { ok: true, run, saved: !!saved.text, pending: !!saved.pending, rank: saved.rank || null });
+  // Sent twice: the run that's already in, with its id (undefined ones are left out of the answer)
+  const shown = saved.text ? run : { ...run, id: saved.id, sentAt: undefined };
+  return answer(200, { ok: true, run: shown, saved: !!saved.text, pending: !!saved.pending, rank: saved.rank || null });
 }
 
 // The runs waiting for a check, oldest first, each with where it would place now
@@ -728,7 +827,8 @@ async function pending(request, env, ctx) {
   })).sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
   return answer(200, { runs });
 }
-// Approve (onto the board) or turn down (gone) a run waiting for a check
+// Approve (onto the board) or turn down (into "declined") a run waiting for a check. It keeps its id, so its page
+// still works, and says who checked it and when.
 async function review(request, env, ctx) {
   if (request.method !== "POST") return answer(405, { error: "bad" });
   if (request.headers.get("Origin") !== new URL(request.url).origin) return answer(403, { error: "bad" });
@@ -743,15 +843,12 @@ async function review(request, env, ctx) {
     const waiting = listIn(data.pending, n);
     const at = waiting.findIndex((r) => r && r.id === id);
     if (at < 0) return { error: "gone", status: 404 }; // someone else checked it already
-    const { id: _, ...taken } = waiting.splice(at, 1)[0]; // the id is only for while it waits
-    run = taken;
-    if (approve) listIn(data.runs, n).push(run);
+    run = { ...waiting.splice(at, 1)[0], checkedBy: user.id, checkedAt: stamp() };
+    listIn(approve ? data.runs : data.declined, n).push(run);
     return { message: `chore(leaderboard): ${approve ? "add" : "turn down"} ${run.name}'s ${run.time} on course ${n}, checked by ${user.name}` };
   });
   if (done.error) return answer(done.status, { error: done.error });
   await showSaved(done.text, null).catch(() => {});
-  const { names } = await gameInfo(env, ctx);
-  ctx.waitUntil(logRun(env, { n, courseName: names[n], run, kind: approve ? "approved" : "declined", reviewer: user, site: new URL(request.url).origin }));
   if (approve && run.discord) ctx.waitUntil(profileAfterRun(env, ctx, run.discord));
   return answer(200, { ok: true, run });
 }
@@ -1001,10 +1098,11 @@ function shortLink(path) {
 }
 
 /* ---------- Files and headers ---------- */
-// The security headers Caddy used to add, on every response
+// The security headers Caddy used to add, on every response. frame-src is for the video players on a run's page,
+// which only load once someone presses Play there (embedOf() in index.html).
 const SECURITY_HEADERS = {
   "Strict-Transport-Security": "max-age=31536000",
-  "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://cdn.discordapp.com; connect-src 'self' https://cloudflareinsights.com; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'",
+  "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://cdn.discordapp.com; connect-src 'self' https://cloudflareinsights.com; frame-src https://www.youtube-nocookie.com https://clips.twitch.tv https://player.twitch.tv https://streamable.com; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'",
   "X-Content-Type-Options": "nosniff",
   "Referrer-Policy": "strict-origin-when-cross-origin",
   "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
@@ -1025,10 +1123,11 @@ async function file(request, env) {
 }
 
 /* ---------- Pages ---------- */
-// The sections (/submit, /faq, …) and the links into them (/leaderboards/6, /leaderboards/3/legacy, /faq/pausing) are
-// the home page. On ballkour.com a Cloudflare rule already serves the sections that way, but the test copy on
-// workers.dev has no such rule, so the Worker does it too.
-const DEEP_LINK = /^\/(?:(?:courses|leaderboards|submit|features|faq|source-code|translations)\/?|leaderboards\/[\w-]+(?:\/legacy)?\/?|faq\/[\w-]+\/?)$/i;
+// The sections (/submit, /faq, …) and the links into them (/leaderboards/6, /leaderboards/3/legacy, /faq/pausing), and
+// every run sent from the website (/runs, the list under the form) and each one's page (/runs/<id>), are the home
+// page. On ballkour.com a Cloudflare rule already serves the sections that way, but the test copy on workers.dev has no
+// such rule, so the Worker does it too.
+const DEEP_LINK = /^\/(?:(?:courses|leaderboards|submit|features|faq|source-code|translations|runs)\/?|leaderboards\/[\w-]+(?:\/legacy)?\/?|faq\/[\w-]+\/?|runs\/[\w-]+\/?)$/i;
 async function page(request, env, ctx) {
   // Ask for the full page every time (no 304 Not Modified), so a browser never reuses old data from its cache
   const headers = new Headers(request.headers);
@@ -1097,6 +1196,7 @@ async function handle(request, env, ctx) {
       if (path === "/api/submit") return await submit(request, env, ctx);
       if (path === "/api/pending" && request.method === "GET") return await pending(request, env, ctx);
       if (path === "/api/review") return await review(request, env, ctx);
+      if (path === "/api/run" && request.method === "GET") return await runInfo(request, env);
       return answer(404, { error: "bad" });
     } catch (e) {
       console.error(`${path}: ${(e && e.message) || e}`);
