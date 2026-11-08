@@ -497,7 +497,8 @@ async function whoAmI(request, env, ctx) {
 
 /* Saving a run, and checking top 10 runs
    Every run sent from the website gets an id, for its page (ballkour.com/runs/<id>), and the time it was sent
-   ("sentAt"). A run that would put its player on a course's top 10 (their new best, faster than the #10's) isn't put
+   ("sentAt"). Ids are numbers in the order runs are saved, from 1 ("1", "2", …), counted by runs.json's "lastId" so
+   none is ever used twice, even after a run is deleted by hand. (The first few runs, from before, have random ids.) A run that would put its player on a course's top 10 (their new best, faster than the #10's) isn't put
    on the board straight away: it waits in runs.json's "pending" until a reviewer checks its video, on its page or at
    ballkour.com/submit, then goes on the board (Approve, into "runs") or into "declined" (Turn down), either way with
    who checked it and when ("checkedBy" and "checkedAt"). Every other run goes on the board straight away. Turned-down
@@ -563,6 +564,17 @@ function placeOf(run, pool, removed) {
 }
 // runs.json's groups of runs, by course number, in the order they're written
 const RUN_GROUPS = ["runs", "pending", "declined", "removed"];
+// The number for the next run's id: one more than runs.json's "lastId", or than any numbered run in it (in case
+// "lastId" is missing, or was edited by hand)
+function nextId(data) {
+  let last = Number.isInteger(data.lastId) ? data.lastId : 0;
+  for (const k of RUN_GROUPS) {
+    for (const list of Object.values(data[k])) {
+      for (const r of Array.isArray(list) ? list : []) if (r && /^\d{1,9}$/.test(r.id)) last = Math.max(last, Number(r.id));
+    }
+  }
+  return last + 1;
+}
 // Now, to the second, for "sentAt" and "checkedAt"
 const stamp = () => new Date().toISOString().slice(0, 19) + "Z";
 // One run per line, so runs.json stays easy to read and edit by hand
@@ -769,7 +781,7 @@ async function afterSend(env, ctx, info) {
 }
 async function runInfo(request, env) {
   const id = new URL(request.url).searchParams.get("id") || "";
-  if (!/^[\w-]{4,16}$/.test(id)) return answer(400, { error: "bad" });
+  if (!/^[\w-]{1,16}$/.test(id)) return answer(400, { error: "bad" });
   const stats = env.PROFILES ? await env.PROFILES.get(statsKey(id), "json").catch(() => null) : null;
   const res = answer(200, { stats });
   if (stats) res.headers.set("Cache-Control", "public, max-age=86400"); // they never change
@@ -811,7 +823,7 @@ async function submit(request, env, ctx) {
   const mine = [...board, ...historyRuns(files, n)].filter((r) => r.discord === user.id);
 
   const sentAt = stamp();
-  const run = { name: caps(name), discord: user.id, time, mistakes, date: sentAt.slice(0, 10), video, id: b64url(crypto.getRandomValues(new Uint8Array(6))), sentAt };
+  const run = { name: caps(name), discord: user.id, time, mistakes, date: sentAt.slice(0, 10), video, id: "", sentAt };
   let before = null; // runs.json just before the run went in, for what it did (runStats)
   const saved = await editRuns(env, (data) => {
     const list = listIn(data.runs, n), waiting = listIn(data.pending, n);
@@ -825,6 +837,10 @@ async function submit(request, env, ctx) {
     if (today >= 20) return { error: "rate", status: 429 };
     const { rank, newBest } = placeOf(run, [...board, ...list], Array.isArray(data.removed[n]) ? data.removed[n] : []);
     before = structuredClone(data);
+    // Its id: the next number, worked out again if runs.json changed under it (see editRuns), so two runs sent at
+    // once can't get the same one
+    data.lastId = nextId(data);
+    run.id = String(data.lastId);
     if (rank <= 10 && newBest) {
       waiting.push(run);
       return { message: `chore(leaderboard): hold ${run.name}'s ${run.time} on course ${n} for a check`, pending: true, rank, newBest };
@@ -865,7 +881,7 @@ async function review(request, env, ctx) {
   let body;
   try { body = JSON.parse(await request.text()); } catch (e) { body = null; }
   const n = Number(body && body.course), id = String((body && body.id) || ""), approve = !!(body && body.approve);
-  if (!Number.isInteger(n) || !/^[\w-]{4,16}$/.test(id)) return answer(400, { error: "bad" });
+  if (!Number.isInteger(n) || !/^[\w-]{1,16}$/.test(id)) return answer(400, { error: "bad" });
   let run = null;
   const done = await editRuns(env, (data) => {
     const waiting = listIn(data.pending, n);

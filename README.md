@@ -195,7 +195,7 @@ Each course's board ranks every run in its file and in `"runs"` in `leaderboards
 
 A run from an old board also only shows if it's slower than today's #10, since a faster one must have been taken off.
 
-Runs sent from the website also have an `id` (for their page) and `sentAt`, and `runs.json` keeps two more groups that are on no board: `"pending"` (waiting for a check) and `"declined"` (turned down). Moving a run's whole line to `"removed"` keeps its page working, and the page says it was taken off.
+Runs sent from the website also have an `id` (for their page: numbers in the order they're saved, from 1, counted by `"lastId"` in `runs.json` so none is used twice) and `sentAt`, and `runs.json` keeps two more groups that are on no board: `"pending"` (waiting for a check) and `"declined"` (turned down). Moving a run's whole line to `"removed"` keeps its page working, and the page says it was taken off.
 
 **Player ratings** (`ballkour.com/leaderboards/ratings`) rate everyone over every course. Each course is worth up to 10,000 points: the record gets all of them, and the further behind it a run is, the fewer it gets (10000 × ln(1 + (e − 1) × record ÷ time)², lucio.surf's curve for a player who has run every map). A rating is the average over every course that isn't broken, with 0 for courses a player hasn't run (courses nobody has run yet included), so a new or faster run never lowers it, and the first run on a course changes nobody else's rating. A player's Top % is their place divided by the number of rated players. The foot of the Player ratings board shows the course rating's and the rating's formulas (`rt.mathCourse` and `rt.mathRating` in `index.html`), with an example; reword them if the math changes.
 

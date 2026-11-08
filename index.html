@@ -4917,7 +4917,7 @@ a.link-copy { text-decoration: none; }
      Play is pressed (the site never sends visitors to anyone else on its own). Other links get a button to the video. */
   const RUN_GROUPS = ["pending", "runs", "declined", "removed"];
   // The page of a run whose link someone opened (/runs/<id>, or an old /submit?check=<id>)
-  const startRun = (/^\/runs\/([\w-]{4,16})\/?$/i.exec(location.pathname) || [])[1] || (/^[\w-]{4,16}$/.test(checkParam) ? checkParam : "");
+  const startRun = (/^\/runs\/([\w-]{1,16})\/?$/i.exec(location.pathname) || [])[1] || (/^[\w-]{1,16}$/.test(checkParam) ? checkParam : "");
   let runId = ""; // the run whose page is open
   let runBack = null; // the address from before it opened, to go back to
   let runTab = "then"; // "then" (When sent) or "now" (Today)
@@ -5217,7 +5217,7 @@ a.link-copy { text-decoration: none; }
 
   // Opens a run's page, and puts its link in the address while it's open
   async function openRun(id) {
-    if (!/^[\w-]{4,16}$/.test(id)) return;
+    if (!/^[\w-]{1,16}$/.test(id)) return;
     leaveStats(); // a run opened from their own panel goes back to where the page was before My stats
     if (runBack === null) runBack = location.pathname + location.search + location.hash;
     plKey = "";
