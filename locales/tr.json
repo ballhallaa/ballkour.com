@@ -256,7 +256,7 @@
   "dcpi.nothingElse": "Başka hiçbir şey: mesajlarını okuyamaz, senin adına paylaşım yapamaz veya hesabındaki başka bir şeyi değiştiremez",
   "dcpi.step1": "Aşağıdaki {continue}’e dokun.",
   "dcpi.step2": "{authorize}’e dokun.",
-  "dcpi.step3": "Buraya geri dönersin. İstatistiklerinin profilinde görünmesi için Discord sunucumuzda işlemi tamamla:",
+  "dcpi.step3": "Buraya geri dönersin. İstatistiklerini profilinde göstermeyi tamamlamak için Discord sunucumuzda işlemi bitir:",
   "dcpi.step4": "Sunucu adına {server}, ardından Bağlantılı Roller’e {linkedRoles}, ardından Discord Profile App’e {role} tıkla.",
   "dcpi.step5": "Discord hesaplarını bağlamanı ister. Ballkyrie’ye {bot} tıkla, bu site tarayıcında açılır.",
   "dcpi.step6": "Discord’a dönüp Bitir’e {finish} tıkla. İlk seferde Discord’un istatistiklerini göstermesi birkaç dakika sürebilir.",

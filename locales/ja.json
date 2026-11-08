@@ -256,7 +256,7 @@
   "dcpi.nothingElse": "それ以外は何もできません。メッセージを読んだり、あなたとして投稿したり、アカウントのほかの部分を変えたりはできません",
   "dcpi.step1": "下の{continue}をタップします。",
   "dcpi.step2": "{authorize}をタップします。",
-  "dcpi.step3": "ここに戻ります。プロフィールに成績を表示するには、続けて私たちのDiscordサーバーで次の操作をします：",
+  "dcpi.step3": "ここに戻ります。プロフィールへの成績の表示を完了するには、続けて私たちのDiscordサーバーで次の操作をします：",
   "dcpi.step4": "サーバー名 {server}、「連携ロール」{linkedRoles}、「Discord Profile App」{role} の順にクリックしてください。",
   "dcpi.step5": "Discordがアカウントの接続を求めます。Ballkyrie {bot} をクリックすると、ブラウザでこのサイトが開きます。",
   "dcpi.step6": "Discordに戻り、「完了」{finish} をクリックしてください。初回はDiscordで成績が表示されるまで数分かかることがあります。",

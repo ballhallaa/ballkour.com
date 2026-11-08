@@ -256,7 +256,7 @@
   "dcpi.nothingElse": "僅此而已：它無法讀取你的訊息、以你的名義發文，也無法更改你帳號的其他任何內容",
   "dcpi.step1": "點選下方的{continue}。",
   "dcpi.step2": "點選{authorize}。",
-  "dcpi.step3": "你會回到這裡。要在個人檔案上顯示你的數據，請在我們的 Discord 伺服器中完成以下步驟：",
+  "dcpi.step3": "你會回到這裡。要完成在個人檔案上顯示你的數據，請在我們的 Discord 伺服器中完成以下步驟：",
   "dcpi.step4": "請依序點選伺服器名稱 {server}、「連結身分組」{linkedRoles}，再點選 Discord Profile App {role}。",
   "dcpi.step5": "Discord 會請你連結帳號。點選 Ballkyrie {bot}，本網站會在你的瀏覽器中開啟。",
   "dcpi.step6": "回到 Discord，點選「完成」{finish}。第一次可能要過幾分鐘 Discord 才會顯示你的數據。",
