@@ -110,7 +110,7 @@
   "faq.issues.sub": "Zgłoś to na GitHubie",
   "faq.valid.q": "Co liczy się jako ważne podejście?",
   "faq.valid.a": "Twoje podejście zostaje zdyskwalifikowane tylko, gdy pominiesz CP, którego jeszcze nie zaliczyłeś w tym podejściu. Cofanie się do CP lub ich restartowanie, przeskakiwanie do zaliczonych CP i obserwowanie są w porządku. Opuszczenie niezaliczonego CP w <fgCB87FFFF>Trybie swobodnym</fg> liczy się jako pominięcie go. Zdyskwalifikowane podejścia nie liczą się do tabeli wyników top 10, <b>Top 3 lobby</b> ani <b>Lobby Stats</b>.",
-  "faq.leaderboard.q": "Jak dostać się do rankingu?",
+  "faq.leaderboard.q": "Jak dostać się do tabeli wyników?",
   "faq.leaderboard.a": "Ukończ ważne podejście i wyślij jego nagranie na ballkour.com. <b>Top 3 wszech czasów</b> pokazuje 3 najszybsze podejścia z tabeli wyników. <b>Top 3 lobby</b> pokazuje tylko najszybsze ważne podejścia ukończone w tym lobby.",
   "faq.timer.q": "Kiedy startuje czas mojego podejścia?",
   "faq.timer.a": "Gdy opuścisz pierwszy CP, a nie gdy się odrodzisz.",
