@@ -270,6 +270,7 @@ main:focus { outline: none; }
 .stat .icon { width: 15px; height: 15px; }
 .stat.time .icon { color: var(--volt); }
 .stat.miss .icon { color: var(--coral); }
+.stat.pts .icon { color: var(--gold); }
 
 .actions { margin-top: 24px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 .btn {
@@ -977,10 +978,13 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .rev-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
 .rev-run { display: grid; gap: 5px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: rgba(0, 0, 0, .25); }
 .rev-run.picked { border-color: rgba(255, 213, 79, .6); box-shadow: 0 0 0 1px rgba(255, 213, 79, .25); }
-.rev-course { font: 500 11.5px/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+/* The course, on one line (a name too long for a small phone ends in …, and its page has all of it) */
+.rev-course { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 11.5px/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
 /* A course's flag before its name (flagName) */
 .mini-flag { font: 400 14px/1 var(--emoji); letter-spacing: 0; }
-.rev-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; font: 700 16px/1.2 var(--body); letter-spacing: .02em; }
+.rev-name { overflow-wrap: anywhere; font: 700 16px/1.2 var(--body); letter-spacing: .02em; }
+/* Its time, mistakes, and rating, then where it is (on a phone, that goes under them) */
+.rev-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
 .rev-line .stat { font: 600 14px/1 var(--mono); }
 .rev-meta { font: 400 12.5px/1.3 var(--mono); color: var(--ink-3); }
 .rev-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 3px; }
@@ -1726,6 +1730,7 @@ a.link-copy { text-decoration: none; }
   "res.sameTimeMore": "Same time as your best ({time}), but more mistakes",
   "rt.rated": "Rated",
   "lb.submittedOn": "Submitted on {date}",
+  "lb.submittedBy": "Submitted on {date} by {name}",
   "lb.playerOpen": "See every run by {player}",
   "pl.close": "Close",
   "pl.rating": "Rating",
@@ -1798,7 +1803,6 @@ a.link-copy { text-decoration: none; }
   "sub.againPending": "You already sent that run on {course}, and it’s waiting for a moderator to check it.",
   "sub.held": "Your run would put you #{rank} on {course}! Top 10 times are checked before they go up, so it goes on the board if a moderator approves it.",
   "rev.title": "Runs to check",
-  "rev.course": "Course {n}",
   "rev.none": "No runs to check right now.",
   "rev.would": "Would be #{rank}",
   "rev.watch": "Watch",
@@ -4403,8 +4407,12 @@ a.link-copy { text-decoration: none; }
     try { reviewRuns = (await fetch("/api/pending", { cache: "no-store" }).then((r) => r.json())).runs || []; } catch (e) { reviewRuns = []; }
     renderReview();
   }
-  // A translation with its {date} kept on one line (a date can break at its dashes otherwise)
-  const withDate = (key, vars) => esc(t(key, { ...vars, date: "\u0000" })).replace("\u0000", `<span class="nowrap">${esc(vars.date)}</span>`);
+  // A translation with its {date} kept on one line (a date can break at its dashes otherwise), and its {name} too
+  const withDate = (key, vars) => esc(t(key, { ...vars, date: "\u0000", ...(vars.name !== undefined && { name: "\u0001" }) }))
+    .replace("\u0000", `<span class="nowrap">${esc(vars.date)}</span>`).replace("\u0001", `<span class="nowrap">${esc(vars.name)}</span>`);
+  // When a run was sent and who sent it: "Submitted on <date> by <name>", or whichever of them it has
+  const sentBy = (date, name) => date && name ? withDate("lb.submittedBy", { date: formatDate(date), name })
+    : date ? withDate("lb.submittedOn", { date: formatDate(date) }) : name ? esc(name) : "";
   let reviewScrolled = false;
   function renderReview(note) {
     const box = $("#sub-review");
@@ -4414,10 +4422,10 @@ a.link-copy { text-decoration: none; }
       const c = course(r.course);
       const who = r.discord && PLAYERS.get(r.discord);
       return `<li class="rev-run${r.id === checkParam ? " picked" : ""}" id="rev-${esc(r.id)}">` +
-        `<span class="rev-course">${esc(`${t("rev.course", { n: r.course })} · `)}${c ? flagName(c) : esc(r.courseName)}</span>` +
-        `<span class="rev-line"><b>${esc(r.name)}</b><span class="stat time">${icon("bolt")}${esc(r.time)}</span><span class="stat miss">${icon("skull")}${esc(r.mistakes)}</span>` +
+        `<span class="rev-course">${esc(`${r.course} `)}${c ? flagName(c) : esc(r.courseName)}</span>` +
+        `<b class="rev-name">${esc(r.name)}</b><span class="rev-line"><span class="stat time">${icon("bolt")}${esc(r.time)}</span><span class="stat miss">${icon("skull")}${esc(r.mistakes)}</span>` +
         `<span class="tag tag-wr">${esc(t("rev.would", { rank: r.rank }))}</span></span>` +
-        `<span class="rev-meta">${withDate("lb.submittedOn", { date: formatDate(r.date) })}${who ? ` · ${esc(who.name)}` : ""}</span>` +
+        `<span class="rev-meta">${sentBy(r.date, who && who.name)}</span>` +
         `<span class="rev-actions" data-id="${esc(r.id)}">${reviewActions(r)}</span></li>`;
     };
     box.innerHTML = `<p class="rev-title">${icon("eye")}<span>${esc(t("rev.title"))}</span><span class="rev-count">${reviewRuns.length}</span></p>` +
@@ -4440,16 +4448,25 @@ a.link-copy { text-decoration: none; }
     if (box.hidden) return;
     const reviewer = !!(me && me.reviewer);
     const left = Math.max(0, all.length - runsShown);
+    // The rating over every course it gives its player, as on its page today (if it's approved, for one waiting for a
+    // check). One that isn't their best, or isn't on the board, gives them nothing, so it has none.
+    const ratingOf = (x) => {
+      const s = (x.status === "pending" || x.status === "up") && runNow(x);
+      return s && s.rating && isTheirBest(s, cleanRun(x.run)) ? s.rating[1] : null;
+    };
     const row = (x) => {
       const r = x.run;
       const c = course(x.n);
       const who = r.discord && PLAYERS.get(r.discord);
       const checker = reviewer && checkerOf(r);
       const checked = checker ? t(x.group === "declined" ? "rev.declinedBy" : "rev.approvedBy", { name: checker.name }) : "";
+      const rating = ratingOf(x);
       return `<li><a class="rev-run" href="/runs/${esc(r.id)}" data-run-open="${esc(r.id)}">` +
-        `<span class="rev-course">${esc(`${t("rev.course", { n: x.n })} · `)}${flagName(c)}</span>` +
-        `<span class="rev-line"><b>${esc(r.name)}</b><span class="stat time">${icon("bolt")}${esc(r.time)}</span><span class="stat miss">${icon("skull")}${esc(r.mistakes)}</span>${statusTag(x)}</span>` +
-        `<span class="rev-meta">${[r.date && withDate("lb.submittedOn", { date: formatDate(r.date) }), ...[who && who.name, checked].filter(Boolean).map(esc)].filter(Boolean).join(" · ")}</span></a></li>`;
+        `<span class="rev-course">${esc(`${x.n} `)}${flagName(c)}</span>` +
+        `<b class="rev-name">${esc(r.name)}</b><span class="rev-line"><span class="stat time">${icon("bolt")}${esc(r.time)}</span><span class="stat miss">${icon("skull")}${esc(r.mistakes)}</span>` +
+        (rating !== null ? `<span class="stat pts" title="${esc(t("lb.rating", { points: points(rating) }))}">${icon("star")}${esc(points(rating))}</span>` : "") +
+        `${statusTag(x)}</span>` +
+        [sentBy(r.date, who && who.name), checked && esc(checked)].filter(Boolean).map((h) => `<span class="rev-meta">${h}</span>`).join("") + `</a></li>`;
     };
     box.innerHTML = `<p class="rev-title">${icon("notes")}<span>${esc(t("runs.title"))}</span><span class="rev-count">${all.length.toLocaleString(htmlLang())}</span></p>` +
       `<ul class="rev-list">${all.slice(0, runsShown).map(row).join("")}</ul>` +
@@ -4793,7 +4810,7 @@ a.link-copy { text-decoration: none; }
   // run that isn't their best changes nothing, so it's that run on its own (see aloneOf), like on its page.
   function resultHtml(n, run, before, after, { again = "", earlier = null, held = false } = {}) {
     const c = course(n);
-    const where = `<a href="/leaderboards/${c.n}" data-board="${c.n}">${esc(`${c.n} `)}${flagName(c)}</a>`;
+    const where = `<a class="nowrap" href="/leaderboards/${c.n}" data-board="${c.n}">${esc(`${c.n} `)}${flagName(c)}</a>`;
     const withCourse = (key, vars) => esc(t(key, { ...vars, course: "\u0000" })).replace("\u0000", where);
     const title = (cls, ico, html) => `<p class="res-title${cls}">${icon(ico)}<span>${html}</span></p>`;
     const plain = (html) => title("", "check", html);
@@ -4874,7 +4891,7 @@ a.link-copy { text-decoration: none; }
           celebrate(before, after);
         } else {
           const c = course(run.course);
-          const where = `<a href="/leaderboards/${c.n}" data-board="${c.n}">${esc(`${t("rev.course", { n: c.n })} · `)}${flagName(c)}</a>`;
+          const where = `<a class="nowrap" href="/leaderboards/${c.n}" data-board="${c.n}">${esc(`${c.n} `)}${flagName(c)}</a>`;
           subStatus.innerHTML = `<p class="res-title held">${icon("eye")}<span>${esc(t("sub.held", { rank: out.rank, course: "\u0000" })).replace("\u0000", where)}</span></p>`;
         }
         loadReview();
@@ -5097,7 +5114,7 @@ a.link-copy { text-decoration: none; }
     const c = course(x.n);
     const run = cleanRun(x.run);
     pl.innerHTML = `<div class="pl-head"><div class="pl-who">` +
-        `<p class="pl-eyebrow">${icon("play")}<span>${esc(`${t("rev.course", { n: c.n })} · `)}${flagName(c)}</span></p>` +
+        `<p class="pl-eyebrow">${icon("play")}<span class="nowrap">${esc(`${c.n} `)}${flagName(c)}</span></p>` +
         `<h2 class="pl-name is-name" id="pl-name"><button class="run-name" type="button" data-run-player="${esc(playerKey(run))}" title="${esc(t("lb.playerOpen", { player: run.name }))}">${esc(caps(run.name))}</button></h2>` +
         `<div class="run-tags" id="run-tags"></div></div>${close}</div>` +
       `<div class="run-facts"><span class="stat time">${icon("bolt")}<span>${esc(run.time)}</span></span>` +
@@ -5182,7 +5199,7 @@ a.link-copy { text-decoration: none; }
     const c = course(x.n);
     const run = cleanRun(x.run);
     if (!s || !s.place) return "";
-    const where = `<a href="/leaderboards/${c.n}" data-board="${c.n}">${esc(`${c.n} `)}${flagName(c)}</a>`;
+    const where = `<a class="nowrap" href="/leaderboards/${c.n}" data-board="${c.n}">${esc(`${c.n} `)}${flagName(c)}</a>`;
     const withCourse = (key, vars) => esc(t(key, { ...vars, course: "\u0000" })).replace("\u0000", where);
     // Not its player's best: it didn't change the board
     if (!isTheirBest(s, run)) {
