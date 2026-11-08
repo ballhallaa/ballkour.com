@@ -3151,6 +3151,8 @@ a.link-copy { text-decoration: none; }
   }
   function openPlayer(key, n) {
     leaveRun();
+    // Their own panel keeps /stats in the address (back from Show on my Discord profile's Not now, say)
+    if (!me || key !== "d:" + me.id) leaveStats();
     plKey = key;
     plOpen.clear();
     if (n) plOpen.add(n);
@@ -3174,8 +3176,9 @@ a.link-copy { text-decoration: none; }
   });
   pl.addEventListener("click", (e) => {
     if (e.target.closest("[data-pl-close]")) { pl.close(); return; }
-    // Submit a run (in their own empty panel): the page goes there, so the panel gets out of the way
-    if (e.target.closest("a[data-route]")) { pl.close(); return; }
+    // Submit a run (in their own empty panel): the page goes there, so the panel gets out of the way. The address goes
+    // back before the section's link goes in (the panel's close event comes later).
+    if (e.target.closest("a[data-route]")) { leaveStats(); pl.close(); return; }
     const toggle = e.target.closest("[data-pl-course]");
     if (toggle) {
       const n = Number(toggle.dataset.plCourse);
@@ -3318,6 +3321,7 @@ a.link-copy { text-decoration: none; }
     if (!c) return;
     // The address goes back before the board's link goes in (the panel's close event comes later)
     leaveRun();
+    leaveStats();
     if (pl.open) pl.close();
     const before = openCourse;
     openCourse = c.n;
@@ -4267,22 +4271,39 @@ a.link-copy { text-decoration: none; }
      first opens a panel saying what signing in with Discord is for and what it shares (so being sent to Discord, and
      asked about Ballkyrie there, doesn't come out of nowhere). Continue with Discord there signs them in, and comes
      back with ?me=1 to open their panel. Sign in with Discord above the form opens the same panel, and comes back to
-     the form. */
+     the form.
+     ballkour.com/stats is the link to it: it opens My stats the same way, and the address shows /stats while My stats
+     is open (their panel, or the panel that signs them in for it). Closing it puts the address back. */
   const meWrap = $("#me-wrap");
   let meKnown = false; // whether /api/me has answered, so the chip doesn't flip from signed out to signed in
+  const startStats = /^\/stats\/?$/i.test(location.pathname);
   let wantMine = (() => {
     try {
       const u = new URL(location.href);
-      if (!u.searchParams.has("me")) return false;
+      if (!u.searchParams.has("me")) return startStats;
       u.searchParams.delete("me");
       history.replaceState(history.state, "", u.pathname + u.search + u.hash);
       return true;
-    } catch (e) { return false; }
+    } catch (e) { return startStats; }
   })();
+  let statsBack = null; // while My stats is open, the address from before it opened, to go back to
   function openMine() {
     if (me) openPlayer("d:" + me.id, 0);
     else if (loginOn) openSignIn("mine");
+    else return;
+    // Opened from ballkour.com/stats, it goes back to the top of the page
+    if (statsBack === null) statsBack = /^\/stats\/?$/i.test(location.pathname) ? "/" + location.search : location.pathname + location.search + location.hash;
+    const l = new URLSearchParams(location.search).get("lang");
+    try { history.replaceState(history.state, "", `/stats${l ? `?lang=${encodeURIComponent(l)}` : ""}`); } catch (e) { /* address stays as it is */ }
   }
+  // Leaving it (closing the panel, or something else opening in its place) puts the address back
+  function leaveStats() {
+    if (statsBack === null) return;
+    const back = statsBack;
+    statsBack = null;
+    putAddressBack(back);
+  }
+  pl.addEventListener("close", leaveStats);
   // A middle click or Ctrl+click still goes straight to Discord, in a new tab
   $("#sub-login").addEventListener("click", (e) => {
     if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
@@ -4293,6 +4314,7 @@ a.link-copy { text-decoration: none; }
   // kind: "mine" (from My stats) or "submit" (from the form)
   function openSignIn(kind) {
     leaveRun();
+    leaveStats();
     plKey = "";
     const mine = kind === "mine";
     const part = (title, body) => `<section class="pl-why"><h3>${esc(t(title))}</h3>${body}</section>`;
@@ -4336,7 +4358,9 @@ a.link-copy { text-decoration: none; }
     let path = "/submit";
     if (kind === "mine" || kind === "profile") {
       back.set("me", "1");
-      path = /^\/[\w/-]*$/.test(location.pathname) ? location.pathname : "/";
+      // While the address shows /stats, back to where the page was before My stats opened
+      const here = statsBack !== null ? statsBack.split(/[?#]/)[0] : location.pathname;
+      path = /^\/[\w/-]*$/.test(here) ? here : "/";
     } else if (kind === "run" && /^[\w-]+$/.test(runId)) path = `/runs/${runId}`;
     else if (checkParam) back.set("check", checkParam);
     return (kind === "profile" ? "/api/profile" : "/api/login") + "?to=" + encodeURIComponent(path + (back.toString() ? `?${back}` : ""));
@@ -5131,6 +5155,7 @@ a.link-copy { text-decoration: none; }
   // Opens a run's page, and puts its link in the address while it's open
   async function openRun(id) {
     if (!/^[\w-]{4,16}$/.test(id)) return;
+    leaveStats(); // a run opened from their own panel goes back to where the page was before My stats
     if (runBack === null) runBack = location.pathname + location.search + location.hash;
     plKey = "";
     runId = id;
@@ -5160,8 +5185,12 @@ a.link-copy { text-decoration: none; }
     // A run's link someone opened goes back to ballkour.com/runs: the page is at Submitted runs behind it
     const back = (runBack || "/").replace(/^\/runs\/[\w-]+\/?/i, "/runs");
     runBack = null;
+    putAddressBack(back);
+  }
+  // After a run's page or My stats closes. Back at the list, /runs stays until they scroll (it isn't in the section
+  // bar); anywhere else follows the page.
+  function putAddressBack(back) {
     try { history.replaceState(history.state, "", back); } catch (e) { /* address stays as it is */ }
-    // Back at the list, /runs stays until they scroll (it isn't in the section bar); anywhere else follows the page
     addressHeld = /^\/runs(?:[?#]|$)/.test(back);
     if (!addressHeld) queueSpy();
   }
@@ -5295,7 +5324,8 @@ a.link-copy { text-decoration: none; }
   // The address follows the section on screen (/faq, /features, …), and is / at the very top. It replaces the
   // current entry rather than adding one, so Back still leaves the page instead of stepping through sections.
   // A link someone opened (ballkour.com/faq) keeps its address until they scroll or click themselves.
-  let addressHeld = !!startRoute || !!startRun;
+  // ballkour.com/stats stays too, until My stats opens (once the page knows whether they're signed in)
+  let addressHeld = !!startRoute || !!startRun || (startStats && loginOn);
   ["wheel", "touchstart", "keydown", "mousedown"].forEach((ev) => addEventListener(ev, () => { addressHeld = false; }, { passive: true }));
   // Opening a board or an answer puts its link in the address straight away, wherever the page is scrolled to, and
   // keeps it there until the visitor scrolls on their own. Closing it lets the address follow the page again.
@@ -5320,7 +5350,7 @@ a.link-copy { text-decoration: none; }
     return "";
   }
   function followAddress(i) {
-    if (addressHeld || runId) return; // a run's page keeps its own link (see "A run's page")
+    if (addressHeld || runId || statsBack !== null) return; // a run's page and My stats keep their own links
     const route = i >= 0 && (scrollY >= 2 || clicked >= 0) ? sectionLinks[i].dataset.route : null;
     let [pathname, hash = ""] = (route ? pathFor(route) : "/").split("#");
     const sub = route ? subPath(route) : "";

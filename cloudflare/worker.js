@@ -17,6 +17,7 @@
                        stats on their Discord profiles too: see "Stats on Discord profiles".
    /runs/<id>          A run sent from the website: the home page, which opens the run's page. Ballkyrie's post for
                        it in the run submissions channel links here. See "Each run's page".
+   /stats              The home page, which opens My stats: the visitor's own player panel (signing them in first).
 
    Each page also gets the latest copy of all three in <head> as <script type="application/json"> blocks, and its
    "• N members" pills already filled in, so nothing pops in after the page loads. If GitHub or Discord can't be
@@ -1134,10 +1135,10 @@ async function file(request, env) {
 
 /* ---------- Pages ---------- */
 // The sections (/submit, /faq, …) and the links into them (/leaderboards/6, /leaderboards/3/legacy, /faq/pausing), and
-// every run sent from the website (/runs, the list under the form) and each one's page (/runs/<id>), are the home
-// page. On ballkour.com a Cloudflare rule already serves the sections that way, but the test copy on workers.dev has no
-// such rule, so the Worker does it too.
-const DEEP_LINK = /^\/(?:(?:courses|leaderboards|submit|features|faq|source-code|translations|runs)\/?|leaderboards\/[\w-]+(?:\/legacy)?\/?|faq\/[\w-]+\/?|runs\/[\w-]+\/?)$/i;
+// every run sent from the website (/runs, the list under the form) and each one's page (/runs/<id>), and /stats (My
+// stats), are the home page. On ballkour.com a Cloudflare rule already serves the sections that way, but the test
+// copy on workers.dev has no such rule, so the Worker does it too.
+const DEEP_LINK = /^\/(?:(?:courses|leaderboards|submit|features|faq|source-code|translations|runs|stats)\/?|leaderboards\/[\w-]+(?:\/legacy)?\/?|faq\/[\w-]+\/?|runs\/[\w-]+\/?)$/i;
 async function page(request, env, ctx) {
   // Ask for the full page every time (no 304 Not Modified), so a browser never reuses old data from its cache
   const headers = new Headers(request.headers);
