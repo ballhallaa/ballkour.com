@@ -127,7 +127,7 @@
   "faq.pace.q": "Was ist die <b>Prognose</b>?",
   "faq.pace.a": "Deine geschätzte Endzeit, aus dem bisherigen Split-Schnitt dieses Laufs. Sobald dein aktueller Split langsamer als dieser Schnitt ist, wird sie <fgFF4646FF>rot</fg> und zählt mit deiner Zeit hoch.",
   "faq.grayed.q": "Warum sind manche Steuerungen <fg808080FF>ausgegraut</fg>?",
-  "faq.grayed.a": "Sie sind gerade nicht nutzbar: <b>Vorh. CP</b> auf dem ersten CP, <b>Nächster CP</b> auf dem letzten, und die <fg00BEFFFF>Zuschauer-Steuerung</fg>, wenn niemand zum <fg00BEFFFF>Zuschauen</fg> da ist. <b>Wieder folgen</b> braucht <b>Freie Kamera</b>, während du einem Spieler zuschaust. <b>Anvisierter Spieler</b> braucht <b>Freie Kamera</b>.",
+  "faq.grayed.a": "Sie sind gerade nicht nutzbar: <b>Vorh. CP</b> auf dem ersten CP, <b>Nächster CP</b> auf dem letzten, und die <fg00BEFFFF>Zuschauer</fg>-Steuerung, wenn niemand zum <fg00BEFFFF>Zuschauen</fg> da ist. <b>Wieder folgen</b> braucht <b>Freie Kamera</b>, während du einem Spieler zuschaust. <b>Anvisierter Spieler</b> braucht <b>Freie Kamera</b>.",
   "faq.scorecard.q": "Was zeigt die Wertung?",
   "faq.scorecard.a": "CP, Zeit und Fehler jedes Läufers, der Weiteste zuerst, dann der Schnellste. Darunter sind Spieler im <fgCB87FFFF>Freien Modus</fg> <fgCB87FFFF>lila</fg> und Spieler beim <fg00BEFFFF>Zuschauen</fg> <fg00BEFFFF>blau</fg>. <fgFF4646FF>Disqualifizierte</fg> Läufe sind mit <fgFF4646FF>×</fg> markiert und unter den Läufern <fgFF4646FF>rot</fg>.",
   "faq.shield.q": "Was ist ein <fg00BEFFFF>Schildabprall</fg>?",

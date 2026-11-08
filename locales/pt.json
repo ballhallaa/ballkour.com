@@ -127,7 +127,7 @@
   "faq.pace.q": "O que é a <b>Previsão</b>?",
   "faq.pace.a": "Seu tempo final estimado, pela média das parciais desta partida. Quando sua parcial atual fica mais lenta que essa média, ela fica <fgFF4646FF>vermelha</fg> e sobe junto com seu tempo.",
   "faq.grayed.q": "Por que alguns controles estão <fg808080FF>em cinza</fg>?",
-  "faq.grayed.a": "Eles não podem ser usados agora: <b>CP anterior</b> no primeiro CP, <b>Próximo CP</b> no último, e os <fg00BEFFFF>controles de espectador</fg> quando não há ninguém para <fg00BEFFFF>assistir</fg>. <b>Voltar a seguir</b> precisa da <b>Câmera livre</b> enquanto você assiste a um jogador. <b>Jogador na mira</b> precisa da <b>Câmera livre</b>.",
+  "faq.grayed.a": "Eles não podem ser usados agora: <b>CP anterior</b> no primeiro CP, <b>Próximo CP</b> no último, e os controles de <fg00BEFFFF>espectador</fg> quando não há ninguém para <fg00BEFFFF>assistir</fg>. <b>Voltar a seguir</b> precisa da <b>Câmera livre</b> enquanto você assiste a um jogador. <b>Jogador na mira</b> precisa da <b>Câmera livre</b>.",
   "faq.scorecard.q": "O que o placar mostra?",
   "faq.scorecard.a": "O CP, tempo e erros de cada jogador, primeiro o mais avançado, depois o mais rápido. Abaixo, jogadores no <fgCB87FFFF>Modo livre</fg> aparecem em <fgCB87FFFF>roxo</fg>, e quem está em <fg00BEFFFF>Assistir</fg>, em <fg00BEFFFF>azul</fg>. Partidas <fgFF4646FF>desclassificadas</fg> são marcadas com <fgFF4646FF>×</fg>, e ficam em <fgFF4646FF>vermelho</fg> entre quem está correndo.",
   "faq.shield.q": "O que é um <fg00BEFFFF>quique com escudo</fg>?",

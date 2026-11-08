@@ -127,7 +127,7 @@
   "faq.pace.q": "Cos'è la <b>Previsione</b>?",
   "faq.pace.a": "Il tuo tempo finale stimato, dalla media dei parziali di questa partita. Quando il parziale attuale è più lento di quella media, diventa <fgFF4646FF>rossa</fg> e sale insieme al tuo tempo.",
   "faq.grayed.q": "Perché alcuni comandi sono <fg808080FF>in grigio</fg>?",
-  "faq.grayed.a": "Ora non si possono usare: <b>CP prec.</b> sul primo CP, <b>CP succ.</b> sull'ultimo, e i <fg00BEFFFF>comandi spettatore</fg> quando non c'è nessuno da <fg00BEFFFF>osservare</fg>. <b>Torna a seguire</b> richiede <b>Telecamera libera</b> mentre osservi un giocatore. <b>Giocatore mirato</b> richiede <b>Telecamera libera</b>.",
+  "faq.grayed.a": "Ora non si possono usare: <b>CP prec.</b> sul primo CP, <b>CP succ.</b> sull'ultimo, e i comandi <fg00BEFFFF>spettatore</fg> quando non c'è nessuno da <fg00BEFFFF>osservare</fg>. <b>Torna a seguire</b> richiede <b>Telecamera libera</b> mentre osservi un giocatore. <b>Giocatore mirato</b> richiede <b>Telecamera libera</b>.",
   "faq.scorecard.q": "Cosa mostrano i punteggi?",
   "faq.scorecard.a": "CP, tempo ed errori di ogni giocatore, prima il più avanti, poi il più veloce. Sotto, i giocatori in <fgCB87FFFF>Modalità libera</fg> sono in <fgCB87FFFF>viola</fg> e quelli in <fg00BEFFFF>Osserva</fg> in <fg00BEFFFF>blu</fg>. Le partite <fgFF4646FF>squalificate</fg> sono segnate con <fgFF4646FF>×</fg>, e in <fgFF4646FF>rosso</fg> tra chi è in corsa.",
   "faq.shield.q": "Cos'è un <fg00BEFFFF>rimbalzo con scudo</fg>?",
