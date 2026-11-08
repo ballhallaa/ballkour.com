@@ -4203,8 +4203,10 @@ a.link-copy { text-decoration: none; }
     $("#sub-alt").hidden = true;
     $$("#submit .submit-alt .btn").forEach((b) => b.classList.add("btn-primary"));
   }
-  // The same checks as the Worker's. Names can't have commas or quotes, which the in-game boards' files use.
-  const NAME_OK = /^[^\u0000-\u001f\u007f"`\\,<>]{1,32}$/u;
+  // The same checks as the Worker's. Names can't have commas or quotes, which the in-game boards' files use, or spaces,
+  // which Overwatch names never have.
+  const NAME_OK = /^[^\u0000-\u001f\u007f"`\\,<>\s]{1,32}$/u;
+  const noSpaces = (s) => s.replace(/\s+/gu, "");
   // "4:05.81" (or "1:04:05.81", or with a decimal comma) → "4:05.81", or "" if it isn't a time
   function cleanTime(v) {
     const m = /^(?:(\d{1,2}):)?(\d{1,2}):(\d{2})[.,](\d{2})$/.exec(v.trim());
@@ -4239,11 +4241,11 @@ a.link-copy { text-decoration: none; }
   function fillName() {
     const name = subField("name");
     if (name.value || !me) return;
-    try { name.value = caps(JSON.parse(localStorage.getItem("ballkour-submit") || "{}").name || ""); } catch (e) { /* private mode */ }
+    try { name.value = noSpaces(caps(JSON.parse(localStorage.getItem("ballkour-submit") || "{}").name || "")); } catch (e) { /* private mode */ }
     if (name.value) return;
     const mine = COURSES.flatMap((c) => [...c.runs, ...(MORE[c.n] || [])]).filter((r) => r.discord === me.id)
       .sort((a, b) => formatDate(b.date).localeCompare(formatDate(a.date)));
-    if (mine[0]) name.value = mine[0].name;
+    if (mine[0]) name.value = noSpaces(mine[0].name);
   }
   function signedIn(user) {
     me = user && /^\d{17,20}$/.test(user.id) ? user : null;
@@ -4536,19 +4538,20 @@ a.link-copy { text-decoration: none; }
   subForm.addEventListener("focusin", pickOpenCourse);
   subField("course").addEventListener("pointerdown", pickOpenCourse);
   subForm.addEventListener("input", (e) => e.target.removeAttribute("aria-invalid"));
-  // The name goes into capitals as it's typed or pasted (special-font letters stay as they are, see caps()), but not
-  // while an input method is still putting a word together, which would break it. caps() keeps every letter the same
-  // length, so the cursor stays where it was.
+  // The name goes into capitals as it's typed or pasted (special-font letters stay as they are, see caps()), and any
+  // spaces come out, but not while an input method is still putting a word together, which would break it. caps()
+  // keeps every letter the same length, so the cursor only moves back by the spaces taken out before it.
   const nameField = subField("name");
-  function capsName() {
-    const v = nameField.value, up = caps(v);
-    if (up === v) return;
+  function tidyName() {
+    const v = nameField.value, tidy = noSpaces(caps(v));
+    if (tidy === v) return;
     const { selectionStart: from, selectionEnd: to, selectionDirection: dir } = nameField;
-    nameField.value = up;
-    nameField.setSelectionRange(from, to, dir);
+    const at = (i) => noSpaces(v.slice(0, i)).length;
+    nameField.value = tidy;
+    nameField.setSelectionRange(at(from), at(to), dir);
   }
-  nameField.addEventListener("input", (e) => { if (!e.isComposing) capsName(); });
-  nameField.addEventListener("compositionend", capsName);
+  nameField.addEventListener("input", (e) => { if (!e.isComposing) tidyName(); });
+  nameField.addEventListener("compositionend", tidyName);
   // The time's : and . fill themselves in from the right as the digits are typed, like a stopwatch: 40581 is 4:05.81,
   // and 1234567 is 1:23:45.67. Typing or pasting them yourself works too, since only the digits are kept.
   function timeFromDigits(d) {
@@ -4749,7 +4752,7 @@ a.link-copy { text-decoration: none; }
     if (sending || !me) return;
     const run = {
       course: Number(subCourse),
-      name: caps(subField("name").value.trim()),
+      name: noSpaces(caps(subField("name").value)),
       time: cleanTime(subField("time").value),
       mistakes: subField("miss").value.trim(),
       video: cleanVideo(subField("video").value),
