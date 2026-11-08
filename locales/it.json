@@ -305,7 +305,6 @@
   "sub.againPending": "Hai già inviato quella run su {course}, ed è in attesa che un moderatore la controlli.",
   "sub.held": "Con questa run saresti #{rank} su {course}! I tempi della top 10 vengono controllati prima di essere pubblicati, quindi comparirà in classifica se un moderatore la approva.",
   "rev.title": "Run da controllare",
-  "rev.course": "Percorso {n}",
   "rev.none": "Nessuna run da controllare al momento.",
   "rev.would": "Sarebbe #{rank}",
   "rev.watch": "Guarda",

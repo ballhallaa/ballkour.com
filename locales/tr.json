@@ -305,7 +305,6 @@
   "sub.againPending": "{course} parkurundaki bu koşuyu zaten gönderdin ve bir moderatörün kontrol etmesini bekliyor.",
   "sub.held": "Bu koşu seni {course} parkurunda #{rank} yapar! İlk 10 süreleri yayınlanmadan önce kontrol edilir, yani bir moderatör onaylarsa tabloya girer.",
   "rev.title": "Kontrol edilecek koşular",
-  "rev.course": "Parkur {n}",
   "rev.none": "Şu anda kontrol edilecek koşu yok.",
   "rev.would": "#{rank} olur",
   "rev.watch": "İzle",
