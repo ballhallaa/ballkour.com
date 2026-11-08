@@ -16,8 +16,13 @@ run_worker_first = true
 # Who can approve or turn down top 10 runs sent from the website, at ballkour.com/submit: everyone on the server with a
 # role in REVIEWER_ROLES. Role IDs, separated by commas (in Discord: Developer Mode on, then Server Settings → Roles →
 # right-click a role → Copy Role ID). See worker.js.
+#
+# RUNS_CHANNEL is the run submissions channel: Ballkyrie posts every run sent from the website there, with a View run
+# button to its page (ballkour.com/runs/<id>). Ballkyrie needs to be able to see it, send messages and embed links
+# there. The test copy below leaves it out, so its runs aren't posted.
 [vars]
 REVIEWER_ROLES = "1497735437979226194" # mod
+RUNS_CHANNEL = "1569040889756655658" # run-submissions
 
 # Runs sent from the website: at most 5 a minute from one Discord account (submit() in worker.js). The test copy below
 # doesn't get it, since environments don't inherit bindings, and goes without the limit.
@@ -27,7 +32,9 @@ namespace_id = "1001"
 simple = { limit = 5, period = 60 }
 
 # Stats on players' Discord profiles (see "Stats on Discord profiles" in worker.js): the Discord tokens of everyone who
-# turned them on, and what was last sent to their profile. Without it, the button for it doesn't show. Made once with
+# turned them on, and what was last sent to their profile. Without it, the button for it doesn't show. It also keeps
+# what each run sent from the website did when it was sent (run:<id>, see "Each run's page"), which its page shows
+# beside today's numbers; without it, the page has just today's. Made once with
 #   npx wrangler kv namespace create PROFILES
 # which prints the id to put here.
 [[kv_namespaces]]

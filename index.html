@@ -958,7 +958,8 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .sub-form [aria-invalid="true"] { border-color: var(--coral); }
 #sub-time, #sub-miss { font-family: var(--mono); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
 .sub-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px 14px; }
-/* Runs to check, for reviewers: one card per run, the one a Verify link picked out in gold */
+/* Runs to check, for reviewers: one card per run, the one an old ?check= link picked out in gold. All runs, its other
+   tab, lists every run sent from the website the same way. */
 .sub-review { margin: 0 18px 16px; padding: 12px 14px; border: 1px solid rgba(255, 213, 79, .28); border-radius: 12px; background: rgba(255, 213, 79, .045); }
 .rev-title { margin: 0; display: flex; align-items: center; gap: 8px; font: 600 12px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink); }
 .rev-title .icon { width: 15px; height: 15px; color: var(--gold); }
@@ -979,6 +980,58 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .rev-ask .btn[disabled] { opacity: .6; cursor: progress; transform: none; }
 .btn-warn { background: var(--coral); border-color: var(--coral); color: #2a0800; }
 .btn-warn:hover { background-color: #ff8a74; border-color: #ff8a74; }
+/* Submitted runs, under the form for everyone: every run sent from the website, newest first, each opening its page */
+.sub-runs { margin: 0 18px 16px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255, 255, 255, .02); }
+.sub-runs .rev-title .icon { color: var(--volt); }
+.sub-runs .rev-count { background: rgba(0, 230, 151, .12); color: var(--volt); }
+a.rev-run { color: inherit; text-decoration: none; transition: border-color .15s, background-color .15s; }
+a.rev-run:hover { border-color: var(--line-hi); background: var(--glass-hi); }
+.rev-more { margin-top: 8px; }
+.nowrap { white-space: nowrap; }
+/* A run's status: on the board, waiting for a check, turned down, taken off, or not its player's best */
+.tag-run { height: 18px; border: 1px solid var(--line-hi); color: var(--ink-2); }
+.tag-run.up { color: var(--volt); background: rgba(0, 230, 151, .1); border-color: rgba(0, 230, 151, .32); }
+.tag-run.pending { color: var(--gold); background: rgba(255, 213, 79, .1); border-color: rgba(255, 213, 79, .3); }
+.tag-run.declined { color: var(--coral); background: rgba(255, 106, 79, .1); border-color: rgba(255, 106, 79, .34); }
+/* A run's page, in the player panel's place: the run, its video, what it did, and for reviewers, Approve and Turn down */
+.pl-name button.run-name { margin: 0; padding: 0; font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; }
+.run-tags { margin-top: 9px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.run-tags .pl-dc { margin-top: 0; }
+.run-facts { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; padding: 14px 18px 0; }
+.run-facts .stat { font: 600 18px/1 var(--mono); }
+.run-facts .stat .icon { width: 16px; height: 16px; }
+.run-when { font: 400 12.5px/1.3 var(--mono); color: var(--ink-3); }
+.run-video { margin: 14px 18px 0; }
+.run-frame { position: relative; aspect-ratio: 16 / 9; border: 1px solid var(--line-hi); border-radius: 12px; overflow: hidden; background: #000; }
+.run-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+/* Nothing loads from the video's site until Play is pressed, so it's a plain box until then */
+.run-play { position: absolute; inset: 0; width: 100%; display: grid; place-content: center; justify-items: center; gap: 9px; padding: 16px; border: 0; background: radial-gradient(120% 90% at 50% 40%, rgba(0, 230, 151, .1), transparent 60%), #050a08; color: var(--ink); text-align: center; cursor: pointer; }
+.run-play-btn { width: 58px; height: 58px; display: grid; place-items: center; border-radius: 50%; background: var(--volt); color: var(--on-volt); box-shadow: 0 10px 30px -8px rgba(0, 230, 151, .55); transition: transform .15s ease; }
+.run-play-btn .icon { width: 24px; height: 24px; margin-inline-start: 3px; }
+.run-play:hover .run-play-btn { transform: scale(1.06); }
+.run-play:focus-visible { outline: 2px solid var(--volt); outline-offset: -3px; }
+.run-play-label { font: 600 15.5px/1.2 var(--body); }
+.run-out { margin-top: 8px; display: flex; justify-content: flex-end; }
+.run-out a { display: inline-flex; align-items: center; gap: 5px; font: 500 13px/1 var(--mono); color: var(--ink-3); text-decoration: underline; text-underline-offset: 3px; }
+.run-out a:hover { color: var(--ink); }
+.run-out .icon { width: 13px; height: 13px; }
+.sub-review.run-check { margin: 16px 18px 0; }
+.run-check .rev-note:first-child { margin-top: 0; }
+.run-checked { margin: 16px 18px 0; font: 400 13px/1.4 var(--mono); color: var(--ink-3); }
+.run-checked a { color: var(--volt); font-family: var(--body); font-size: 14px; font-weight: 600; text-underline-offset: 3px; }
+.run-stats { margin: 16px 18px 0; padding-top: 16px; border-top: 1px solid var(--line); }
+.run-tabs { display: inline-flex; flex-wrap: wrap; gap: 3px; padding: 3px; border: 1px solid var(--line-hi); border-radius: 10px; background: rgba(0, 0, 0, .25); }
+.run-tab { height: 30px; padding: 0 12px; border: 0; border-radius: 7px; background: none; font: 600 13px/1 var(--mono); color: var(--ink-2); cursor: pointer; }
+.run-tab:hover { color: var(--ink); }
+.run-tab[aria-pressed="true"] { background: var(--volt); color: var(--on-volt); }
+.run-stats-title { margin: 0; font: 600 12px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink); }
+.run-note { margin: 10px 0 0; font: 400 13.5px/1.45 var(--body); color: var(--ink-2); }
+.run-stats > .run-note:first-child { margin-top: 0; }
+.run-stats-title.run-alone { margin-top: 16px; }
+.run-stats .res-title { margin-top: 12px; }
+.run-stats .res-title a { color: var(--volt); text-underline-offset: 3px; }
+.run-foot { margin: 16px 18px 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.run-missing { margin: 0; padding: 18px; font: 400 15px/1.45 var(--body); color: var(--ink-2); }
 /* Signing in: Discord's own blurple, then who's signed in above the fields */
 .sub-signin { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 0 18px 16px; }
 .sub-signin .field-hint { flex: 1 1 220px; }
@@ -1022,6 +1075,8 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .res-delta.down { color: var(--coral); background: rgba(255, 106, 79, .12); }
 .res-delta.new { color: var(--arc); background: rgba(51, 198, 255, .12); }
 .res-note { grid-column: 1 / -1; font: 400 13px/1.4 var(--body); color: var(--ink-2); }
+/* Who a run passed, on its own line under how much faster it was */
+.res-passed { display: block; margin-top: 2px; }
 .res-foot { margin: 6px 0 0; padding-top: 10px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; border-top: 1px solid var(--line); font: 400 13px/1.4 var(--body); color: var(--ink-2); }
 .res-foot .btn { color: var(--ink); font-weight: 600; text-decoration: none; }
 .res-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-inline-start: auto; }
@@ -1371,6 +1426,7 @@ a.link-copy { text-decoration: none; }
           </div>
           <p class="sub-status field-wide" id="sub-status" role="status"></p>
         </form>
+        <div class="sub-runs" id="sub-runs" hidden></div>
         <div class="submit-alt">
           <span class="lr-sub" id="sub-alt" data-i18n="lb.submit.how">Open a ticket on our Discord and share your video. Not in our server yet? Join us first!</span>
           <span class="submit-actions">
@@ -1732,6 +1788,45 @@ a.link-copy { text-decoration: none; }
   "rev.declined": "Turned down {name}’s {time}.",
   "rev.gone": "Someone already checked {name}’s {time}.",
   "rev.fail": "That didn’t go through. Try again in a moment.",
+  "runs.title": "Submitted runs",
+  "run.all": "All runs",
+  "rev.view": "View run",
+  "rev.more": "Show {count} more",
+  "rev.approvedBy": "Approved by {name}",
+  "rev.declinedBy": "Turned down by {name}",
+  "run.up": "On the board",
+  "run.slower": "Not their best",
+  "run.pending": "Waiting for a check",
+  "run.declined": "Turned down",
+  "run.removed": "Taken off",
+  "run.play": "Play the video",
+  "run.open": "Open on {site}",
+  "run.watch": "Watch the video",
+  "run.check": "Check this run",
+  "run.signin": "Moderator? Sign in to approve or turn down this run.",
+  "run.approvedBy": "Approved by {name} on {date}",
+  "run.declinedBy": "Turned down by {name} on {date}",
+  "run.then": "When sent",
+  "run.now": "Today",
+  "run.nowPending": "If approved now",
+  "run.thenNote": "What it did when it was sent, on {date}.",
+  "run.thenNotePending": "What it would have done when it was sent, on {date}.",
+  "run.nowNote": "What it does on today’s boards.",
+  "run.nowNotePending": "What approving it would do on today’s boards.",
+  "run.did": "What it did",
+  "run.would": "If approved",
+  "run.same": "Its board and rating stats haven’t changed since it was sent on {date}.",
+  "run.first": "Their first run on this course",
+  "run.faster": "{delta} faster than their old best ({time})",
+  "run.passed": "Passed {names}",
+  "run.passedMany": "Passed {count} players",
+  "run.isRecord": "It’s the record on {course}.",
+  "run.wouldRecord": "It would be a new record on {course}!",
+  "run.slowerThen": "Their best on {course} was already {time} (#{rank}), so this run didn’t change their place or rating. Only each player’s best run counts.",
+  "run.alone": "This run on its own",
+  "run.slowerBy": "{delta} slower than their best ({time})",
+  "run.slowerNow": "Their best on {course} is {time} now (#{rank}), so this run doesn’t count toward their place or rating. Only each player’s best run counts.",
+  "run.missing": "There’s no run at this link. It may have been taken off the boards, or part of the link is missing.",
   "sub.err.course": "Pick the course you ran.",
   "sub.err.name": "Enter your name as it shows in Overwatch, without commas or quotes.",
   "sub.err.time": "Enter your time as it shows on the finish screen, like 4:05.81.",
@@ -2507,14 +2602,16 @@ a.link-copy { text-decoration: none; }
     return key && typeof d.files[key] === "string" ? d.files[key] : Promise.reject(path);
   });
 
+  // Every board's files as they load, so a run's page can wait for all of them (see "A run's page")
+  const LOADS = [];
   remakes.forEach((c) => {
-    gameFile(c.file)
+    LOADS.push(gameFile(c.file)
       .then((text) => {
         if (!/\blb\s*=\s*\[\s*\]/.test(text)) return; // file layout changed: keep the fallback runs
         c.runs = parseBoard(text);
         refreshCourse(c);
       })
-      .catch(() => {});
+      .catch(() => {}));
   });
 
   // Each classic course's board is a list of runs in leaderboards/<n>-<slug>.json on the game repo's develop branch:
@@ -2544,14 +2641,14 @@ a.link-copy { text-decoration: none; }
   const REMOVED = {}; // and the runs taken off the boards for good
   classics.forEach((c) => {
     if (!CLASSIC_FILES[c.n]) return;
-    gameFile(`leaderboards/${CLASSIC_FILES[c.n]}.json`)
+    LOADS.push(gameFile(`leaderboards/${CLASSIC_FILES[c.n]}.json`)
       .then(JSON.parse)
       .then((runs) => {
         if (!Array.isArray(runs)) return;
         c.runs = runs.map((r) => cleanRun(r)).filter(Boolean).sort(byTime);
         refreshCourse(c);
       })
-      .catch(() => {});
+      .catch(() => {}));
   });
 
   /* ---------- Leaderboard history ----------
@@ -2592,7 +2689,7 @@ a.link-copy { text-decoration: none; }
   const isRecord = (list, i) => !!list[i][0] && (i === 0 || !list[i - 1][0] || toSeconds(list[i][0].time) < toSeconds(list[i - 1][0].time));
   // A board is dated by its newest run
   const boardDate = (runs) => runs.map((r) => formatDate(r.date)).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort().pop() || "";
-  gameFile("leaderboards/history.json")
+  LOADS.push(gameFile("leaderboards/history.json")
     .then(JSON.parse)
     .then((data) => {
       if (!data || typeof data !== "object") return;
@@ -2613,14 +2710,15 @@ a.link-copy { text-decoration: none; }
         if (openCourse === c.n && /\/legacy$/i.test(location.pathname)) showLink("leaderboards", subPath("leaderboards"));
       });
     })
-    .catch(() => {});
+    .catch(() => {}));
 
   /* ---------- Every run, and the ratings ----------
      A course's board ranks every run in its file and in leaderboards/runs.json on the game's develop branch (the runs
      sent from the website, and runs that never made a top 10), once each per player with their best run, minus the
      runs taken off for good:
        { "runs": { "1": [run, …], … }, "removed": { "1": [{ "name", "discord", "time" }, …], … } }
-     Runs are like the classic files'. Its top 10 is the board, and "Show all" adds the players who dropped out of it,
+     Runs are like the classic files'. (Runs sent from the website waiting for a check, and turned down, are in
+     "pending" and "declined", on no board.) Its top 10 is the board, and "Show all" adds the players who dropped out of it,
      from the boards in history.json, but only with runs slower than today's #10: a faster one that isn't on the board
      any more was taken off it (or the board was cleared), not pushed off. A player is their Discord ID, or for a run
      without one, its in-game name (in-game names aren't unique: Overwatch hides the BattleTag number).
@@ -2757,8 +2855,12 @@ a.link-copy { text-decoration: none; }
       `<p class="rt-math-f">${esc(t("rt.mathRating", { n }))}</p>` +
       `<p class="rt-math-note">${esc(t("rt.mathNote", { n, a: eg("5:00.00"), b: eg("8:00.00") }))}</p></div>`;
   }
+  // runs.json as it is, for the runs sent from the website by their id: their pages, and the reviewers' All runs
+  // (see "A run's page")
+  let RUNS_DATA = null;
   function applyRuns(data) {
     if (!data || typeof data !== "object") return;
+    RUNS_DATA = data;
     [MORE, REMOVED].forEach((m) => Object.keys(m).forEach((k) => delete m[k]));
     const byCourse = (obj, into, clean) => Object.keys(obj && typeof obj === "object" ? obj : {}).forEach((k) => {
       const c = course(Number(k));
@@ -2769,8 +2871,9 @@ a.link-copy { text-decoration: none; }
     byCourse(data.removed, REMOVED, (r) => (r && typeof r.name === "string" && r.name.trim() && typeof r.time === "string"
       ? { name: r.name.trim(), discord: typeof r.discord === "string" && /^\d{17,20}$/.test(r.discord) ? r.discord : "", time: r.time } : null));
     COURSES.forEach(refreshCourse);
+    renderSentRuns();
   }
-  gameFile("leaderboards/runs.json").then(JSON.parse).then(applyRuns).catch(() => {});
+  LOADS.push(gameFile("leaderboards/runs.json").then(JSON.parse).then(applyRuns).catch(() => {}));
 
   /* ---------- A player's runs ----------
      Clicking a name on any board opens that player in a panel beside it: their rating, place and Top %, then every
@@ -3017,6 +3120,7 @@ a.link-copy { text-decoration: none; }
     if (back) back.focus({ preventScroll: true });
   }
   function openPlayer(key, n) {
+    leaveRun();
     plKey = key;
     plOpen.clear();
     if (n) plOpen.add(n);
@@ -3182,6 +3286,8 @@ a.link-copy { text-decoration: none; }
   function openBoard(n) {
     const c = course(n);
     if (!c) return;
+    // The address goes back before the board's link goes in (the panel's close event comes later)
+    leaveRun();
     if (pl.open) pl.close();
     const before = openCourse;
     openCourse = c.n;
@@ -3518,7 +3624,7 @@ a.link-copy { text-decoration: none; }
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
       .then((data) => {
         addPlayers(data);
-        if (PLAYERS.size) COURSES.forEach(refreshCourse);
+        if (PLAYERS.size) { COURSES.forEach(refreshCourse); renderRunTags(); renderSentRuns(); }
       })
       .catch(() => {});
   }
@@ -3788,6 +3894,8 @@ a.link-copy { text-decoration: none; }
     renderLangControls();
     renderCourses();
     renderSubmit();
+    renderSentRuns();
+    renderRun();
     renderDiscord();
     renderVersions();
     renderFaq();
@@ -4104,6 +4212,9 @@ a.link-copy { text-decoration: none; }
     renderSubmit();
     fillName();
     loadReview();
+    // A run's page that's open gets Approve and Turn down once a reviewer is known to be signed in
+    renderRunCheck();
+    renderSentRuns(); // reviewers see who checked each run
     // Back from signing in through My stats: their panel opens. Back without signing in (they cancelled on Discord):
     // the panel that explains it opens again, where they left off.
     if (wantMine) { wantMine = false; openMine(); }
@@ -4138,6 +4249,7 @@ a.link-copy { text-decoration: none; }
   // In the player panel's place. It's drawn once: nothing on the page can change while it's open.
   // kind: "mine" (from My stats) or "submit" (from the form)
   function openSignIn(kind) {
+    leaveRun();
     plKey = "";
     const mine = kind === "mine";
     const part = (title, body) => `<section class="pl-why"><h3>${esc(t(title))}</h3>${body}</section>`;
@@ -4172,9 +4284,9 @@ a.link-copy { text-decoration: none; }
     pl.scrollTop = 0;
     pl.querySelector(".pl-signin-go a[data-login-for]").focus();
   }
-  // Signing in comes back in the same language: from My stats to the same page with their panel open (?me=1), and
-  // from the form to the form (with ?check= kept, for reviewers). Show on my Discord profile ("profile") comes back
-  // to their panel like My stats.
+  // Signing in comes back in the same language: from My stats to the same page with their panel open (?me=1), from
+  // the form to the form (with ?check= kept, for reviewers), and from a run's page ("run") to that run. Show on my
+  // Discord profile ("profile") comes back to their panel like My stats.
   function loginFor(kind) {
     const back = new URLSearchParams();
     if (lang !== "en") back.set("lang", lang);
@@ -4182,7 +4294,8 @@ a.link-copy { text-decoration: none; }
     if (kind === "mine" || kind === "profile") {
       back.set("me", "1");
       path = /^\/[\w/-]*$/.test(location.pathname) ? location.pathname : "/";
-    } else if (checkParam) back.set("check", checkParam);
+    } else if (kind === "run" && /^[\w-]+$/.test(runId)) path = `/runs/${runId}`;
+    else if (checkParam) back.set("check", checkParam);
     return (kind === "profile" ? "/api/profile" : "/api/login") + "?to=" + encodeURIComponent(path + (back.toString() ? `?${back}` : ""));
   }
   function renderMe() {
@@ -4199,18 +4312,21 @@ a.link-copy { text-decoration: none; }
     const a = e.target.closest("a[data-login-for]");
     if (a) a.href = loginFor(a.dataset.loginFor);
   });
-  /* Reviewers (REVIEWER_ROLES in cloudflare/wrangler.toml) see the top 10 runs waiting for a check above the form: each with
-     its video, Approve (onto the board) and Turn down. Verify under a run to check in the log channel links here with
-     ?check=<its id>, and that run is picked out. Approve and Turn down ask first, in that run's row (reviewAsk): Yes
-     sends it, and Cancel or Esc puts the buttons back. */
+  /* Reviewers (REVIEWER_ROLES in cloudflare/wrangler.toml) see the top 10 runs waiting for a check above the form,
+     Runs to check: each with View run (its page, with its video and what it would do), Approve (onto the board), and
+     Turn down. Approve and Turn down ask first, in the run's row or on its page (reviewAsk): Yes sends it, and Cancel
+     or Esc puts the buttons back. Old ?check=<id> links (the Verify buttons from before runs had pages) pick that run
+     out here and open its page. Everyone, reviewers too, sees every run under the form (Submitted runs). */
   let reviewRuns = [];
-  let reviewAsk = null; // { id, approve, at }: the run whose row is asking, and when it started asking
+  let reviewAsk = null; // { id, approve, at }: the run whose buttons are asking, and when they started asking
   const checkParam = (() => { try { return new URLSearchParams(location.search).get("check") || ""; } catch (e) { return ""; } })();
   async function loadReview() {
     if (!me || !me.reviewer) { renderReview(); return; }
     try { reviewRuns = (await fetch("/api/pending", { cache: "no-store" }).then((r) => r.json())).runs || []; } catch (e) { reviewRuns = []; }
     renderReview();
   }
+  // A translation with its {date} kept on one line (a date can break at its dashes otherwise)
+  const withDate = (key, vars) => esc(t(key, { ...vars, date: "\u0000" })).replace("\u0000", `<span class="nowrap">${esc(vars.date)}</span>`);
   let reviewScrolled = false;
   function renderReview(note) {
     const box = $("#sub-review");
@@ -4223,8 +4339,8 @@ a.link-copy { text-decoration: none; }
         `<span class="rev-course">${esc(`${t("rev.course", { n: r.course })} · ${c ? c.name : r.courseName}`)}</span>` +
         `<span class="rev-line"><b>${esc(r.name)}</b><span class="stat time">${icon("bolt")}${esc(r.time)}</span><span class="stat miss">${icon("skull")}${esc(r.mistakes)}</span>` +
         `<span class="tag tag-wr">${esc(t("rev.would", { rank: r.rank }))}</span></span>` +
-        `<span class="rev-meta">${esc(t("lb.submittedOn", { date: formatDate(r.date) }))}${who ? ` · ${esc(who.name)}` : ""}</span>` +
-        `<span class="rev-actions">${reviewActions(r)}</span></li>`;
+        `<span class="rev-meta">${withDate("lb.submittedOn", { date: formatDate(r.date) })}${who ? ` · ${esc(who.name)}` : ""}</span>` +
+        `<span class="rev-actions" data-id="${esc(r.id)}">${reviewActions(r)}</span></li>`;
     };
     box.innerHTML = `<p class="rev-title">${icon("eye")}<span>${esc(t("rev.title"))}</span><span class="rev-count">${reviewRuns.length}</span></p>` +
       (note ? `<p class="rev-note">${note}</p>` : "") +
@@ -4232,30 +4348,70 @@ a.link-copy { text-decoration: none; }
     const picked = checkParam && !reviewScrolled && box.querySelector(".rev-run.picked");
     if (picked) { reviewScrolled = true; picked.scrollIntoView({ block: "center" }); }
   }
-  // A run's buttons: Watch, Approve, and Turn down, or, while it's asking, the question with Yes and Cancel
-  function reviewActions(r) {
+  /* Submitted runs, under the form for everyone (ballkour.com/runs goes here): every run sent from the website, newest
+     first, with where it is now, 5 at first and then 20 more at a time. Each opens its page (a middle click, in a new
+     tab). Reviewers also see who checked each one. It's hidden until there's a run to show. */
+  let runsShown = 5;
+  function renderSentRuns() {
+    const box = $("#sub-runs");
+    const all = sentRuns();
+    box.hidden = !all.length;
+    if (box.hidden) return;
+    const reviewer = !!(me && me.reviewer);
+    const left = Math.max(0, all.length - runsShown);
+    const row = (x) => {
+      const r = x.run;
+      const c = course(x.n);
+      const who = r.discord && PLAYERS.get(r.discord);
+      const checker = reviewer && checkerOf(r);
+      const checked = checker ? t(x.group === "declined" ? "rev.declinedBy" : "rev.approvedBy", { name: checker.name }) : "";
+      return `<li><a class="rev-run" href="/runs/${esc(r.id)}" data-run-open="${esc(r.id)}">` +
+        `<span class="rev-course">${esc(`${t("rev.course", { n: x.n })} · ${c.name}`)}</span>` +
+        `<span class="rev-line"><b>${esc(r.name)}</b><span class="stat time">${icon("bolt")}${esc(r.time)}</span><span class="stat miss">${icon("skull")}${esc(r.mistakes)}</span>${statusTag(x)}</span>` +
+        `<span class="rev-meta">${[withDate("lb.submittedOn", { date: formatDate(r.date) }), ...[who && who.name, checked].filter(Boolean).map(esc)].join(" · ")}</span></a></li>`;
+    };
+    box.innerHTML = `<p class="rev-title">${icon("notes")}<span>${esc(t("runs.title"))}</span><span class="rev-count">${all.length.toLocaleString(htmlLang())}</span></p>` +
+      `<ul class="rev-list">${all.slice(0, runsShown).map(row).join("")}</ul>` +
+      (left ? `<button class="btn btn-sm rev-more" type="button" data-runs-more>${esc(t("rev.more", { count: Math.min(left, 20).toLocaleString(htmlLang()) }))}</button>` : "");
+  }
+  // Who checked a run: their Discord name, or null when it isn't known yet (the names are looked up once an hour)
+  const checkerOf = (r) => (r.checkedBy ? PLAYERS.get(r.checkedBy) || (me && me.id === r.checkedBy ? me : null) : null);
+  // A run's buttons: View run (in the list), Approve, and Turn down, or, while it's asking, the question with Yes and Cancel
+  function reviewActions(r, onItsPage) {
     const btn = (act, ico, label, cls) => `<button class="btn btn-sm${cls ? ` ${cls}` : ""}" type="button" data-review="${esc(r.id)}" data-act="${act}">${icon(ico)}<span>${esc(label)}</span></button>`;
     const ask = reviewAsk && reviewAsk.id === r.id ? reviewAsk : null;
     if (!ask) {
-      return `<a class="btn btn-sm" href="${esc(r.video)}" target="_blank" rel="noopener">${icon("play")}<span>${esc(t("rev.watch"))}</span></a>` +
+      return (onItsPage ? "" : `<button class="btn btn-sm" type="button" data-run-open="${esc(r.id)}">${icon("play")}<span>${esc(t("rev.view"))}</span></button>`) +
         btn("approve", "check", t("rev.approve"), "btn-primary") + btn("decline", "x", t("rev.decline"));
     }
-    const q = `rev-q-${esc(r.id)}`;
+    const q = `rev-q-${esc(r.id)}${onItsPage ? "-page" : ""}`;
     return `<span class="rev-ask" role="group" aria-labelledby="${q}">` +
       `<span class="rev-q" id="${q}">${esc(t(ask.approve ? "rev.askApprove" : "rev.askDecline", { name: r.name, time: r.time }))}</span>` +
       (ask.approve ? btn("yes", "check", t("rev.yesApprove"), "btn-primary") : btn("yes", "x", t("rev.yesDecline"), "btn-warn")) +
       btn("cancel", "x", t("rev.cancel")) + `</span>`;
   }
-  // Starts (or, with no run, stops) a run's row asking; only one row asks at a time
+  // The run a reviewer's button is for: one in Runs to check, or the one whose page is open
+  function reviewTarget(id) {
+    const listed = reviewRuns.find((x) => x.id === id);
+    if (listed) return listed;
+    const x = runId === id ? sentRun(id) : null;
+    return x && x.group === "pending" ? { ...x.run, course: x.n } : null;
+  }
+  // Starts (or, with no run, stops) a run's buttons asking; only one run asks at a time
   function askReview(r, approve) {
     const before = reviewAsk;
-    const was = before && reviewRuns.find((x) => x.id === before.id);
+    const was = before && reviewTarget(before.id);
     reviewAsk = r ? { id: r.id, approve, at: performance.now() } : null;
+    // Redraws its buttons wherever they are (its row, its page), and hands back the ones on screen
     const redo = (x) => {
-      const li = document.getElementById(`rev-${x.id}`);
-      const box = li && li.querySelector(".rev-actions");
-      if (box) box.innerHTML = reviewActions(x);
-      return box;
+      let shown = null;
+      $$(".rev-actions[data-id]").forEach((box) => {
+        if (box.dataset.id !== x.id) return;
+        const onItsPage = pl.contains(box);
+        box.innerHTML = reviewActions(x, onItsPage);
+        if (onItsPage === pl.open) shown = box;
+      });
+      return shown;
     };
     if (was) {
       const box = redo(was);
@@ -4265,13 +4421,13 @@ a.link-copy { text-decoration: none; }
     // Cancel has focus, so pressing Enter twice doesn't send it
     if (r) { const box = redo(r); if (box) box.querySelector('[data-act="cancel"]').focus(); }
   }
-  $("#sub-review").addEventListener("keydown", (e) => {
+  function onReviewKey(e) {
     if (e.key === "Escape" && reviewAsk && e.target.closest(".rev-ask")) { e.preventDefault(); askReview(null); }
-  });
-  $("#sub-review").addEventListener("click", async (e) => {
+  }
+  async function onReview(e) {
     const b = e.target.closest("[data-review]");
     if (!b) return;
-    const r = reviewRuns.find((x) => x.id === b.dataset.review);
+    const r = reviewTarget(b.dataset.review);
     if (!r) return;
     const act = b.dataset.act;
     if (act === "approve" || act === "decline") { askReview(r, act === "approve"); return; }
@@ -4288,9 +4444,27 @@ a.link-copy { text-decoration: none; }
     } catch (err) { out = {}; }
     if (out.ok || out.error === "gone") {
       reviewRuns = reviewRuns.filter((x) => x.id !== r.id);
-      if (out.ok && approve) await reloadRuns();
-      renderReview(esc(t(out.ok ? (approve ? "rev.approved" : "rev.declined") : "rev.gone", { name: r.name, time: r.time })));
-    } else renderReview(esc(t("rev.fail")));
+      await reloadRuns();
+      const note = esc(t(out.ok ? (approve ? "rev.approved" : "rev.declined") : "rev.gone", { name: r.name, time: r.time }));
+      renderReview(note);
+      // Its page, if it's open, says where it is now. Its status and "Approved by …" say what happened, so the note
+      // only goes there when it wasn't this reviewer's click that did it.
+      if (runId === r.id) { renderRunTags(); renderRunCheck(out.ok ? "" : note); renderRunStats(); }
+    } else {
+      renderReview(esc(t("rev.fail")));
+      if (runId === r.id) renderRunCheck(esc(t("rev.fail")));
+    }
+  }
+  $("#sub-review").addEventListener("keydown", onReviewKey);
+  $("#sub-review").addEventListener("click", onReview);
+  $("#sub-runs").addEventListener("click", (e) => {
+    if (!e.target.closest("[data-runs-more]")) return;
+    // Focus goes to the first run that just showed up
+    const first = runsShown;
+    runsShown += 20;
+    renderSentRuns();
+    const next = $$("#sub-runs .rev-list > li")[first];
+    if (next) next.querySelector("[data-run-open]").focus();
   });
   if (loginOn) {
     $("#sub-signin").hidden = false;
@@ -4353,31 +4527,77 @@ a.link-copy { text-decoration: none; }
       if (typeof text === "string") applyRuns(JSON.parse(text));
     } catch (e) { /* the boards catch up on the next visit */ }
   }
-  // Where they stand, before and after a run: on that course's board, in the ratings, and their Top 10s, Podiums and
-  // Records
-  function standing(n) {
+  // Where a player (by Discord ID: theirs, unless it says) stands: on a course's board, in the ratings, and their Top
+  // 10s, Podiums and Records. Before and after a run, it's what the run did.
+  function standing(n, id = me.id) {
     const { top, rest } = standingsOf(course(n));
     const board = top.concat(rest);
-    const at = board.findIndex((r) => r.discord === me.id);
+    const at = board.findIndex((r) => r.discord === id);
     const r = ratings();
-    return { board, at, best: at >= 0 ? board[at] : null, player: r.players.find((p) => p.discord === me.id) || null, total: r.players.length, medals: medalsOf("d:" + me.id) };
+    return { board, at, best: at >= 0 ? board[at] : null, player: r.players.find((p) => p.discord === id) || null, total: r.players.length, counted: r.counted.length, medals: medalsOf("d:" + id) };
   }
   // Where they'd stand with a run that isn't on the board yet (a top 10 run waiting for a check): it goes in with
   // the other runs just long enough to work that out
-  function standingWith(n, sent) {
-    const run = cleanRun({ ...sent, name: String(sent.name || "").toUpperCase(), discord: me.id });
+  function standingWith(n, sent, id = me.id) {
+    const run = cleanRun({ ...sent, name: String(sent.name || "").toUpperCase(), discord: id });
     if (!run) return null;
     const made = !MORE[n];
     const list = MORE[n] || (MORE[n] = []);
     list.push(run);
-    try { return standing(n); } finally {
+    try { return standing(n, id); } finally {
       list.splice(list.indexOf(run), 1);
       if (made) delete MORE[n];
     }
   }
+  // And where they'd stand without a run that's on the board: it's taken off just long enough to work that out
+  function standingWithout(n, run, id) {
+    const made = !REMOVED[n];
+    const list = REMOVED[n] || (REMOVED[n] = []);
+    list.push(run);
+    try { return standing(n, id); } finally {
+      list.splice(list.indexOf(run), 1);
+      if (made) delete REMOVED[n];
+    }
+  }
+  /* What a run did, from where its player stood before it and after it (see standing):
+       { place, was, best, old, record, passed, points, rating, rank, of, tier, courses, counted, top10s, podiums, records }
+     place and was are their place on the course after and before (was is null on their first run there), best and old
+     their best time there after and before (best isn't the run's time when it wasn't their best), passed the names of
+     the players it put them ahead of. points (the course rating), rating, rank (their place in the ratings) and tier
+     are [before, after] (before null when they weren't rated yet, the pair null when the course isn't rated), of is how
+     many players are rated, courses [before, after] the rated courses they've run out of counted, and top10s, podiums
+     and records [before, after]. (A run's page adds alone, the run by itself: see aloneOf.) The Worker works out the
+     same when a run is sent (runStats() in cloudflare/worker.js),
+     for its page's When sent: keep the two in step. */
+  function statsFrom(n, run, before, after) {
+    const b = before.player, a = after.player;
+    const beforeKeys = before.board.map(playerKey);
+    const wasAt = before.at >= 0 ? before.at : Infinity;
+    const mine = after.best ? playerKey(after.best) : "";
+    const pair = (get) => (a && get(a) !== undefined ? [b && get(b) !== undefined ? get(b) : null, get(a)] : null);
+    const round = (v) => (v === undefined ? undefined : Math.round(v));
+    return {
+      place: after.at >= 0 ? after.at + 1 : null,
+      was: before.at >= 0 ? before.at + 1 : null,
+      best: after.best ? after.best.time : null,
+      old: before.best ? before.best.time : null,
+      record: after.at === 0 && (!before.board[0] || byTime(after.best, before.board[0]) < 0),
+      passed: after.at < 0 ? [] : after.board.filter((r, i) => i > after.at && playerKey(r) !== mine && beforeKeys.includes(playerKey(r)) && beforeKeys.indexOf(playerKey(r)) < wasAt).map((r) => r.name),
+      points: pair((p) => round(p.points[n])),
+      rating: pair((p) => Math.round(p.rating)),
+      rank: pair((p) => p.rank),
+      of: after.total,
+      tier: pair((p) => p.tier),
+      courses: a ? [b ? b.courses : 0, a.courses] : null,
+      counted: after.counted,
+      top10s: [before.medals.top10s, after.medals.top10s],
+      podiums: [before.medals.podiums, after.medals.podiums],
+      records: [before.medals.records, after.medals.records],
+    };
+  }
   // 6.81 → "6.81s", 62.15 → "1:02.15"
   const gap = (sec) => (sec < 60 ? `${sec.toFixed(2)}s` : `${Math.floor(sec / 60)}:${(sec % 60).toFixed(2).padStart(5, "0")}`);
-  const tierText = (p) => (p.tier === null ? t("rt.rated") : t("rt.tier", { pct: p.tier.toLocaleString(htmlLang()) }));
+  const tierLabel = (tier) => (tier === null ? t("rt.rated") : t("rt.tier", { pct: tier.toLocaleString(htmlLang()) }));
   // ▲3 in mint, ▼3 in coral, or a New chip
   function deltaHtml(change, text) {
     if (change === null) return `<span class="res-delta new">${esc(t("res.new"))}</span>`;
@@ -4387,8 +4607,56 @@ a.link-copy { text-decoration: none; }
   const resRow = (label, value, delta, note) => `<div class="res-row"><span class="res-label">${esc(label)}</span>` +
     `<span class="res-value">${value}</span>${delta || "<span></span>"}${note ? `<span class="res-note">${note}</span>` : ""}</div>`;
   const was = (html) => `<span class="was">${html} →</span> `;
-  // What the run did: the course's place and time, who they passed, their rating, place and Top %, and their Top 10s,
-  // Podiums and Records. held: it's a top 10 run waiting for a check, and after is where it would put them.
+  // The rows of what a run did (s, from statsFrom or the Worker): the course's place and time and who it passed, the
+  // course rating, the rating, place and Top %, and the Top 10s, Podiums and Records it adds. they: someone else's run,
+  // on its page ("their old best", not "your"). held: it's waiting for a check.
+  function statRowsHtml(n, run, s, { held = false, they = false } = {}) {
+    const c = course(n);
+    const faster = s.old ? t(they ? "run.faster" : "res.faster", { delta: gap(toSeconds(s.old) - toSeconds(run.time)), time: s.old }) : t(they ? "run.first" : "res.first");
+    let names = "";
+    if (s.passed.length > 3) names = esc(t(they ? "run.passedMany" : "res.passedMany", { count: s.passed.length }));
+    else if (s.passed.length) {
+      let list = s.passed.join(", ");
+      try { list = new Intl.ListFormat(htmlLang(), { style: "long", type: "conjunction" }).format(s.passed); } catch (e) { /* plain commas */ }
+      names = esc(t(they ? "run.passed" : "res.passed", { names: list }));
+    }
+    // The course
+    let html = `<div class="res-rows">` + resRow(`${c.n} ${c.name}`,
+      (s.was && s.was !== s.place ? was(`#${s.was}`) : "") + esc(`#${s.place} · ${run.time}`),
+      deltaHtml(s.was ? s.was - s.place : null, String(s.was - s.place)),
+      esc(faster) + (names ? `<span class="res-passed">${names}</span>` : ""));
+    // The course rating, then the overall ratings (a course that's broken right now counts for neither)
+    if (s.points) {
+      const [from, to] = s.points;
+      html += resRow(t("res.course"), (from !== null && from !== to ? was(esc(points(from))) : "") + esc(points(to)),
+        deltaHtml(from === null ? null : to - from, Math.abs(to - (from || 0)).toLocaleString(htmlLang())));
+    }
+    if (s.rating) {
+      const [from, to] = s.rating;
+      const rated = from !== null; // they had a rating before
+      const change = rated ? to - from : null;
+      html += resRow(t("res.rating"), (rated && change ? was(esc(points(from))) : "") + esc(points(to)),
+        deltaHtml(change, Math.abs(change || 0).toLocaleString(htmlLang())),
+        rated && s.courses[0] !== s.courses[1] ? esc(t("rt.courses", { n: s.courses[1], total: s.counted })) : "");
+      const [rankFrom, rankTo] = s.rank;
+      html += resRow(t("res.place"), (rated && rankFrom !== rankTo ? was(`#${rankFrom}`) : "") + esc(t("res.of", { rank: rankTo, total: s.of })),
+        deltaHtml(rated ? rankFrom - rankTo : null, String(Math.abs(rated ? rankFrom - rankTo : 0))));
+      const [tierFrom, tierTo] = s.tier;
+      const newTier = !rated || tierFrom !== tierTo;
+      html += resRow(t("res.tier"), (rated && newTier ? was(esc(tierLabel(tierFrom))) : "") + esc(tierLabel(tierTo)),
+        newTier ? `<span class="res-delta ${rated ? "up" : "new"}">${esc(t(rated ? "res.newRole" : "res.new"))}</span>` : "",
+        newTier && !held && !they ? esc(t("res.roleNote")) : "");
+    }
+    // Their Top 10s, Podiums and Records, the numbers on their Discord profile, when the run adds to them
+    [["top10s", "res.top10s"], ["podiums", "res.podiums"], ["records", "res.records"]].forEach(([k, label]) => {
+      const [from, to] = s[k];
+      if (to !== from) html += resRow(t(label), `<span class="was">${from} →</span> ${to}`, deltaHtml(to - from, String(Math.abs(to - from))));
+    });
+    return html + `</div>`;
+  }
+  // What the run did, right after it's sent: the course's place and time, who they passed, their rating, place and
+  // Top %, and their Top 10s, Podiums and Records. held: it's a top 10 run waiting for a check, and after is where it
+  // would put them.
   function resultHtml(n, run, before, after, again, held) {
     const c = course(n);
     const where = `<a href="/leaderboards/${c.n}" data-board="${c.n}">${esc(`${c.n} ${c.name}`)}</a>`;
@@ -4398,55 +4666,13 @@ a.link-copy { text-decoration: none; }
     if (!after.best) return plain(esc(t("sub.sentPlain")));
     if (again) return plain(withCourse("sub.sentAgain", { rank: after.at + 1 }));
     if (after.best.time !== run.time) return plain(withCourse("sub.sentSlower", { time: after.best.time, rank: after.at + 1 }));
-    const record = after.at === 0 && (!before.board[0] || byTime(after.best, before.board[0]) < 0);
+    const s = statsFrom(c.n, run, before, after);
     let html = held
-      ? title(record ? " record" : " held", record ? "trophy" : "eye", withCourse(record ? "res.heldRecord" : "res.held", { rank: after.at + 1 })) +
+      ? title(s.record ? " record" : " held", s.record ? "trophy" : "eye", withCourse(s.record ? "res.heldRecord" : "res.held", { rank: s.place })) +
         `<p class="res-held">${esc(t("res.heldNote"))}</p>`
-      : record ? title(" record", "trophy", withCourse("res.record")) : plain(esc(t("res.title")));
-    // The course
-    const faster = before.best ? t("res.faster", { delta: gap(toSeconds(before.best.time) - toSeconds(run.time)), time: before.best.time }) : t("res.first");
-    const beforeKeys = before.board.map(playerKey);
-    const mine = playerKey(after.best);
-    const wasAt = before.at >= 0 ? before.at : Infinity;
-    const passed = after.board.filter((r, i) => i > after.at && beforeKeys.indexOf(playerKey(r)) < wasAt && playerKey(r) !== mine && beforeKeys.includes(playerKey(r)));
-    let names = "";
-    if (passed.length > 3) names = esc(t("res.passedMany", { count: passed.length }));
-    else if (passed.length) {
-      let list = passed.map((r) => r.name).join(", ");
-      try { list = new Intl.ListFormat(htmlLang(), { style: "long", type: "conjunction" }).format(passed.map((r) => r.name)); } catch (e) { /* plain commas */ }
-      names = esc(t("res.passed", { names: list }));
-    }
-    html += `<div class="res-rows">` + resRow(`${c.n} ${c.name}`,
-      (before.at >= 0 && before.at !== after.at ? was(`#${before.at + 1}`) : "") + esc(`#${after.at + 1} · ${run.time}`),
-      deltaHtml(before.at >= 0 ? before.at - after.at : null, String(before.at - after.at)),
-      esc(faster) + (names ? ` · ${names}` : ""));
-    // The course rating, then the overall ratings (a course that's broken right now counts for neither)
-    const b = before.player, a = after.player;
-    if (a && a.points[c.n] !== undefined) {
-      const was = b && b.points[c.n] !== undefined ? Math.round(b.points[c.n]) : null;
-      const now = Math.round(a.points[c.n]);
-      html += resRow(t("res.course"), (was !== null && was !== now ? `<span class="was">${esc(points(was))} →</span> ` : "") + esc(points(now)),
-        deltaHtml(was === null ? null : now - was, Math.abs(now - (was || 0)).toLocaleString(htmlLang())));
-    }
-    if (a) {
-      const pts = (p) => points(p.rating);
-      const ratingChange = b ? Math.round(a.rating) - Math.round(b.rating) : null;
-      html += resRow(t("res.rating"), (b && ratingChange ? was(esc(pts(b))) : "") + esc(pts(a)),
-        deltaHtml(ratingChange, `${Math.abs(ratingChange || 0).toLocaleString(htmlLang())}`),
-        b && a.courses !== b.courses ? esc(t("rt.courses", { n: a.courses, total: ratings().counted.length })) : "");
-      html += resRow(t("res.place"), (b && b.rank !== a.rank ? was(`#${b.rank}`) : "") + esc(t("res.of", { rank: a.rank, total: after.total })),
-        deltaHtml(b ? b.rank - a.rank : null, String(Math.abs(b ? b.rank - a.rank : 0))));
-      const newTier = !b || b.tier !== a.tier;
-      html += resRow(t("res.tier"), (b && newTier ? was(esc(tierText(b))) : "") + esc(tierText(a)),
-        newTier ? `<span class="res-delta ${b ? "up" : "new"}">${esc(t(b ? "res.newRole" : "res.new"))}</span>` : "",
-        newTier && !held ? esc(t("res.roleNote")) : "");
-    }
-    // Their Top 10s, Podiums and Records, the numbers on their Discord profile, when the run adds to them
-    [["top10s", "res.top10s"], ["podiums", "res.podiums"], ["records", "res.records"]].forEach(([k, label]) => {
-      const from = before.medals[k], to = after.medals[k];
-      if (to !== from) html += resRow(t(label), `<span class="was">${from} →</span> ${to}`, deltaHtml(to - from, String(Math.abs(to - from))));
-    });
-    html += `</div><p class="res-foot"><span>${after.at < 10 && !held ? esc(t("res.discord")) : ""}</span><span class="res-actions">` +
+      : s.record ? title(" record", "trophy", withCourse("res.record")) : plain(esc(t("res.title")));
+    html += statRowsHtml(c.n, run, s, { held });
+    html += `<p class="res-foot"><span>${s.place <= 10 && !held ? esc(t("res.discord")) : ""}</span><span class="res-actions">` +
       `<button class="btn btn-sm" type="button" data-my-stats>${icon("star", "icon icon-star")}<span>${esc(t("me.button"))}</span></button>` +
       `<a class="btn btn-sm" href="/leaderboards/${c.n}" data-board="${c.n}">${esc(t("res.board"))}</a></span></p>`;
     return html;
@@ -4526,12 +4752,341 @@ a.link-copy { text-decoration: none; }
     }
   });
 
+  /* ---------- A run's page ----------
+     Every run sent from the website has its own page, ballkour.com/runs/<id>, which the View run button on its post in
+     the run submissions channel opens (Ballkyrie posts it there: see "Each run's page" in cloudflare/worker.js). It opens
+     in the player panel's place: the course, the player, the time and mistakes, where the run is now (on the board,
+     waiting for a check, turned down, taken off, or not its player's best), its video, and what it did to the boards.
+     That's two tabs: When sent, worked out by the Worker as it was sent and kept (from /api/run), and Today, worked out
+     here from today's boards (for a run waiting for a check, If approved now: what approving it would do). While the
+     two are the same (nothing on the boards has changed since), it's one view that says so. Reviewers
+     also get Approve and Turn down for a run waiting for a check, and see who checked one. Old ?check=<id> links (the
+     Verify buttons from before) open it too.
+     The video plays on the page for YouTube, Twitch, and Streamable links, but nothing loads from those sites until
+     Play is pressed (the site never sends visitors to anyone else on its own). Other links get a button to the video. */
+  const RUN_GROUPS = ["pending", "runs", "declined", "removed"];
+  // The page of a run whose link someone opened (/runs/<id>, or an old /submit?check=<id>)
+  const startRun = (/^\/runs\/([\w-]{4,16})\/?$/i.exec(location.pathname) || [])[1] || (/^[\w-]{4,16}$/.test(checkParam) ? checkParam : "");
+  let runId = ""; // the run whose page is open
+  let runBack = null; // the address from before it opened, to go back to
+  let runTab = "then"; // "then" (When sent) or "now" (Today)
+  const runThen = {}; // id → what it did when it was sent, from the Worker
+  // Where a run is now: on the board ("up"), or else "slower" (its player has a faster one), "pending", "declined" or
+  // "removed" (taken off)
+  // (boards: each course's board, worked out once for a whole list)
+  function runStatus(r, n, group, boards = {}) {
+    if (group !== "runs") return group;
+    const run = cleanRun(r);
+    if ((REMOVED[n] || []).some((x) => sameRun(x, run))) return "removed";
+    if (!boards[n]) { const { top, rest } = standingsOf(course(n)); boards[n] = top.concat(rest); }
+    return boards[n].some((x) => playerKey(x) === playerKey(run) && x.time === run.time && x.miss === run.miss) ? "up" : "slower";
+  }
+  const statusTag = (x) => `<span class="tag tag-run ${x.status}">${esc(t(`run.${x.status}`))}</span>`;
+  // Every run sent from the website that has an id, as { run (as runs.json has it), n, group, status }, newest first
+  function sentRuns() {
+    const out = [];
+    const boards = {};
+    RUN_GROUPS.forEach((group) => {
+      const g = RUNS_DATA && RUNS_DATA[group];
+      Object.keys(g && typeof g === "object" ? g : {}).forEach((k) => {
+        const n = Number(k);
+        if (!course(n) || !Array.isArray(g[k])) return;
+        g[k].forEach((r) => {
+          if (r && typeof r.id === "string" && cleanRun(r)) out.push({ run: r, n, group, status: runStatus(r, n, group, boards) });
+        });
+      });
+    });
+    const when = (x) => String(x.run.sentAt || x.run.date || "");
+    return out.sort((a, b) => when(b).localeCompare(when(a)));
+  }
+  function sentRun(id) {
+    for (const group of RUN_GROUPS) {
+      const g = RUNS_DATA && RUNS_DATA[group];
+      for (const k of Object.keys(g && typeof g === "object" ? g : {})) {
+        const n = Number(k);
+        const r = course(n) && Array.isArray(g[k]) ? g[k].find((x) => x && x.id === id) : null;
+        if (r && cleanRun(r)) return { run: r, n, group, status: runStatus(r, n, group) };
+      }
+    }
+    return null;
+  }
+  // What it does on today's boards: before is the boards without it, after with it. A run waiting for a check goes in
+  // as if it were approved.
+  function runNow(x) {
+    const run = cleanRun(x.run);
+    if (!run.discord) return null;
+    if (x.status === "pending") return statsFrom(x.n, run, standing(x.n, run.discord), standingWith(x.n, x.run, run.discord));
+    if (x.status === "up" || x.status === "slower") return { ...statsFrom(x.n, run, standingWithout(x.n, run, run.discord), standing(x.n, run.discord)), alone: aloneOf(x.n, run) };
+    return null;
+  }
+
+  // A run by itself, for one that isn't its player's best: its place among everyone else's bests, and the course
+  // rating its time gets (null when the course isn't rated). The Worker works out the same as it's sent (runStats).
+  function aloneOf(n, run) {
+    const c = course(n);
+    const { top, rest } = standingsOf(c);
+    const board = top.concat(rest);
+    const rated = ratings().counted.includes(c);
+    return {
+      place: 1 + board.filter((r) => playerKey(r) !== playerKey(run) && byTime(r, run) < 0).length,
+      points: rated && board[0] ? Math.round(coursePoints(board[0], run)) : null,
+    };
+  }
+  // A video link that can play on the page → { site, src }, or null. Each player loads only once Play is pressed.
+  const ytStart = (v) => { const m = /^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s?)?$/.exec(v || ""); return m ? Number(m[1] || 0) * 3600 + Number(m[2] || 0) * 60 + Number(m[3] || 0) : 0; };
+  function embedOf(url) {
+    let u;
+    try { u = new URL(url); } catch (e) { return null; }
+    if (u.protocol !== "https:") return null;
+    const host = u.hostname.toLowerCase().replace(/^(?:www|m)\./, "");
+    const path = u.pathname;
+    const match = (re) => { const m = re.exec(path); return m ? m[1] : ""; };
+    // YouTube, from youtube-nocookie.com, which keeps its cookies off until the video plays
+    const yt = host === "youtu.be" ? match(/^\/([\w-]{11})\/?$/)
+      : host === "youtube.com" || host === "music.youtube.com" ? (path === "/watch" ? u.searchParams.get("v") || "" : match(/^\/(?:shorts|live|embed)\/([\w-]{11})\/?$/))
+      : "";
+    if (/^[\w-]{11}$/.test(yt)) {
+      const start = ytStart(u.searchParams.get("t") || u.searchParams.get("start"));
+      return { site: "YouTube", src: `https://www.youtube-nocookie.com/embed/${yt}?autoplay=1&rel=0${start ? `&start=${start}` : ""}` };
+    }
+    // Twitch clips and videos, which only play on the site they name as their parent
+    const parent = encodeURIComponent(location.hostname);
+    const clip = host === "clips.twitch.tv" ? match(/^\/([\w-]+)\/?$/) : host === "twitch.tv" ? match(/^\/\w+\/clip\/([\w-]+)\/?$/) : "";
+    if (clip && clip !== "embed") return { site: "Twitch", src: `https://clips.twitch.tv/embed?clip=${encodeURIComponent(clip)}&parent=${parent}&autoplay=true` };
+    const vod = host === "twitch.tv" ? match(/^\/videos\/(\d+)\/?$/) : "";
+    if (vod) return { site: "Twitch", src: `https://player.twitch.tv/?video=${vod}&parent=${parent}&autoplay=true` };
+    const st = host === "streamable.com" ? match(/^\/(?:e\/)?(\w+)\/?$/) : "";
+    if (st) return { site: "Streamable", src: `https://streamable.com/e/${st}?autoplay=1` };
+    return null;
+  }
+  function videoHtml(url) {
+    if (!url) return "";
+    const e = embedOf(url);
+    if (!e) return `<div class="run-video"><a class="btn btn-sm" href="${esc(url)}" target="_blank" rel="noopener">${icon("play")}<span>${esc(t("run.watch"))}</span>${icon("out")}</a></div>`;
+    return `<div class="run-video"><div class="run-frame" data-src="${esc(e.src)}">` +
+        `<button class="run-play" type="button" data-run-play><span class="run-play-btn">${icon("play")}</span>` +
+        `<span class="run-play-label">${esc(t("run.play"))}</span></button></div>` +
+      `<p class="run-out"><a href="${esc(url)}" target="_blank" rel="noopener">${esc(t("run.open", { site: e.site }))}${icon("out")}</a></p></div>`;
+  }
+
+  const runClose = () => `<button class="pl-close" type="button" data-pl-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button>`;
+  // Just its title and Close, while it looks for the run (more: what to say under them)
+  const runEmpty = (more = "") => `<div class="pl-head"><div class="pl-who"><h2 class="pl-name" id="pl-name">${esc(t("rev.view"))}</h2></div>${runClose()}</div>${more}`;
+  // The whole page. Only a new language redraws it all: everything that changes after that (where it is now, the
+  // reviewers' box, the tabs) redraws on its own, so a video that's playing keeps playing.
+  function renderRun() {
+    if (!runId || !pl.open) return;
+    const x = sentRun(runId);
+    const close = runClose();
+    if (!x) { pl.innerHTML = runEmpty(`<p class="run-missing">${esc(t("run.missing"))}</p>`); return; }
+    const c = course(x.n);
+    const run = cleanRun(x.run);
+    pl.innerHTML = `<div class="pl-head"><div class="pl-who">` +
+        `<p class="pl-eyebrow">${icon("play")}<span>${esc(`${t("rev.course", { n: c.n })} · ${c.name}`)}</span></p>` +
+        `<h2 class="pl-name" id="pl-name"><button class="run-name" type="button" data-run-player="${esc(playerKey(run))}" title="${esc(t("lb.playerOpen", { player: run.name }))}">${esc(run.name)}</button></h2>` +
+        `<div class="run-tags" id="run-tags"></div></div>${close}</div>` +
+      `<div class="run-facts"><span class="stat time">${icon("bolt")}<span>${esc(run.time)}</span></span>` +
+        `<span class="stat miss">${icon("skull")}<span>${esc(run.miss)}</span></span>` +
+        `<span class="run-when">${withDate("lb.submittedOn", { date: formatDate(run.date) })}</span></div>` +
+      videoHtml(run.video) +
+      `<div id="run-check"></div><div class="run-stats" id="run-stats" hidden></div>` +
+      `<div class="run-foot"><a class="btn btn-sm" href="/leaderboards/${c.n}" data-board="${c.n}">${esc(t("res.board"))}</a>` +
+        `<a class="btn btn-sm" href="/runs" data-route="runs">${icon("notes")}<span>${esc(t("run.all"))}</span></a></div>`;
+    renderRunTags();
+    renderRunCheck();
+    renderRunStats();
+  }
+  // Their Discord name and picture, and where the run is now
+  function renderRunTags() {
+    const box = runId && pl.open ? $("#run-tags", pl) : null;
+    const x = box && sentRun(runId);
+    if (!x) return;
+    const p = x.run.discord && PLAYERS.get(x.run.discord);
+    const pfp = p && /^https:\/\/cdn\.discordapp\.com\//.test(p.avatar) ? `<img class="run-pfp" src="${esc(p.avatar)}" alt="" width="18" height="18">` : "";
+    box.innerHTML = (p ? `<span class="pl-dc">${pfp}<span>${esc(p.name)}</span></span>` : "") + statusTag(x);
+  }
+  // Reviewers: Approve and Turn down for a run waiting for a check (note: what just happened), and who checked one.
+  // Signed out, a run waiting for a check says moderators can sign in to check it.
+  function renderRunCheck(note) {
+    const box = runId && pl.open ? $("#run-check", pl) : null;
+    const x = box && sentRun(runId);
+    if (!x) return;
+    const reviewer = !!(me && me.reviewer);
+    // Who checked it and when, in the same box as any note
+    const checker = reviewer && checkerOf(x.run);
+    const checked = checker ? withDate(x.group === "declined" ? "run.declinedBy" : "run.approvedBy", { name: checker.name, date: formatDate(String(x.run.checkedAt || "").slice(0, 10)) }) : "";
+    let html = "";
+    if (x.group === "pending" && reviewer) {
+      html = `<div class="sub-review run-check"><p class="rev-title">${icon("eye")}<span>${esc(t("run.check"))}</span></p>` +
+        (note ? `<p class="rev-note">${note}</p>` : "") +
+        `<span class="rev-actions" data-id="${esc(x.run.id)}">${reviewActions({ ...x.run, course: x.n }, true)}</span></div>`;
+    } else if (note || checked) {
+      html = `<div class="sub-review run-check">${[note, checked].filter(Boolean).map((h) => `<p class="rev-note">${h}</p>`).join("")}</div>`;
+    } else if (x.group === "pending" && loginOn && meKnown && !me) {
+      html = `<p class="run-checked"><a href="${esc(loginFor("run"))}" data-login-for="run">${esc(t("run.signin"))}</a></p>`;
+    }
+    box.innerHTML = html;
+  }
+  // What it did: When sent and Today (or just one, when that's all there is)
+  function renderRunStats() {
+    const box = runId && pl.open ? $("#run-stats", pl) : null;
+    const x = box && sentRun(runId);
+    if (!x) return;
+    // A turned-down run never went on the board, so it did nothing (even if it was waiting when its page opened)
+    if (x.status === "declined") { box.hidden = true; box.innerHTML = ""; return; }
+    // Nothing until the Worker has answered for When sent, so it doesn't open on Today and then jump
+    const then = runThen[runId] || null;
+    const now = x.status === "declined" || x.status === "removed" || runAsking.has(runId) ? null : runNow(x);
+    const pending = x.status === "pending";
+    const date = formatDate(x.run.date);
+    const label = (k) => t(k === "then" ? "run.then" : pending ? "run.nowPending" : "run.now");
+    // Nothing on the boards has changed since it was sent (often the case while a run waits for a check): one view
+    // that says so, since tabs that show the same thing look broken
+    if (then && now && runStatsHtml(x, then, "then") === runStatsHtml(x, now, "then")) {
+      box.hidden = false;
+      // A run that wasn't its player's best did nothing, so it's just the sentence saying why
+      const slower = then.best !== cleanRun(x.run).time;
+      box.innerHTML = (slower ? "" : `<p class="run-stats-title">${esc(t(pending ? "run.would" : "run.did"))}</p>` +
+        `<p class="run-note">${withDate("run.same", { date })}</p>`) + runStatsHtml(x, then, "then");
+      return;
+    }
+    const tabs = [then && "then", now && "now"].filter(Boolean);
+    box.hidden = !tabs.length;
+    if (!tabs.length) { box.innerHTML = ""; return; }
+    // When sent unless they picked Today (runTab stays what they picked, for when both are there)
+    const shown = tabs.includes(runTab) ? runTab : tabs[0];
+    const head = tabs.length > 1
+      ? `<div class="run-tabs">${tabs.map((k) => `<button class="run-tab" type="button" data-run-tab="${k}" aria-pressed="${k === shown}">${esc(label(k))}</button>`).join("")}</div>`
+      : `<p class="run-stats-title">${esc(label(shown))}</p>`;
+    const note = shown === "then"
+      ? withDate(pending ? "run.thenNotePending" : "run.thenNote", { date })
+      : esc(t(pending ? "run.nowNotePending" : "run.nowNote"));
+    box.innerHTML = head + `<p class="run-note">${note}</p>` + runStatsHtml(x, shown === "then" ? then : now, shown);
+  }
+  function runStatsHtml(x, s, which) {
+    const c = course(x.n);
+    const run = cleanRun(x.run);
+    if (!s || !s.place) return "";
+    const where = `<a href="/leaderboards/${c.n}" data-board="${c.n}">${esc(`${c.n} ${c.name}`)}</a>`;
+    const withCourse = (key, vars) => esc(t(key, { ...vars, course: "\u0000" })).replace("\u0000", where);
+    // Not its player's best: it didn't change the board
+    if (s.best !== run.time) {
+      const why = `<p class="run-note">${withCourse(which === "then" ? "run.slowerThen" : "run.slowerNow", { time: s.best, rank: s.place })}</p>`;
+      if (!s.alone) return why;
+      return why + `<p class="run-stats-title run-alone">${esc(t("run.alone"))}</p><div class="res-rows">` +
+        resRow(`${c.n} ${c.name}`, esc(`#${s.alone.place} · ${run.time}`), "", esc(t("run.slowerBy", { delta: gap(toSeconds(run.time) - toSeconds(s.best)), time: s.best }))) +
+        (s.alone.points !== null ? resRow(t("res.course"), esc(points(s.alone.points)), "") : "") + `</div>`;
+    }
+    const held = x.status === "pending";
+    const record = s.record
+      ? `<p class="res-title record">${icon("trophy")}<span>${withCourse(held ? "run.wouldRecord" : which === "then" ? "res.record" : "run.isRecord")}</span></p>`
+      : "";
+    return record + statRowsHtml(x.n, run, s, { held, they: true });
+  }
+  // When sent, from the Worker. It's saved as the run is sent, so for a run that's just come in, it's asked for again
+  // once in a few seconds if it isn't there yet. runAsking: the runs it's asking for the first time, whose stats wait.
+  const runAsking = new Set();
+  async function loadRunThen(id, again) {
+    if (runThen[id]) return;
+    if (!again) runAsking.add(id);
+    let stats = null;
+    try { stats = (await fetch(`/api/run?id=${encodeURIComponent(id)}`).then((r) => (r.ok ? r.json() : {}))).stats || null; } catch (e) { stats = null; }
+    runAsking.delete(id);
+    if (stats && typeof stats === "object") runThen[id] = stats;
+    if (runId === id) renderRunStats();
+    if (stats) return;
+    const x = sentRun(id);
+    const fresh = x && x.run.sentAt && Date.now() - Date.parse(x.run.sentAt) < 3 * 60 * 1000;
+    if (!again && fresh) setTimeout(() => { if (runId === id) loadRunThen(id, true); }, 5000);
+  }
+
+  // Opens a run's page, and puts its link in the address while it's open
+  async function openRun(id) {
+    if (!/^[\w-]{4,16}$/.test(id)) return;
+    if (runBack === null) runBack = location.pathname + location.search + location.hash;
+    plKey = "";
+    runId = id;
+    runTab = "then";
+    const l = new URLSearchParams(location.search).get("lang");
+    try { history.replaceState(history.state, "", `/runs/${id}${l ? `?lang=${encodeURIComponent(l)}` : ""}`); } catch (e) { /* address stays as it is */ }
+    if (!pl.open) pl.showModal();
+    // A run sent since the page loaded: the newest runs.json has it
+    if (!sentRun(id)) {
+      pl.innerHTML = runEmpty();
+      await reloadRuns();
+      if (runId !== id) return;
+    }
+    const x = sentRun(id);
+    if (x && x.status !== "declined") loadRunThen(id);
+    renderRun();
+    pl.scrollTop = 0;
+    pl.querySelector("[data-pl-close]").focus();
+  }
+  // Leaving it (closing the panel, or a player's panel opening in its place) puts the address back
+  function leaveRun() {
+    if (!runId) return;
+    const left = runId;
+    runId = "";
+    if (reviewAsk && reviewAsk.id === left) { reviewAsk = null; renderReview(); }
+    // A run's link someone opened goes back to ballkour.com/runs: the page is at Submitted runs behind it
+    const back = (runBack || "/").replace(/^\/runs\/[\w-]+\/?/i, "/runs");
+    runBack = null;
+    try { history.replaceState(history.state, "", back); } catch (e) { /* address stays as it is */ }
+    // Back at the list, /runs stays until they scroll (it isn't in the section bar); anywhere else follows the page
+    addressHeld = /^\/runs(?:[?#]|$)/.test(back);
+    if (!addressHeld) queueSpy();
+  }
+  pl.addEventListener("close", leaveRun);
+  pl.addEventListener("keydown", onReviewKey);
+  pl.addEventListener("click", (e) => {
+    if (!runId) return;
+    // All runs: the page goes there (the panel closes), and the address goes back before /runs goes in
+    if (e.target.closest("a[data-route]")) { leaveRun(); return; }
+    onReview(e);
+    const tab = e.target.closest("[data-run-tab]");
+    if (tab) {
+      runTab = tab.dataset.runTab;
+      renderRunStats();
+      const again = $(`[data-run-tab="${runTab}"]`, pl);
+      if (again) again.focus();
+      return;
+    }
+    // Play: the player loads now, and only now
+    const play = e.target.closest("[data-run-play]");
+    if (play) {
+      const frame = play.closest(".run-frame");
+      const f = document.createElement("iframe");
+      f.src = frame.dataset.src;
+      f.title = t("run.play");
+      f.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+      f.allowFullscreen = true;
+      f.referrerPolicy = "strict-origin-when-cross-origin";
+      frame.replaceChildren(f);
+      f.focus();
+      return;
+    }
+    // Their name opens their player panel in its place, at the run's course
+    const who = e.target.closest("[data-run-player]");
+    if (who) {
+      const x = sentRun(runId);
+      openPlayer(who.dataset.runPlayer, x ? x.n : 0);
+    }
+  });
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-run-open]");
+    if (!b || (b.tagName === "A" && (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0))) return;
+    e.preventDefault();
+    openRun(b.dataset.runOpen);
+  });
+  if (startRun) Promise.allSettled(LOADS).then(() => openRun(startRun));
+
   /* ---------- Clean section links: ballkour.com/features, /leaderboards, … ----------
      Cloudflare serves this page at each path. Clicking one scrolls in place and updates the address, so the
      link can be shared, reloaded and stepped through with Back. Scrolling updates the address too (see spy()).
      /leaderboards opens Gibraltar's top 10. */
   // route → section id. Discord stays /#discord, since /discord already goes straight to the server.
-  const ROUTES = { courses: "courses", leaderboards: "leaderboards", submit: "submit", features: "features", faq: "faq", discord: "discord", "source-code": "source", translations: "translations" };
+  // runs is Submitted runs, under the form (or the form, while there are none)
+  const ROUTES = { courses: "courses", leaderboards: "leaderboards", submit: "submit", runs: "sub-runs", features: "features", faq: "faq", discord: "discord", "source-code": "source", translations: "translations" };
   const pathFor = (route) => (route === "discord" ? "/#discord" : "/" + route);
   const routeOf = (path) => { const m = /^\/([a-z-]+)(?:\/[\w-]+(?:\/legacy)?)?\/?$/i.exec(path); const r = m && m[1].toLowerCase(); return r && r !== "discord" && ROUTES[r] ? r : null; };
   // The board or answer a link names: /leaderboards/6 (/leaderboards/6/legacy for its Legacy tab), /faq/pausing, or
@@ -4550,10 +5105,13 @@ a.link-copy { text-decoration: none; }
   function goTo(route, smooth) {
     if (route === "leaderboards" && !openCourse) { openCourse = 1; refreshCourse(course(1)); }
     clicked = sectionLinks.findIndex((a) => a.dataset.route === route);
+    // A place that isn't in the section bar (/runs) keeps its address until the visitor scrolls, like a board's link
+    if (clicked < 0) addressHeld = true;
     queueSpy();
     const root = document.documentElement;
     if (!smooth) root.style.scrollBehavior = "auto";
-    document.getElementById(ROUTES[route]).scrollIntoView({ block: "start", behavior: smooth && !reduced ? "smooth" : "auto" });
+    const el = document.getElementById(ROUTES[route]);
+    (el.hidden ? $("#submit") : el).scrollIntoView({ block: "start", behavior: smooth && !reduced ? "smooth" : "auto" });
     root.style.scrollBehavior = "";
   }
   document.addEventListener("click", (e) => {
@@ -4604,7 +5162,7 @@ a.link-copy { text-decoration: none; }
   // The address follows the section on screen (/faq, /features, …), and is / at the very top. It replaces the
   // current entry rather than adding one, so Back still leaves the page instead of stepping through sections.
   // A link someone opened (ballkour.com/faq) keeps its address until they scroll or click themselves.
-  let addressHeld = !!startRoute;
+  let addressHeld = !!startRoute || !!startRun;
   ["wheel", "touchstart", "keydown", "mousedown"].forEach((ev) => addEventListener(ev, () => { addressHeld = false; }, { passive: true }));
   // Opening a board or an answer puts its link in the address straight away, wherever the page is scrolled to, and
   // keeps it there until the visitor scrolls on their own. Closing it lets the address follow the page again.
@@ -4629,7 +5187,7 @@ a.link-copy { text-decoration: none; }
     return "";
   }
   function followAddress(i) {
-    if (addressHeld) return;
+    if (addressHeld || runId) return; // a run's page keeps its own link (see "A run's page")
     const route = i >= 0 && (scrollY >= 2 || clicked >= 0) ? sectionLinks[i].dataset.route : null;
     let [pathname, hash = ""] = (route ? pathFor(route) : "/").split("#");
     const sub = route ? subPath(route) : "";
