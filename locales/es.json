@@ -115,7 +115,7 @@
   "faq.timer.q": "¿Cuándo empieza el tiempo de mi partida?",
   "faq.timer.a": "Cuando sales del primer CP, no cuando apareces.",
   "faq.mistake.q": "¿Qué cuenta como error?",
-  "faq.mistake.a": "Aterrizar en cualquier sitio que no sea el siguiente CP, hacer bhop dos veces, fallar el salto de un CP de rebote, caerse del mapa, o salir a mitad de un intento con <b>CP anterior</b>/<b>CP siguiente</b>, <b>Reiniciar CP</b>, <b>Modo libre</b>, <b>Espectar</b> o <b>Lobby/Pausa</b>.",
+  "faq.mistake.a": "Aterrizar en cualquier sitio que no sea el siguiente CP, hacer bhop dos veces, no recoger el orbe de un CP, caerse del mapa, o salir a mitad de un intento con <b>CP anterior</b>/<b>CP siguiente</b>, <b>Reiniciar CP</b>, <b>Modo libre</b>, <b>Espectar</b> o <b>Lobby/Pausa</b>.",
   "faq.pause.q": "¿Puedo pausar mi partida?",
   "faq.pause.a": "<b>Lobby/Pausa</b> y <b>Espectar</b> pausan tu tiempo. <b>Reanudar partida</b> en el lobby continúa desde tu CP. Pausar fuera de tu CP cuenta como error.",
   "faq.counts.q": "¿Qué cuentan <b>Partidas</b> e <b>Intentos</b>?",

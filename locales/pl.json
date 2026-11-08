@@ -115,7 +115,7 @@
   "faq.timer.q": "Kiedy startuje czas mojego podejścia?",
   "faq.timer.a": "Gdy opuścisz pierwszy CP, a nie gdy się odrodzisz.",
   "faq.mistake.q": "Co liczy się jako błąd?",
-  "faq.mistake.a": "Wylądowanie gdziekolwiek poza następnym CP, dwa bhopy, pominięcie skoku na CP z odbiciem, spadnięcie z mapy lub wyjście w trakcie próby przez <b>Poprz.</b>/<b>Nast. CP</b>, <b>Reset CP</b>, <b>Tryb swobodny</b>, <b>Obserwuj</b> lub <b>Lobby/Pauza</b>.",
+  "faq.mistake.a": "Wylądowanie gdziekolwiek poza następnym CP, dwa bhopy, pominięcie kuli CP, spadnięcie z mapy lub wyjście w trakcie próby przez <b>Poprz.</b>/<b>Nast. CP</b>, <b>Reset CP</b>, <b>Tryb swobodny</b>, <b>Obserwuj</b> lub <b>Lobby/Pauza</b>.",
   "faq.pause.q": "Czy mogę zapauzować podejście?",
   "faq.pause.a": "<b>Lobby/Pauza</b> i <b>Obserwuj</b> pauzują czas. <b>Wznów podejście</b> w lobby kontynuuje od twojego CP. Pauza poza twoim CP liczy się jako błąd.",
   "faq.counts.q": "Co liczą <b>Podejścia</b> i <b>Próby</b>?",

@@ -115,7 +115,7 @@
   "faq.timer.q": "Wann startet der Timer meines Laufs?",
   "faq.timer.a": "Wenn du den ersten CP verlässt, nicht beim Spawnen.",
   "faq.mistake.q": "Was zählt als Fehler?",
-  "faq.mistake.a": "Woanders als auf dem nächsten CP landen, zweimal bhoppen, den Sprung eines Abprall-CPs verpassen, von der Map fallen oder mitten im Versuch mit <b>Vorh.</b>/<b>Nächster CP</b>, <b>CP zurücksetzen</b>, <b>Freier Modus</b>, <b>Zuschauen</b> oder <b>Lobby/Pause</b> abbrechen.",
+  "faq.mistake.a": "Woanders als auf dem nächsten CP landen, zweimal bhoppen, den Orb eines CPs verpassen, von der Map fallen oder mitten im Versuch mit <b>Vorh.</b>/<b>Nächster CP</b>, <b>CP zurücksetzen</b>, <b>Freier Modus</b>, <b>Zuschauen</b> oder <b>Lobby/Pause</b> abbrechen.",
   "faq.pause.q": "Kann ich meinen Lauf pausieren?",
   "faq.pause.a": "<b>Lobby/Pause</b> und <b>Zuschauen</b> pausieren deinen Timer. <b>Lauf fortsetzen</b> in der Lobby macht an deinem CP weiter. Pausieren außerhalb deines CPs zählt als Fehler.",
   "faq.counts.q": "Was zählen <b>Läufe</b> und <b>Versuche</b>?",
