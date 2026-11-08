@@ -305,7 +305,6 @@
   "sub.againPending": "To przejście na trasie {course} zostało już wysłane i czeka, aż moderator je sprawdzi.",
   "sub.held": "To przejście dałoby ci #{rank} na trasie {course}! Czasy z top 10 są sprawdzane przed publikacją, więc pojawi się na tablicy, jeśli moderator je zatwierdzi.",
   "rev.title": "Przejścia do sprawdzenia",
-  "rev.course": "Trasa {n}",
   "rev.none": "Obecnie nie ma przejść do sprawdzenia.",
   "rev.would": "Byłoby #{rank}",
   "rev.watch": "Obejrzyj",

@@ -305,7 +305,6 @@
   "sub.againPending": "Você já enviou essa corrida em {course}, e ela está esperando um moderador verificar.",
   "sub.held": "Essa corrida colocaria você em #{rank} em {course}! Os tempos do top 10 são verificados antes de entrar, então ela vai aparecer na classificação se um moderador aprovar.",
   "rev.title": "Corridas para verificar",
-  "rev.course": "Percurso {n}",
   "rev.none": "Não há corridas para verificar agora.",
   "rev.would": "Seria #{rank}",
   "rev.watch": "Assistir",

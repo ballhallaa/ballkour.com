@@ -305,7 +305,6 @@
   "sub.againPending": "你已經提交過這個 {course} 的成績，它正在等待管理員審核。",
   "sub.held": "這個成績能讓你在 {course} 排第 {rank} 名！前 10 名的成績上榜前會經過審核，管理員通過後就會上榜。",
   "rev.title": "待審核的成績",
-  "rev.course": "關卡 {n}",
   "rev.none": "目前沒有待審核的成績。",
   "rev.would": "將排第 {rank} 名",
   "rev.watch": "觀看",

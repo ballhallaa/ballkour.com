@@ -305,7 +305,6 @@
   "sub.againPending": "Diesen Lauf auf {course} hast du schon eingereicht, und er wartet darauf, dass ein Moderator ihn prüft.",
   "sub.held": "Mit diesem Lauf wärst du #{rank} auf {course}! Top-10-Zeiten werden geprüft, bevor sie erscheinen. Er kommt also auf die Liste, wenn ein Moderator ihn annimmt.",
   "rev.title": "Zu prüfende Läufe",
-  "rev.course": "Strecke {n}",
   "rev.none": "Gerade gibt es keine Läufe zu prüfen.",
   "rev.would": "Wäre #{rank}",
   "rev.watch": "Ansehen",
