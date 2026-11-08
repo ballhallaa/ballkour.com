@@ -1087,6 +1087,7 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .qa[open] summary .chev { transform: rotate(180deg); color: var(--volt); }
 .qa-a { margin: 0; max-width: 66ch; padding: 0 18px 15px; font: 400 15px/1.55 var(--body); color: var(--ink-2); }
 .qa-a .fg { font-weight: 600; }
+.qa-a a { color: var(--volt); font-weight: 600; text-underline-offset: 3px; }
 /* <b> marks the game's own labels (controls, HUD and lobby names) in the house orange */
 .qa-a b, .qa-q b { font-weight: 600; color: var(--ember); white-space: nowrap; }
 /* Controls (the keybind that opens the FAQ, the shield bounce's button) are keycaps: chips, one per key, with a
@@ -3646,7 +3647,12 @@ a.link-copy { text-decoration: none; }
   function fgHtml(s) {
     const h = esc(s).replace(/&lt;(\/?)(b|kbd)&gt;/g, "<$1$2>").replace(/&lt;fg([0-9a-f]{6})[0-9a-f]{2}&gt;(.*?)&lt;\/fg&gt;/gi,
       (m, hex, inner) => `<span class="fg" style="color:#${hex}">${inner}</span>`);
-    return h.replace(/^((?:\s*<span class="fg"[^>]*>[^<]*<\/span>){2,})\s*/, (m, run) => `<span class="qa-legend">${run.trim()}</span>`);
+    return h.replace(/^((?:\s*<span class="fg"[^>]*>[^<]*<\/span>){2,})\s*/, (m, run) => `<span class="qa-legend">${run.trim()}</span>`)
+      // ballkour.com/issues in an answer (where to report a translation mistake) links there, and a bare ballkour.com
+      // (where to submit a run) opens the submit page
+      .replace(/ballkour\.com(\/issues)?(?![\w/])/g, (m, issues) => issues
+        ? `<a href="https://ballkour.com/issues" target="_blank" rel="noopener">${m}</a>`
+        : `<a href="/submit" data-route="submit">${m}</a>`);
   }
   // FAQ links: ballkour.com/faq/pausing opens that answer. While an answer is open, the address links to it.
   let pendingFaq = null, openFaq = null, faqClicked = null;
