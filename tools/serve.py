@@ -4,9 +4,9 @@
     python3 tools/serve.py            # then open http://localhost:8000
     python3 tools/serve.py 8080       # another port
 
-It serves your copy of the site at the same addresses as ballkour.com (/leaderboards/6, /faq/pausing, /runs/<id>, …)
-and gets /data/*.json (the boards, Discord names, member count) and /api/run (a run's numbers from when it was sent)
-from ballkour.com, so you see your changes with real data.
+It serves your copy of the site at the same addresses as ballkour.com (/leaderboards/6, /faq/pausing, /runs/<id>,
+/stats, …) and gets /data/*.json (the boards, Discord names, member count) and /api/run (a run's numbers from when it
+was sent) from ballkour.com, so you see your changes with real data.
 Signing in and sending runs only work on the real site, so the form shows the Discord ticket instead.
 """
 import http.server
@@ -18,7 +18,7 @@ import urllib.request
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
 # The addresses that are the home page, like the Worker and Cloudflare's rules serve them
-PAGES = re.compile(r"^/(courses|leaderboards|submit|features|faq|source-code|translations|runs)(/[\w-]+(/legacy)?)?/?$", re.I)
+PAGES = re.compile(r"^/(courses|leaderboards|submit|features|faq|source-code|translations|runs|stats)(/[\w-]+(/legacy)?)?/?$", re.I)
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
