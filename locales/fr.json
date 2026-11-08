@@ -304,7 +304,6 @@
   "sub.againPending": "Vous avez déjà envoyé cette partie sur {course}, et elle attend qu’un modérateur la vérifie.",
   "sub.held": "Cette partie vous placerait #{rank} sur {course} ! Les temps du top 10 sont vérifiés avant d’être publiés, donc elle apparaîtra au classement si un modérateur l’approuve.",
   "rev.title": "Parties à vérifier",
-  "rev.course": "Parcours {n}",
   "rev.none": "Aucune partie à vérifier pour le moment.",
   "rev.would": "Serait #{rank}",
   "rev.watch": "Regarder",

@@ -304,7 +304,6 @@
   "sub.againPending": "Ya enviaste esa carrera en {course}, y está esperando a que un moderador la revise.",
   "sub.held": "¡Con esta carrera serías #{rank} en {course}! Los tiempos del top 10 se revisan antes de publicarse, así que aparecerá en la clasificación si un moderador la aprueba.",
   "rev.title": "Carreras por revisar",
-  "rev.course": "Recorrido {n}",
   "rev.none": "No hay carreras por revisar ahora mismo.",
   "rev.would": "Sería #{rank}",
   "rev.watch": "Ver",

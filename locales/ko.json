@@ -304,7 +304,6 @@
   "sub.againPending": "{course}에 이미 보낸 기록이며, 운영진의 확인을 기다리고 있습니다.",
   "sub.held": "이 기록이면 {course}에서 #{rank}입니다! TOP 10 기록은 올라가기 전에 확인을 거치므로, 운영진이 승인하면 순위표에 올라갑니다.",
   "rev.title": "확인할 기록",
-  "rev.course": "코스 {n}",
   "rev.none": "지금은 확인할 기록이 없습니다.",
   "rev.would": "#{rank} 예정",
   "rev.watch": "보기",

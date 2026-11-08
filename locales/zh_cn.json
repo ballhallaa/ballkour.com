@@ -304,7 +304,6 @@
   "sub.againPending": "你已经提交过这个 {course} 的成绩，它正在等待管理员审核。",
   "sub.held": "这个成绩能让你在 {course} 排第 {rank} 名！前 10 名的成绩上榜前会经过审核，管理员通过后就会上榜。",
   "rev.title": "待审核的成绩",
-  "rev.course": "关卡 {n}",
   "rev.none": "目前没有待审核的成绩。",
   "rev.would": "将排第 {rank} 名",
   "rev.watch": "观看",
