@@ -1073,7 +1073,8 @@ a.rev-run:hover { border-color: var(--line-hi); background: var(--glass-hi); }
 .res-title { margin: 0; display: flex; gap: 9px; align-items: flex-start; font: 600 15.5px/1.4 var(--body); color: var(--ink); }
 .res-title .icon { width: 17px; height: 17px; margin-top: 2px; color: var(--volt); }
 .res-title.record .icon, .res-title.held .icon { color: var(--gold); }
-/* A top 10 run waiting for a check: what it'll do once it's on the board */
+/* A top 10 run waiting for a check: what it'll do once it's on the board. Its note under the title (.res-held) is also
+   the one under a run that isn't its player's best. */
 .sub-status.res.held { border-color: rgba(255, 213, 79, .32); background: rgba(255, 213, 79, .06); }
 .res-held { margin: 4px 0 0 26px; font: 400 13.5px/1.45 var(--body); color: var(--ink-2); }
 .res-rows { margin-top: 8px; }
@@ -1700,6 +1701,7 @@ a.link-copy { text-decoration: none; }
   "res.record": "New record on {course}!",
   "res.first": "Your first run on this course",
   "res.faster": "{delta} faster than your old best ({time})",
+  "res.sameTimeFewer": "Same time as your old best ({time}), but fewer mistakes",
   "res.passed": "You passed {names}",
   "res.passedMany": "You passed {count} players",
   "res.course": "Course rating",
@@ -1717,7 +1719,11 @@ a.link-copy { text-decoration: none; }
   "res.records": "Records",
   "res.held": "Your run would put you #{rank} on {course}!",
   "res.heldRecord": "Your run would be a new record on {course}!",
-  "res.heldNote": "Top 10 times are checked before they go up. Here’s what you get once a moderator has watched your video:",
+  "res.heldNote": "Top 10 times are checked before they go up. Here’s what you get if a moderator approves your run:",
+  "res.againNote": "Here’s what it does on today’s boards:",
+  "res.slowerNote":"Only your best run on each course counts toward your place and rating. Here’s this run on its own:",
+  "res.slowerBy": "{delta} slower than your best ({time})",
+  "res.sameTimeMore": "Same time as your best ({time}), but more mistakes",
   "rt.rated": "Rated",
   "lb.submittedOn": "Submitted on {date}",
   "lb.playerOpen": "See every run by {player}",
@@ -1785,10 +1791,12 @@ a.link-copy { text-decoration: none; }
   "lb.rating": "Rating over every course: {points}",
   "lb.ratingNote": "Ratings: each player’s rating over every course",
   "lb.ratingThen": "Ratings: each player’s rating over every course, as it was on {date}",
-  "sub.sentSlower": "Your run is saved. Your best on {course} is still {time} (#{rank}).",
+  "sub.sentSlower": "Your run is sent, but your best on {course} is still {time} (#{rank}).",
   "sub.sentPlain": "Your run is up!",
-  "sub.sentAgain": "That run is already on the board: you’re #{rank} on {course}.",
-  "sub.held": "Your run would put you #{rank} on {course}! Top 10 times are checked before they go up, so it’ll be on the board once a moderator has watched your video.",
+  "sub.sentAgain": "You already sent that run, and it’s on the board: you’re #{rank} on {course}.",
+  "sub.againSlower": "You already sent that run. Your best on {course} is {time} (#{rank}).",
+  "sub.againPending": "You already sent that run on {course}, and it’s waiting for a moderator to check it.",
+  "sub.held": "Your run would put you #{rank} on {course}! Top 10 times are checked before they go up, so it goes on the board if a moderator approves it.",
   "rev.title": "Runs to check",
   "rev.course": "Course {n}",
   "rev.none": "No runs to check right now.",
@@ -1835,6 +1843,7 @@ a.link-copy { text-decoration: none; }
   "run.same": "Its board and rating stats haven’t changed since it was sent on {date}.",
   "run.first": "Their first run on this course",
   "run.faster": "{delta} faster than their old best ({time})",
+  "run.sameTimeFewer": "Same time as their old best ({time}), but fewer mistakes",
   "run.passed": "Passed {names}",
   "run.passedMany": "Passed {count} players",
   "run.isRecord": "It’s the record on {course}.",
@@ -1842,6 +1851,7 @@ a.link-copy { text-decoration: none; }
   "run.slowerThen": "Their best on {course} was already {time} (#{rank}), so this run didn’t change their place or rating. Only each player’s best run counts.",
   "run.alone": "This run on its own",
   "run.slowerBy": "{delta} slower than their best ({time})",
+  "run.sameTimeMore": "Same time as their best ({time}), but more mistakes",
   "run.slowerNow": "Their best on {course} is {time} now (#{rank}), so this run doesn’t count toward their place or rating. Only each player’s best run counts.",
   "run.missing": "There’s no run at this link. It may have been taken off the boards, or part of the link is missing.",
   "sub.err.course": "Pick the course you ran.",
@@ -2778,7 +2788,8 @@ a.link-copy { text-decoration: none; }
   // A course's board: { top: [run, …], rest: [run, …] }
   function standingsOf(c) {
     const gone = REMOVED[c.n] || [];
-    const kept = (r) => !gone.some((x) => sameRun(x, r));
+    // A removed run is its player and time. One with its mistakes too (from standingWithout) is only that run.
+    const kept = (r) => !gone.some((x) => sameRun(x, r) && (x.miss === undefined || x.miss === r.miss));
     const live = [...c.runs, ...(MORE[c.n] || [])].filter(kept);
     const board = bestEach(live);
     const last = board.length >= 10 ? board[9] : null;
@@ -4635,7 +4646,8 @@ a.link-copy { text-decoration: none; }
       if (made) delete MORE[n];
     }
   }
-  // And where they'd stand without a run that's on the board: it's taken off just long enough to work that out
+  // And where they'd stand without a run that's on the board: it's taken off just long enough to work that out (just
+  // that run: with its mistakes, so one of theirs with the same time stays, see standingsOf)
   function standingWithout(n, run, id) {
     const made = !REMOVED[n];
     const list = REMOVED[n] || (REMOVED[n] = []);
@@ -4646,9 +4658,10 @@ a.link-copy { text-decoration: none; }
     }
   }
   /* What a run did, from where its player stood before it and after it (see standing):
-       { place, was, best, old, record, passed, points, rating, rank, of, tier, courses, counted, top10s, podiums, records }
+       { place, was, best, bestMiss, old, record, passed, points, rating, rank, of, tier, courses, counted, top10s,
+         podiums, records }
      place and was are their place on the course after and before (was is null on their first run there), best and old
-     their best time there after and before (best isn't the run's time when it wasn't their best), passed the names of
+     their best time there after and before, and bestMiss the mistakes on that best (see isTheirBest), passed the names of
      the players it put them ahead of. points (the course rating), rating, rank (their place in the ratings) and tier
      are [before, after] (before null when they weren't rated yet, the pair null when the course isn't rated), of is how
      many players are rated, courses [before, after] the rated courses they've run out of counted, and top10s, podiums
@@ -4666,6 +4679,7 @@ a.link-copy { text-decoration: none; }
       place: after.at >= 0 ? after.at + 1 : null,
       was: before.at >= 0 ? before.at + 1 : null,
       best: after.best ? after.best.time : null,
+      bestMiss: after.best ? after.best.miss : null,
       old: before.best ? before.best.time : null,
       record: after.at === 0 && (!before.board[0] || byTime(after.best, before.board[0]) < 0),
       passed: after.at < 0 ? [] : after.board.filter((r, i) => i > after.at && playerKey(r) !== mine && beforeKeys.includes(playerKey(r)) && beforeKeys.indexOf(playerKey(r)) < wasAt).map((r) => r.name),
@@ -4684,6 +4698,14 @@ a.link-copy { text-decoration: none; }
   // 6.81 → "6.81s", 62.15 → "1:02.15"
   const gap = (sec) => (sec < 60 ? `${sec.toFixed(2)}s` : `${Math.floor(sec / 60)}:${(sec % 60).toFixed(2).padStart(5, "0")}`);
   const tierLabel = (tier) => (tier === null ? t("rt.rated") : t("rt.tier", { pct: tier.toLocaleString(htmlLang()) }));
+  // Whether a run (cleanRun) is its player's best in s (what it did: statsFrom, or the Worker's): the same time and
+  // mistakes. What the Worker kept before it had bestMiss only has the time.
+  const isTheirBest = (s, run) => s.best === run.time && (typeof s.bestMiss !== "number" || s.bestMiss === run.miss);
+  // How a run compares with its player's best (best: that run's time), for one that isn't their best: slower, or the
+  // same time with more mistakes (more mistakes lose a tie). they: someone else's run, on its page ("their best").
+  const slowerThan = (run, best, they) => (run.time === best
+    ? t(they ? "run.sameTimeMore" : "res.sameTimeMore", { time: best })
+    : t(they ? "run.slowerBy" : "res.slowerBy", { delta: gap(toSeconds(run.time) - toSeconds(best)), time: best }));
   // ▲3 in mint, ▼3 in coral, or a New chip
   function deltaHtml(change, text) {
     if (change === null) return `<span class="res-delta new">${esc(t("res.new"))}</span>`;
@@ -4696,10 +4718,14 @@ a.link-copy { text-decoration: none; }
   const was = (html) => `<span class="was">${html} →</span> `;
   // The rows of what a run did (s, from statsFrom or the Worker): the course's place and time and who it passed, the
   // course rating, the rating, place and Top %, and the Top 10s, Podiums and Records it adds. they: someone else's run,
-  // on its page ("their old best", not "your"). held: it's waiting for a check.
-  function statRowsHtml(n, run, s, { held = false, they = false } = {}) {
+  // on its page ("their old best", not "your"). held: it's waiting for a check. again: it was sent before, so nothing
+  // changes now (no note that their role is about to).
+  function statRowsHtml(n, run, s, { held = false, they = false, again = false } = {}) {
     const c = course(n);
-    const faster = s.old ? t(they ? "run.faster" : "res.faster", { delta: gap(toSeconds(s.old) - toSeconds(run.time)), time: s.old }) : t(they ? "run.first" : "res.first");
+    // A new best with the same time as the old one has fewer mistakes, since they break ties
+    const faster = !s.old ? t(they ? "run.first" : "res.first")
+      : s.old === run.time ? t(they ? "run.sameTimeFewer" : "res.sameTimeFewer", { time: s.old })
+      : t(they ? "run.faster" : "res.faster", { delta: gap(toSeconds(s.old) - toSeconds(run.time)), time: s.old });
     let names = "";
     if (s.passed.length > 3) names = esc(t(they ? "run.passedMany" : "res.passedMany", { count: s.passed.length }));
     else if (s.passed.length) {
@@ -4732,7 +4758,7 @@ a.link-copy { text-decoration: none; }
       const newTier = !rated || tierFrom !== tierTo;
       html += resRow(t("res.tier"), (rated && newTier ? was(esc(tierLabel(tierFrom))) : "") + esc(tierLabel(tierTo)),
         newTier ? `<span class="res-delta ${rated ? "up" : "new"}">${esc(t(rated ? "res.newRole" : "res.new"))}</span>` : "",
-        newTier && !held && !they ? esc(t("res.roleNote")) : "");
+        newTier && !held && !they && !again ? esc(t("res.roleNote")) : "");
     }
     // Their Top 10s, Podiums and Records, the numbers on their Discord profile, when the run adds to them
     [["top10s", "res.top10s"], ["podiums", "res.podiums"], ["records", "res.records"]].forEach(([k, label]) => {
@@ -4741,28 +4767,63 @@ a.link-copy { text-decoration: none; }
     });
     return html + `</div>`;
   }
+  // Whether a run that's just been sent (as the Worker answered with it) is its player's best on the course now
+  // (after: see standing). A run with the same time but more mistakes isn't.
+  const isBest = (after, run) => !!after.best && after.best.time === run.time && after.best.miss === Number(run.mistakes);
+  // A run that was sent before (the same time and mistakes, so the Worker didn't save it again), as its page has it
+  // ({ run, n, group, status }, see sentRun): by its id, or one from before the website's form (the Worker answers with
+  // no id for those) by its player, time, and mistakes. null when runs.json doesn't have it yet.
+  function earlierRun(n, run) {
+    if (run.id) return sentRun(run.id);
+    const r = cleanRun(run);
+    return (r && pastRuns().find((y) => y.n === n && playerKey(y.run) === playerKey(r) && y.run.time === r.time && y.run.mistakes === r.miss)) || null;
+  }
+  // Where that one is now: "up", "slower" or "pending" (see runStatus; a run that's taken off is moved out of "runs",
+  // so the Worker never finds it to say it was sent before). Without it, it's worked out from the board: a run that
+  // would beat their best but isn't on the board is waiting for a check.
+  function againStatus(run, after, x) {
+    if (x) return x.status;
+    if (isBest(after, run)) return "up";
+    return after.best && byTime(after.best, cleanRun(run)) < 0 ? "slower" : "pending";
+  }
   // What the run did, right after it's sent: the course's place and time, who they passed, their rating, place and
   // Top %, and their Top 10s, Podiums and Records. held: it's a top 10 run waiting for a check, and after is where it
-  // would put them.
-  function resultHtml(n, run, before, after, again, held) {
+  // would put them. again: it was sent before, and this is where that one is now (see againStatus), and earlier is that
+  // one (see earlierRun): what it does on today's boards, or would do once it's approved, like on its page's Today. A
+  // run that isn't their best changes nothing, so it's that run on its own (see aloneOf), like on its page.
+  function resultHtml(n, run, before, after, { again = "", earlier = null, held = false } = {}) {
     const c = course(n);
     const where = `<a href="/leaderboards/${c.n}" data-board="${c.n}">${esc(`${c.n} `)}${flagName(c)}</a>`;
     const withCourse = (key, vars) => esc(t(key, { ...vars, course: "\u0000" })).replace("\u0000", where);
     const title = (cls, ico, html) => `<p class="res-title${cls}">${icon(ico)}<span>${html}</span></p>`;
     const plain = (html) => title("", "check", html);
+    // Its page, My stats, and the board (note: what goes on the left)
+    const id = run.id || (earlier && earlier.run.id) || "";
+    const foot = (note = "") => `<p class="res-foot"><span>${note}</span><span class="res-actions">` +
+      (id ? `<button class="btn btn-sm" type="button" data-run-open="${esc(id)}">${icon("play")}<span>${esc(t("rev.view"))}</span></button>` : "") +
+      `<button class="btn btn-sm" type="button" data-my-stats>${icon("star", "icon icon-star")}<span>${esc(t("me.button"))}</span></button>` +
+      `<a class="btn btn-sm" href="/leaderboards/${c.n}" data-board="${c.n}">${esc(t("res.board"))}</a></span></p>`;
+    const slower = (key) => {
+      const alone = aloneOf(c.n, cleanRun({ ...run, discord: me.id }));
+      return plain(withCourse(key, { time: after.best.time, rank: after.at + 1 })) +
+        `<p class="res-held">${esc(t("res.slowerNote"))}</p><div class="res-rows">` +
+        resRow({ html: `${c.n} ${flagName(c)}` }, esc(`#${alone.place} · ${run.time}`), "", esc(slowerThan(run, after.best.time))) +
+        (alone.points !== null ? resRow(t("res.course"), esc(points(alone.points)), "") : "") + `</div>` + foot();
+    };
+    // Sent before and on the board, or waiting for a check: what it does (or would) on today's boards
+    const now = (again === "up" || again === "pending") && earlier ? runNow(earlier) : null;
+    const rows = now && now.place ? statRowsHtml(c.n, cleanRun(earlier.run), now, { held: again === "pending", again: true }) : "";
+    if (again === "pending") return title(" held", "eye", withCourse("sub.againPending")) + (rows && `<p class="res-held">${esc(t("res.heldNote"))}</p>${rows}`) + foot();
     if (!after.best) return plain(esc(t("sub.sentPlain")));
-    if (again) return plain(withCourse("sub.sentAgain", { rank: after.at + 1 }));
-    if (after.best.time !== run.time) return plain(withCourse("sub.sentSlower", { time: after.best.time, rank: after.at + 1 }));
+    if (again === "up") return plain(withCourse("sub.sentAgain", { rank: after.at + 1 })) + (rows && `<p class="res-held">${esc(t("res.againNote"))}</p>${rows}`) + foot();
+    if (again) return slower("sub.againSlower");
+    if (!isBest(after, run)) return slower("sub.sentSlower");
     const s = statsFrom(c.n, run, before, after);
     let html = held
       ? title(s.record ? " record" : " held", s.record ? "trophy" : "eye", withCourse(s.record ? "res.heldRecord" : "res.held", { rank: s.place })) +
         `<p class="res-held">${esc(t("res.heldNote"))}</p>`
       : s.record ? title(" record", "trophy", withCourse("res.record")) : plain(esc(t("res.title")));
-    html += statRowsHtml(c.n, run, s, { held });
-    html += `<p class="res-foot"><span>${s.place <= 10 && !held ? esc(t("res.discord")) : ""}</span><span class="res-actions">` +
-      `<button class="btn btn-sm" type="button" data-my-stats>${icon("star", "icon icon-star")}<span>${esc(t("me.button"))}</span></button>` +
-      `<a class="btn btn-sm" href="/leaderboards/${c.n}" data-board="${c.n}">${esc(t("res.board"))}</a></span></p>`;
-    return html;
+    return html + statRowsHtml(c.n, run, s, { held }) + foot(s.place <= 10 && !held ? esc(t("res.discord")) : "");
   }
   // A record, the podium or a better Top %: a few balls fly out of the button
   function celebrate(before, after) {
@@ -4808,8 +4869,8 @@ a.link-copy { text-decoration: none; }
         const sent = out.run || { ...run, mistakes: Number(run.mistakes), date: new Date().toISOString().slice(0, 10) };
         const after = standingWith(run.course, sent);
         subStatus.className = "sub-status field-wide ok res held";
-        if (after && after.best && after.best.time === sent.time) {
-          subStatus.innerHTML = resultHtml(run.course, sent, before, after, false, true);
+        if (after && isBest(after, sent)) {
+          subStatus.innerHTML = resultHtml(run.course, sent, before, after, { held: true });
           celebrate(before, after);
         } else {
           const c = course(run.course);
@@ -4822,10 +4883,12 @@ a.link-copy { text-decoration: none; }
         try { localStorage.setItem("ballkour-submit", JSON.stringify({ name: run.name })); } catch (err) { /* private mode */ }
         await reloadRuns();
         const after = standing(run.course);
-        const sent = out.run || run;
-        subStatus.className = "sub-status field-wide ok res";
-        subStatus.innerHTML = resultHtml(run.course, sent, before, after, out.saved === false);
-        if (out.saved !== false && after.best && after.best.time === sent.time) celebrate(before, after);
+        const sent = out.run || { ...run, mistakes: Number(run.mistakes) };
+        const earlier = out.saved === false ? earlierRun(run.course, sent) : null;
+        const again = out.saved === false ? againStatus(sent, after, earlier) : "";
+        subStatus.className = `sub-status field-wide ok res${again === "pending" ? " held" : ""}`;
+        subStatus.innerHTML = resultHtml(run.course, sent, before, after, { again, earlier });
+        if (!again && isBest(after, sent)) celebrate(before, after);
       } else {
         const err = typeof out.error === "string" ? out.error : "";
         if (err === "login") signedIn(null);
@@ -5097,7 +5160,7 @@ a.link-copy { text-decoration: none; }
     if (then && now && runStatsHtml(x, then, "then") === runStatsHtml(x, now, "then")) {
       box.hidden = false;
       // A run that wasn't its player's best did nothing, so it's just the sentence saying why
-      const slower = then.best !== cleanRun(x.run).time;
+      const slower = !isTheirBest(then, cleanRun(x.run));
       box.innerHTML = (slower ? "" : `<p class="run-stats-title">${esc(t(pending ? "run.would" : "run.did"))}</p>` +
         `<p class="run-note">${withDate("run.same", { date })}</p>`) + runStatsHtml(x, then, "then");
       return;
@@ -5122,11 +5185,11 @@ a.link-copy { text-decoration: none; }
     const where = `<a href="/leaderboards/${c.n}" data-board="${c.n}">${esc(`${c.n} `)}${flagName(c)}</a>`;
     const withCourse = (key, vars) => esc(t(key, { ...vars, course: "\u0000" })).replace("\u0000", where);
     // Not its player's best: it didn't change the board
-    if (s.best !== run.time) {
+    if (!isTheirBest(s, run)) {
       const why = `<p class="run-note">${withCourse(which === "then" ? "run.slowerThen" : "run.slowerNow", { time: s.best, rank: s.place })}</p>`;
       if (!s.alone) return why;
       return why + `<p class="run-stats-title run-alone">${esc(t("run.alone"))}</p><div class="res-rows">` +
-        resRow({ html: `${c.n} ${flagName(c)}` }, esc(`#${s.alone.place} · ${run.time}`), "", esc(t("run.slowerBy", { delta: gap(toSeconds(run.time) - toSeconds(s.best)), time: s.best }))) +
+        resRow({ html: `${c.n} ${flagName(c)}` }, esc(`#${s.alone.place} · ${run.time}`), "", esc(slowerThan(run, s.best, true))) +
         (s.alone.points !== null ? resRow(t("res.course"), esc(points(s.alone.points)), "") : "") + `</div>`;
     }
     const held = x.status === "pending";
