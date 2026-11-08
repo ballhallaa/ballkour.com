@@ -655,9 +655,11 @@ const statsKey = (id) => `run:${id}`;
 // What a run did to the boards: where its player stood on its course and in the player ratings just before it, and
 // with it (a run waiting for a check, as if it were on the board already). before is runs.json as it was just before.
 // The page works out the same numbers from today's boards (statsFrom() in index.html): keep the two in step.
-//   { place, was, best, old, record, passed, points, rating, rank, of, tier, courses, counted, top10s, podiums, records }
+//   { place, was, best, bestMiss, old, record, passed, points, rating, rank, of, tier, courses, counted, top10s,
+//     podiums, records }
 // place and was are their place on the course with and before the run (was is null on their first run there), best
-// and old their best time there with and before it (best isn't the run's time when it wasn't their best), passed the
+// and old their best time there with and before it, and bestMiss the mistakes on that best (it isn't the run when its
+// time or mistakes aren't the run's: a tie on time goes to fewer mistakes), passed the
 // names of the players it put them ahead of. points (the course rating), rating, rank (their place in the ratings) and
 // tier are [before, with] (before null when they weren't rated yet, the pair null when the course isn't rated), of is
 // how many players are rated, courses [before, with] the rated courses they've run out of counted, and top10s,
@@ -697,6 +699,7 @@ function runStats(game, before, run, n) {
     place: a.at >= 0 ? a.at + 1 : null,
     was: b.at >= 0 ? b.at + 1 : null,
     best: a.best ? a.best.time : null,
+    bestMiss: a.best ? a.best.mistakes : null,
     old: b.best ? b.best.time : null,
     record: a.at === 0 && (!b.board[0] || runByTime(a.best, b.board[0]) < 0),
     passed: a.at < 0 ? [] : a.board.filter((r, i) => i > a.at && playerKey(r) !== key && beforeKeys.includes(playerKey(r)) && beforeKeys.indexOf(playerKey(r)) < wasAt).map((r) => r.name),
