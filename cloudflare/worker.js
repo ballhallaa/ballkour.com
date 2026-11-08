@@ -167,15 +167,17 @@ async function buildGame(env, previous) {
   };
   // The leaderboard files are listed in the leaderboard bot's courses.json. runs.json has the runs that never made a
   // top 10 and the runs taken off the boards, for the boards' "Show all" and the player ratings.
-  // Its course names are kept too, for the log of runs sent from the website, and each course's number, file and
-  // whether it's broken, for the stats on players' Discord profiles.
+  // Its course names and flags are kept too, for the log of runs sent from the website and Ballkyrie's posts about
+  // them, and each course's number, file and whether it's broken, for the stats on players' Discord profiles.
   let paths = previous ? Object.keys(previous.files) : [];
   let names = (previous && previous.names) || {};
+  let flags = (previous && previous.flags) || {};
   let list = (previous && previous.courses) || null;
   try {
     const courses = JSON.parse(await get("tools/leaderboard-bot/courses.json")).courses;
     paths = ["leaderboards/history.json", RUNS_FILE, "src/engine/faq.opy", ...courses.map((c) => c.file)];
     names = Object.fromEntries(courses.map((c) => [c.n, c.name]));
+    flags = Object.fromEntries(courses.filter((c) => c.flag).map((c) => [c.n, c.flag]));
     list = courses.map(({ n, file, broken }) => ({ n, file, broken: !!broken }));
   } catch (e) {
     if (!paths.length) throw e;
@@ -215,7 +217,7 @@ async function buildGame(env, previous) {
     releasesOf(REPO, previous ? previous.releases : null),
     releasesOf(SITE_REPO, previous ? previous.siteReleases ?? null : null),
   ]);
-  return JSON.stringify({ files, names, ...(list ? { courses: list } : {}), releases, siteReleases });
+  return JSON.stringify({ files, names, flags, ...(list ? { courses: list } : {}), releases, siteReleases });
 }
 const game = (env, ctx) => cached("game", 60, ctx, (prev) => buildGame(env, prev));
 
@@ -359,6 +361,13 @@ const botId = (env) => (/^\d{17,20}$/.test(env.DISCORD_CLIENT_ID || "") ? env.DI
 const loginOn = (env) => !!(env.DISCORD_CLIENT_ID && env.DISCORD_CLIENT_SECRET && env.SESSION_SECRET && (appOn(env) || env.GITHUB_TOKEN));
 // The same checks as the page's. Names can't have commas or quotes, which the in-game boards' files use.
 const NAME_OK = /^[^\u0000-\u001f\u007f"`\\,<>]{1,32}$/u;
+// Names are saved in capitals, the same as the page's caps(): letters in a special font (𝓫𝓸𝓵𝓭, ᴄᴀᴘꜱ, ⓒⓘⓡⓒⓛⓔⓓ,
+// ｗｉｄｅ) stay as they are, and so does one whose capital is longer (ß is SS). Of the small capitals, only ɪ and ʀ
+// have capitals of their own (Ɪ and Ʀ), so they're kept by name.
+const caps = (s) => s.replace(/./gsu, (c) => {
+  const u = c.toUpperCase();
+  return u.length === c.length && c.normalize("NFKC") === c && c !== "ɪ" && c !== "ʀ" ? u : c;
+});
 const toSeconds = (t) => t.split(":").reduce((sum, part) => sum * 60 + Number(part), 0);
 // "4:05.81" (or "1:04:05.81", or with a decimal comma) → "4:05.81", or "" if it isn't a time
 function cleanTime(v) {
@@ -625,9 +634,9 @@ async function showSaved(runsText, user) {
 // The cached game data's course files and names (fetched if there's none yet)
 async function gameInfo(env, ctx) {
   try {
-    const { files = null, names = {} } = JSON.parse((await stored("game")) ?? (await game(env, ctx)));
-    return { files, names };
-  } catch (e) { return { files: null, names: {} }; }
+    const { files = null, names = {}, flags = {} } = JSON.parse((await stored("game")) ?? (await game(env, ctx)));
+    return { files, names, flags };
+  } catch (e) { return { files: null, names: {}, flags: {} }; }
 }
 const courseFile = (files, n) => files && Object.keys(files).find((k) => k.startsWith(`leaderboards/${n}-`) && /\.(opy|json)$/.test(k));
 /* ---------- Each run's page ----------
@@ -714,9 +723,9 @@ async function saveStats(env, ctx, { n, run, before }) {
 }
 // The run's post in the run submissions channel: the run, where it would place (waiting for a check) or placed (on the
 // board, when it's the player's new best there), and View run, which opens its page
-async function postRun(env, { n, courseName, run, pending, rank, newBest, site }) {
+async function postRun(env, { n, courseName, courseFlag, run, pending, rank, newBest, site }) {
   if (!env.RUNS_CHANNEL || !env.DISCORD_BOT_TOKEN) return;
-  const where = `Course ${n}${courseName ? ` · ${courseName}` : ""}`;
+  const where = `Course ${n}${courseName ? ` · ${courseFlag ? `${courseFlag} ` : ""}${courseName}` : ""}`;
   const page = `${site}/runs/${run.id}`;
   const fields = [
     { name: "Player", value: mdSafe(run.name), inline: true },
@@ -780,13 +789,13 @@ async function submit(request, env, ctx) {
   if (!video) return answer(400, { error: "video" });
 
   // The course has to have a board
-  const { files, names } = await gameInfo(env, ctx);
+  const { files, names, flags } = await gameInfo(env, ctx);
   const file = courseFile(files, n);
   if (files && !file) return answer(400, { error: "course" });
   const board = fileRuns(file, file && files[file]);
 
   const sentAt = stamp();
-  const run = { name: name.toUpperCase(), discord: user.id, time, mistakes, date: sentAt.slice(0, 10), video, id: b64url(crypto.getRandomValues(new Uint8Array(6))), sentAt };
+  const run = { name: caps(name), discord: user.id, time, mistakes, date: sentAt.slice(0, 10), video, id: b64url(crypto.getRandomValues(new Uint8Array(6))), sentAt };
   let before = null; // runs.json just before the run went in, for what it did (runStats)
   const saved = await editRuns(env, (data) => {
     const list = listIn(data.runs, n), waiting = listIn(data.pending, n);
@@ -806,7 +815,7 @@ async function submit(request, env, ctx) {
   });
   if (saved.error) return answer(saved.status, { error: saved.error });
   await showSaved(saved.text, user).catch((e) => console.error(`submit: couldn't update the cached copy: ${(e && e.message) || e}`));
-  if (saved.text) ctx.waitUntil(afterSend(env, ctx, { n, courseName: names[n], run, before, pending: saved.pending, rank: saved.rank, newBest: saved.newBest, site: url.origin }));
+  if (saved.text) ctx.waitUntil(afterSend(env, ctx, { n, courseName: names[n], courseFlag: flags[n], run, before, pending: saved.pending, rank: saved.rank, newBest: saved.newBest, site: url.origin }));
   if (saved.text && !saved.pending) ctx.waitUntil(profileAfterRun(env, ctx, user.id));
   // Sent twice: the run that's already in, with its id (undefined ones are left out of the answer)
   const shown = saved.text ? run : { ...run, id: saved.id, sentAt: undefined };

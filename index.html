@@ -211,7 +211,6 @@ main:focus { outline: none; }
 @media (max-width: 799px) {
   .lang-menu { grid-column: 1 / -1; justify-self: end; position: static; width: min(340px, 100%); margin-top: 8px; }
 }
-select option, select optgroup { background: var(--menu); color: var(--ink); }
 
 /* ---------- Hero ---------- */
 .hero {
@@ -553,7 +552,7 @@ select option, select optgroup { background: var(--menu); color: var(--ink); }
 .run-who { grid-area: who; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .run .stat.time { grid-area: time; }
 .run .stat.miss { grid-area: miss; }
-.run-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 16px/1.2 var(--body); letter-spacing: .03em; text-transform: uppercase; color: var(--ink-2); }
+.run-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 16px/1.2 var(--body); letter-spacing: .03em; color: var(--ink-2); }
 .run-date { grid-area: date; justify-self: end; display: flex; align-items: center; gap: 10px; margin-top: 3px; font: 400 11.5px/1.2 var(--mono); color: var(--ink-3); }
 /* A rating beside a run's date: the player's over every course on a board, the course's in a player's panel */
 .run-pts { display: inline-flex; align-items: center; gap: 4px; color: var(--ink-2); }
@@ -720,6 +719,7 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: flex-start; gap: 12px; padding: 18px 18px 14px; border-bottom: 1px solid var(--line); background: #08100d; }
 .pl-who { flex: 1; min-width: 0; }
 .pl-name { margin: 0; font: italic 800 30px/1.05 var(--display); letter-spacing: .02em; text-transform: uppercase; overflow-wrap: anywhere; }
+.pl-name.is-name { text-transform: none; } /* a player's name, already in capitals (caps()) */
 .pl-dc { margin-top: 7px; display: flex; align-items: center; gap: 7px; font: 600 14px/1.2 var(--body); color: #b9befc; }
 .pl-dc .run-pfp { width: 18px; height: 18px; }
 .pl-bot { display: inline-flex; align-items: center; gap: 5px; vertical-align: bottom; font-weight: 600; color: #b9befc; white-space: nowrap; }
@@ -935,7 +935,7 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .field-wide { grid-column: 1 / -1; }
 .field-label { font: 600 11.5px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
 .field-hint { font: 400 12.5px/1.4 var(--body); color: var(--ink-3); }
-.sub-form input, .sub-form select {
+.sub-form input, .sub-form .sub-pick {
   width: 100%;
   height: 42px;
   padding: 0 12px;
@@ -946,15 +946,24 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
   font: 500 15.5px/1 var(--body);
   transition: border-color .15s;
 }
-.sub-form select {
-  appearance: none;
-  padding-inline-end: 36px;
-  background: rgba(0, 0, 0, .3) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2376867f' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center / 16px;
-  cursor: pointer;
+/* The course: a button like the other fields that opens a menu like the languages', each course with its number and
+   flag. It's two columns over the fields under it, or under 600px wide one column in the page that pushes the form
+   down, since the panel would cut a long list off. */
+.sub-pick-wrap { position: relative; min-width: 0; }
+.sub-form .sub-pick { display: flex; align-items: center; gap: 10px; text-align: left; cursor: pointer; }
+.sub-pick-current { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
+.sub-pick-current .opt-num { width: auto; font-size: 13.5px; }
+.sub-pick-current .opt-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sub-pick-current.empty { color: var(--ink-3); }
+.sub-pick .chev { width: 16px; height: 16px; flex: none; color: var(--ink-3); transition: transform .2s ease; }
+.sub-pick[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.sub-course-menu { left: 0; right: 0; top: calc(100% + 6px); max-height: 340px; overflow-y: auto; overscroll-behavior: contain; transform-origin: top center; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; }
+@media (max-width: 600px) {
+  .sub-course-menu { position: static; max-height: none; margin-top: 6px; grid-template-columns: minmax(0, 1fr); }
 }
 .sub-form input::placeholder { color: var(--ink-3); opacity: 1; }
-.sub-form input:hover, .sub-form select:hover { border-color: rgba(196, 255, 232, .42); }
-.sub-form input:focus-visible, .sub-form select:focus-visible { outline: 2px solid var(--volt); outline-offset: 1px; border-color: var(--volt); }
+.sub-form input:hover, .sub-form .sub-pick:hover, .sub-pick[aria-expanded="true"] { border-color: rgba(196, 255, 232, .42); }
+.sub-form input:focus-visible, .sub-form .sub-pick:focus-visible { outline: 2px solid var(--volt); outline-offset: 1px; border-color: var(--volt); }
 .sub-form [aria-invalid="true"] { border-color: var(--coral); }
 #sub-time, #sub-miss { font-family: var(--mono); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
 .sub-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px 14px; }
@@ -969,7 +978,7 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .rev-run { display: grid; gap: 5px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: rgba(0, 0, 0, .25); }
 .rev-run.picked { border-color: rgba(255, 213, 79, .6); box-shadow: 0 0 0 1px rgba(255, 213, 79, .25); }
 .rev-course { font: 500 11.5px/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
-/* The course's flag before its name, in a run's row and at the top of its page */
+/* A course's flag before its name (flagName) */
 .mini-flag { font: 400 14px/1 var(--emoji); letter-spacing: 0; }
 .rev-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; font: 700 16px/1.2 var(--body); letter-spacing: .02em; }
 .rev-line .stat { font: 600 14px/1 var(--mono); }
@@ -1401,8 +1410,14 @@ a.link-copy { text-decoration: none; }
             </span>
           </div>
           <div class="field field-wide">
-            <label class="field-label" for="sub-course" data-i18n="sub.course">Course</label>
-            <select id="sub-course" required></select>
+            <label class="field-label" id="sub-course-label" for="sub-course" data-i18n="sub.course">Course</label>
+            <div class="sub-pick-wrap" id="sub-course-wrap">
+              <button class="sub-pick" id="sub-course" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="sub-course-menu" aria-labelledby="sub-course-label sub-course-current">
+                <span class="sub-pick-current" id="sub-course-current"></span>
+                <svg class="icon chev" aria-hidden="true"><use href="#i-chev"/></svg>
+              </button>
+              <ul class="menu sub-course-menu" id="sub-course-menu" role="listbox" tabindex="-1" aria-labelledby="sub-course-label" hidden></ul>
+            </div>
           </div>
           <div class="field field-wide">
             <label class="field-label" for="sub-name" data-i18n="sub.name">In-game name</label>
@@ -1890,9 +1905,17 @@ a.link-copy { text-decoration: none; }
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const icon = (id, cls = "icon") => `<svg class="${cls}" aria-hidden="true"><use href="#i-${id}"/></svg>`;
-  // A course's name with its flag before it, for a run's row and the top of its page. The flag is set off by a real
-  // space, not a margin, so a link's underline runs on under it without a gap.
+  // A course's name with its flag before it, wherever a course is named in a line of text. The flag is set off by a
+  // real space, not a margin, so a link's underline runs on under it without a gap.
   const flagName = (c) => `${c.flag ? `<span class="mini-flag" aria-hidden="true">${c.flag}</span> ` : ""}${esc(c.name)}`;
+  // Players' names are in capitals, as Overwatch shows them, but letters in a special font (𝓫𝓸𝓵𝓭, ᴄᴀᴘꜱ, ⓒⓘⓡⓒⓛⓔⓓ,
+  // ｗｉｄｅ) stay as they are, and so does one whose capital is longer (ß is SS). Of the small capitals, only ɪ and ʀ
+  // have capitals of their own (Ɪ and Ʀ), so they're kept by name. The Worker's is the same. (CSS uppercase would
+  // change all of those, so names don't use it.)
+  const caps = (s) => String(s).replace(/./gsu, (c) => {
+    const u = c.toUpperCase();
+    return u.length === c.length && c.normalize("NFKC") === c && c !== "ɪ" && c !== "ʀ" ? u : c;
+  });
 
   const REPO = "ballhallaa/ballkour";
   const motionQuery = matchMedia("(prefers-reduced-motion: reduce)");
@@ -2035,7 +2058,8 @@ a.link-copy { text-decoration: none; }
     renderAll();
   }
 
-  /* A button that opens a listbox menu: mouse, touch and keyboard (arrows, Home/End, Enter, Escape) */
+  /* A button that opens a listbox menu: mouse, touch and keyboard (arrows, Home/End, Enter, Escape). cols is how many
+     columns it has, or a function that says, for a menu whose columns change with the screen's width. */
   function makeMenu(wrap, btn, menu, cols, onChoose) {
     let opts = [];
     let active = 0;
@@ -2067,7 +2091,8 @@ a.link-copy { text-decoration: none; }
     menu.addEventListener("click", (e) => { const o = e.target.closest('[role="option"]'); if (o) choose(o.dataset.value); });
     menu.addEventListener("pointermove", (e) => { const o = e.target.closest('[role="option"]'); if (o) setActive(opts.indexOf(o), false); });
     menu.addEventListener("keydown", (e) => {
-      const step = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: cols, ArrowUp: -cols }[e.key];
+      const n = typeof cols === "function" ? cols() : cols;
+      const step = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: n, ArrowUp: -n }[e.key];
       if (step) { e.preventDefault(); setActive(active + step, true); }
       else if (e.key === "Home") { e.preventDefault(); setActive(0, true); }
       else if (e.key === "End") { e.preventDefault(); setActive(opts.length - 1, true); }
@@ -2157,7 +2182,7 @@ a.link-copy { text-decoration: none; }
     return `<span class="run-dc">${pfp}<span>${esc(p.name)}</span></span>`;
   }
   // A name on a board: opens the player's runs (see "A player's runs")
-  const nameButton = (key, name) => `<button class="run-name" type="button" data-player="${esc(key)}" title="${esc(t("lb.playerOpen", { player: name }))}">${esc(name)}</button>`;
+  const nameButton = (key, name) => `<button class="run-name" type="button" data-player="${esc(key)}" title="${esc(t("lb.playerOpen", { player: name }))}">${esc(caps(name))}</button>`;
   // A run on a board. ratingOf: each player's rating over every course (see ratingsBy), beside the date like on the
   // board pictures (none on legacy boards). podium: the run's place on the board by time when it's sorted by
   // mistakes, so the fastest three keep their gold, silver and bronze wherever they are
@@ -2846,10 +2871,10 @@ a.link-copy { text-decoration: none; }
     if (!r.players.length) return `<p class="board-empty">${esc(t("rt.empty"))}</p>`;
     const top = r.players.slice(0, 10);
     const rest = r.players.slice(10);
-    const courses = r.counted.map((c) => `${c.n} ${c.name}`).join(" · ");
+    const courses = r.counted.map((c) => `<span class="nowrap">${c.n} ${flagName(c)}</span>`).join(esc(" · "));
     return `<div class="lb-bar">${searchHtml(RATINGS)}</div>` + rowsHtml(RATINGS, top, rest, (p) => ratingRow(p, r)) +
       `<p class="lb-foot"><span>${esc(t("rt.how"))}</span><span>${esc(t("rt.tiers", { count: r.players.length.toLocaleString(htmlLang()) }))}</span>` +
-      `<span>${esc(t("rt.counted", { courses }))}</span></p>` + mathHtml(r);
+      `<span>${esc(t("rt.counted", { courses: "\u0000" })).replace("\u0000", courses)}</span></p>` + mathHtml(r);
   }
   // The formulas under the board, with two runs on a 4:00.00 record as an example
   function mathHtml(r) {
@@ -2937,7 +2962,7 @@ a.link-copy { text-decoration: none; }
     const stat = (label, value) => `<div class="pl-stat"><span class="pl-stat-label">${esc(label)}</span><span class="pl-stat-value">${value}</span></div>`;
     const tier = p ? `<span class="tag tag-tier${p.tier !== null && p.tier <= 5 ? " elite" : ""}">${esc(p.tier === null ? t("rt.rated") : t("rt.tier", { pct: p.tier.toLocaleString(htmlLang()) }))}</span>` : "—";
     const dcLine = dc && named.name ? `<span class="pl-dc">${/^https:\/\/cdn\.discordapp\.com\//.test(dc.avatar) ? `<img class="run-pfp" src="${esc(dc.avatar)}" alt="" width="18" height="18">` : ""}<span>${esc(dc.name)}</span></span>` : "";
-    let html = `<div class="pl-head"><div class="pl-who"><h2 class="pl-name" id="pl-name">${esc(named.name || (dc ? dc.name : ""))}</h2>` +
+    let html = `<div class="pl-head"><div class="pl-who"><h2 class="pl-name is-name" id="pl-name">${esc(caps(named.name || (dc ? dc.name : "")))}</h2>` +
       (mine ? `<div class="pl-me">${dcLine}<button class="pl-signout" type="button" data-sign-out>${esc(t("sub.signout"))}</button></div>` : dcLine) +
       `</div><button class="pl-close" type="button" data-pl-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button></div>` +
       `<div class="pl-stats">` +
@@ -3204,7 +3229,7 @@ a.link-copy { text-decoration: none; }
       .filter(Boolean).join(", ");
     return `<li class="run${p && p.rank <= 3 ? " p" + p.rank : ""}${i === pfActive ? " active" : ""}" role="option" id="pf-opt-${i}" aria-selected="${i === pfActive}" aria-label="${esc(label)}">` +
       `<span class="run-rank">${p ? p.rank : "–"}</span>` +
-      `<span class="run-who"><span class="run-line"><span class="run-name">${esc(x.name)}</span>` +
+      `<span class="run-who"><span class="run-line"><span class="run-name">${esc(caps(x.name))}</span>` +
         (tier ? `<span class="tag tag-tier${p.tier <= 5 ? " elite" : ""}">${esc(tier)}</span>` : "") + `</span></span>` +
       (p ? `<span class="stat time">${icon("star")}<span class="v">${esc(points(p.rating))}</span></span>` +
           `<span class="stat miss">${icon("map")}<span>${p.courses}/${total}</span></span>`
@@ -3510,7 +3535,7 @@ a.link-copy { text-decoration: none; }
       // The name, shrunk to fit like the bot's, then the New tag
       const nameLeft = left + 34 + 12;
       const nameMax = timeRight - tw - 7 - 21 - 12 - nameLeft - (fresh ? 9 + 44 : 0);
-      const name = r ? r.name.toUpperCase() : "---";
+      const name = r ? caps(r.name) : "---";
       let size = 25;
       picFont(ctx, `700 ${size}px Barlow, sans-serif`, size * 0.03);
       while (ctx.measureText(name).width > nameMax && size > 16) { size -= 0.5; picFont(ctx, `700 ${size}px Barlow, sans-serif`, size * 0.03); }
@@ -3564,7 +3589,7 @@ a.link-copy { text-decoration: none; }
   // The picture, in a window with Save, Copy and Share
   async function openPicture(c) {
     const d = picBoard(c);
-    pic.innerHTML = `<div class="pic-head"><h2 class="pic-title" id="pic-title">${esc(t("pic.title", { n: c.n, course: c.name }))}</h2>` +
+    pic.innerHTML = `<div class="pic-head"><h2 class="pic-title" id="pic-title">${esc(t("pic.title", { n: c.n, course: "\u0000" })).replace("\u0000", flagName(c))}</h2>` +
       `<button class="pl-close" type="button" data-pic-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button></div>` +
       `<p class="pic-wait">${esc(t("pic.drawing"))}</p>`;
     if (!pic.open) pic.showModal();
@@ -4146,6 +4171,19 @@ a.link-copy { text-decoration: none; }
   const subForm = $("#sub-form");
   const subField = (id) => $("#sub-" + id);
   const subStatus = $("#sub-status");
+  // The course they picked (its number, or "" for none yet), from a menu like the languages'
+  let subCourse = "";
+  const subCoursePicker = makeMenu($("#sub-course-wrap"), subField("course"), $("#sub-course-menu"),
+    () => (matchMedia("(max-width: 600px)").matches ? 1 : 2), (v) => setSubCourse(v));
+  function setSubCourse(v) {
+    const c = COURSES.find((x) => String(x.n) === String(v) && !x.broken);
+    subCourse = c ? String(c.n) : "";
+    subCoursePicker.select(subCourse);
+    const cur = $("#sub-course-current");
+    cur.classList.toggle("empty", !c);
+    cur.innerHTML = c ? `<span class="opt-num">${c.n}</span><span class="opt-flag" aria-hidden="true">${c.flag}</span><span class="opt-label">${esc(c.name)}</span>` : esc(t("sub.pick"));
+    if (c) subField("course").removeAttribute("aria-invalid");
+  }
   const loginOn = submitBox.dataset.login === "on";
   // Stats on Discord profiles are set up too (see "Stats on Discord profiles" in cloudflare/worker.js)
   const profilesOn = loginOn && submitBox.dataset.profiles === "on";
@@ -4185,11 +4223,9 @@ a.link-copy { text-decoration: none; }
   }
   // Signed out: the sign-in button. Signed in: who they are, and the form.
   function renderSubmit() {
-    const sel = subField("course");
-    const was = sel.value;
-    sel.innerHTML = `<option value="">${esc(t("sub.pick"))}</option>` +
-      COURSES.filter((c) => !c.broken).map((c) => `<option value="${c.n}">${c.n} · ${esc(c.name)}</option>`).join("");
-    sel.value = was;
+    subCoursePicker.fill(COURSES.filter((c) => !c.broken).map((c) => `<li class="opt" role="option" id="sub-course-opt-${c.n}" data-value="${c.n}" aria-selected="false">` +
+      `<span class="opt-num">${c.n}</span><span class="opt-flag" aria-hidden="true">${c.flag}</span><span class="opt-label">${esc(c.name)}</span>${CHECK}</li>`).join(""));
+    setSubCourse(subCourse);
     $("#sub-login").href = loginFor("submit");
     $("#sub-signin").hidden = !loginOn || !!me;
     subForm.hidden = !loginOn || !me;
@@ -4203,7 +4239,7 @@ a.link-copy { text-decoration: none; }
   function fillName() {
     const name = subField("name");
     if (name.value || !me) return;
-    try { name.value = JSON.parse(localStorage.getItem("ballkour-submit") || "{}").name || ""; } catch (e) { /* private mode */ }
+    try { name.value = caps(JSON.parse(localStorage.getItem("ballkour-submit") || "{}").name || ""); } catch (e) { /* private mode */ }
     if (name.value) return;
     const mine = COURSES.flatMap((c) => [...c.runs, ...(MORE[c.n] || [])]).filter((r) => r.discord === me.id)
       .sort((a, b) => formatDate(b.date).localeCompare(formatDate(a.date)));
@@ -4491,13 +4527,28 @@ a.link-copy { text-decoration: none; }
     pl.close();
     signOut(() => { const b = $("#me-wrap .me-btn"); if (b) b.focus({ preventScroll: true }); });
   });
-  // The course whose board is open is picked already
-  subForm.addEventListener("focusin", () => {
-    const sel = subField("course");
+  // The course whose board is open is picked already. Also as the course button's pressed, before its menu opens, since
+  // Safari doesn't focus buttons that are clicked.
+  function pickOpenCourse() {
     const c = typeof openCourse === "number" ? course(openCourse) : null;
-    if (!sel.value && c && !c.broken) sel.value = String(c.n);
-  });
+    if (!subCourse && c && !c.broken) setSubCourse(c.n);
+  }
+  subForm.addEventListener("focusin", pickOpenCourse);
+  subField("course").addEventListener("pointerdown", pickOpenCourse);
   subForm.addEventListener("input", (e) => e.target.removeAttribute("aria-invalid"));
+  // The name goes into capitals as it's typed or pasted (special-font letters stay as they are, see caps()), but not
+  // while an input method is still putting a word together, which would break it. caps() keeps every letter the same
+  // length, so the cursor stays where it was.
+  const nameField = subField("name");
+  function capsName() {
+    const v = nameField.value, up = caps(v);
+    if (up === v) return;
+    const { selectionStart: from, selectionEnd: to, selectionDirection: dir } = nameField;
+    nameField.value = up;
+    nameField.setSelectionRange(from, to, dir);
+  }
+  nameField.addEventListener("input", (e) => { if (!e.isComposing) capsName(); });
+  nameField.addEventListener("compositionend", capsName);
   // The time's : and . fill themselves in from the right as the digits are typed, like a stopwatch: 40581 is 4:05.81,
   // and 1234567 is 1:23:45.67. Typing or pasting them yourself works too, since only the digits are kept.
   function timeFromDigits(d) {
@@ -4547,7 +4598,7 @@ a.link-copy { text-decoration: none; }
   // Where they'd stand with a run that isn't on the board yet (a top 10 run waiting for a check): it goes in with
   // the other runs just long enough to work that out
   function standingWith(n, sent, id = me.id) {
-    const run = cleanRun({ ...sent, name: String(sent.name || "").toUpperCase(), discord: id });
+    const run = cleanRun({ ...sent, name: caps(String(sent.name || "")), discord: id });
     if (!run) return null;
     const made = !MORE[n];
     const list = MORE[n] || (MORE[n] = []);
@@ -4612,7 +4663,8 @@ a.link-copy { text-decoration: none; }
     if (!change) return "";
     return `<span class="res-delta ${change > 0 ? "up" : "down"}">${change > 0 ? "▲" : "▼"} ${esc(text)}</span>`;
   }
-  const resRow = (label, value, delta, note) => `<div class="res-row"><span class="res-label">${esc(label)}</span>` +
+  // label: text, or { html } (the course's, with its flag)
+  const resRow = (label, value, delta, note) => `<div class="res-row"><span class="res-label">${label && label.html ? label.html : esc(label)}</span>` +
     `<span class="res-value">${value}</span>${delta || "<span></span>"}${note ? `<span class="res-note">${note}</span>` : ""}</div>`;
   const was = (html) => `<span class="was">${html} →</span> `;
   // The rows of what a run did (s, from statsFrom or the Worker): the course's place and time and who it passed, the
@@ -4629,7 +4681,7 @@ a.link-copy { text-decoration: none; }
       names = esc(t(they ? "run.passed" : "res.passed", { names: list }));
     }
     // The course
-    let html = `<div class="res-rows">` + resRow(`${c.n} ${c.name}`,
+    let html = `<div class="res-rows">` + resRow({ html: `${c.n} ${flagName(c)}` },
       (s.was && s.was !== s.place ? was(`#${s.was}`) : "") + esc(`#${s.place} · ${run.time}`),
       deltaHtml(s.was ? s.was - s.place : null, String(s.was - s.place)),
       esc(faster) + (names ? `<span class="res-passed">${names}</span>` : ""));
@@ -4667,7 +4719,7 @@ a.link-copy { text-decoration: none; }
   // would put them.
   function resultHtml(n, run, before, after, again, held) {
     const c = course(n);
-    const where = `<a href="/leaderboards/${c.n}" data-board="${c.n}">${esc(`${c.n} ${c.name}`)}</a>`;
+    const where = `<a href="/leaderboards/${c.n}" data-board="${c.n}">${esc(`${c.n} `)}${flagName(c)}</a>`;
     const withCourse = (key, vars) => esc(t(key, { ...vars, course: "\u0000" })).replace("\u0000", where);
     const title = (cls, ico, html) => `<p class="res-title${cls}">${icon(ico)}<span>${html}</span></p>`;
     const plain = (html) => title("", "check", html);
@@ -4696,8 +4748,8 @@ a.link-copy { text-decoration: none; }
     e.preventDefault();
     if (sending || !me) return;
     const run = {
-      course: Number(subField("course").value),
-      name: subField("name").value.trim(),
+      course: Number(subCourse),
+      name: caps(subField("name").value.trim()),
       time: cleanTime(subField("time").value),
       mistakes: subField("miss").value.trim(),
       video: cleanVideo(subField("video").value),
@@ -4734,7 +4786,7 @@ a.link-copy { text-decoration: none; }
           celebrate(before, after);
         } else {
           const c = course(run.course);
-          const where = `<a href="/leaderboards/${c.n}" data-board="${c.n}">${esc(`${t("rev.course", { n: c.n })} · ${c.name}`)}</a>`;
+          const where = `<a href="/leaderboards/${c.n}" data-board="${c.n}">${esc(`${t("rev.course", { n: c.n })} · `)}${flagName(c)}</a>`;
           subStatus.innerHTML = `<p class="res-title held">${icon("eye")}<span>${esc(t("sub.held", { rank: out.rank, course: "\u0000" })).replace("\u0000", where)}</span></p>`;
         }
         loadReview();
@@ -4956,7 +5008,7 @@ a.link-copy { text-decoration: none; }
     const run = cleanRun(x.run);
     pl.innerHTML = `<div class="pl-head"><div class="pl-who">` +
         `<p class="pl-eyebrow">${icon("play")}<span>${esc(`${t("rev.course", { n: c.n })} · `)}${flagName(c)}</span></p>` +
-        `<h2 class="pl-name" id="pl-name"><button class="run-name" type="button" data-run-player="${esc(playerKey(run))}" title="${esc(t("lb.playerOpen", { player: run.name }))}">${esc(run.name)}</button></h2>` +
+        `<h2 class="pl-name is-name" id="pl-name"><button class="run-name" type="button" data-run-player="${esc(playerKey(run))}" title="${esc(t("lb.playerOpen", { player: run.name }))}">${esc(caps(run.name))}</button></h2>` +
         `<div class="run-tags" id="run-tags"></div></div>${close}</div>` +
       `<div class="run-facts"><span class="stat time">${icon("bolt")}<span>${esc(run.time)}</span></span>` +
         `<span class="stat miss">${icon("skull")}<span>${esc(run.miss)}</span></span>` +
@@ -5040,14 +5092,14 @@ a.link-copy { text-decoration: none; }
     const c = course(x.n);
     const run = cleanRun(x.run);
     if (!s || !s.place) return "";
-    const where = `<a href="/leaderboards/${c.n}" data-board="${c.n}">${esc(`${c.n} ${c.name}`)}</a>`;
+    const where = `<a href="/leaderboards/${c.n}" data-board="${c.n}">${esc(`${c.n} `)}${flagName(c)}</a>`;
     const withCourse = (key, vars) => esc(t(key, { ...vars, course: "\u0000" })).replace("\u0000", where);
     // Not its player's best: it didn't change the board
     if (s.best !== run.time) {
       const why = `<p class="run-note">${withCourse(which === "then" ? "run.slowerThen" : "run.slowerNow", { time: s.best, rank: s.place })}</p>`;
       if (!s.alone) return why;
       return why + `<p class="run-stats-title run-alone">${esc(t("run.alone"))}</p><div class="res-rows">` +
-        resRow(`${c.n} ${c.name}`, esc(`#${s.alone.place} · ${run.time}`), "", esc(t("run.slowerBy", { delta: gap(toSeconds(run.time) - toSeconds(s.best)), time: s.best }))) +
+        resRow({ html: `${c.n} ${flagName(c)}` }, esc(`#${s.alone.place} · ${run.time}`), "", esc(t("run.slowerBy", { delta: gap(toSeconds(run.time) - toSeconds(s.best)), time: s.best }))) +
         (s.alone.points !== null ? resRow(t("res.course"), esc(points(s.alone.points)), "") : "") + `</div>`;
     }
     const held = x.status === "pending";
