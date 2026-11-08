@@ -656,11 +656,27 @@ a.stat:hover .play { color: var(--volt); }
 .lb-search:focus-within .icon { color: var(--volt); }
 .lb-search input { width: 100%; height: 26px; padding-inline: 28px 8px; border: 1px solid var(--line); border-radius: 7px; background: rgba(0, 0, 0, .25); color: var(--ink); font: 500 13px/1 var(--body); -webkit-appearance: none; appearance: none; transition: border-color .15s; }
 .lb-search input::-webkit-search-decoration { -webkit-appearance: none; }
+/* The clear button keeps its room even while the box is empty, which cut off the end of the longer hints */
+.lb-search input:placeholder-shown::-webkit-search-cancel-button { display: none; }
 .lb-search input::placeholder { color: var(--ink-3); opacity: 1; }
 .lb-search input:hover { border-color: var(--line-hi); }
 .lb-search input:focus-visible { outline: 2px solid var(--volt); outline-offset: 1px; border-color: var(--volt); }
-/* Phones zoom in on a field with text under 16px */
-@media (pointer: coarse) { .lb-search input { height: 32px; font-size: 16px; } }
+/* Phones zoom in on a field with text under 16px. At that size, the longest hint ("Nombre del jugador o de Discord")
+   needs 262px, so the box gets a little more, on a line of its own when Picture would squeeze it */
+@media (pointer: coarse) {
+  .lb-search { flex-basis: 270px; }
+  .lb-search input { height: 32px; font-size: 16px; }
+}
+/* On phones, under the box: "Sort by" on two lines and the buttons a little tighter, so the sort buttons fit beside
+   Picture. Where they still don't, they go on the next line, and Picture goes right, above them. (Beside Picture, the
+   sort buttons take the rest of the line, which leaves none for Picture's margin, so it stays left there.) */
+@media (pointer: coarse) and (max-width: 520px) {
+  .lb-bar { column-gap: 8px; }
+  .lb-sort button, .lb-pic { gap: 4px; padding: 0 7px; }
+  .lb-sort-label { width: min-content; margin-inline-end: 2px; letter-spacing: .06em; text-align: end; word-break: keep-all; }
+  .lb-pic { margin-inline-start: auto; }
+  .lb-sort { flex-grow: 1; justify-content: flex-end; }
+}
 /* Found only past the top 10: no line between the bar and them */
 .lb-rows > .board-rest:first-child { border-top: 0; }
 /* Places 4–10 stand out from 11 on: a faint mint and brighter text, while past the top 10 the text dims a little */
