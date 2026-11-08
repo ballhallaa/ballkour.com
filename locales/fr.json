@@ -256,7 +256,7 @@
   "dcpi.nothingElse": "Rien d’autre : il ne peut ni lire vos messages, ni publier à votre place, ni modifier quoi que ce soit d’autre sur votre compte",
   "dcpi.step1": "Touchez {continue} ci-dessous.",
   "dcpi.step2": "Touchez {authorize}.",
-  "dcpi.step3": "Vous revenez ici. Pour afficher vos stats sur votre profil, terminez sur notre serveur Discord :",
+  "dcpi.step3": "Vous revenez ici. Pour finir d’afficher vos stats sur votre profil, terminez sur notre serveur Discord :",
   "dcpi.step4": "Cliquez sur le nom du serveur {server}, puis sur Rôles liés {linkedRoles}, puis sur Discord Profile App {role}.",
   "dcpi.step5": "Discord vous demande de connecter vos comptes. Cliquez sur Ballkyrie {bot}, et ce site s’ouvre dans votre navigateur.",
   "dcpi.step6": "De retour sur Discord, cliquez sur Terminer {finish}. La première fois, Discord peut mettre quelques minutes à afficher vos stats.",
