@@ -204,4 +204,4 @@ The English source is `locales/en.json`. Weblate component settings:
 
 Translations may use `<b>` and `<code>` only. Anything else shows up as text. Keep `{placeholders}` as they are.
 
-In the FAQ, `<b>` marks the game's own labels (controls like Reset CP, HUD and lobby names like Runs and Lobby Top 3), which show in orange. Use each label as the game shows it in that language. A word in a `<fgRRGGBBAA>` tag keeps that color from the game's HUD instead (the modes Freemode in violet and Spectator or Spectate in blue, (DISCONNECTED) in white), so keep those tags around the same words.
+In the FAQ, `<b>` marks the game's own labels (controls like Reset CP, HUD and lobby names like Runs and Lobby Top 3), which show in orange. Use each label as the game shows it in that language. A word in a `<fgRRGGBBAA>` tag keeps that color from the game's HUD instead (the modes Freemode in violet and Spectator or Spectate in blue, along with spectating and the spectator controls, disqualified in red, grayed out in gray, and (DISCONNECTED) in white), so keep those tags around the same words.
