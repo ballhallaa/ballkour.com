@@ -448,7 +448,7 @@ select option, select optgroup { background: var(--menu); color: var(--ink); }
 .group + .group { border-top: 1px solid var(--line); }
 
 #leaderboards, #submit { scroll-margin-top: 72px; }
-.course, .qa { scroll-margin-top: 80px; }
+.course, .qa, #sub-runs { scroll-margin-top: 80px; }
 .by { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; padding: 16px 18px 6px; }
 .by-title { margin: 0; font: italic 700 22px/1 var(--display); letter-spacing: .02em; text-transform: uppercase; color: var(--ink-3); }
 .by-name { color: var(--ink); }
@@ -969,6 +969,8 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .rev-run { display: grid; gap: 5px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: rgba(0, 0, 0, .25); }
 .rev-run.picked { border-color: rgba(255, 213, 79, .6); box-shadow: 0 0 0 1px rgba(255, 213, 79, .25); }
 .rev-course { font: 500 11.5px/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+/* The course's flag before its name, in a run's row and at the top of its page */
+.mini-flag { font: 400 14px/1 var(--emoji); letter-spacing: 0; }
 .rev-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; font: 700 16px/1.2 var(--body); letter-spacing: .02em; }
 .rev-line .stat { font: 600 14px/1 var(--mono); }
 .rev-meta { font: 400 12.5px/1.3 var(--mono); color: var(--ink-3); }
@@ -1888,6 +1890,9 @@ a.link-copy { text-decoration: none; }
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const icon = (id, cls = "icon") => `<svg class="${cls}" aria-hidden="true"><use href="#i-${id}"/></svg>`;
+  // A course's name with its flag before it, for a run's row and the top of its page. The flag is set off by a real
+  // space, not a margin, so a link's underline runs on under it without a gap.
+  const flagName = (c) => `${c.flag ? `<span class="mini-flag" aria-hidden="true">${c.flag}</span> ` : ""}${esc(c.name)}`;
 
   const REPO = "ballhallaa/ballkour";
   const motionQuery = matchMedia("(prefers-reduced-motion: reduce)");
@@ -4336,7 +4341,7 @@ a.link-copy { text-decoration: none; }
       const c = course(r.course);
       const who = r.discord && PLAYERS.get(r.discord);
       return `<li class="rev-run${r.id === checkParam ? " picked" : ""}" id="rev-${esc(r.id)}">` +
-        `<span class="rev-course">${esc(`${t("rev.course", { n: r.course })} · ${c ? c.name : r.courseName}`)}</span>` +
+        `<span class="rev-course">${esc(`${t("rev.course", { n: r.course })} · `)}${c ? flagName(c) : esc(r.courseName)}</span>` +
         `<span class="rev-line"><b>${esc(r.name)}</b><span class="stat time">${icon("bolt")}${esc(r.time)}</span><span class="stat miss">${icon("skull")}${esc(r.mistakes)}</span>` +
         `<span class="tag tag-wr">${esc(t("rev.would", { rank: r.rank }))}</span></span>` +
         `<span class="rev-meta">${withDate("lb.submittedOn", { date: formatDate(r.date) })}${who ? ` · ${esc(who.name)}` : ""}</span>` +
@@ -4348,12 +4353,15 @@ a.link-copy { text-decoration: none; }
     const picked = checkParam && !reviewScrolled && box.querySelector(".rev-run.picked");
     if (picked) { reviewScrolled = true; picked.scrollIntoView({ block: "center" }); }
   }
-  /* Submitted runs, under the form for everyone (ballkour.com/runs goes here): every run sent from the website, newest
-     first, with where it is now, 5 at first and then 20 more at a time. Each opens its page (a middle click, in a new
-     tab). Reviewers also see who checked each one. It's hidden until there's a run to show. */
+  /* Submitted runs, under the form for everyone (ballkour.com/runs goes here): every run sent from the website, and
+     every run from before it (see pastRuns), newest first, with where it is now, 5 at first and then 20 more at a
+     time. Each opens its page (a middle click, in a new tab). Reviewers also see who checked each one. It waits for
+     every board to load, so it doesn't fill in bit by bit, and it's hidden until there's a run to show. */
   let runsShown = 5;
+  let runsReady = false;
   function renderSentRuns() {
     const box = $("#sub-runs");
+    if (!runsReady) return;
     const all = sentRuns();
     box.hidden = !all.length;
     if (box.hidden) return;
@@ -4366,9 +4374,9 @@ a.link-copy { text-decoration: none; }
       const checker = reviewer && checkerOf(r);
       const checked = checker ? t(x.group === "declined" ? "rev.declinedBy" : "rev.approvedBy", { name: checker.name }) : "";
       return `<li><a class="rev-run" href="/runs/${esc(r.id)}" data-run-open="${esc(r.id)}">` +
-        `<span class="rev-course">${esc(`${t("rev.course", { n: x.n })} · ${c.name}`)}</span>` +
+        `<span class="rev-course">${esc(`${t("rev.course", { n: x.n })} · `)}${flagName(c)}</span>` +
         `<span class="rev-line"><b>${esc(r.name)}</b><span class="stat time">${icon("bolt")}${esc(r.time)}</span><span class="stat miss">${icon("skull")}${esc(r.mistakes)}</span>${statusTag(x)}</span>` +
-        `<span class="rev-meta">${[withDate("lb.submittedOn", { date: formatDate(r.date) }), ...[who && who.name, checked].filter(Boolean).map(esc)].join(" · ")}</span></a></li>`;
+        `<span class="rev-meta">${[r.date && withDate("lb.submittedOn", { date: formatDate(r.date) }), ...[who && who.name, checked].filter(Boolean).map(esc)].filter(Boolean).join(" · ")}</span></a></li>`;
     };
     box.innerHTML = `<p class="rev-title">${icon("notes")}<span>${esc(t("runs.title"))}</span><span class="rev-count">${all.length.toLocaleString(htmlLang())}</span></p>` +
       `<ul class="rev-list">${all.slice(0, runsShown).map(row).join("")}</ul>` +
@@ -4761,7 +4769,8 @@ a.link-copy { text-decoration: none; }
      here from today's boards (for a run waiting for a check, If approved now: what approving it would do). While the
      two are the same (nothing on the boards has changed since), it's one view that says so. Reviewers
      also get Approve and Turn down for a run waiting for a check, and see who checked one. Old ?check=<id> links (the
-     Verify buttons from before) open it too.
+     Verify buttons from before) open it too. The runs from before the website's form have a page too, with just Today
+     (see pastRuns).
      The video plays on the page for YouTube, Twitch, and Streamable links, but nothing loads from those sites until
      Play is pressed (the site never sends visitors to anyone else on its own). Other links get a button to the video. */
   const RUN_GROUPS = ["pending", "runs", "declined", "removed"];
@@ -4782,7 +4791,8 @@ a.link-copy { text-decoration: none; }
     return boards[n].some((x) => playerKey(x) === playerKey(run) && x.time === run.time && x.miss === run.miss) ? "up" : "slower";
   }
   const statusTag = (x) => `<span class="tag tag-run ${x.status}">${esc(t(`run.${x.status}`))}</span>`;
-  // Every run sent from the website that has an id, as { run (as runs.json has it), n, group, status }, newest first
+  // Every run with a page, as { run (as runs.json has it), n, group, status }, newest first: the runs sent from the
+  // website, and the ones from before (see pastRuns)
   function sentRuns() {
     const out = [];
     const boards = {};
@@ -4796,7 +4806,9 @@ a.link-copy { text-decoration: none; }
         });
       });
     });
-    const when = (x) => String(x.run.sentAt || x.run.date || "");
+    out.push(...pastRuns(boards));
+    // Ties keep their order: on the same day, the runs sent from the website come first
+    const when = (x) => String(x.run.sentAt || formatDate(x.run.date) || "");
     return out.sort((a, b) => when(b).localeCompare(when(a)));
   }
   function sentRun(id) {
@@ -4808,7 +4820,51 @@ a.link-copy { text-decoration: none; }
         if (r && cleanRun(r)) return { run: r, n, group, status: runStatus(r, n, group) };
       }
     }
-    return null;
+    return pastRuns().find((x) => x.run.id === id) || null;
+  }
+  /* The runs from before the website's form (sent in a Discord ticket), so they're listed and have a page too: every
+     run on a board now, and on every board in history.json, once each (a run whose time was fixed later, with the same
+     video, is the newer one). Legacy runs, timed to the second with no date or video, aren't. Their group is "past".
+     Their id comes from their course and video (or their player, time, and mistakes, for one without a video), so its
+     link stays the same: ballkour.com/runs/1-1x2b3c4. Nothing was worked out as they were sent, so their page only
+     has Today. A run sent from the website that's on a board in history.json too is only listed once, with its own id. */
+  const pastId = (n, key) => {
+    let h = 0x811c9dc5; // FNV-1a
+    for (const ch of key) h = Math.imul(h ^ ch.codePointAt(0), 0x01000193) >>> 0;
+    return `${n}-${h.toString(36)}`;
+  };
+  function pastRuns(boards = {}) {
+    const out = [];
+    const same = (a, b) => samePlayer(a, b) && ((a.time === b.time && a.miss === b.miss) || (!!a.video && a.video === b.video));
+    COURSES.forEach((c) => {
+      const seen = RUN_GROUPS.flatMap((g) => {
+        const list = RUNS_DATA && RUNS_DATA[g] && RUNS_DATA[g][c.n];
+        return Array.isArray(list) ? list.map((r) => cleanRun(r)).filter(Boolean) : [];
+      });
+      const ids = new Set();
+      // Newest first: the board now, then the history's boards from the last one back
+      const h = HISTORY[c.n];
+      [c.runs, ...(h ? h.boards.slice().reverse() : [])].forEach((board) => board.forEach((r) => {
+        if (seen.some((s) => same(s, r))) return;
+        seen.push(r);
+        const key = `${playerKey(r)} ${r.time} ${r.miss}`;
+        let id = pastId(c.n, r.video || key);
+        if (ids.has(id)) id = pastId(c.n, `${r.video} ${key}`); // two players with the same video link
+        ids.add(id);
+        const run = { name: r.name, discord: r.discord, time: r.time, mistakes: r.miss, date: r.date || "", video: r.video || "", id };
+        if (cleanRun(run)) out.push({ run, n: c.n, group: "past", status: pastStatus(c, r, boards) });
+      }));
+    });
+    return out;
+  }
+  // Where a run from before is now: like runStatus, but one that isn't on today's board and that its player hasn't
+  // beaten there was taken off
+  function pastStatus(c, run, boards) {
+    if ((REMOVED[c.n] || []).some((x) => sameRun(x, run))) return "removed";
+    if (!boards[c.n]) { const { top, rest } = standingsOf(c); boards[c.n] = top.concat(rest); }
+    if (boards[c.n].some((x) => playerKey(x) === playerKey(run) && x.time === run.time && x.miss === run.miss)) return "up";
+    const best = boards[c.n].find((x) => playerKey(x) === playerKey(run));
+    return best && byTime(best, run) <= 0 ? "slower" : "removed";
   }
   // What it does on today's boards: before is the boards without it, after with it. A run waiting for a check goes in
   // as if it were approved.
@@ -4816,8 +4872,25 @@ a.link-copy { text-decoration: none; }
     const run = cleanRun(x.run);
     if (!run.discord) return null;
     if (x.status === "pending") return statsFrom(x.n, run, standing(x.n, run.discord), standingWith(x.n, x.run, run.discord));
-    if (x.status === "up" || x.status === "slower") return { ...statsFrom(x.n, run, standingWithout(x.n, run, run.discord), standing(x.n, run.discord)), alone: aloneOf(x.n, run) };
+    if (x.status === "up" || x.status === "slower") return { ...statsFrom(x.n, run, withPastBest(x, () => standingWithout(x.n, run, run.discord)), standing(x.n, run.discord)), alone: aloneOf(x.n, run) };
     return null;
+  }
+  // Without a run from before that's on the board, its player's other runs there still count, like a run sent from
+  // the website's do (theirs stay in runs.json): their fastest one goes in just long enough to work out the boards
+  // without it. (The boards only keep a run from history.json when it's slower than today's #10.)
+  function withPastBest(x, get) {
+    const run = cleanRun(x.run);
+    const other = x.group === "past" && x.status === "up" ? pastRuns()
+      .filter((y) => y.n === x.n && y.status === "slower" && playerKey(y.run) === playerKey(run))
+      .map((y) => cleanRun(y.run)).sort(byTime)[0] : null;
+    if (!other) return get();
+    const made = !MORE[x.n];
+    const list = MORE[x.n] || (MORE[x.n] = []);
+    list.push(other);
+    try { return get(); } finally {
+      list.splice(list.indexOf(other), 1);
+      if (made) delete MORE[x.n];
+    }
   }
 
   // A run by itself, for one that isn't its player's best: its place among everyone else's bests, and the course
@@ -4882,12 +4955,12 @@ a.link-copy { text-decoration: none; }
     const c = course(x.n);
     const run = cleanRun(x.run);
     pl.innerHTML = `<div class="pl-head"><div class="pl-who">` +
-        `<p class="pl-eyebrow">${icon("play")}<span>${esc(`${t("rev.course", { n: c.n })} · ${c.name}`)}</span></p>` +
+        `<p class="pl-eyebrow">${icon("play")}<span>${esc(`${t("rev.course", { n: c.n })} · `)}${flagName(c)}</span></p>` +
         `<h2 class="pl-name" id="pl-name"><button class="run-name" type="button" data-run-player="${esc(playerKey(run))}" title="${esc(t("lb.playerOpen", { player: run.name }))}">${esc(run.name)}</button></h2>` +
         `<div class="run-tags" id="run-tags"></div></div>${close}</div>` +
       `<div class="run-facts"><span class="stat time">${icon("bolt")}<span>${esc(run.time)}</span></span>` +
         `<span class="stat miss">${icon("skull")}<span>${esc(run.miss)}</span></span>` +
-        `<span class="run-when">${withDate("lb.submittedOn", { date: formatDate(run.date) })}</span></div>` +
+        (run.date ? `<span class="run-when">${withDate("lb.submittedOn", { date: formatDate(run.date) })}</span>` : "") + `</div>` +
       videoHtml(run.video) +
       `<div id="run-check"></div><div class="run-stats" id="run-stats" hidden></div>` +
       `<div class="run-foot"><a class="btn btn-sm" href="/leaderboards/${c.n}" data-board="${c.n}">${esc(t("res.board"))}</a>` +
@@ -5017,7 +5090,8 @@ a.link-copy { text-decoration: none; }
       if (runId !== id) return;
     }
     const x = sentRun(id);
-    if (x && x.status !== "declined") loadRunThen(id);
+    // A run from before has no When sent to ask for
+    if (x && x.status !== "declined" && x.group !== "past") loadRunThen(id);
     renderRun();
     pl.scrollTop = 0;
     pl.querySelector("[data-pl-close]").focus();
@@ -5078,7 +5152,11 @@ a.link-copy { text-decoration: none; }
     e.preventDefault();
     openRun(b.dataset.runOpen);
   });
-  if (startRun) Promise.allSettled(LOADS).then(() => openRun(startRun));
+  Promise.allSettled(LOADS).then(() => {
+    runsReady = true;
+    renderSentRuns();
+    if (startRun) openRun(startRun);
+  });
 
   /* ---------- Clean section links: ballkour.com/features, /leaderboards, … ----------
      Cloudflare serves this page at each path. Clicking one scrolls in place and updates the address, so the

@@ -102,7 +102,9 @@ A run's page shows the course, the player, the time and mistakes, where the run 
 
 Moderators also get **Runs to check** above the form at ballkour.com/submit: every run waiting, with **View run**, **Approve**, and **Turn down**. Each checked run in `runs.json` keeps who checked it and when (`checkedBy` and `checkedAt`). Old `/submit?check=<id>` links, from the **Verify** buttons before runs had pages, open the run's page too.
 
-**Everyone can see every run** under the form, in **Submitted runs** (`ballkour.com/runs`, and **All runs** on any run's page goes there too): newest first, with where each run is now, each opening its page. Moderators also see who checked each one there. It's hidden until a run has been sent from the website.
+**Everyone can see every run** under the form, in **Submitted runs** (`ballkour.com/runs`, and **All runs** on any run's page goes there too): newest first, with where each run is now, each opening its page. Moderators also see who checked each one there.
+
+The runs from before the form (sent in a Discord ticket) are listed there too: every run on a board now, and on every board in `history.json`, once each. Legacy runs (no date or video) aren't. They have pages too, at `ballkour.com/runs/<course>-<code>`, where the code comes from the run's video, so the link stays the same. Since nothing was worked out when they were sent, their page only has **Today**.
 
 To take a run off, move it from `"runs"` to `"removed"` in `runs.json` (see [Courses and leaderboards](#courses-and-leaderboards)).
 
