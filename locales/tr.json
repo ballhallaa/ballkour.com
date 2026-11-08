@@ -127,7 +127,7 @@
   "faq.pace.q": "<b>Tahmini</b> nedir?",
   "faq.pace.a": "Bu denemedeki ortalama bölüm süresine göre tahmini bitiş süren. Mevcut bölümün bu ortalamadan yavaş olunca <fgFF4646FF>kırmızı</fg> olur ve sürenle birlikte artar.",
   "faq.grayed.q": "Neden bazı kontroller <fg808080FF>gri</fg>?",
-  "faq.grayed.a": "Şu an kullanılamazlar: ilk CP'de <b>Önceki CP</b>, sonuncuda <b>Sonraki CP</b>, ve <fg00BEFFFF>izlenecek</fg> kimse yokken <fg00BEFFFF>izleyici kontrolleri</fg>. <b>Tekrar takip et</b>, bir oyuncuyu izlerken <b>Serbest kamera</b> ister. <b>Nişandaki oyuncu</b> <b>Serbest kamera</b> ister.",
+  "faq.grayed.a": "Şu an kullanılamazlar: ilk CP'de <b>Önceki CP</b>, sonuncuda <b>Sonraki CP</b>, ve <fg00BEFFFF>izlenecek</fg> kimse yokken <fg00BEFFFF>izleyici</fg> kontrolleri. <b>Tekrar takip et</b>, bir oyuncuyu izlerken <b>Serbest kamera</b> ister. <b>Nişandaki oyuncu</b> <b>Serbest kamera</b> ister.",
   "faq.scorecard.q": "Skorlarda ne var?",
   "faq.scorecard.a": "Her oyuncunun CP'si, süresi ve hataları; önce en ileride, sonra en hızlı olan. Altta <fgCB87FFFF>Serbest mod</fg>daki oyuncular <fgCB87FFFF>mor</fg>, <fg00BEFFFF>İzle</fg>'deki oyuncular <fg00BEFFFF>mavi</fg> görünür. <fgFF4646FF>Diskalifiye</fg> denemeler <fgFF4646FF>×</fg> ile işaretlenir ve koşanlar arasında <fgFF4646FF>kırmızı</fg> görünür.",
   "faq.shield.q": "<fg00BEFFFF>Kalkan sekmesi</fg> nedir?",

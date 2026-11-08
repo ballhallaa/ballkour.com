@@ -127,7 +127,7 @@
   "faq.pace.q": "Qu'est-ce que la <b>Prévision</b> ?",
   "faq.pace.a": "Ton temps final estimé, d'après la moyenne des segments de cette partie. Dès que ton segment actuel est plus lent que cette moyenne, elle passe au <fgFF4646FF>rouge</fg> et augmente avec ton temps.",
   "faq.grayed.q": "Pourquoi certaines commandes sont-elles <fg808080FF>grisées</fg> ?",
-  "faq.grayed.a": "Elles sont inutilisables pour l'instant : <b>CP préc.</b> sur le premier CP, <b>CP suiv.</b> sur le dernier, et les <fg00BEFFFF>commandes de spectateur</fg> quand il n'y a personne à <fg00BEFFFF>observer</fg>. <b>Rattacher</b> demande <b>Caméra libre</b> pendant que tu observes un joueur. <b>Joueur visé</b> demande <b>Caméra libre</b>.",
+  "faq.grayed.a": "Elles sont inutilisables pour l'instant : <b>CP préc.</b> sur le premier CP, <b>CP suiv.</b> sur le dernier, et les commandes de <fg00BEFFFF>spectateur</fg> quand il n'y a personne à <fg00BEFFFF>observer</fg>. <b>Rattacher</b> demande <b>Caméra libre</b> pendant que tu observes un joueur. <b>Joueur visé</b> demande <b>Caméra libre</b>.",
   "faq.scorecard.q": "Que montrent les scores ?",
   "faq.scorecard.a": "Le CP, le temps et les erreurs de chaque joueur, le plus avancé d'abord, puis le plus rapide. En dessous, les joueurs en <fgCB87FFFF>Mode libre</fg> sont en <fgCB87FFFF>violet</fg>, et ceux qui utilisent <fg00BEFFFF>Observer</fg> en <fg00BEFFFF>bleu</fg>. Les parties <fgFF4646FF>disqualifiées</fg> sont marquées d'un <fgFF4646FF>×</fg>, et en <fgFF4646FF>rouge</fg> parmi les joueurs en course.",
   "faq.shield.q": "Qu'est-ce qu'un <fg00BEFFFF>rebond de bouclier</fg> ?",

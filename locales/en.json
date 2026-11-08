@@ -298,7 +298,7 @@
   "faq.pace.q": "What is <b>Pace</b>?",
   "faq.pace.a": "Your estimated finish time, from this run's average split so far. Once your current split is slower than that average, it turns <fgFF4646FF>red</fg> and counts up with your time.",
   "faq.grayed.q": "Why are some controls <fg808080FF>grayed out</fg>?",
-  "faq.grayed.a": "They can't be used right now: <b>Prev. CP</b> on the first checkpoint, <b>Next CP</b> on the last, and the <fg00BEFFFF>spectator controls</fg> while there's nobody to <fg00BEFFFF>spectate</fg>. <b>Reattach</b> needs <b>Freecam</b> while watching a player. <b>X-Hair Player</b> needs <b>Freecam</b>.",
+  "faq.grayed.a": "They can't be used right now: <b>Prev. CP</b> on the first checkpoint, <b>Next CP</b> on the last, and the <fg00BEFFFF>spectator</fg> controls while there's nobody to <fg00BEFFFF>spectate</fg>. <b>Reattach</b> needs <b>Freecam</b> while watching a player. <b>X-Hair Player</b> needs <b>Freecam</b>.",
   "faq.scorecard.q": "What's on the scorecard?",
   "faq.scorecard.a": "Each runner's checkpoint, time, and mistakes, sorted by furthest and then fastest. Below them, players in <fgCB87FFFF>Freemode</fg> are <fgCB87FFFF>purple</fg>, and players in <fg00BEFFFF>Spectate</fg> are <fg00BEFFFF>blue</fg>. <fgFF4646FF>Disqualified</fg> runs are marked <fgFF4646FF>×</fg>, and <fgFF4646FF>red</fg> among the runners.",
   "faq.shield.q": "What is a <fg00BEFFFF>shield bounce</fg>?",
