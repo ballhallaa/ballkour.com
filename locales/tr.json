@@ -115,7 +115,7 @@
   "faq.timer.q": "Denememin süresi ne zaman başlar?",
   "faq.timer.a": "İlk CP'den ayrıldığında, doğduğunda değil.",
   "faq.mistake.q": "Hata sayılan nedir?",
-  "faq.mistake.a": "Sonraki CP dışında bir yere inmek, iki kez bhop yapmak, sekme CP'sinde zıplamayı kaçırmak, haritadan düşmek ya da girişimin ortasında <b>Önceki CP</b>/<b>Sonraki CP</b>, <b>CP'yi sıfırla</b>, <b>Serbest mod</b>, <b>İzle</b> veya <b>Lobi/Duraklat</b> ile ayrılmak.",
+  "faq.mistake.a": "Sonraki CP dışında bir yere inmek, iki kez bhop yapmak, bir CP'nin küresini kaçırmak, haritadan düşmek ya da girişimin ortasında <b>Önceki CP</b>/<b>Sonraki CP</b>, <b>CP'yi sıfırla</b>, <b>Serbest mod</b>, <b>İzle</b> veya <b>Lobi/Duraklat</b> ile ayrılmak.",
   "faq.pause.q": "Denememi duraklatabilir miyim?",
   "faq.pause.a": "<b>Lobi/Duraklat</b> ve <b>İzle</b> süreni duraklatır. Lobideki <b>Denemeye devam et</b> CP'nden devam eder. CP'nin dışındayken duraklatmak hata sayılır.",
   "faq.counts.q": "<b>Denemeler</b> ve <b>Girişimler</b> neyi sayar?",

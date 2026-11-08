@@ -115,7 +115,7 @@
   "faq.timer.q": "Quand le chrono de ma partie démarre-t-il ?",
   "faq.timer.a": "Quand tu quittes le premier CP, pas quand tu apparais.",
   "faq.mistake.q": "Qu'est-ce qui compte comme erreur ?",
-  "faq.mistake.a": "Atterrir ailleurs que sur le CP suivant, faire deux bhops, rater le saut d'un CP à rebond, tomber de la carte, ou quitter un essai en cours avec <b>CP préc.</b>/<b>CP suiv.</b>, <b>Réinit. CP</b>, <b>Mode libre</b>, <b>Observer</b> ou <b>Lobby/Pause</b>.",
+  "faq.mistake.a": "Atterrir ailleurs que sur le CP suivant, faire deux bhops, rater l'orbe d'un CP, tomber de la carte, ou quitter un essai en cours avec <b>CP préc.</b>/<b>CP suiv.</b>, <b>Réinit. CP</b>, <b>Mode libre</b>, <b>Observer</b> ou <b>Lobby/Pause</b>.",
   "faq.pause.q": "Est-ce que je peux mettre ma partie en pause ?",
   "faq.pause.a": "<b>Lobby/Pause</b> et <b>Observer</b> mettent ton chrono en pause. <b>Reprendre la partie</b> dans le lobby repart de ton CP. Mettre en pause hors de ton CP compte comme une erreur.",
   "faq.counts.q": "Que comptent <b>Parties</b> et <b>Essais</b> ?",

@@ -115,7 +115,7 @@
   "faq.timer.q": "Quando o tempo da minha partida começa?",
   "faq.timer.a": "Quando você sai do primeiro CP, não quando nasce.",
   "faq.mistake.q": "O que conta como erro?",
-  "faq.mistake.a": "Pousar em qualquer lugar que não seja o próximo CP, dar bhop duas vezes, errar o pulo de um CP de quique, cair do mapa, ou sair no meio da tentativa com <b>CP anterior</b>/<b>Próximo CP</b>, <b>Reiniciar CP</b>, <b>Modo livre</b>, <b>Assistir</b> ou <b>Lobby/Pausa</b>.",
+  "faq.mistake.a": "Pousar em qualquer lugar que não seja o próximo CP, dar bhop duas vezes, perder o orbe de um CP, cair do mapa, ou sair no meio da tentativa com <b>CP anterior</b>/<b>Próximo CP</b>, <b>Reiniciar CP</b>, <b>Modo livre</b>, <b>Assistir</b> ou <b>Lobby/Pausa</b>.",
   "faq.pause.q": "Posso pausar minha partida?",
   "faq.pause.a": "<b>Lobby/Pausa</b> e <b>Assistir</b> pausam seu tempo. <b>Retomar partida</b> no lobby continua do seu CP. Pausar fora do seu CP conta como erro.",
   "faq.counts.q": "O que <b>Partidas</b> e <b>Tentativas</b> contam?",

@@ -115,7 +115,7 @@
   "faq.timer.q": "Quando parte il timer della mia partita?",
   "faq.timer.a": "Quando lasci il primo CP, non quando compari.",
   "faq.mistake.q": "Cosa conta come errore?",
-  "faq.mistake.a": "Atterrare ovunque tranne il CP successivo, fare due bhop, mancare il salto di un CP a rimbalzo, cadere dalla mappa, o uscire a metà tentativo con <b>CP prec.</b>/<b>CP succ.</b>, <b>Reset CP</b>, <b>Modalità libera</b>, <b>Osserva</b> o <b>Lobby/Pausa</b>.",
+  "faq.mistake.a": "Atterrare ovunque tranne il CP successivo, fare due bhop, mancare la sfera di un CP, cadere dalla mappa, o uscire a metà tentativo con <b>CP prec.</b>/<b>CP succ.</b>, <b>Reset CP</b>, <b>Modalità libera</b>, <b>Osserva</b> o <b>Lobby/Pausa</b>.",
   "faq.pause.q": "Posso mettere in pausa la mia partita?",
   "faq.pause.a": "<b>Lobby/Pausa</b> e <b>Osserva</b> mettono in pausa il timer. <b>Riprendi partita</b> nella lobby riparte dal tuo CP. Mettere in pausa fuori dal tuo CP conta come errore.",
   "faq.counts.q": "Cosa contano <b>Partite</b> e <b>Tentativi</b>?",
