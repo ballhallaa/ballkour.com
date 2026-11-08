@@ -338,10 +338,11 @@ async function buildPlayers(env, ctx, previous) {
                          whether they have the Discord Profile App role it needs, see "Stats on Discord profiles")
      POST /api/logout
      POST /api/submit    { course, name, time, mistakes, video } → { ok: true, run, saved, pending, rank } (saved is
-                         false when that exact run was already in, and pending is true when it's a top 10 run that
-                         waits for a check, see "Saving a run, and checking top 10 runs") or { error }, the error saying
-                         what to fix: login (not signed in), course, name, time, miss, video, rate (too many), off
-                         (not set up, or GitHub didn't take it) or bad
+                         false when that exact run was already in, sent before or on a board from before the form,
+                         and then run has that one's id, or none for one from before; pending is true when it's a top
+                         10 run that waits for a check, see "Saving a run, and checking top 10 runs") or { error },
+                         the error saying what to fix: login (not signed in), course, name, time, miss, video, rate
+                         (too many), off (not set up, or GitHub didn't take it) or bad
    GET /api/pending and POST /api/review are for checking top 10 runs (see below), and GET /api/run is a run's numbers
    from when it was sent (see "Each run's page").
    The session is a cookie signed with SESSION_SECRET that lasts 30 days. Nothing about it is stored here.
@@ -537,6 +538,14 @@ function fileRuns(file, body) {
   try {
     const runs = JSON.parse(body);
     return Array.isArray(runs) ? runs.filter((r) => r && typeof r.name === "string" && typeof r.time === "string" && Number.isInteger(r.mistakes)) : [];
+  } catch (e) { return []; }
+}
+// The runs on a course's old boards in history.json (from the cached game data), or [] when it can't be read
+function historyRuns(files, n) {
+  try {
+    const h = JSON.parse(files && files["leaderboards/history.json"]);
+    const boards = (h && h[n] && h[n].boards) || [];
+    return (Array.isArray(boards) ? boards : []).flat().filter((r) => r && typeof r.name === "string" && typeof r.time === "string" && Number.isInteger(r.mistakes));
   } catch (e) { return []; }
 }
 // Where a run would place on its course's board (1 + the other players whose best is faster), and whether it's its
@@ -798,14 +807,19 @@ async function submit(request, env, ctx) {
   const file = courseFile(files, n);
   if (files && !file) return answer(400, { error: "course" });
   const board = fileRuns(file, file && files[file]);
+  // Their runs from before the website's form are on the board, or on its old boards
+  const mine = [...board, ...historyRuns(files, n)].filter((r) => r.discord === user.id);
 
   const sentAt = stamp();
   const run = { name: caps(name), discord: user.id, time, mistakes, date: sentAt.slice(0, 10), video, id: b64url(crypto.getRandomValues(new Uint8Array(6))), sentAt };
   let before = null; // runs.json just before the run went in, for what it did (runStats)
   const saved = await editRuns(env, (data) => {
     const list = listIn(data.runs, n), waiting = listIn(data.pending, n);
-    // The same run sent twice is only saved once (a turned-down run can be sent again, with a new video, say)
-    const same = [...list, ...waiting].find((r) => r && r.discord === run.discord && r.time === run.time && r.mistakes === run.mistakes);
+    // The same run sent twice is only saved once, and so is one from before the form that's on a board, which has no
+    // id (a turned-down run can be sent again, with a new video, say, and so can one that's taken off)
+    const removed = Array.isArray(data.removed[n]) ? data.removed[n] : [];
+    const old = mine.filter((r) => !removed.some((x) => sameRunAs(x, r)));
+    const same = [...list, ...waiting, ...old].find((r) => r && r.discord === run.discord && r.time === run.time && r.mistakes === run.mistakes);
     if (same) return { skip: true, id: same.id };
     const today = ["runs", "pending", "declined"].flatMap((k) => Object.values(data[k]).flat()).filter((r) => r && r.discord === run.discord && r.date === run.date).length;
     if (today >= 20) return { error: "rate", status: 429 };
