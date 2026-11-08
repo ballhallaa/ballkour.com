@@ -759,7 +759,7 @@ async function review(request, env, ctx) {
 /* ---------- Stats on Discord profiles ----------
    Players can put their stats on their Discord profile, under Apps, like a linked game account. It's Discord's
    "role connection", which shows as:
-     Ballkour · Top 0.1%          their Top % (Rated for the bottom 10%, Unrated before they have a rating)
+     ballkour.com · Top 0.1%      their Top % (Rated for the bottom 10%, Unrated before they have a rating)
      DUCKLING · #3                their in-game name and place in the player ratings
      8123 ⭐ Rating  4 ⚡ Top 10s  2 🏆 Podiums  1 👑 Records  12 🗺️ Courses run
    PROFILE_FIELDS are the numbers on the last line. Discord allows at most 5 per app, whole numbers only (so Top %,
@@ -858,7 +858,7 @@ function profilesFrom(data) {
     const p = rated.get("d:" + id);
     const b = boards.get("d:" + id) || { top10s: 0, podiums: 0, records: 0, name: "" };
     return JSON.stringify({
-      platform_name: `Ballkour · ${!p ? "Unrated" : p.tier === null ? "Rated" : `Top ${p.tier}%`}`,
+      platform_name: `ballkour.com · ${!p ? "Unrated" : p.tier === null ? "Rated" : `Top ${p.tier}%`}`,
       platform_username: p ? `${p.name} · #${p.rank}` : b.name || "No runs yet",
       metadata: { rating: p ? Math.round(p.rating) : 0, top10s: b.top10s, podiums: b.podiums, records: b.records, courses: p ? p.courses : 0 },
     });

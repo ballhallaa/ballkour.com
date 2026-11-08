@@ -1648,7 +1648,7 @@ a.link-copy { text-decoration: none; }
   "dcpi.lookNote": "With your stats as they are now. They keep up to date with the boards on their own, and you can take them off here any time.",
   "dcpi.asksTitle": "What Discord asks",
   "dcpi.asks": "Discord lists “Update your connection and metadata for this application”. In plain words:",
-  "dcpi.connection": "Your connection is the Ballkour box above, on your profile",
+  "dcpi.connection": "Your connection is the ballkour.com box above, on your profile",
   "dcpi.metadata": "Its metadata is the numbers in it, from your rating to the courses you’ve run",
   "dcpi.nothingElse": "Nothing else: it can’t read your messages, post as you, or change anything else on your account",
   "dcpi.step1": "Tap {continue} below.",
@@ -2886,7 +2886,7 @@ a.link-copy { text-decoration: none; }
     return `<div class="dcp-card" lang="en">` +
       `<img class="dcp-card-icon" src="${esc(botPic())}" alt="" width="40" height="40">` +
       `<div class="dcp-card-body">` +
-        `<div class="dcp-card-name">Ballkour · ${!p ? "Unrated" : p.tier === null ? "Rated" : `Top ${p.tier}%`}</div>` +
+        `<div class="dcp-card-name">ballkour.com · ${!p ? "Unrated" : p.tier === null ? "Rated" : `Top ${p.tier}%`}</div>` +
         `<div class="dcp-card-user">${esc(p ? `${p.name} · #${p.rank}` : n.name || "No runs yet")}</div>` +
         `<div class="dcp-card-by">Powered by Ballkyrie</div>` +
         `<div class="dcp-card-stats">${stats.map(([v, name]) => `<span>${v} ${name}</span>`).join("")}</div>` +

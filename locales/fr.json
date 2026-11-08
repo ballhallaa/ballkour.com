@@ -251,7 +251,7 @@
   "dcpi.lookNote": "Avec vos stats actuelles. Elles restent à jour avec les classements d’elles-mêmes, et vous pouvez les retirer ici à tout moment.",
   "dcpi.asksTitle": "Ce que Discord demande",
   "dcpi.asks": "Discord indique « Mettre à jour votre connexion et vos métadonnées pour cette application ». En clair :",
-  "dcpi.connection": "Votre connexion, c’est l’encadré Ballkour ci-dessus, sur votre profil",
+  "dcpi.connection": "Votre connexion, c’est l’encadré ballkour.com ci-dessus, sur votre profil",
   "dcpi.metadata": "Ses métadonnées, ce sont les nombres qu’il contient, de votre score aux parcours que vous avez faits",
   "dcpi.nothingElse": "Rien d’autre : il ne peut ni lire vos messages, ni publier à votre place, ni modifier quoi que ce soit d’autre sur votre compte",
   "dcpi.step1": "Touchez {continue} ci-dessous.",
