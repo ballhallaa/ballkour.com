@@ -251,7 +251,7 @@
   "dcpi.lookNote": "依你目前的數據顯示。它們會隨著排行榜自動更新，你也可以隨時在這裡移除。",
   "dcpi.asksTitle": "Discord 會詢問什麼",
   "dcpi.asks": "Discord 會列出「更新你在此應用程式中的連結和中繼資料」。簡單來說：",
-  "dcpi.connection": "連結就是上面那個顯示在你個人檔案上的 Ballkour 方塊",
+  "dcpi.connection": "連結就是上面那個顯示在你個人檔案上的 ballkour.com 方塊",
   "dcpi.metadata": "中繼資料就是方塊裡的數字，從你的積分到你跑過的關卡",
   "dcpi.nothingElse": "僅此而已：它無法讀取你的訊息、以你的名義發文，也無法更改你帳號的其他任何內容",
   "dcpi.step1": "點選下方的{continue}。",

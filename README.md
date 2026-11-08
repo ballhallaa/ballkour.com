@@ -128,7 +128,7 @@ The remakes' in-game top 10s are part of the game, so they only change with a re
 Players can show their Ballkour stats on their Discord profile, under **Apps**, the same way a linked game account shows there. **Show on my Discord profile** in their own panel (My stats) sends them to Discord, which asks if Ballkyrie can update their connection, and brings them back. It shows:
 
 ```
-Ballkour · Top 0.1%
+ballkour.com · Top 0.1%
 DUCKLING · #3
 8123 ⭐ Rating   4 ⚡ Top 10s   2 🏆 Podiums   1 👑 Records   12 🗺️ Courses run
 ```

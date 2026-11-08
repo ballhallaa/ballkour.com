@@ -251,7 +251,7 @@
   "dcpi.lookNote": "按你当前的数据显示。它们会跟随排行榜自动更新，你也可以随时在这里移除。",
   "dcpi.asksTitle": "Discord 会询问什么",
   "dcpi.asks": "Discord 会列出“更新你在此应用中的连接和元数据”。简单来说：",
-  "dcpi.connection": "连接就是上面那个显示在你个人资料上的 Ballkour 框",
+  "dcpi.connection": "连接就是上面那个显示在你个人资料上的 ballkour.com 框",
   "dcpi.metadata": "元数据就是框里的数字，从你的积分到你跑过的关卡",
   "dcpi.nothingElse": "仅此而已：它不能读取你的消息、以你的名义发帖，也不能更改你账号的其他任何内容",
   "dcpi.step1": "点击下方的{continue}。",
