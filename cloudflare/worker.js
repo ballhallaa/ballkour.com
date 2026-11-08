@@ -359,8 +359,9 @@ const SESSION_DAYS = 30;
 // Ballkyrie's own Discord ID, which is the same as its app's ID
 const botId = (env) => (/^\d{17,20}$/.test(env.DISCORD_CLIENT_ID || "") ? env.DISCORD_CLIENT_ID : "");
 const loginOn = (env) => !!(env.DISCORD_CLIENT_ID && env.DISCORD_CLIENT_SECRET && env.SESSION_SECRET && (appOn(env) || env.GITHUB_TOKEN));
-// The same checks as the page's. Names can't have commas or quotes, which the in-game boards' files use.
-const NAME_OK = /^[^\u0000-\u001f\u007f"`\\,<>]{1,32}$/u;
+// The same checks as the page's. Names can't have commas or quotes, which the in-game boards' files use, or spaces,
+// which Overwatch names never have.
+const NAME_OK = /^[^\u0000-\u001f\u007f"`\\,<>\s]{1,32}$/u;
 // Names are saved in capitals, the same as the page's caps(): letters in a special font (𝓫𝓸𝓵𝓭, ᴄᴀᴘꜱ, ⓒⓘⓡⓒⓛⓔⓓ,
 // ｗｉｄｅ) stay as they are, and so does one whose capital is longer (ß is SS). Of the small capitals, only ɪ and ʀ
 // have capitals of their own (Ɪ and Ʀ), so they're kept by name.
