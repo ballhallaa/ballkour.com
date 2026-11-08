@@ -232,6 +232,7 @@
   "res.sameTimeMore": "Mesmo tempo que o seu melhor tempo ({time}), mas com mais erros",
   "rt.rated": "Rated",
   "lb.submittedOn": "Enviada em {date}",
+  "lb.submittedBy": "Enviada em {date} por {name}",
   "lb.playerOpen": "Ver todas as corridas de {player}",
   "pl.close": "Fechar",
   "pl.rating": "Pontuação",
