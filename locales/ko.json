@@ -232,6 +232,7 @@
   "res.sameTimeMore": "최고 기록({time})과 같은 시간, 실수는 더 많음",
   "rt.rated": "Rated",
   "lb.submittedOn": "{date} 제출",
+  "lb.submittedBy": "{date}에 {name} 님이 제출",
   "lb.playerOpen": "{player}의 모든 기록 보기",
   "pl.close": "닫기",
   "pl.rating": "레이팅",

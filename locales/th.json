@@ -232,6 +232,7 @@
   "res.sameTimeMore": "เวลาเท่ากับสถิติดีที่สุดของคุณ ({time}) แต่พลาดมากกว่า",
   "rt.rated": "Rated",
   "lb.submittedOn": "ส่งเมื่อ {date}",
+  "lb.submittedBy": "ส่งเมื่อ {date} โดย {name}",
   "lb.playerOpen": "ดูการวิ่งทั้งหมดของ {player}",
   "pl.close": "ปิด",
   "pl.rating": "เรตติ้ง",

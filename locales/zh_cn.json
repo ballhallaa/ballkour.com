@@ -232,6 +232,7 @@
   "res.sameTimeMore": "与你的最佳成绩（{time}）用时相同，但失误更多",
   "rt.rated": "Rated",
   "lb.submittedOn": "提交于 {date}",
+  "lb.submittedBy": "{name} 提交于 {date}",
   "lb.playerOpen": "查看 {player} 的所有成绩",
   "pl.close": "关闭",
   "pl.rating": "积分",

@@ -232,6 +232,7 @@
   "res.sameTimeMore": "То же время, что и ваше лучшее ({time}), но больше ошибок",
   "rt.rated": "Rated",
   "lb.submittedOn": "Отправлено {date}",
+  "lb.submittedBy": "Отправлено {date} игроком {name}",
   "lb.playerOpen": "Все забеги игрока {player}",
   "pl.close": "Закрыть",
   "pl.rating": "Рейтинг",

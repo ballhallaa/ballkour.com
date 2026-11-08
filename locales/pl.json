@@ -232,6 +232,7 @@
   "res.sameTimeMore": "Ten sam czas co twój najlepszy czas ({time}), ale więcej błędów",
   "rt.rated": "Rated",
   "lb.submittedOn": "Przesłano {date}",
+  "lb.submittedBy": "Przesłane {date} przez {name}",
   "lb.playerOpen": "Zobacz wszystkie przejścia gracza {player}",
   "pl.close": "Zamknij",
   "pl.rating": "Ranking",

@@ -232,6 +232,7 @@
   "res.sameTimeMore": "ベスト（{time}）と同じタイムだが、ミスが多い",
   "rt.rated": "Rated",
   "lb.submittedOn": "{date}に提出",
+  "lb.submittedBy": "{date}に{name}が提出",
   "lb.playerOpen": "{player}のすべての記録を見る",
   "pl.close": "閉じる",
   "pl.rating": "レーティング",

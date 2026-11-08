@@ -232,6 +232,7 @@
   "res.sameTimeMore": "En iyinle ({time}) aynı süre, ama daha çok hata",
   "rt.rated": "Rated",
   "lb.submittedOn": "Gönderilme tarihi: {date}",
+  "lb.submittedBy": "{name} tarafından {date} tarihinde gönderildi",
   "lb.playerOpen": "{player} oyuncusunun tüm koşularını gör",
   "pl.close": "Kapat",
   "pl.rating": "Puan",
