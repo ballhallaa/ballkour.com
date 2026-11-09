@@ -453,5 +453,14 @@
   "pic.remaker": "重製",
   "pic.noVideos": "當時不要求影片",
   "pic.beFirst": "來創下第一個成績吧",
-  "pic.asOf": "截至 {date}"
+  "pic.asOf": "截至 {date}",
+  "rt.coursePointsGain": "{points} 關卡積分，其中 {change} 來自這個成績",
+  "vid.comments": "YouTube 留言",
+  "vid.loading": "正在載入留言…",
+  "vid.none": "還沒有留言。",
+  "vid.off": "這部影片已關閉留言。",
+  "vid.fail": "無法載入留言。請稍後再試。",
+  "vid.all": "在 YouTube 上查看全部 {count} 則留言",
+  "vid.likes": "喜歡：{count}",
+  "vid.replies": "回覆：{count}"
 }

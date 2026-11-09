@@ -453,5 +453,14 @@
   "pic.remaker": "리메이크",
   "pic.noVideos": "영상은 필수가 아니었습니다",
   "pic.beFirst": "첫 기록의 주인공이 되세요",
-  "pic.asOf": "{date} 기준"
+  "pic.asOf": "{date} 기준",
+  "rt.coursePointsGain": "코스 레이팅 {points}점 (이 기록으로 {change})",
+  "vid.comments": "YouTube 댓글",
+  "vid.loading": "댓글을 불러오는 중…",
+  "vid.none": "아직 댓글이 없습니다.",
+  "vid.off": "이 영상은 댓글이 꺼져 있습니다.",
+  "vid.fail": "댓글을 불러오지 못했습니다. 나중에 다시 시도하세요.",
+  "vid.all": "YouTube에서 댓글 {count}개 모두 보기",
+  "vid.likes": "좋아요: {count}",
+  "vid.replies": "답글: {count}"
 }

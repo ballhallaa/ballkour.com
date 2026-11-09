@@ -453,5 +453,14 @@
   "pic.remaker": "Remake",
   "pic.noVideos": "Vídeos não eram exigidos",
   "pic.beFirst": "Seja o primeiro a marcar um tempo",
-  "pic.asOf": "Em {date}"
+  "pic.asOf": "Em {date}",
+  "rt.coursePointsGain": "{points} pontos de pontuação do percurso, com {change} desta corrida",
+  "vid.comments": "Comentários no YouTube",
+  "vid.loading": "Carregando os comentários…",
+  "vid.none": "Ainda não há comentários.",
+  "vid.off": "Os comentários estão desativados neste vídeo.",
+  "vid.fail": "Não foi possível carregar os comentários. Tente de novo mais tarde.",
+  "vid.all": "Ver todos os {count} comentários no YouTube",
+  "vid.likes": "Curtidas: {count}",
+  "vid.replies": "Respostas: {count}"
 }

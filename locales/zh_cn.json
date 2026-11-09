@@ -453,5 +453,14 @@
   "pic.remaker": "重制",
   "pic.noVideos": "当时不要求视频",
   "pic.beFirst": "来创下第一个成绩吧",
-  "pic.asOf": "截至 {date}"
+  "pic.asOf": "截至 {date}",
+  "rt.coursePointsGain": "{points} 关卡积分，其中 {change} 来自这个成绩",
+  "vid.comments": "YouTube 评论",
+  "vid.loading": "正在加载评论…",
+  "vid.none": "还没有评论。",
+  "vid.off": "这个视频已关闭评论。",
+  "vid.fail": "无法加载评论。请稍后再试。",
+  "vid.all": "在 YouTube 上查看全部 {count} 条评论",
+  "vid.likes": "点赞：{count}",
+  "vid.replies": "回复：{count}"
 }

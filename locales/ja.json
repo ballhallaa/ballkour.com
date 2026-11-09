@@ -453,5 +453,14 @@
   "pic.remaker": "リメイク",
   "pic.noVideos": "動画は必須ではありませんでした",
   "pic.beFirst": "最初の記録を出そう",
-  "pic.asOf": "{date}時点"
+  "pic.asOf": "{date}時点",
+  "rt.coursePointsGain": "コースレーティング{points}ポイント（この記録で{change}）",
+  "vid.comments": "YouTubeのコメント",
+  "vid.loading": "コメントを読み込み中…",
+  "vid.none": "まだコメントはありません。",
+  "vid.off": "この動画のコメントはオフになっています。",
+  "vid.fail": "コメントを読み込めませんでした。しばらくしてからもう一度お試しください。",
+  "vid.all": "YouTubeで{count}件のコメントをすべて見る",
+  "vid.likes": "高評価：{count}",
+  "vid.replies": "返信：{count}"
 }

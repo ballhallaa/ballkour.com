@@ -453,5 +453,14 @@
   "pic.remaker": "Yeniden yapan",
   "pic.noVideos": "Video zorunlu değildi",
   "pic.beFirst": "İlk süreyi sen yap",
-  "pic.asOf": "{date} itibarıyla"
+  "pic.asOf": "{date} itibarıyla",
+  "rt.coursePointsGain": "{points} parkur puanı, bu koşudan {change}",
+  "vid.comments": "YouTube yorumları",
+  "vid.loading": "Yorumlar yükleniyor…",
+  "vid.none": "Henüz yorum yok.",
+  "vid.off": "Bu videoda yorumlar kapalı.",
+  "vid.fail": "Yorumlar yüklenemedi. Daha sonra tekrar dene.",
+  "vid.all": "YouTube’da {count} yorumun tümünü gör",
+  "vid.likes": "Beğeni: {count}",
+  "vid.replies": "Yanıt: {count}"
 }
