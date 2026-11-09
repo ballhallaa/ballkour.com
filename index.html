@@ -1172,24 +1172,30 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .stats-bar[aria-pressed="true"] > span { background: var(--volt); }
 .stats-bar:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; }
 .stats-axis { display: flex; justify-content: space-between; margin: 6px 38px 0; font: 500 11px/1.2 var(--mono); color: var(--ink-3); }
-.stats-table { width: 100%; margin-top: 14px; border-collapse: collapse; font: 500 14px/1.35 var(--body); color: var(--ink-2); }
-.stats-table th, .stats-table td { padding: 2px 0; font: inherit; text-align: left; vertical-align: baseline; }
-.stats-table thead th { padding-bottom: 6px; font: 600 10.5px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
-.stats-table .num { padding-left: 16px; text-align: right; white-space: nowrap; font: 600 13px/1.35 var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); }
-.stats-table thead .num { font: 600 10.5px/1.2 var(--mono); color: var(--ink-3); }
-.stats-table .num.soft { font-weight: 500; color: var(--ink-2); }
 /* The list under Runs: each row a button that opens what makes up its number (see "What a number in Stats is made
    of"), its name on the left and its number on the right with an arrow, lit up under the pointer edge to edge. Each
    row is its own line, so a long one can't squeeze the others: Most runs' course ("1 🇬🇮 Watchpoint: Gibraltar · 1")
    goes on the next line, on the right, when it and the name don't fit on one. */
 .stats-rows { list-style: none; margin: 14px -8px 0; padding: 0; }
 .stats-row { width: 100%; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 16px; padding: 2px 8px; border: 0; border-radius: 6px; background: none; font: 500 14px/1.35 var(--body); color: var(--ink-2); text-align: left; cursor: pointer; transition: background-color .15s, color .15s; }
+.stats-row { text-decoration: none; }
 .stats-row:hover { background: var(--glass-hi); color: var(--ink); }
+div.stats-row { cursor: default; }
+div.stats-row:hover { background: none; color: var(--ink-2); }
 .stats-row-value { margin-inline-start: auto; display: inline-flex; align-items: baseline; gap: 6px; text-align: right; }
 .stats-row .num { white-space: nowrap; font: 600 13px/1.35 var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); }
 .stats-row .course-cell { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; align-items: baseline; gap: 0 6px; font: 600 13px/1.35 var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); }
 .stats-row-arrow { flex: none; align-self: center; width: 11px; height: 11px; transform: rotate(-90deg); color: var(--ink-3); transition: color .15s; }
 .stats-row:hover .stats-row-arrow { color: var(--volt); }
+/* Most viewed: the same rows, with People and Views in two columns under their names. Every row (and the names over
+   the columns) lays itself out on the list's own columns (subgrid), so the numbers line up however wide they or the
+   names in that language are. */
+.stats-cols { display: grid; grid-template-columns: minmax(0, 1fr) auto auto 11px; column-gap: 16px; }
+.stats-cols > li, .stats-cols .stats-row { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: baseline; }
+.stats-cols .num { text-align: right; }
+.stats-row .num.soft { font-weight: 500; color: var(--ink-2); }
+.stats-cols-head { padding: 0 8px 6px; font: 600 10.5px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.stats-cols-head > span + span { text-align: right; }
 /* A list in the panel: its name with the number it explains, and its runs or players. A run's page or a player's
    panel opened from it has Back to it over the top. */
 .stats-list-count { display: inline-block; margin-inline-start: 8px; padding: 3px 9px; border-radius: 999px; background: rgba(255, 213, 79, .16); color: var(--gold); font: 600 14px/1.2 var(--mono); font-style: normal; letter-spacing: 0; vertical-align: 5px; font-variant-numeric: tabular-nums; }
@@ -1198,8 +1204,6 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .stats-list .rev-empty { margin: 0; }
 .stats-back { margin: 0; padding: 14px 18px 0; }
 .stat.place .icon { color: var(--gold); }
-.stats-link { padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-decoration-color: var(--line-hi); text-underline-offset: 3px; transition: color .15s, text-decoration-color .15s; }
-.stats-link:hover { color: var(--volt); text-decoration-color: currentColor; }
 @media (max-width: 600px) { .stats-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 a.rev-run, button.rev-run { color: inherit; text-decoration: none; transition: border-color .15s, background-color .15s; }
 button.rev-run { width: 100%; font: inherit; text-align: left; cursor: pointer; }
@@ -5982,16 +5986,18 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (pick < end - 29) end = pick + 29;
     return { days, last, pick, end, from: Math.max(0, end - 29) };
   }
-  // Each section in Most viewed links to it: the top of the page, a section (scrolling there like the section bar), My
-  // profile, or Find a player for players (a player's panel, which has no section). "Other" has nowhere to go.
+  // Each section in Most viewed is a row that goes to it, like the list under Runs: the top of the page, a section
+  // (scrolling there like the section bar), My profile, or Find a player for players (a player's panel, which has no
+  // section). "Other" has nowhere to go, so its row is just its numbers, with no arrow. nums: its People and Views.
   const STAT_ROUTES = ["courses", "leaderboards", "submit", "runs", "features", "faq", "source-code", "translations", "stats"];
-  function statSectionHtml(key) {
-    const name = esc(t(STAT_NAMES[key] || "visits.other"));
-    if (key === "home") return `<a class="stats-link" href="/" data-stat-top>${name}</a>`;
-    if (STAT_ROUTES.includes(key)) return `<a class="stats-link" href="/${key}" data-route="${key}">${name}</a>`;
-    if (key === "my-stats") return `<a class="stats-link" href="/my-stats" data-my-stats>${name}</a>`;
-    if (key === "players") return `<button class="stats-link" type="button" data-find>${name}</button>`;
-    return name;
+  function statSectionRow(key, nums) {
+    const inner = `<span>${esc(t(STAT_NAMES[key] || "visits.other"))}</span>${nums}`;
+    const arrow = icon("chev", "icon stats-row-arrow");
+    if (key === "home") return `<li><a class="stats-row" href="/" data-stat-top>${inner}${arrow}</a></li>`;
+    if (STAT_ROUTES.includes(key)) return `<li><a class="stats-row" href="/${key}" data-route="${key}">${inner}${arrow}</a></li>`;
+    if (key === "my-stats") return `<li><a class="stats-row" href="/my-stats" data-my-stats>${inner}${arrow}</a></li>`;
+    if (key === "players") return `<li><button class="stats-row" type="button" data-find>${inner}${arrow}</button></li>`;
+    return `<li><div class="stats-row">${inner}</div></li>`;
   }
   // Each section's name, from the words the site already uses for it where it has them
   const STAT_NAMES = { home: "visits.home", courses: "courses.title", leaderboards: "nav.leaderboards", submit: "nav.submit", runs: "pl.runs",
@@ -6095,11 +6101,13 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       html += `<h3 class="by src-group">${esc(t("visits.title"))}</h3><div class="stats-part">` +
         `<div class="stats-tiles">${tile("stats.people", before ? "—" : n(sum("people")), "user")}${tile("stats.views", before ? "—" : n(sum("views")), "eye")}</div>` +
         chart("views", "stats.viewsChart", (d) => Number(v(d).views) || 0, (d) => t("visits.day", { date: d, views: n(v(d).views), people: n(v(d).people) })) +
-        (top.length ? `<table class="stats-table"><thead><tr><th scope="col">${esc(t("visits.top"))}</th>` +
-          `<th class="num" scope="col">${esc(t("stats.people"))}</th><th class="num" scope="col">${esc(t("stats.views"))}</th></tr></thead><tbody>` +
-          top.map(([key, x]) => `<tr><th scope="row">${statSectionHtml(key)}</th>` +
-            `<td class="num soft">${x.known ? esc(n(x.people)) : "—"}</td><td class="num">${esc(n(x.views))}</td></tr>`).join("") +
-          `</tbody></table>` : "") +
+        // Most viewed: People and Views in columns under their names. Each number also says which it is, for screen
+        // readers, which read the row as one link.
+        (top.length ? `<ul class="stats-rows stats-cols" aria-label="${esc(t("visits.top"))}">` +
+          `<li class="stats-cols-head" aria-hidden="true"><span>${esc(t("visits.top"))}</span><span>${esc(t("stats.people"))}</span><span>${esc(t("stats.views"))}</span></li>` +
+          top.map(([key, x]) => statSectionRow(key, `<span class="num soft"><span class="sr-only">${esc(t("stats.people"))} </span>${x.known ? esc(n(x.people)) : "—"}</span>` +
+            `<span class="num"><span class="sr-only">${esc(t("stats.views"))} </span>${esc(n(x.views))}</span>`)).join("") +
+          `</ul>` : "") +
         `<p class="rev-note">${esc(t("visits.note"))}${span[0] < since ? ` ${esc(t("stats.since", { date: since }))}` : ""}</p></div>`;
     }
     box.innerHTML = html;
