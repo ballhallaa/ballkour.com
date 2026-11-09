@@ -1198,6 +1198,9 @@ a.rev-run:hover { border-color: var(--line-hi); background: var(--glass-hi); }
 .res-delta.down { color: var(--coral); background: rgba(255, 106, 79, .12); }
 .res-delta.new { color: var(--arc); background: rgba(51, 198, 255, .12); }
 .res-note { grid-column: 1 / -1; font: 400 13px/1.4 var(--body); color: var(--ink-2); }
+/* The course's row: its name on a line of its own, then its place and time under it, lined up with the rows below */
+.res-course .res-label { grid-column: 1 / -1; white-space: normal; }
+.res-course .res-value { grid-column: 2; }
 /* Who a run passed, on its own line under how much faster it was */
 .res-passed { display: block; margin-top: 2px; }
 .res-foot { margin: 6px 0 0; padding-top: 10px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; border-top: 1px solid var(--line); font: 400 13px/1.4 var(--body); color: var(--ink-2); }
@@ -5600,8 +5603,8 @@ a.link-copy { text-decoration: none; }
     if (!change) return "";
     return `<span class="res-delta ${change > 0 ? "up" : "down"}">${change > 0 ? "▲" : "▼"} ${esc(text)}</span>`;
   }
-  // label: text, or { html } (the course's, with its flag)
-  const resRow = (label, value, delta, note) => `<div class="res-row"><span class="res-label">${label && label.html ? label.html : esc(label)}</span>` +
+  // label: text, or { html } (the course's, with its flag, on a line of its own so its name isn't cut off)
+  const resRow = (label, value, delta, note) => `<div class="res-row${label && label.html ? " res-course" : ""}"><span class="res-label">${label && label.html ? label.html : esc(label)}</span>` +
     `<span class="res-value">${value}</span>${delta || "<span></span>"}${note ? `<span class="res-note">${note}</span>` : ""}</div>`;
   const was = (html) => `<span class="was">${html} →</span> `;
   // The rows of what a run did (s, from statsFrom or the Worker): the course's place and time and who it passed, the
