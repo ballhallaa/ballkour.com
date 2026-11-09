@@ -2116,6 +2116,12 @@ a.link-copy { text-decoration: none; }
   $$("[data-i18n-aria]").forEach((el) => { EN[el.dataset.i18nAria] = el.getAttribute("aria-label"); });
   $$("[data-i18n-alt]").forEach((el) => { EN[el.dataset.i18nAlt] = el.getAttribute("alt"); });
   const cache = { en: {} };
+  // The translation the Worker put into the page (the language it worked out the way detectLang() does, see "The
+  // visitor's language" in cloudflare/worker.js), so the page draws in it from the start
+  try {
+    const baked = $("#i18n-lang");
+    if (baked && LANGS.some((l) => l[0] === baked.dataset.lang)) cache[baked.dataset.lang] = JSON.parse(baked.textContent);
+  } catch (e) { /* it's fetched instead */ }
   let dict = {};
   let lang = "en";
   const htmlLang = () => (LANGS.find((l) => l[0] === lang) || LANGS[0])[2];
@@ -2140,7 +2146,14 @@ a.link-copy { text-decoration: none; }
     document.title = `Ballkour · ${t("hero.tagline")}`;
   }
   function storedLang() { try { return localStorage.getItem("ballkour-lang"); } catch (e) { return null; } }
-  function storeLang(code) { try { localStorage.setItem("ballkour-lang", code); } catch (e) { /* private mode */ } }
+  function storeLang(code) {
+    try { localStorage.setItem("ballkour-lang", code); } catch (e) { /* private mode */ }
+    langCookie(code);
+  }
+  // The language they picked, for the Worker too, which puts its translation into the page from then on (a year)
+  function langCookie(code) {
+    try { document.cookie = `bk_lang=${code}; Path=/; Max-Age=31536000; SameSite=Lax; Secure`; } catch (e) { /* no cookies */ }
+  }
   // ballkour.com/?lang=ja opens the page in Japanese, so a link can be shared in a language. Codes like zh-CN or
   // pt-BR work too. Picking a language puts it in the address (English leaves it out), ready to copy.
   function langParam() {
@@ -6012,9 +6025,15 @@ a.link-copy { text-decoration: none; }
   });
 
   /* ---------- Start ---------- */
-  renderAll();
   const initial = detectLang();
-  if (initial !== "en") setLang(initial, false);
+  // A language picked before the Worker could know it (before the cookie): it knows from now on
+  const picked = storedLang();
+  if (picked && !/(?:^|;\s*)bk_lang=/.test(document.cookie)) langCookie(picked);
+  // Its translation is in the page already (it usually is): drawn in it from the start. Otherwise it's fetched, and the
+  // page switches once it's here.
+  if (initial !== "en" && cache[initial]) { lang = initial; dict = cache[initial]; applyStatic(); }
+  renderAll();
+  if (initial !== "en" && !cache[initial]) setLang(initial, false);
   size();
   start();
   if (startRoute) {
