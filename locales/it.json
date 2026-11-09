@@ -431,7 +431,7 @@
   "visits.other": "Altro",
   "visits.note": "Contate dal sito stesso ogni volta che qualcuno lo apre in un browser, quindi i blocchi pubblicità non nascondono nessuno e i bot non contano. Ogni persona conta una volta al giorno, senza che il sito tenga chi è.",
   "foot.openDiscord": "Apri su Discord",
-  "link.title": "Il tuo link",
+  "link.title": "Il tuo link:",
   "link.yours": "<b>Il tuo link:</b> {link}",
   "link.pick": "Scegli un nome",
   "link.change": "Cambia",

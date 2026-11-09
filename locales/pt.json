@@ -431,7 +431,7 @@
   "visits.other": "Outros",
   "visits.note": "Contadas pelo próprio site toda vez que alguém o abre em um navegador, então bloqueadores de anúncios não escondem ninguém e bots não contam. Cada pessoa conta uma vez por dia, sem que o site guarde quem ela é.",
   "foot.openDiscord": "Abrir no Discord",
-  "link.title": "Seu link",
+  "link.title": "Seu link:",
   "link.yours": "<b>Seu link:</b> {link}",
   "link.pick": "Escolher um nome",
   "link.change": "Alterar",
