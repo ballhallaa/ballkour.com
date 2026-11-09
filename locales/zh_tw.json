@@ -106,6 +106,7 @@
   "f.beta.tryList": "用關卡列表中的測試版代碼即可體驗。",
   "faq.title": "常見問題",
   "faq.intro": "與{beta}代碼中遊戲內常見問題相同的解答，比賽中按 <b><kbd>絕招</kbd> + <kbd>快速近戰</kbd></b> 開啟。",
+  "motion.label": "減少動態效果",
   "faq.issues.title": "少了什麼嗎？",
   "faq.issues.sub": "到 GitHub 上建議",
   "faq.valid.q": "什麼樣的成績有效？",

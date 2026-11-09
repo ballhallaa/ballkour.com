@@ -106,6 +106,7 @@
   "f.beta.tryList": "Bunları parkur listesindeki bir Beta koduyla dene.",
   "faq.title": "SSS",
   "faq.intro": "{beta} kodlarındaki oyun içi SSS ile aynı cevaplar; maçta <b><kbd>Ulti</kbd> + <kbd>Yakın dövüş</kbd></b> ile açılır.",
+  "motion.label": "Hareketi azalt",
   "faq.issues.title": "Eksik bir şey mi var?",
   "faq.issues.sub": "GitHub’da öner",
   "faq.valid.q": "Geçerli deneme nedir?",

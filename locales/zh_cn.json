@@ -106,6 +106,7 @@
   "f.beta.tryList": "用关卡列表中的测试版代码即可体验。",
   "faq.title": "常见问题",
   "faq.intro": "与{beta}代码中游戏内常见问题相同的解答，比赛中按 <b><kbd>终极技能</kbd> + <kbd>快速近战</kbd></b> 打开。",
+  "motion.label": "减弱动态效果",
   "faq.issues.title": "少了什么吗？",
   "faq.issues.sub": "到 GitHub 上建议",
   "faq.valid.q": "什么样的成绩有效？",

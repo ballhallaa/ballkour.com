@@ -106,6 +106,7 @@
   "f.beta.tryList": "Pruébalas con un código Beta de la lista de recorridos.",
   "faq.title": "FAQ",
   "faq.intro": "Las mismas respuestas que el FAQ del juego en los códigos {beta}, que se abre en partida con <b><kbd>Definitiva</kbd> + <kbd>Cuerpo a cuerpo</kbd></b>.",
+  "motion.label": "Reducir movimiento",
   "faq.issues.title": "¿Falta algo?",
   "faq.issues.sub": "Sugiérelo en GitHub",
   "faq.valid.q": "¿Qué cuenta como partida válida?",
