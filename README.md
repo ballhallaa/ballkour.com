@@ -242,6 +242,8 @@ The English source is `locales/en.json`. Weblate component settings:
 | Template for new translations | `locales/en.json` |
 | Edit base file | Off |
 
+Each page comes with the visitor's translation already in it, so it draws in their language from the start instead of in English first. The Worker picks the language the same way the page does: the one `?lang=` asks for, or else the one they last picked on the site (the `bk_lang` cookie, which the page sets when they pick one), or else the first of their browser's languages the site has. The preview (`tools/serve.py`) doesn't do this, so there the page still switches from English once the translation loads.
+
 Translations may use `<b>` and `<code>` only. Anything else shows up as text. Keep `{placeholders}` as they are.
 
 In the FAQ, `<b>` marks the game's own labels (controls like Reset CP, HUD and lobby names like Runs and Lobby Top 3), which show in orange. Use each label as the game shows it in that language. A word in a `<fgRRGGBBAA>` tag keeps that color from the game's HUD instead (the modes Freemode in violet and Spectator or Spectate in blue, along with spectating and just the word spectator in spectator controls, disqualified in red, grayed out in gray, and (DISCONNECTED) in white), so keep those tags around the same words.

@@ -1488,6 +1488,51 @@ async function file(request, env) {
   return out;
 }
 
+/* ---------- The visitor's language ----------
+   Every page gets the visitor's translation baked in too (<script type="application/json" id="i18n-lang">), so it draws
+   in their language from the start instead of in English first: the one ?lang= asks for, or else the one they picked
+   last on the site (the bk_lang cookie, which the page sets), or else the first of their browser's languages the site
+   has. It's the same choice the page makes (detectLang() in index.html: keep the two in step), so the page uses what's
+   baked in, and only fetches a translation itself when they differ. */
+const LANG_CODES = ["en", "de", "es", "fr", "it", "pl", "pt", "tr", "ru", "th", "ja", "ko", "zh_cn", "zh_tw"];
+// ?lang=: a code (ja, zh_cn or zh-cn) or a language tag (pt-BR, zh-Hans, zh-Hant), like the page's langParam()
+function langAsked(v) {
+  const q = String(v || "").trim().toLowerCase().replace(/_/g, "-");
+  if (!q) return null;
+  if (q === "zh-hans") return "zh_cn";
+  if (q === "zh-hant" || q === "zh-hk" || q === "zh-mo") return "zh_tw";
+  return LANG_CODES.find((c) => c.replace("_", "-") === q) || LANG_CODES.find((c) => c === q.split("-")[0]) || null;
+}
+// A browser's language (Accept-Language), like the page's detectLang(): Chinese by script or region, the rest by language
+function langOfBrowser(tag) {
+  const l = String(tag || "").trim().toLowerCase();
+  if (l.startsWith("zh")) return /(tw|hk|mo|hant)/.test(l) ? "zh_tw" : "zh_cn";
+  return LANG_CODES.find((c) => c === l.split("-")[0]) || null;
+}
+function langOf(request, url) {
+  const asked = langAsked(url.searchParams.get("lang"));
+  if (asked) return asked;
+  const picked = /(?:^|;\s*)bk_lang=([\w-]+)/.exec(request.headers.get("Cookie") || "");
+  if (picked && LANG_CODES.includes(picked[1])) return picked[1];
+  for (const part of (request.headers.get("Accept-Language") || "").split(",")) {
+    const l = langOfBrowser(part.split(";")[0]);
+    if (l) return l;
+  }
+  return "en";
+}
+// The translation, as a block for the page's <head> (none in English, or when it can't be read)
+async function langBlock(env, url, lang) {
+  if (lang === "en") return "";
+  const r = await env.ASSETS.fetch(new Request(new URL(`/locales/${lang}.json`, url))).catch(() => null);
+  const text = r && r.ok ? await r.text() : "";
+  return text ? `<script type="application/json" id="i18n-lang" data-lang="${lang}">${text.replace(/</g, "\\u003c")}</script>` : "";
+}
+// The page that isn't there (404.html, which picks the language the same way) gets just the translation (block)
+function notFound(res, block) {
+  if (!block) return res;
+  return new HTMLRewriter().on("head", { element(el) { el.append(block, { html: true }); } }).transform(new Response(res.body, res));
+}
+
 /* ---------- Pages ---------- */
 // The sections (/submit, /faq, …) and the links into them (/leaderboards/6, /leaderboards/3/legacy, /leaderboards/3/12
 // for one of its older boards, /faq/pausing), and every run sent from the website (/runs, the list under the form)
@@ -1506,7 +1551,7 @@ async function page(request, env, ctx) {
   // one or two per player, so a page load only refreshes the names when the game data is fresh. Past the limit, the
   // releases (fetched last) can't be refreshed and every page keeps getting the last list.
   const freshGame = await caches.default.match(cacheKey("game"));
-  const [res, widget, gameData, players] = await Promise.all([
+  const [res, widget, gameData, players, lang] = await Promise.all([
     file(new Request(url, { method: "GET", headers, redirect: "manual" }), env),
     // The online count is worth a short wait (Discord answers in well under the 1.5 s limit), so it's never stale
     cached("widget", 60, ctx, (prev) => buildWidget(env, prev)).catch(() => null),
@@ -1514,10 +1559,13 @@ async function page(request, env, ctx) {
     !env.DISCORD_BOT_TOKEN ? null
       : freshGame ? peek("players", 60 * 60, ctx, (prev) => buildPlayers(env, ctx, prev))
       : stored("players"),
+    langBlock(env, url, langOf(request, url)),
   ]);
-  if (!res.ok || !(res.headers.get("Content-Type") || "").includes("text/html")) return res;
+  const html = (res.headers.get("Content-Type") || "").includes("text/html");
+  if (res.status === 404 && html) return notFound(res, lang);
+  if (!res.ok || !html) return res;
   const on = loginOn(env);
-  if (!widget && !gameData && !players && !on) return res;
+  if (!widget && !gameData && !players && !lang && !on) return res;
 
   const out = new Response(res.body, res);
   out.headers.delete("ETag");
@@ -1526,7 +1574,7 @@ async function page(request, env, ctx) {
 
   const script = (id, body) => `<script type="application/json" id="${id}">${body.replace(/</g, "\\u003c")}</script>`;
   const blocks = [["discord-widget", widget], ["game-data", gameData], ["players", players]].filter(([, body]) => body);
-  let rw = new HTMLRewriter().on("head", { element(el) { el.append(blocks.map(([id, body]) => script(id, body)).join(""), { html: true }); } });
+  let rw = new HTMLRewriter().on("head", { element(el) { el.append(blocks.map(([id, body]) => script(id, body)).join("") + lang, { html: true }); } });
   // Sending runs from the website is set up (see "Signing in with Discord"): the page shows the form. So are the
   // stats on Discord profiles (see "Stats on Discord profiles"): the sign-in panel tells people about them.
   if (on) {
