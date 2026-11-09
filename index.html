@@ -787,6 +787,12 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-mine-empty { margin: 0 18px 16px; padding: 12px 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; border: 1px dashed var(--line-hi); border-radius: 10px; font: 400 14px/1.45 var(--body); color: var(--ink-2); }
 .pl-mine-empty > span { flex: 1 1 220px; }
 .pl-mine-empty .btn { text-decoration: none; }
+/* Is this you?, in the panel of a name from the legacy boards, and Were you … ?, in a player's own: like the box above */
+.pl-claim { margin: 0 18px 16px; padding: 12px 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; border: 1px dashed var(--line-hi); border-radius: 10px; font: 400 14px/1.45 var(--body); color: var(--ink-2); }
+.pl-claim-text { flex: 1 1 220px; margin: 0; }
+.pl-claim-text b { color: var(--ink); }
+.pl-claim .btn { text-decoration: none; }
+.pl-claim-note { flex-basis: 100%; margin: 0; color: var(--coral); }
 /* Their own panel: their stats on their Discord profile, or the button that puts them there */
 .pl-dcp { margin: 0 18px 16px; padding: 12px 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; border: 1px solid rgba(88, 101, 242, .35); border-radius: 10px; background: rgba(88, 101, 242, .07); font: 400 14px/1.45 var(--body); color: var(--ink-2); }
 .pl-dcp-text { flex: 1 1 220px; }
@@ -998,6 +1004,19 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .rev-title .icon { width: 15px; height: 15px; color: var(--gold); }
 .rev-count { padding: 2px 7px; border-radius: 999px; background: rgba(255, 213, 79, .16); color: var(--gold); }
 .rev-note, .rev-empty { margin: 10px 0 0; font: 400 14px/1.45 var(--body); color: var(--ink-2); }
+/* Legacy runs to check, under the runs. Who claimed them: their Discord, like under a name on the boards, which opens
+   their Discord profile */
+.rev-title-next { margin-top: 16px; }
+.rev-dc { justify-self: start; max-width: 100%; display: inline-flex; align-items: center; gap: 6px; font: 600 13px/1.2 var(--body); color: #b9befc; text-decoration: none; }
+.rev-dc > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rev-dc .icon { flex: none; width: 12px; height: 12px; opacity: .7; }
+.rev-dc:hover > span { text-decoration: underline; text-underline-offset: 3px; }
+.rev-dc:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; border-radius: 4px; }
+/* A claim's legacy runs, one per line: the course (like Submitted runs names it), then the time */
+.rev-legacy { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.rev-legacy li { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.rev-legacy .rev-course { min-width: 0; }
+.rev-legacy .stat { flex: none; font: 600 14px/1 var(--mono); }
 .rev-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
 .rev-run { display: grid; gap: 5px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: rgba(0, 0, 0, .25); }
 .rev-run.picked { border-color: rgba(255, 213, 79, .6); box-shadow: 0 0 0 1px rgba(255, 213, 79, .25); }
@@ -1345,6 +1364,7 @@ a.link-copy { text-decoration: none; }
     <symbol id="i-code" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></g></symbol>
     <symbol id="i-github" viewBox="0 0 24 24"><path fill="currentColor" d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></symbol>
     <symbol id="i-discord" viewBox="0 0 24 24"><path fill="currentColor" d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></g></symbol>
   </defs>
 </svg>
 
@@ -1823,6 +1843,8 @@ a.link-copy { text-decoration: none; }
   "signin.step2": "Tap Authorize. If you’ve signed in here before, Discord skips this step.",
   "signin.step3Mine": "You’re back here with your stats open.",
   "signin.step3Submit": "You’re back here, ready to send your run.",
+  "signin.forClaim": "Link {name}’s runs from before May 2026 to your Discord, once a moderator checks that they’re yours.",
+  "signin.step3Claim": "You’re back on {name}’s runs. Tap This is me there to send them to a moderator.",
   "signin.continue": "Continue with Discord",
   "signin.notNow": "Not now",
   "rt.coursePoints": "{points} course rating points",
@@ -1860,6 +1882,28 @@ a.link-copy { text-decoration: none; }
   "rev.more": "Show {count} more",
   "rev.approvedBy": "Approved by {name}",
   "rev.declinedBy": "Turned down by {name}",
+  "claim.title": "Is this you?",
+  "claim.what": "Link these runs from before May 2026 to your Discord, so they show in My stats, with your Discord name and picture by them on the boards. A moderator checks that they’re yours first, and may message you on Discord to ask for proof, like an old screenshot or clip.",
+  "claim.button": "This is me",
+  "claim.waiting": "Waiting for a moderator to check that these runs are yours.",
+  "claim.declined": "A moderator turned down your claim to these runs. If you think that’s a mistake, open a ticket on our Discord.",
+  "claim.taken": "These runs are already linked to someone’s Discord.",
+  "claim.rate": "That’s a lot at once. Wait a moment, or until a moderator checks the ones you’ve sent.",
+  "claim.maybe": "Were you {name} before May 2026? Those runs aren’t linked to anyone yet.",
+  "claim.see": "See the runs",
+  "claim.revTitle": "Legacy runs to check",
+  "claim.revOn": "Claimed on {date}",
+  "claim.revNow": "On the boards now as {names}",
+  "claim.revLinked": "Already linked",
+  "claim.view": "View runs",
+  "claim.approve": "Link",
+  "claim.askApprove": "Link the runs as {name} to {who}’s Discord?",
+  "claim.askDecline": "Turn down {who}’s claim to the runs as {name}?",
+  "claim.yesApprove": "Yes, link",
+  "claim.approved": "Linked: the runs as {name} are {who}’s now.",
+  "claim.declinedNote": "Turned down {who}’s claim to the runs as {name}.",
+  "claim.gone": "Someone already checked {who}’s claim to the runs as {name}.",
+  "claim.takenRev": "The runs as {name} are already linked to someone else, so turn this claim down.",
   "run.up": "On the board",
   "run.slower": "Not their best",
   "run.pending": "Waiting for a check",
@@ -2976,6 +3020,8 @@ a.link-copy { text-decoration: none; }
   // runs.json as it is, for the runs sent from the website by their id: their pages, and the reviewers' All runs
   // (see "A run's page")
   let RUNS_DATA = null;
+  // runs.json's "claims": who says which name from the legacy boards is theirs (see "Claiming legacy runs")
+  let CLAIMS = [];
   function applyRuns(data) {
     if (!data || typeof data !== "object") return;
     RUNS_DATA = data;
@@ -2988,6 +3034,7 @@ a.link-copy { text-decoration: none; }
     // A removed run only needs its player and time
     byCourse(data.removed, REMOVED, (r) => (r && typeof r.name === "string" && r.name.trim() && typeof r.time === "string"
       ? { name: r.name.trim(), discord: typeof r.discord === "string" && /^\d{17,20}$/.test(r.discord) ? r.discord : "", time: r.time } : null));
+    CLAIMS = (Array.isArray(data.claims) ? data.claims : []).filter((x) => x && typeof x.name === "string" && typeof x.discord === "string");
     COURSES.forEach(refreshCourse);
     renderSentRuns();
   }
@@ -3076,6 +3123,10 @@ a.link-copy { text-decoration: none; }
       `</div>` +
       (mine && ranNone ? `<p class="pl-mine-empty"><span>${esc(t("pl.mineEmpty"))}</span>` +
         `<a class="btn btn-sm btn-primary" href="/submit" data-route="submit">${icon("upload")}<span>${esc(t("nav.submit"))}</span></a></p>` : "") +
+      // A name from the legacy boards that isn't anyone's yet: Is this you?. In their own panel: legacy names like theirs.
+      // (See "Claiming legacy runs".)
+      (key.startsWith("n:") && rows.some((x) => x.legacy.length) ? claimHtml(named.name) : "") +
+      (mine ? maybeHtml(key) : "") +
       // Everyone can put their stats on their profile, runs or not: before their first, it says they're unrated
       (mine ? profileHtml() : "") +
       `<ul class="pl-courses">`;
@@ -4396,6 +4447,8 @@ a.link-copy { text-decoration: none; }
     // Back from signing in through My stats: their panel opens. Back without signing in (they cancelled on Discord):
     // the panel that explains it opens again, where they left off.
     if (wantMine) { wantMine = false; openMine(); }
+    // Back from signing in for This is me (or not: they cancelled on Discord): the runs it was for, to tap it there
+    if (wantClaim) { const name = wantClaim; wantClaim = ""; openClaim(name); }
   }
   /* My stats: their own player panel, the one a click on their name on any board opens, with Sign out in it too. It's
      by the language picker, next to Sign out and under a run's result. Signed out, the one by the language picker
@@ -4442,23 +4495,25 @@ a.link-copy { text-decoration: none; }
     openSignIn("submit");
   });
   // In the player panel's place. It's drawn once: nothing on the page can change while it's open.
-  // kind: "mine" (from My stats) or "submit" (from the form)
+  // kind: "mine" (from My stats), "submit" (from the form) or "claim" (from This is me, for claimName's legacy runs)
   function openSignIn(kind) {
     leaveRun();
     leaveStats();
     plKey = "";
     const mine = kind === "mine";
+    const claiming = kind === "claim";
+    const named = { name: claimName };
     const part = (title, body) => `<section class="pl-why"><h3>${esc(t(title))}</h3>${body}</section>`;
     const perk = (ico, color, key, html) => `<li><span class="f-icon" style="--c: var(--${color})">${icon(ico)}</span><span>${html || esc(t(key))}</span></li>`;
     // "Turn it on in My stats": My stats (the button's own name, in every language) signs them in and opens it
     const myStats = esc(t("me.button"));
     const profilePerk = esc(t("signin.perkProfile")).replace(myStats, `<a class="pl-perk-link" href="${esc(loginFor("mine"))}" data-login-for="mine">${myStats}</a>`);
     const share = (cls, ico, key) => `<li class="${cls}"><span class="mark">${icon(ico)}</span><span>${esc(t(key))}</span></li>`;
-    const steps = ["signin.step1", "signin.step2", mine ? "signin.step3Mine" : "signin.step3Submit"];
+    const steps = ["signin.step1", "signin.step2", mine ? "signin.step3Mine" : claiming ? "signin.step3Claim" : "signin.step3Submit"];
     pl.innerHTML = `<div class="pl-head"><div class="pl-who">` +
-        `<p class="pl-eyebrow">${icon(mine ? "stats" : "upload")}<span>${esc(t(mine ? "me.button" : "nav.submit"))}</span></p>` +
+        `<p class="pl-eyebrow">${icon(mine ? "stats" : claiming ? "link" : "upload")}<span>${esc(t(mine ? "me.button" : claiming ? "claim.title" : "nav.submit"))}</span></p>` +
         `<h2 class="pl-name" id="pl-name">${esc(t("sub.signin"))}</h2>` +
-        `<p class="pl-lead">${esc(t(mine ? "signin.forMine" : "signin.forSubmit"))}</p></div>` +
+        `<p class="pl-lead">${esc(t(mine ? "signin.forMine" : claiming ? "signin.forClaim" : "signin.forSubmit", named))}</p></div>` +
         `<button class="pl-close" type="button" data-pl-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button></div>` +
       `<div class="pl-signin">` +
         `<div class="pl-link" aria-hidden="true"><img src="/assets/logo.webp" alt="" width="60" height="60">` +
@@ -4470,10 +4525,11 @@ a.link-copy { text-decoration: none; }
           (profilesOn ? perk("discord", "discord", "signin.perkProfile", profilePerk) : "") + `</ul>`) +
         part("signin.sharesTitle", `<p>${withBot("signin.shares")}</p>` +
           `<ul class="pl-shares">${share("yes", "check", "signin.sharesYes")}${share("no", "x", "signin.sharesNo")}</ul>`) +
-        part("signin.nextTitle", `<ol class="pl-steps">${steps.map((k) => `<li>${esc(t(k))}</li>`).join("")}</ol>`) +
+        part("signin.nextTitle", `<ol class="pl-steps">${steps.map((k) => `<li>${esc(t(k, named))}</li>`).join("")}</ol>`) +
         `<div class="pl-signin-go">` +
           `<a class="btn btn-discord" href="${esc(loginFor(kind))}" data-login-for="${kind}">${icon("discord")}<span>${esc(t("signin.continue"))}</span></a>` +
-          `<button class="btn" type="button" data-pl-close>${esc(t("signin.notNow"))}</button>` +
+          // Not now, from This is me: back to the runs it was for
+          `<button class="btn" type="button" ${claiming ? "data-claim-back" : "data-pl-close"}>${esc(t("signin.notNow"))}</button>` +
         `</div>` +
       `</div>`;
     if (!pl.open) pl.showModal();
@@ -4482,7 +4538,8 @@ a.link-copy { text-decoration: none; }
   }
   // Signing in comes back in the same language: from My stats to the same page with their panel open (?me=1), from
   // the form to the form (with ?check= kept, for reviewers), and from a run's page ("run") to that run. Show on my
-  // Discord profile ("profile") comes back to their panel like My stats.
+  // Discord profile ("profile") comes back to their panel like My stats, and This is me ("claim") to the same page with
+  // the legacy name's panel open again (?claim=, the name in URL-safe base64, which the Worker lets through).
   function loginFor(kind) {
     const back = new URLSearchParams();
     if (lang !== "en") back.set("lang", lang);
@@ -4493,7 +4550,10 @@ a.link-copy { text-decoration: none; }
       const here = statsBack !== null ? statsBack.split(/[?#]/)[0] : location.pathname;
       path = /^\/[\w/-]*$/.test(here) ? here : "/";
     } else if (kind === "run" && /^[\w-]+$/.test(runId)) path = `/runs/${runId}`;
-    else if (checkParam) back.set("check", checkParam);
+    else if (kind === "claim" && claimName) {
+      back.set("claim", toB64(claimName));
+      path = /^\/[\w/-]*$/.test(location.pathname) ? location.pathname : "/";
+    } else if (checkParam) back.set("check", checkParam);
     return (kind === "profile" ? "/api/profile" : "/api/login") + "?to=" + encodeURIComponent(path + (back.toString() ? `?${back}` : ""));
   }
   function renderMe() {
@@ -4510,6 +4570,81 @@ a.link-copy { text-decoration: none; }
     const a = e.target.closest("a[data-login-for]");
     if (a) a.href = loginFor(a.dataset.loginFor);
   });
+  /* ---------- Claiming legacy runs ----------
+     A name on the legacy boards (before May 2026) that isn't linked to anyone's Discord is its own player. Its panel
+     asks Is this you?, and This is me sends a claim to the moderators (POST /api/claim, see "Claiming legacy runs" in
+     cloudflare/worker.js), who check that it's really them before they link the runs (under the form, Legacy runs to
+     check). Signed out, This is me signs them in first, and comes back to the same page with the name's panel open
+     again (?claim=), for them to tap it. After that, the panel says the claim is waiting, or that it was turned
+     down. Their own panel also points out legacy names like the ones they go by now (Were you … before May 2026?). */
+  const toB64 = (s) => btoa(String.fromCharCode(...new TextEncoder().encode(s))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const fromB64 = (s) => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0)));
+  const sameName = (a, b) => String(a).trim().toUpperCase() === String(b).trim().toUpperCase();
+  const legacyKey = (name) => playerKey({ name: String(name).trim(), discord: "" });
+  let claimName = ""; // the legacy name signing in is for
+  let claimNote = ""; // why the last This is me didn't go through, as a translation key
+  // Back from signing in for This is me: the name it was for
+  let wantClaim = (() => {
+    try {
+      const u = new URL(location.href);
+      const v = u.searchParams.get("claim");
+      if (v === null) return "";
+      u.searchParams.delete("claim");
+      history.replaceState(history.state, "", u.pathname + u.search + u.hash);
+      return /^[\w-]{1,200}$/.test(v) ? fromB64(v) : "";
+    } catch (e) { return ""; }
+  })();
+  // Their newest claim to a legacy name that isn't linked yet: waiting, or turned down
+  const theirClaim = (name) => (me ? CLAIMS.filter((x) => x.discord === me.id && sameName(x.name, name) && x.status !== "approved").pop() || null : null);
+  function claimHtml(name) {
+    if (!loginOn) return "";
+    const sent = theirClaim(name);
+    if (sent && sent.status === "pending") {
+      return `<p class="pl-claim" role="status"><span class="pl-dcp-ok">${icon("check")}</span><span class="pl-claim-text">${esc(t("claim.waiting"))}</span></p>`;
+    }
+    if (sent) return `<p class="pl-claim"><span class="pl-claim-text">${esc(t("claim.declined"))}</span></p>`;
+    return `<div class="pl-claim"><p class="pl-claim-text"><b>${esc(t("claim.title"))}</b> ${esc(t("claim.what"))}</p>` +
+      `<button class="btn btn-sm btn-primary" type="button" data-claim="${esc(name)}">${icon("link")}<span>${esc(t("claim.button"))}</span></button>` +
+      (claimNote ? `<p class="pl-claim-note" role="alert">${esc(t(claimNote))}</p>` : "") + `</div>`;
+  }
+  // Their own panel: the legacy names nobody has linked yet that are the same as a name on their runs now (unless a
+  // moderator turned their claim to it down)
+  function maybeHtml(key) {
+    const now = new Set(COURSES.flatMap((c) => [...c.runs, ...(MORE[c.n] || [])]).filter((r) => playerKey(r) === key).map((r) => r.name.toUpperCase()));
+    const names = [...new Set(COURSES.flatMap((c) => (HISTORY[c.n] ? HISTORY[c.n].legacy : []).filter((r) => !r.discord && now.has(r.name.toUpperCase())).map((r) => r.name)))];
+    return names.filter((name) => { const x = theirClaim(name); return !x || x.status === "pending"; }).map((name) =>
+      `<p class="pl-claim"><span class="pl-claim-text">${esc(t("claim.maybe", { name }))}</span>` +
+      `<button class="btn btn-sm" type="button" data-claim-see="${esc(name)}">${icon("link")}<span>${esc(t("claim.see"))}</span></button></p>`).join("");
+  }
+  // Opens a legacy name's panel, on This is me
+  function openClaim(name) {
+    openPlayer(legacyKey(name), 0);
+    const b = pl.querySelector("[data-claim]");
+    if (b) b.focus();
+  }
+  pl.addEventListener("click", async (e) => {
+    const see = e.target.closest("[data-claim-see]");
+    if (see) { openClaim(see.dataset.claimSee); return; }
+    if (e.target.closest("[data-claim-back]")) { openClaim(claimName); return; }
+    const b = e.target.closest("[data-claim]");
+    if (!b) return;
+    const name = b.dataset.claim;
+    if (!me) { claimName = name; openSignIn("claim"); return; }
+    b.disabled = true;
+    let out = {};
+    try {
+      const res = await fetch("/api/claim", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) });
+      out = await res.json().catch(() => ({}));
+    } catch (err) { out = {}; }
+    // Signed out since (their session ran out): sign in again
+    if (out.error === "login") { claimName = name; openSignIn("claim"); return; }
+    if (out.ok && out.claim) CLAIMS = CLAIMS.filter((x) => !(x.discord === out.claim.discord && sameName(x.name, out.claim.name) && x.status === "pending")).concat(out.claim);
+    else if (out.error === "declined") CLAIMS = CLAIMS.concat({ name, discord: me.id, status: "declined" });
+    else claimNote = out.error === "name" ? "claim.taken" : out.error === "rate" ? "claim.rate" : "rev.fail";
+    renderPlayer("[data-claim]");
+    claimNote = "";
+  });
+
   /* Reviewers (REVIEWER_ROLES in cloudflare/wrangler.toml) see the top 10 runs waiting for a check under the form,
      Runs to check: each with what approving it would do (its place on the course, and its player's place and rating
      in the player ratings), View run (its page, with its video and the rest of that), Approve (onto the board), and
@@ -4521,7 +4656,11 @@ a.link-copy { text-decoration: none; }
   const checkParam = (() => { try { return new URLSearchParams(location.search).get("check") || ""; } catch (e) { return ""; } })();
   async function loadReview() {
     if (!me || !me.reviewer) { renderReview(); return; }
-    try { reviewRuns = (await fetch("/api/pending", { cache: "no-store" }).then((r) => r.json())).runs || []; } catch (e) { reviewRuns = []; }
+    try {
+      const d = await fetch("/api/pending", { cache: "no-store" }).then((r) => r.json());
+      reviewRuns = d.runs || [];
+      reviewClaims = d.claims || [];
+    } catch (e) { reviewRuns = []; reviewClaims = []; }
     renderReview();
   }
   // A translation with its {date} kept on one line (a date can break at its dashes otherwise), and its {name} too
@@ -4561,7 +4700,8 @@ a.link-copy { text-decoration: none; }
     };
     box.innerHTML = `<p class="rev-title">${icon("eye")}<span>${esc(t("rev.title"))}</span><span class="rev-count">${reviewRuns.length}</span></p>` +
       (note ? `<p class="rev-note">${note}</p>` : "") +
-      (reviewRuns.length ? `<ul class="rev-list">${reviewRuns.map(row).join("")}</ul>` : `<p class="rev-empty">${esc(t("rev.none"))}</p>`);
+      (reviewRuns.length ? `<ul class="rev-list">${reviewRuns.map(row).join("")}</ul>` : `<p class="rev-empty">${esc(t("rev.none"))}</p>`) +
+      claimsHtml();
     const picked = checkParam && !reviewScrolled && box.querySelector(".rev-run.picked");
     if (picked) { reviewScrolled = true; picked.scrollIntoView({ block: "center" }); }
   }
@@ -4684,8 +4824,101 @@ a.link-copy { text-decoration: none; }
       if (runId === r.id) renderRunCheck(esc(t("rev.fail")));
     }
   }
+  /* Legacy runs to check, under Runs to check, while there are any: each claim to a name from the legacy boards (see
+     "Claiming legacy runs"), with its legacy runs (the ones nobody's linked yet), who it's from and the names they go
+     by on the boards now, View runs (the name's panel), Link, and Turn down. Link and Turn down ask first, like a run's.
+     Legacy runs have no videos, so moderators ask the player for proof on Discord before they link them. */
+  let reviewClaims = [];
+  let claimAsk = null; // { key, approve, at }: the claim whose buttons are asking, and when they started asking
+  let claimRevNote = ""; // what happened to the last one checked, as HTML, until the list is drawn again
+  const claimKey = (x) => `${x.discord}:${x.name}`;
+  const discordName = (id) => (PLAYERS.get(id) || {}).name || id;
+  function claimsHtml() {
+    const note = claimRevNote;
+    claimRevNote = "";
+    if (!reviewClaims.length && !note) return "";
+    const row = (x, i) => {
+      // Their best legacy run on each course, by the course's number and flag
+      const runs = COURSES.map((c) => ({ c, r: (HISTORY[c.n] ? HISTORY[c.n].legacy : []).filter((r) => !r.discord && sameName(r.name, x.name)).sort(byTime)[0] })).filter((y) => y.r);
+      const now = [...new Set(COURSES.flatMap((c) => [...c.runs, ...(MORE[c.n] || [])]).filter((r) => r.discord === x.discord).map((r) => r.name))];
+      // Who it's from: their Discord name and picture (Discord's default picture until the names are looked up),
+      // the way they'll show by the name once it's linked. It opens their Discord profile, to message them for proof.
+      const who = PLAYERS.get(x.discord);
+      const pic = who && /^https:\/\/cdn\.discordapp\.com\//.test(who.avatar) ? who.avatar
+        : /^\d{17,20}$/.test(x.discord) ? `https://cdn.discordapp.com/embed/avatars/${Number((BigInt(x.discord) >> 22n) % 6n)}.png` : "";
+      const name = discordName(x.discord);
+      return `<li class="rev-run">` +
+        `<span class="rev-course">${esc(t("pl.legacy"))}</span><b class="rev-name">${esc(x.name)}</b>` +
+        `<a class="rev-dc" href="https://discord.com/users/${esc(x.discord)}" target="_blank" rel="noopener" title="${esc(t("dc.profile", { name }))}">` +
+          (pic ? `<img class="run-pfp" src="${esc(pic)}" alt="" width="16" height="16">` : "") + `<span>${esc(name)}</span>${icon("out")}</a>` +
+        // One run per line: the course, the way Submitted runs names it, then the time
+        (runs.length
+          ? `<ul class="rev-legacy">${runs.map(({ c, r }) => `<li><span class="rev-course">${esc(`${c.n} `)}${flagName(c)}</span>` +
+            `<span class="stat time">${icon("bolt")}${esc(r.time)}</span></li>`).join("")}</ul>`
+          : `<span class="rev-line"><span class="tag tag-legacy">${esc(t("claim.revLinked"))}</span></span>`) +
+        `<span class="rev-meta">${withDate("claim.revOn", { date: formatDate(String(x.sentAt || "").slice(0, 10)) })}</span>` +
+        (now.length ? `<span class="rev-meta">${esc(t("claim.revNow", { names: now.join(", ") }))}</span>` : "") +
+        `<span class="rev-actions">${claimActions(x, i)}</span></li>`;
+    };
+    return `<p class="rev-title rev-title-next">${icon("link")}<span>${esc(t("claim.revTitle"))}</span><span class="rev-count">${reviewClaims.length}</span></p>` +
+      (note ? `<p class="rev-note">${note}</p>` : "") +
+      (reviewClaims.length ? `<ul class="rev-list">${reviewClaims.map(row).join("")}</ul>` : "");
+  }
+  // A claim's buttons: View runs, Link, and Turn down, or, while it's asking, the question with Yes and Cancel
+  function claimActions(x, i) {
+    const btn = (act, ico, label, cls) => `<button class="btn btn-sm${cls ? ` ${cls}` : ""}" type="button" data-claim-review="${esc(claimKey(x))}" data-act="${act}">${icon(ico)}<span>${esc(label)}</span></button>`;
+    if (!claimAsk || claimAsk.key !== claimKey(x)) {
+      return btn("view", "eye", t("claim.view")) + btn("approve", "link", t("claim.approve"), "btn-primary") + btn("decline", "x", t("rev.decline"));
+    }
+    const vars = { name: x.name, who: discordName(x.discord) };
+    return `<span class="rev-ask" role="group" aria-labelledby="claim-q-${i}">` +
+      `<span class="rev-q" id="claim-q-${i}">${esc(t(claimAsk.approve ? "claim.askApprove" : "claim.askDecline", vars))}</span>` +
+      (claimAsk.approve ? btn("yes", "link", t("claim.yesApprove"), "btn-primary") : btn("yes", "x", t("rev.yesDecline"), "btn-warn")) +
+      btn("cancel", "x", t("rev.cancel")) + `</span>`;
+  }
+  // Draws the list again with one claim's buttons asking (or none), and focuses that claim's act button
+  function askClaim(ask, focusKey, act) {
+    claimAsk = ask;
+    renderReview();
+    const b = $$("#sub-review [data-claim-review]").find((y) => y.dataset.claimReview === focusKey && y.dataset.act === act);
+    if (b) b.focus();
+  }
+  async function onClaimReview(e) {
+    const b = e.target.closest("[data-claim-review]");
+    if (!b) return;
+    const x = reviewClaims.find((y) => claimKey(y) === b.dataset.claimReview);
+    if (!x) return;
+    const key = claimKey(x), act = b.dataset.act;
+    if (act === "view") { openPlayer(legacyKey(x.name), 0); return; }
+    // Cancel has focus, so pressing Enter twice doesn't send it
+    if (act === "approve" || act === "decline") { askClaim({ key, approve: act === "approve", at: performance.now() }, key, "cancel"); return; }
+    if (act === "cancel") { askClaim(null, key, claimAsk && claimAsk.approve ? "approve" : "decline"); return; }
+    // Yes: a double-click on Link or Turn down, or a tap that lands twice, doesn't count as Yes too
+    if (act !== "yes" || !claimAsk || claimAsk.key !== key || performance.now() - claimAsk.at < 500) return;
+    const approve = claimAsk.approve;
+    claimAsk = null;
+    b.closest(".rev-actions").querySelectorAll("button").forEach((y) => { y.disabled = true; });
+    let out = {};
+    try {
+      const res = await fetch("/api/claim/review", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: x.name, discord: x.discord, approve }) });
+      out = await res.json().catch(() => ({}));
+    } catch (err) { out = {}; }
+    const vars = { name: x.name, who: discordName(x.discord) };
+    if (out.ok || out.error === "gone") {
+      reviewClaims = reviewClaims.filter((y) => y !== x);
+      await reloadRuns();
+      claimRevNote = esc(t(out.ok ? (approve ? "claim.approved" : "claim.declinedNote") : "claim.gone", vars));
+    } else claimRevNote = esc(t(out.error === "taken" ? "claim.takenRev" : "rev.fail", vars));
+    renderReview();
+  }
   $("#sub-review").addEventListener("keydown", onReviewKey);
   $("#sub-review").addEventListener("click", onReview);
+  $("#sub-review").addEventListener("click", onClaimReview);
+  $("#sub-review").addEventListener("keydown", (e) => {
+    if (e.key !== "Escape" || !claimAsk || !e.target.closest(".rev-ask [data-claim-review]")) return;
+    e.preventDefault();
+    askClaim(null, claimAsk.key, claimAsk.approve ? "approve" : "decline");
+  });
   $("#sub-runs").addEventListener("click", (e) => {
     if (!e.target.closest("[data-runs-more]")) return;
     // Focus goes to the first run that just showed up
@@ -4764,13 +4997,24 @@ a.link-copy { text-decoration: none; }
       el.focus();
     }
   }
-  // After a run is saved: the newest runs.json from the Worker, which already has the run
+  // After a run is saved (or a claim checked): the newest runs.json from the Worker, which already has it, and the
+  // legacy runs from the newest history.json, where a linked claim's runs have their player's Discord ID now
   async function reloadRuns() {
     try {
       const d = await fetch("/data/game.json", { cache: "no-store" }).then((r) => r.json());
       const text = d && d.files && d.files["leaderboards/runs.json"];
       if (typeof text === "string") applyRuns(JSON.parse(text));
+      const history = d && d.files && d.files["leaderboards/history.json"];
+      if (typeof history === "string") applyLegacy(JSON.parse(history));
     } catch (e) { /* the boards catch up on the next visit */ }
+  }
+  function applyLegacy(data) {
+    Object.keys(data && typeof data === "object" ? data : {}).forEach((k) => {
+      const c = course(Number(k));
+      if (!c || !HISTORY[c.n] || !data[k] || !Array.isArray(data[k].legacy)) return;
+      HISTORY[c.n].legacy = data[k].legacy.map((r) => cleanRun(r, true)).filter(Boolean);
+      refreshCourse(c);
+    });
   }
   // Where a player (by Discord ID: theirs, unless it says) stands: on a course's board, in the ratings, and their Top
   // 10s, Podiums and Records. Before and after a run, it's what the run did.

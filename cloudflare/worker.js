@@ -14,7 +14,8 @@
                        Looked up with Ballkyrie's token, only for players on a board. Refreshed at most once an hour.
    /api/…              Signing in with Discord, and runs sent from the form under Submit a run, which go on the boards
                        straight away. See "Signing in with Discord, and runs sent from the website" below. Players'
-                       stats on their Discord profiles too: see "Stats on Discord profiles".
+                       stats on their Discord profiles too: see "Stats on Discord profiles". And players claiming their
+                       runs from before May 2026: see "Claiming legacy runs".
    /runs/<id>          A run sent from the website: the home page, which opens the run's page. Ballkyrie's post for
                        it in the run submissions channel links here. See "Each run's page".
    /stats              The home page, which opens My stats: the visitor's own player panel (signing them in first).
@@ -153,12 +154,13 @@ async function appToken(env) {
 
 async function buildGame(env, previous) {
   const headers = githubHeaders(env);
+  let appAuth = null; // one GitHub App token for the whole refresh
   const get = async (path) => {
-    // runs.json changes with every run sent from the website, so it's read through GitHub's API, which always has
-    // the newest copy (raw files can be a few minutes behind)
-    // (with GITHUB_TOKEN if it's set, or else as the GitHub App)
-    const viaApi = path === RUNS_FILE && (env.GITHUB_TOKEN || appOn(env));
-    const auth = viaApi && !env.GITHUB_TOKEN ? { Authorization: `Bearer ${await appToken(env)}` } : {};
+    // runs.json changes with every run sent from the website, and history.json with every board posted and every
+    // claim approved, so they're read through GitHub's API, which always has the newest copy (raw files can be a few
+    // minutes behind) (with GITHUB_TOKEN if it's set, or else as the GitHub App)
+    const viaApi = DATA_FILES.includes(path) && (env.GITHUB_TOKEN || appOn(env));
+    const auth = viaApi && !env.GITHUB_TOKEN ? await (appAuth || (appAuth = appToken(env).then((t) => ({ Authorization: `Bearer ${t}` })))) : {};
     const branch = DATA_FILES.includes(path) ? dataBranch(env) : "develop";
     const r = await fetch(viaApi ? `https://api.github.com/repos/${REPO}/contents/${encodeURI(path)}?ref=${branch}` : `${GAME}/${branch}/${encodeURI(path)}`, {
       headers: viaApi ? { ...headers, ...auth, Accept: "application/vnd.github.raw+json" } : headers,
@@ -344,8 +346,9 @@ async function buildPlayers(env, ctx, previous) {
                          10 run that waits for a check, see "Saving a run, and checking top 10 runs") or { error },
                          the error saying what to fix: login (not signed in), course, name, time, miss, video, rate
                          (too many), off (not set up, or GitHub didn't take it) or bad
-   GET /api/pending and POST /api/review are for checking top 10 runs (see below), and GET /api/run is a run's numbers
-   from when it was sent (see "Each run's page").
+   GET /api/pending and POST /api/review are for checking top 10 runs (see below), GET /api/run is a run's numbers
+   from when it was sent (see "Each run's page"), and POST /api/claim and /api/claim/review are for claiming legacy
+   runs (see "Claiming legacy runs").
    The session is a cookie signed with SESSION_SECRET that lasts 30 days. Nothing about it is stored here.
    Secrets: DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET (Ballkyrie's app in Discord's Developer Portal, OAuth2 page,
    with https://ballkour.com/api/login/callback added as a redirect), SESSION_SECRET (any long random string) and
@@ -355,8 +358,9 @@ async function buildPlayers(env, ctx, previous) {
    with a View run button to its page (see "Each run's page"). Without it (or DISCORD_BOT_TOKEN), nothing is posted.
    SUBMIT_LIMIT (wrangler.toml) allows 5 sends a minute from one Discord account, and runs.json at most 20 a day. */
 const RUNS_FILE = "leaderboards/runs.json";
+const HISTORY_FILE = "leaderboards/history.json";
 // The files on the game repo's data branch: runs.json, and every board the leaderboard bot has posted
-const DATA_FILES = [RUNS_FILE, "leaderboards/history.json"];
+const DATA_FILES = [RUNS_FILE, HISTORY_FILE];
 // The game repo's branch with DATA_FILES, kept apart so the commits for every run stay off develop: leaderboard-data,
 // or DATA_BRANCH (the test copy's own test-runs, so trying it out never touches the real boards)
 const dataBranch = (env) => env.DATA_BRANCH || "leaderboard-data";
@@ -590,38 +594,71 @@ function dumpRuns(data) {
       .sort((a, b) => Number(a) - Number(b) || (a < b ? -1 : 1));
     return keys.length ? "{\n" + keys.map((k) => `    ${JSON.stringify(k)}: [\n` + obj[k].map((r) => "      " + run(r)).join(",\n") + "\n    ]").join(",\n") + "\n  }" : "{}";
   };
+  // Other lists (the claims) one item per line too
+  const other = (v) => (Array.isArray(v) && v.length ? "[\n" + v.map((r) => "    " + run(r)).join(",\n") + "\n  ]" : JSON.stringify(v));
   const others = Object.entries(data).filter(([k]) => !RUN_GROUPS.includes(k));
   return "{\n" + RUN_GROUPS.map((k) => `  ${JSON.stringify(k)}: ${group(data[k])}`).join(",\n") +
-    others.map(([k, v]) => `,\n  ${JSON.stringify(k)}: ${JSON.stringify(v)}`).join("") + "\n}\n";
+    others.map(([k, v]) => `,\n  ${JSON.stringify(k)}: ${other(v)}`).join("") + "\n}\n";
+}
+// history.json the way the leaderboard bot writes it (dumpHistory() in its bot.mjs), one run per line: keep the two in step
+function dumpHistory(data) {
+  const run = (r) => "{" + Object.entries(r).filter(([, v]) => v !== "" && v !== undefined)
+    .map(([k, v]) => `${JSON.stringify(k)}: ${JSON.stringify(v)}`).join(", ") + "}";
+  const entry = (e) => Object.entries(e).map(([k, v]) => {
+    if (k === "legacy" && Array.isArray(v)) return `    "legacy": [\n${v.map((r) => "      " + run(r)).join(",\n")}\n    ]`;
+    if (k === "boards" && Array.isArray(v)) return `    "boards": [\n${v.map((b) => `      [\n${b.map((r) => "        " + run(r)).join(",\n")}\n      ]`).join(",\n")}\n    ]`;
+    return `    ${JSON.stringify(k)}: ${JSON.stringify(v)}`;
+  }).join(",\n");
+  return `{\n${Object.entries(data).map(([k, e]) => `  ${JSON.stringify(k)}: {\n${entry(e)}\n  }`).join(",\n")}\n}\n`;
 }
 async function runsApi(env) {
   return { ...githubHeaders(env), ...(appOn(env) ? { Authorization: `Bearer ${await appToken(env)}` } : {}), Accept: "application/vnd.github+json" };
 }
-// runs.json as it is on the data branch, with every group in RUN_GROUPS always there, and its sha (null if there's none)
-async function readRuns(env, headers) {
-  const got = await fetch(`https://api.github.com/repos/${REPO}/contents/${RUNS_FILE}?ref=${dataBranch(env)}`, { headers, signal: AbortSignal.timeout(5000) });
+// A file on the data branch as it is now, through GitHub's API: its text (null if there's none yet) and its sha
+async function readData(env, headers, path) {
+  const got = await fetch(`https://api.github.com/repos/${REPO}/contents/${path}?ref=${dataBranch(env)}`, { headers, signal: AbortSignal.timeout(5000) });
   if (!got.ok && got.status !== 404) throw new Error(`reading it: ${got.status} ${(await got.text()).slice(0, 200)}`);
   const meta = got.ok ? await got.json() : null;
+  // GitHub only hands over a file's text this way up to 1 MB
+  if (meta && !meta.content && meta.size) throw new Error("it's over 1 MB, too big for GitHub's API to hand over");
+  return { raw: meta ? text(unbase64(meta.content)) : null, sha: meta && meta.sha };
+}
+// runs.json's text → its data, with every group in RUN_GROUPS always there
+function loadRuns(raw) {
   let data;
-  try { data = meta ? JSON.parse(text(unbase64(meta.content))) : {}; } catch (e) { throw new Error("it isn't valid JSON"); }
+  try { data = raw === null ? {} : JSON.parse(raw); } catch (e) { throw new Error("it isn't valid JSON"); }
   if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("it isn't a JSON object");
   for (const k of RUN_GROUPS) if (!data[k] || typeof data[k] !== "object" || Array.isArray(data[k])) data[k] = {};
-  return { data, sha: meta && meta.sha };
+  return data;
+}
+// history.json's text → its data. It has to be there already: the leaderboard bot starts it.
+function loadHistory(raw) {
+  let data;
+  try { data = JSON.parse(raw); } catch (e) { throw new Error("it isn't valid JSON"); }
+  if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("it isn't a JSON object");
+  return data;
+}
+// runs.json as it is on the data branch, and its sha (null if there's none)
+async function readRuns(env, headers) {
+  const { raw, sha } = await readData(env, headers, RUNS_FILE);
+  return { data: loadRuns(raw), sha };
 }
 const listIn = (group, n) => (Array.isArray(group[n]) ? group[n] : (group[n] = []));
-// Changes runs.json on the data branch through GitHub's API: edit(data) changes it and says what to commit ({ message }), or
-// that nothing needs saving ({ skip: true }), or what went wrong ({ error, status }). It's read again and redone if
-// someone else saved in between. → what edit said, and the new runs.json as { text } (null when nothing was saved)
-async function editRuns(env, edit) {
+// Changes a file on the data branch through GitHub's API: load(text) reads it, edit(data) changes that and says what
+// to commit ({ message }), or that nothing needs saving ({ skip: true }), or what went wrong ({ error, status }), and
+// dump(data) writes it out. It's read again and redone if someone else saved in between. → what edit said, and the
+// new file as { text } (null when nothing was saved)
+async function editData(env, path, load, dump, edit) {
+  const file = path.split("/").pop();
   let headers, why = "";
-  try { headers = await runsApi(env); } catch (e) { console.error(`runs.json: ${e.message}`); return { error: "off", status: 502 }; }
+  try { headers = await runsApi(env); } catch (e) { console.error(`${file}: ${e.message}`); return { error: "off", status: 502 }; }
   for (let attempt = 0; attempt < 3; attempt++) {
     let data, sha;
-    try { ({ data, sha } = await readRuns(env, headers)); } catch (e) { why = e.message; break; }
+    try { const got = await readData(env, headers, path); data = load(got.raw); sha = got.sha; } catch (e) { why = e.message; break; }
     const out = edit(data);
     if (out.error || out.skip) return { ...out, text: null };
-    const next = dumpRuns(data);
-    const put = await fetch(`https://api.github.com/repos/${REPO}/contents/${RUNS_FILE}`, {
+    const next = dump(data);
+    const put = await fetch(`https://api.github.com/repos/${REPO}/contents/${path}`, {
       method: "PUT",
       headers: { ...headers, "Content-Type": "application/json" },
       body: JSON.stringify({ message: out.message, content: base64(utf8.encode(next)), branch: dataBranch(env), ...(sha ? { sha } : {}) }),
@@ -629,26 +666,29 @@ async function editRuns(env, edit) {
     });
     if (put.ok) return { ...out, text: next };
     why = `saving it: ${put.status} ${(await put.text()).slice(0, 300)}`;
-    if (put.status !== 409) break; // 409: runs.json changed since it was read, so read it again
+    if (put.status !== 409) break; // 409: the file changed since it was read, so read it again
   }
-  console.error(`runs.json: couldn't save it, ${why}`);
+  console.error(`${file}: couldn't save it, ${why}`);
   return { error: "off", status: 502 };
 }
-// The site shows a saved run straight away: the cached game data gets the new runs.json, and the player's Discord
-// name and picture go in until the next lookup has them. That copy is only kept for a few minutes, so adding someone
-// never puts off the lookup for everyone else. (Copies from GitHub have the run too: runs.json is read through
-// GitHub's API, which doesn't serve old copies the way raw files can.)
+const editRuns = (env, edit) => editData(env, RUNS_FILE, loadRuns, dumpRuns, edit);
+// The site shows a saved run straight away: the cached game data gets the new runs.json (and history.json, when that
+// changed too: see "Claiming legacy runs"), and the player's Discord name and picture go in until the next lookup has
+// them. That copy is only kept for a few minutes, so adding someone never puts off the lookup for everyone else.
+// (Copies from GitHub have the change too: both files are read through GitHub's API, which doesn't serve old copies
+// the way raw files can.)
 async function putCached(name, ttl, body) {
   await Promise.all([
     caches.default.put(cacheKey(name), new Response(body, { headers: { "Cache-Control": `public, max-age=${ttl}` } })),
     caches.default.put(cacheKey(name, true), new Response(body, { headers: { "Cache-Control": `public, max-age=${STALE_FOR}` } })),
   ]);
 }
-async function showSaved(runsText, user) {
+async function showSaved(runsText, user, historyText = null) {
   const gameCopy = await stored("game");
-  if (gameCopy && runsText) {
+  if (gameCopy && (runsText || historyText)) {
     const d = JSON.parse(gameCopy);
-    d.files[RUNS_FILE] = runsText;
+    if (runsText) d.files[RUNS_FILE] = runsText;
+    if (historyText) d.files[HISTORY_FILE] = historyText;
     await putCached("game", 60, JSON.stringify(d));
   }
   const playersCopy = user && (await stored("players"));
@@ -782,13 +822,17 @@ async function postRun(env, { n, courseName, courseFlag, run, pending, rank, new
     embeds: [{ title: `${pending ? "Run to check" : "New run"} on ${where}`, url: page, color: pending ? 0xffd54f : 0x00e697, fields, timestamp: new Date(run.sentAt).toISOString() }],
     components: [{ type: 1, components: [{ type: 2, style: 5, label: "View run", url: page }] }],
   };
-  const res = await fetch(`${DISCORD_API}/channels/${env.RUNS_CHANNEL}/messages`, {
+  await postIn(env, env.RUNS_CHANNEL, message, `run ${run.id}`);
+}
+// Ballkyrie posts a message in a channel. what says what it's about, for the log if it can't.
+async function postIn(env, channel, message, what) {
+  const res = await fetch(`${DISCORD_API}/channels/${channel}/messages`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
     body: JSON.stringify(message),
     signal: AbortSignal.timeout(5000),
   }).catch((e) => ({ ok: false, status: String((e && e.message) || e), text: async () => "" }));
-  if (!res.ok) console.error(`run ${run.id}: Ballkyrie couldn't post in channel ${env.RUNS_CHANNEL}, Discord said ${res.status} ${(await res.text()).slice(0, 200)}`);
+  if (!res.ok) console.error(`${what}: Ballkyrie couldn't post in channel ${channel}, Discord said ${res.status} ${(await res.text()).slice(0, 200)}`);
 }
 // After a run is saved: its numbers first, kept for its page so they're there by the time anyone opens it from the
 // post, and in the post too. Without them, the post still goes, with just its place on the course.
@@ -888,7 +932,9 @@ async function pending(request, env, ctx) {
     const { rank } = placeOf(r, [...fileRuns(file, file && files[file]), ...listIn(data.runs, n)], Array.isArray(data.removed[n]) ? data.removed[n] : []);
     return { course: Number(n), courseName: names[n] || "", rank, ...r };
   })).sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
-  return answer(200, { runs });
+  // And the claims to legacy runs waiting for a check, oldest first (see "Claiming legacy runs")
+  const claims = (Array.isArray(data.claims) ? data.claims : []).filter((x) => x && x.status === "pending");
+  return answer(200, { runs, claims });
 }
 // Approve (onto the board) or turn down (into "declined") a run waiting for a check. It keeps its id, so its page
 // still works, and says who checked it and when.
@@ -914,6 +960,155 @@ async function review(request, env, ctx) {
   await showSaved(done.text, null).catch(() => {});
   if (approve && run.discord) ctx.waitUntil(profileAfterRun(env, ctx, run.discord));
   return answer(200, { ok: true, run });
+}
+
+/* ---------- Claiming legacy runs ----------
+   The legacy boards (history.json's "legacy", from before May 2026) have runs under just an in-game name, with no
+   Discord ID. Those runs aren't anyone's on the site: they're their own player, with no Discord name or picture, and
+   they don't show in anyone's My stats. A signed-in player can say a legacy name is theirs (Is this you? in its panel
+   on the site). The claim waits in runs.json's "claims" until a moderator checks that it's really them, under the form
+   at ballkour.com/submit, and Ballkyrie posts it in the legacy claims channel (CLAIMS_CHANNEL in wrangler.toml) so
+   moderators know. Ballkyrie needs to be able to see it, send messages and embed links there. Without it (or
+   DISCORD_BOT_TOKEN), nothing is posted.
+   Legacy runs have no videos, so moderators ask them for proof on Discord first, like an old screenshot or clip.
+   Approving it (Link) adds their Discord ID to every legacy run under that name that has none yet, in history.json.
+   Turning it down keeps it, so the same player can't ask for that name again (they open a ticket instead).
+     POST /api/claim          { name } → { ok: true, claim } or { error }: login (not signed in), name (no legacy runs
+                              under that name are left without a Discord ID), declined (a moderator turned their claim
+                              to it down), rate (too many), off or bad
+     POST /api/claim/review   { name, discord, approve } (reviewers only) → { ok: true, claim } or { error }: gone
+                              (someone checked it already), taken (its runs are someone else's now), off or bad
+   /api/pending lists the claims waiting too. Each claim is one line in "claims":
+     { "name", "discord" (theirs), "sentAt", "status": "pending" | "approved" | "declined", "checkedBy", "checkedAt" } */
+const upper = (s) => String(s).trim().toUpperCase();
+// Every legacy run under a name, as { n (its course), i (where it is in that course's "legacy"), run }
+function legacyRuns(history, name) {
+  const out = [];
+  for (const [n, e] of Object.entries(history && typeof history === "object" ? history : {})) {
+    (e && Array.isArray(e.legacy) ? e.legacy : []).forEach((run, i) => {
+      if (run && typeof run.name === "string" && upper(run.name) === upper(name)) out.push({ n, i, run });
+    });
+  }
+  return out;
+}
+// The in-game names a Discord account has on the boards now (the course files and runs.json), for moderators
+function namesNow(files, id) {
+  const names = new Set();
+  for (const [path, body] of Object.entries(files || {})) {
+    if (/^leaderboards\/\d+-[^/]+\.(opy|json)$/.test(path)) fileRuns(path, body).forEach((r) => r.discord === id && names.add(r.name));
+  }
+  try {
+    Object.values(JSON.parse(files[RUNS_FILE]).runs || {}).flat().forEach((r) => r && r.discord === id && typeof r.name === "string" && names.add(r.name));
+  } catch (e) { /* just the course files' */ }
+  return [...names];
+}
+// The claim's post in the legacy claims channel: who it's from, the legacy runs, and the names they go by now
+async function postClaim(env, { claim, runs, files, names, flags, site }) {
+  if (!env.CLAIMS_CHANNEL || !env.DISCORD_BOT_TOKEN) return;
+  const lines = runs.map(({ n, run }) => `${n} · ${flags[n] ? `${flags[n]} ` : ""}${names[n] || `Course ${n}`}: ${String(run.time).replace(".--", "")}`);
+  const now = namesNow(files, claim.discord);
+  await postIn(env, env.CLAIMS_CHANNEL, {
+    allowed_mentions: { parse: [] }, // shows who it's from without pinging them
+    embeds: [{
+      title: `Legacy runs to check: ${claim.name}`,
+      url: `${site}/submit`,
+      color: 0xffd54f,
+      description: "Make sure these are really theirs before you link them. Legacy runs have no videos, so ask them for proof, like an old screenshot or clip.",
+      fields: [
+        { name: "Claimed by", value: `<@${claim.discord}>`, inline: true },
+        ...(now.length ? [{ name: "On the boards now as", value: mdSafe(now.join(", ")).slice(0, 1024), inline: true }] : []),
+        { name: "Legacy runs", value: lines.join("\n").slice(0, 1024) },
+      ],
+      timestamp: claim.sentAt,
+    }],
+    components: [{ type: 1, components: [{ type: 2, style: 5, label: "Verify", url: `${site}/submit` }] }],
+  }, `claim to ${claim.name}`);
+}
+async function claim(request, env, ctx) {
+  if (request.method !== "POST") return answer(405, { error: "bad" });
+  const url = new URL(request.url);
+  if (request.headers.get("Origin") !== url.origin) return answer(403, { error: "bad" });
+  if (!loginOn(env)) return answer(503, { error: "off" });
+  const user = await readSession(request, env);
+  if (!user) return answer(401, { error: "login" });
+  if (env.SUBMIT_LIMIT && !(await env.SUBMIT_LIMIT.limit({ key: user.id })).success) return answer(429, { error: "rate" });
+  let body;
+  try {
+    const raw = await request.text();
+    body = raw.length <= 1024 ? JSON.parse(raw) : null;
+  } catch (e) { body = null; }
+  const asked = body && typeof body.name === "string" ? body.name.trim() : "";
+  if (!asked || asked.length > 64) return answer(400, { error: "name" });
+
+  // Its legacy runs that aren't anyone's yet, from the cached game data
+  const { files, names, flags } = await gameInfo(env, ctx);
+  let history = null;
+  try { history = loadHistory(files && files[HISTORY_FILE]); } catch (e) { return answer(503, { error: "off" }); }
+  const open = legacyRuns(history, asked).filter(({ run }) => !run.discord);
+  if (!open.length) return answer(400, { error: "name" });
+
+  const name = open[0].run.name.trim();
+  const fresh = { name, discord: user.id, sentAt: stamp(), status: "pending" };
+  const saved = await editRuns(env, (data) => {
+    const list = Array.isArray(data.claims) ? data.claims : (data.claims = []);
+    const theirs = list.filter((x) => x && x.discord === user.id);
+    // Asked already: still waiting, or turned down. (An approved one doesn't count: these runs came after it.)
+    const same = theirs.filter((x) => upper(x.name) === upper(name) && x.status !== "approved").pop();
+    if (same && same.status === "declined") return { error: "declined", status: 409 };
+    if (same) return { skip: true, claim: same };
+    if (theirs.filter((x) => x.status === "pending").length >= 5) return { error: "rate", status: 429 };
+    list.push(fresh);
+    return { message: `chore(leaderboard): ${user.name} says the legacy runs as ${name} are theirs, waiting for a check`, claim: fresh };
+  });
+  if (saved.error) return answer(saved.status, { error: saved.error });
+  await showSaved(saved.text, user).catch((e) => console.error(`claim: couldn't update the cached copy: ${(e && e.message) || e}`));
+  if (saved.text) ctx.waitUntil(postClaim(env, { claim: fresh, runs: open, files, names, flags, site: url.origin }));
+  return answer(200, { ok: true, claim: saved.claim });
+}
+// Link (approve) or turn down a claim waiting for a check. Linking adds their Discord ID to the legacy runs first, so
+// a claim never says it's approved while its runs aren't theirs; linking the same runs again changes nothing, so
+// trying again after a hiccup is fine. The claim keeps who checked it and when.
+async function reviewClaim(request, env, ctx) {
+  if (request.method !== "POST") return answer(405, { error: "bad" });
+  if (request.headers.get("Origin") !== new URL(request.url).origin) return answer(403, { error: "bad" });
+  const user = await readSession(request, env);
+  if (!(await isReviewer(env, user))) return answer(403, { error: "bad" });
+  let body;
+  try { body = JSON.parse(await request.text()); } catch (e) { body = null; }
+  const name = String((body && body.name) || "").trim(), id = String((body && body.discord) || ""), approve = !!(body && body.approve);
+  if (!name || name.length > 64 || !/^\d{17,20}$/.test(id)) return answer(400, { error: "bad" });
+  const isIt = (x) => x && x.status === "pending" && x.discord === id && upper(x.name) === upper(name);
+  // Still waiting? (Asked again as it's saved, in case another moderator got there in between)
+  try {
+    const { data } = await readRuns(env, await runsApi(env));
+    if (!(Array.isArray(data.claims) && data.claims.some(isIt))) return answer(404, { error: "gone" });
+  } catch (e) { console.error(`claim to ${name}: ${e.message}`); return answer(502, { error: "off" }); }
+  let linked = null;
+  if (approve) {
+    linked = await editData(env, HISTORY_FILE, loadHistory, dumpHistory, (history) => {
+      const all = legacyRuns(history, name);
+      const open = all.filter(({ run }) => !run.discord);
+      if (!open.length) return all.some(({ run }) => run.discord === id) ? { skip: true } : { error: "taken", status: 409 };
+      // Their ID goes right after the name, like on the runs that have one
+      for (const { n, i, run } of open) {
+        const { name: runName, discord: none, ...rest } = run;
+        history[n].legacy[i] = { name: runName, discord: id, ...rest };
+      }
+      return { message: `chore(leaderboard): link the legacy runs as ${name} to Discord ${id}, checked by ${user.name}` };
+    });
+    if (linked.error) return answer(linked.status, { error: linked.error });
+  }
+  let checked = null;
+  const done = await editRuns(env, (data) => {
+    const list = Array.isArray(data.claims) ? data.claims : [];
+    const at = list.findIndex(isIt);
+    if (at < 0) return { error: "gone", status: 404 };
+    checked = list[at] = { ...list[at], status: approve ? "approved" : "declined", checkedBy: user.id, checkedAt: stamp() };
+    return { message: `chore(leaderboard): ${approve ? "approve" : "turn down"} the claim to the legacy runs as ${name}, checked by ${user.name}` };
+  });
+  await showSaved(done.text, null, linked && linked.text).catch((e) => console.error(`claim to ${name}: couldn't update the cached copy: ${(e && e.message) || e}`));
+  if (done.error) return answer(done.status, { error: done.error });
+  return answer(200, { ok: true, claim: checked });
 }
 
 /* ---------- Stats on Discord profiles ----------
@@ -1259,6 +1454,8 @@ async function handle(request, env, ctx) {
       if (path === "/api/submit") return await submit(request, env, ctx);
       if (path === "/api/pending" && request.method === "GET") return await pending(request, env, ctx);
       if (path === "/api/review") return await review(request, env, ctx);
+      if (path === "/api/claim") return await claim(request, env, ctx);
+      if (path === "/api/claim/review") return await reviewClaim(request, env, ctx);
       if (path === "/api/run" && request.method === "GET") return await runInfo(request, env);
       return answer(404, { error: "bad" });
     } catch (e) {

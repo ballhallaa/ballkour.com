@@ -71,7 +71,7 @@ The test copy doesn't have the Worker's secrets, so player names and pictures ar
 
   Anything after these carries over, e.g. `/code/game/issues`. A release's own page is `/releases/v2026.10.14-0` or `/releases/site/v2026.11.02.6`, which Cloudflare redirects before the Worker sees it.
 - `/data/players.json`: the Discord name and picture of every player whose run has a Discord ID, looked up with Ballkyrie's token. Refreshed at most once an hour.
-- `/api/…`: signing in with Discord, and runs sent from the form under Submit a run. See [Runs sent from the website](#runs-sent-from-the-website). Also players' stats on their Discord profiles: see [Stats on Discord profiles](#stats-on-discord-profiles).
+- `/api/…`: signing in with Discord, and runs sent from the form under Submit a run. See [Runs sent from the website](#runs-sent-from-the-website). Also players' stats on their Discord profiles (see [Stats on Discord profiles](#stats-on-discord-profiles)), and players claiming their runs from before May 2026 (see [Claiming legacy runs](#claiming-legacy-runs)).
 
 Each page also gets the latest copy of all three as it's served, with the "• N members" counts already filled in, so nothing pops in after the page loads. If GitHub or Discord can't be reached, the last copy that worked is served for up to a week.
 
@@ -93,7 +93,7 @@ Players sign in with Discord (one click, no new account) and send their run from
 
 **After sending**, the form shows what the run did: their place on the course and who they passed, their course rating, rating, place, and Top %, and any new top 10, podium, or record (the numbers on their Discord profile). A top 10 run that's waiting for a check shows the same, as what they'll get once it's approved.
 
-**My stats** opens a signed-in player's own panel, the same one a click on their name on a board opens: their rating, place, Top % and every course, with Sign out in it too. It's by the language picker, next to Sign out, and under a run's result. Signed out, the one by the language picker signs them in with Discord first and comes back to the same page with `?me=1`, which opens it. It finds their runs by Discord ID, so runs saved under just an in-game name don't show there. `ballkour.com/stats` opens it too, and the address shows `/stats` while it's open, so it's easy to copy and share; closing it puts the address back.
+**My stats** opens a signed-in player's own panel, the same one a click on their name on a board opens: their rating, place, Top % and every course, with Sign out in it too. It's by the language picker, next to Sign out, and under a run's result. Signed out, the one by the language picker signs them in with Discord first and comes back to the same page with `?me=1`, which opens it. It finds their runs by Discord ID, so runs saved under just an in-game name (the legacy runs from before May 2026) don't show there until they claim them (see [Claiming legacy runs](#claiming-legacy-runs)). `ballkour.com/stats` opens it too, and the address shows `/stats` while it's open, so it's easy to copy and share; closing it puts the address back.
 
 **Every run gets its own page** at `ballkour.com/runs/<id>`, and Ballkyrie posts every run in the run submissions channel (`RUNS_CHANNEL` in `cloudflare/wrangler.toml`) with the player, time, mistakes, who sent it, where it would place or placed (its place on its course, and the player's place and rating in the player ratings: `Course: #1 of 12 • Global: #1 of 16 • ⭐ 1,818`), the video, and a **View run** button to its page. Ballkyrie needs to be able to see that channel, send messages, and embed links there. The post stays as it was sent, even after a run is checked.
 
@@ -132,6 +132,26 @@ To turn it on:
 Until those are set, the form stays hidden and the Discord ticket is the only way. (A `GITHUB_TOKEN` that can write the game repo works instead of the app, but then runs are committed as its owner.) The test copy needs its own secrets, and its `…workers.dev/api/login/callback` address added as a redirect too.
 
 The remakes' in-game top 10s are part of the game, so they only change with a release. Before one, run `node tools/leaderboard-bot/game-boards.mjs` in the game repo: it prints the `lb[…]` and `lbRunInfo(…)` lines for every `.opy` file that's behind its board.
+
+### Claiming legacy runs
+
+The legacy boards (before May 2026) have runs under just an in-game name, with no Discord ID. On the site, each of those names is its own player: no Discord name or picture by it, nothing in anyone's My stats, and someone who still plays can show up twice in Find a player (rated, and again as Legacy).
+
+Players can claim them. A legacy name's panel (click it on a legacy board) asks **Is this you?**, and **This is me** sends a claim to the moderators. Signed out, it signs them in with Discord first and comes back to the same page with that panel open again (`?claim=`, the name in URL-safe base64), so they can tap it there. After that, the panel says the claim is waiting for a moderator, or that it was turned down. A player's own panel (My stats) also points out legacy names that match a name they go by now: "Were you DVD before May 2026?"
+
+Each claim waits in `"claims"` in `runs.json` on `leaderboard-data`, one per line:
+
+```json
+"claims": [
+  {"name": "FLATO", "discord": "ID", "sentAt": "2026-11-09T01:44:31Z", "status": "pending"}
+]
+```
+
+Ballkyrie posts every claim in the legacy claims channel (`CLAIMS_CHANNEL` in `cloudflare/wrangler.toml`) with who it's from, the legacy runs, the names they go by on the boards now, and a **Verify** button to ballkour.com/submit. Ballkyrie needs to be able to see that channel, send messages, and embed links there.
+
+Moderators get **Legacy runs to check** under Runs to check there. Each claim shows the legacy runs, and who claimed them: their Discord name and picture, which open their Discord profile so a moderator can message them. Then come **View runs** (the name's panel), **Link**, and **Turn down**, which ask first like a run's. Legacy runs have no videos, so ask the player for proof on Discord before linking, like an old screenshot or clip. **Link** adds their Discord ID to every legacy run under that name in `history.json` that doesn't have one yet (the same as doing it by hand), and marks the claim `"approved"`. **Turn down** marks it `"declined"` and leaves the runs alone. That player can't claim the same name again from the site, so they'd open a ticket instead. Both keep who checked it and when (`checkedBy` and `checkedAt`).
+
+A player can have at most 5 claims waiting at once. A name with no unlinked legacy runs left can't be claimed. To undo a link, take the `"discord"` off those runs in `history.json` by hand.
 
 ### Stats on Discord profiles
 
