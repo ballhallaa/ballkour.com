@@ -152,6 +152,8 @@
   "lb.sortedMiss": "Sorted by mistakes, fewest first",
   "lb.sortedTimeSlow": "Sorted by time, slowest first",
   "lb.sortedMissMost": "Sorted by mistakes, most first",
+  "lb.sortedRating": "Sorted by rating, highest first",
+  "lb.sortedRatingLow": "Sorted by rating, lowest first",
   "lb.fewer": "Show the top 10 only",
   "lb.search": "Player or Discord name",
   "lb.searchLabel": "Find a player on this board by in-game or Discord name",

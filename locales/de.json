@@ -181,6 +181,8 @@
   "lb.sortedMiss": "Nach Fehlern sortiert, wenigste zuerst",
   "lb.sortedTimeSlow": "Nach Zeit sortiert, langsamste zuerst",
   "lb.sortedMissMost": "Nach Fehlern sortiert, meiste zuerst",
+  "lb.sortedRating": "Nach Wertung sortiert, höchste zuerst",
+  "lb.sortedRatingLow": "Nach Wertung sortiert, niedrigste zuerst",
   "lb.fewer": "Nur die Top 10 anzeigen",
   "lb.search": "Spieler- oder Discord-Name",
   "lb.searchLabel": "Finde einen Spieler auf dieser Liste nach Namen im Spiel oder auf Discord",

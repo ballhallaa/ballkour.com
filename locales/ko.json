@@ -181,6 +181,8 @@
   "lb.sortedMiss": "실수 적은 순 정렬",
   "lb.sortedTimeSlow": "시간 느린 순 정렬",
   "lb.sortedMissMost": "실수 많은 순 정렬",
+  "lb.sortedRating": "레이팅 높은 순 정렬",
+  "lb.sortedRatingLow": "레이팅 낮은 순 정렬",
   "lb.fewer": "TOP 10만 보기",
   "lb.search": "플레이어 또는 Discord 이름",
   "lb.searchLabel": "게임 내 이름이나 Discord 이름으로 이 순위표의 플레이어 찾기",

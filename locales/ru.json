@@ -181,6 +181,8 @@
   "lb.sortedMiss": "По ошибкам, сначала меньше",
   "lb.sortedTimeSlow": "По времени, сначала медленные",
   "lb.sortedMissMost": "По ошибкам, сначала больше",
+  "lb.sortedRating": "По рейтингу, сначала выше",
+  "lb.sortedRatingLow": "По рейтингу, сначала ниже",
   "lb.fewer": "Показать только топ-10",
   "lb.search": "Ник в игре или в Discord",
   "lb.searchLabel": "Найдите игрока в этой таблице по нику в игре или в Discord",

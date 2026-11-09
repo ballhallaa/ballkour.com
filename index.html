@@ -651,9 +651,18 @@ a.stat:hover .play { color: var(--volt); }
 .tag-this { flex: none; height: 17px; padding: 0 5px; font-size: 9.5px; color: var(--on-volt); background: var(--volt); border: 1px solid var(--volt); }
 .stat .na { color: var(--ink-3); }
 .lb-foot { margin: 0; display: grid; gap: 3px; padding: 9px 12px 11px; border-top: 1px solid var(--line); font: 400 12.5px/1.45 var(--body); word-spacing: .12em; color: var(--ink-3); }
-/* Sort by time or by mistakes, above a board */
+/* Sort by time, mistakes, rating, or date, above a board */
 .lb-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; padding: 8px 12px 2px; }
-.lb-sort { display: flex; align-items: center; gap: 4px; margin-inline-start: auto; }
+/* Its buttons in a row beside "Sort by", or where they don't fit on one line (.two, see fitSorts: on phones, and in the
+   longer languages), two on each line, lined up in two columns, with "Sort by" halfway down beside them */
+.lb-sort { display: flex; align-items: center; gap: 4px; min-width: 0; margin-inline-start: auto; }
+.lb-sort .sort-btns { flex: none; display: grid; grid-auto-flow: column; gap: 6px 4px; }
+.lb-sort.two .sort-btns { grid-auto-flow: row; grid-template-columns: auto auto; }
+.lb-sort.two .sort-btns button { justify-content: center; }
+/* Where even that's too wide (a one-word "Sort by", like Russian's, on the narrowest phones: .stack), "Sort by" goes
+   over the buttons, on the right like them */
+.lb-sort.stack { flex-direction: column; align-items: flex-end; }
+.lb-sort.stack .lb-sort-label { width: auto; margin: 0; }
 /* "Sort by" on two lines, ending right by the buttons */
 .lb-sort-label { width: min-content; margin-inline-end: 4px; font: 500 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; text-align: end; word-break: keep-all; color: var(--ink-3); }
 .lb-sort button, .lb-pic { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 9px; border: 1px solid var(--line); border-radius: 7px; background: none; color: var(--ink-2); font: 600 12.5px/1 var(--body); cursor: pointer; transition: color .15s, border-color .15s, background-color .15s; }
@@ -661,6 +670,7 @@ a.stat:hover .play { color: var(--volt); }
 .lb-pic .icon { color: var(--arc); }
 .lb-sort button[data-sort="time"] .icon { color: var(--volt); }
 .lb-sort button[data-sort="miss"] .icon { color: var(--coral); }
+.lb-sort button[data-sort="rating"] .icon { color: var(--gold); }
 .lb-sort button[data-sort="date"] .icon { color: var(--arc); }
 .lb-sort button:hover, .lb-pic:hover { color: var(--ink); border-color: var(--line-hi); }
 .lb-sort button[aria-pressed="true"] { color: var(--ink); background: rgba(0, 230, 151, .1); border-color: rgba(0, 230, 151, .35); }
@@ -782,12 +792,7 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-all-head .pl-runs-count { margin: 0; padding: 0; }
 /* Its sort, on a line of its own: like a board's, with Rating and Date too. The same over a course's runs (see
    .pl-runs-head). */
-.pl-all-head .pl-sort, .pl-runs-head .pl-sort { flex-basis: 100%; min-width: 0; flex-wrap: nowrap; justify-content: flex-end; }
-/* Its buttons in a row beside "Sort by", or where they don't fit on one line (.two, see fitSorts), two on each line,
-   lined up in two columns, with "Sort by" halfway down beside them */
-.pl-sort .sort-btns { flex: none; display: grid; grid-auto-flow: column; gap: 6px 4px; }
-.pl-sort.two .sort-btns { grid-auto-flow: row; grid-template-columns: auto auto; }
-.pl-sort.two .sort-btns button { justify-content: center; }
+.pl-all-head .pl-sort, .pl-runs-head .pl-sort { flex-basis: 100%; justify-content: flex-end; }
 .pl-sort [data-pl-sort="time"] .icon { color: var(--volt); }
 .pl-sort [data-pl-sort="miss"] .icon { color: var(--coral); }
 .pl-sort [data-pl-sort="rating"] .icon { color: var(--gold); }
@@ -1963,6 +1968,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "lb.sortedMiss": "Sorted by mistakes, fewest first",
   "lb.sortedTimeSlow": "Sorted by time, slowest first",
   "lb.sortedMissMost": "Sorted by mistakes, most first",
+  "lb.sortedRating": "Sorted by rating, highest first",
+  "lb.sortedRatingLow": "Sorted by rating, lowest first",
   "lb.fewer": "Show the top 10 only",
   "lb.search": "Player or Discord name",
   "lb.searchLabel": "Find a player on this board by in-game or Discord name",
@@ -2753,9 +2760,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const day = old ? boardDate(runs) : "";
     const ratingOf = boardRatings(c, old ? { day, c, runs } : null);
     let top = runs.slice(0, 10);
-    // Sorted by mistakes or by date, everyone on it is ranked again (the newest board's top 10 can then take players from
-    // past it), and the podium's colors stay with the three fastest
-    const resort = boardOrder(false);
+    // Sorted by mistakes, rating, or date, everyone on it is ranked again (the newest board's top 10 can then take
+    // players from past it), and the podium's colors stay with the three fastest
+    const resort = boardOrder(false, ratingOf);
     const podium = resort ? (r) => runs.slice(0, 3).indexOf(r) : () => undefined;
     if (resort) {
       const all = top.concat(rest).sort(resort);
@@ -2770,43 +2777,72 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     return sortHtml(c) + rowsHtml(c, top, rest, (r, i) => runRow(r, i, i < top.length ? fresh : null, false, ratingOf, podium(r), isMarked(c, r))) +
       (notes.length ? `<p class="lb-foot">${notes.map((s) => `<span>${esc(s)}</span>`).join("")}</p>` : "");
   }
-  // Boards are sorted by time (the leaderboard itself), by mistakes (fewest first, then fastest), or by date (newest
-  // first, then fastest, and runs with no date last). Pressing the sort that's on again turns it around (boardRev):
-  // slowest first, most mistakes first (then fastest), or oldest first (runs with no date still last). The choice
-  // holds for every course's board until the page is left. Legacy boards have no dates, so they have no Date, and
-  // show by time while it's picked.
+  // Boards are sorted by time (the leaderboard itself), by mistakes (fewest first, then fastest), by rating (each
+  // player's rating over every course, the one beside their date: highest first, then fastest, and anyone without one
+  // last), or by date (newest first, then fastest, and runs with no date last). Pressing the sort that's on again
+  // turns it around (boardRev): slowest first, most mistakes first (then fastest), lowest rating first (anyone without
+  // one still last), or oldest first (runs with no date still last). The choice holds for every course's board until
+  // the page is left. Legacy boards have no ratings or dates, so they have no Rating or Date, and show by time while
+  // either is picked.
   let boardSort = "time";
   let boardRev = false;
   const byMistakes = (a, b) => a.miss - b.miss || toSeconds(a.time) - toSeconds(b.time);
   const runDay = (r) => { const d = formatDate(r.date); return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : ""; };
   const byNewest = (a, b) => runDay(b).localeCompare(runDay(a)) || toSeconds(a.time) - toSeconds(b.time);
-  // Each sort's order, then turned around. null is the leaderboard's own (by time, fastest first).
-  const BOARD_SORTS = {
-    time: [null, (a, b) => byTime(b, a)],
-    miss: [byMistakes, (a, b) => b.miss - a.miss || toSeconds(a.time) - toSeconds(b.time)],
-    date: [byNewest, (a, b) => !runDay(a) - !runDay(b) || runDay(a).localeCompare(runDay(b)) || toSeconds(a.time) - toSeconds(b.time)],
-  };
-  // How a board is sorted, [sort, turned around], a Legacy board by time while Date is picked; and its order
-  const boardSortOf = (legacy) => (legacy && boardSort === "date" ? ["time", false] : [boardSort, boardRev]);
-  const boardOrder = (legacy) => { const [k, rev] = boardSortOf(legacy); return BOARD_SORTS[k][rev ? 1 : 0]; };
-  // What each sort says when it's picked (read out, and the pressed button's hint), then turned around, for the
-  // boards and for a player's Runs
+  // Each sort's order, then turned around. null is the leaderboard's own (by time, fastest first). ratingOf: the
+  // players' ratings on the board (see boardRatings), which Rating sorts by
+  function boardSorts(ratingOf) {
+    const rt = (r) => { const x = ratingOf && ratingOf.get(playerKey(r)); return x ? x.rating : -1; };
+    return {
+      time: [null, (a, b) => byTime(b, a)],
+      miss: [byMistakes, (a, b) => b.miss - a.miss || toSeconds(a.time) - toSeconds(b.time)],
+      rating: [(a, b) => rt(b) - rt(a) || toSeconds(a.time) - toSeconds(b.time),
+        (a, b) => (rt(a) < 0) - (rt(b) < 0) || rt(a) - rt(b) || toSeconds(a.time) - toSeconds(b.time)],
+      date: [byNewest, (a, b) => !runDay(a) - !runDay(b) || runDay(a).localeCompare(runDay(b)) || toSeconds(a.time) - toSeconds(b.time)],
+    };
+  }
+  // How a board is sorted, [sort, turned around], a Legacy board by time while Rating or Date is picked; and its order
+  const boardSortOf = (legacy) => (legacy && (boardSort === "rating" || boardSort === "date") ? ["time", false] : [boardSort, boardRev]);
+  const boardOrder = (legacy, ratingOf) => { const [k, rev] = boardSortOf(legacy); return boardSorts(ratingOf)[k][rev ? 1 : 0]; };
+  // What each sort says when it's picked (read out, and the pressed button's hint), then turned around, for a
+  // player's Runs; and for the boards, where Rating is each player's rating over every course, not a course rating
   const SORTED = { time: ["lb.sortedTime", "lb.sortedTimeSlow"], miss: ["lb.sortedMiss", "lb.sortedMissMost"],
     date: ["pl.sortedDate", "pl.sortedDateOld"], rating: ["pl.sortedRating", "pl.sortedRatingLow"] };
+  const BOARD_SORTED = { ...SORTED, rating: ["lb.sortedRating", "lb.sortedRatingLow"] };
   // The arrow on the pressed sort button: up when the smallest comes first (fastest, fewest mistakes, oldest, lowest
   // rating), down when the biggest does. Pressing it again turns the sort, and the arrow, around.
   const sortArrow = (k, rev) => `<span class="sort-dir${(k === "date" || k === "rating" ? rev : !rev) ? " up" : ""}" aria-hidden="true">${icon("chev")}</span>`;
-  const sortHint = (k, rev) => ` title="${esc(t(SORTED[k][rev ? 1 : 0]))}"`;
+  const sortHint = (k, rev, said = SORTED) => ` title="${esc(t(said[k][rev ? 1 : 0]))}"`;
   // The bar above a board: its search (see "Searching a board") and picture (see "Board pictures") on the left, how
-  // it's sorted on the right. legacy: a Legacy board, which has no Date (it's by time while Date is picked)
+  // it's sorted on the right. legacy: a Legacy board, which has no Rating or Date (it's by time while either is picked)
   function sortHtml(c, legacy) {
     const [on, rev] = boardSortOf(legacy);
-    const b = (key, ico, label) => `<button type="button" data-sort="${key}" data-course="${c.n}" aria-pressed="${on === key}"${on === key ? sortHint(key, rev) : ""}>` +
+    const b = (key, ico, label) => `<button type="button" data-sort="${key}" data-course="${c.n}" aria-pressed="${on === key}"${on === key ? sortHint(key, rev, BOARD_SORTED) : ""}>` +
       `${icon(ico)}<span>${esc(t(label))}</span>${on === key ? sortArrow(key, rev) : ""}</button>`;
     return `<div class="lb-bar">${searchHtml(c)}<button class="lb-pic" type="button" data-course="${c.n}">${icon("image")}<span>${esc(t("pic.button"))}</span></button>` +
       `<div class="lb-sort" role="group" aria-label="${esc(t("lb.sortBy"))}"><span class="lb-sort-label" aria-hidden="true">${esc(t("lb.sortBy"))}</span>` +
-      b("time", "bolt", "lb.sort.time") + b("miss", "skull", "lb.sort.miss") + (legacy ? "" : b("date", "calendar", "pl.sort.date")) + `</div></div>`;
+      `<span class="sort-btns">${b("time", "bolt", "lb.sort.time") + b("miss", "skull", "lb.sort.miss") +
+      (legacy ? "" : b("rating", "star", "pl.rating") + b("date", "calendar", "pl.sort.date"))}</span></div></div>`;
   }
+  /* A sort bar, a board's or one over a player's runs (see runSortHtml), has its buttons in a row beside "Sort by"
+     where they fit, and two on each line where they don't (.two): on phones, and in the longer languages. Where
+     that's still too wide, "Sort by" goes over them (.stack). They're measured each time a board or the panel is
+     drawn (root: what was), when the window changes size, and once the fonts have loaded. One that's hidden
+     measures nothing, and it's drawn again when it's shown. */
+  function fitSorts(root) {
+    const fits = (s) => {
+      const box = [...s.children].map((el) => el.getBoundingClientRect());
+      return Math.max(...box.map((b) => b.right)) - Math.min(...box.map((b) => b.left)) <= s.getBoundingClientRect().width + 0.5;
+    };
+    root.querySelectorAll(".lb-sort").forEach((s) => {
+      s.classList.remove("two", "stack");
+      if (fits(s)) return;
+      s.classList.add("two");
+      if (!fits(s)) s.classList.add("stack");
+    });
+  }
+  addEventListener("resize", () => fitSorts(document));
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => fitSorts(document));
   // The rows past the top 10 (rows() draws them), and the row that shows or hides them
   function moreHtml(row, rows, total, count) {
     if (!count) return "";
@@ -2904,6 +2940,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (!el) return;
     const spot = focusSpot(el);
     el.outerHTML = c === RATINGS ? ratingsRow() : courseRow(c);
+    const drawn = document.getElementById(`course-${c.n}`);
+    if (drawn) fitSorts(drawn);
     const back = spot && document.querySelector(`#course-${c.n} ${spot}`);
     if (back) refocus(back);
   }
@@ -2938,6 +2976,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     };
     const before = reduced ? null : offsets(box);
     box.innerHTML = boardHtml(c);
+    fitSorts(box);
     if (before && before.size && box.querySelector(".board")) {
       const after = offsets(box);
       $$(".run[data-k]", box).forEach((li) => {
@@ -2982,7 +3021,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       boardRev = on === sort.dataset.sort ? !rev : false;
       boardSort = sort.dataset.sort;
       refreshBoard(c, `.lb-sort [data-sort="${boardSort}"]`);
-      announce.textContent = t(SORTED[boardSort][boardRev ? 1 : 0]);
+      announce.textContent = t(BOARD_SORTED[boardSort][boardRev ? 1 : 0]);
       return;
     }
     const more = e.target.closest(".lb-more");
@@ -3034,6 +3073,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     // Then the Player ratings, over every course
     html += `</ul></div><div class="group"><div class="by"><h3 class="by-title">${esc(t("rt.group"))}</h3></div><ul class="course-list">${ratingsRow()}</ul></div>`;
     $("#leaderboards").innerHTML = html;
+    fitSorts($("#leaderboards"));
   }
 
   document.addEventListener("click", (e) => {
@@ -3903,25 +3943,11 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const spot = focusSel || (pl.contains(document.activeElement) && document.activeElement.dataset.plCourse ? `[data-pl-course="${document.activeElement.dataset.plCourse}"]` : null);
     const scroll = pl.scrollTop;
     pl.innerHTML = statBackHtml() + playerHtml();
-    fitSorts();
+    fitSorts(pl);
     pl.scrollTop = scroll;
     const back = spot && pl.querySelector(spot);
     if (back) back.focus({ preventScroll: true });
   }
-  /* A sort over a player's runs (see runSortHtml) has its buttons in a row beside "Sort by" where they fit, and two on
-     each line where they don't (.two): on phones, and in the longer languages. They're measured in a row each time
-     the panel is drawn, when the window changes size, and once the fonts have loaded. A course's runs that are
-     closed measure nothing, and they're drawn again when they're opened. */
-  function fitSorts() {
-    pl.querySelectorAll(".pl-sort").forEach((s) => {
-      s.classList.remove("two");
-      const box = [...s.children].map((el) => el.getBoundingClientRect());
-      const need = Math.max(...box.map((b) => b.right)) - Math.min(...box.map((b) => b.left));
-      if (need > s.getBoundingClientRect().width + 0.5) s.classList.add("two");
-    });
-  }
-  addEventListener("resize", () => { if (pl.open) fitSorts(); });
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (pl.open) fitSorts(); });
   /* A player's own link, ballkour.com/players/<number or name> (see "Players' own links"), opens their panel, so their
      stats can be shared, and /players/<…>/runs opens it on Runs. The address shows it while their panel is open (their
      own too, from My profile or their name on a board), and Copy link in the panel copies it. */
