@@ -437,7 +437,7 @@
   "link.change": "Ändern",
   "link.rules": "Wähl einen Namen dafür: bis zu 32 Buchstaben oder Zahlen, mit mindestens einem Buchstaben. Verwende - oder _ statt Leerzeichen.",
   "link.save": "Speichern",
-  "link.useNumber": "Meine Nummer verwenden",
+  "link.useNumber": "Meine ID-Nummer verwenden",
   "link.bad": "Dieser Name geht nicht. Er darf bis zu 32 Buchstaben oder Zahlen haben, braucht mindestens einen Buchstaben und darf keine Leerzeichen enthalten.",
   "link.taken": "Dieser Name ist schon vergeben. Versuch einen anderen.",
   "link.rate": "Das sind viele Änderungen auf einmal. Warte eine Minute und versuch es dann noch einmal.",

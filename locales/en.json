@@ -357,7 +357,7 @@
   "link.change": "Change",
   "link.rules": "Pick a name for it: up to 32 letters or numbers, with at least one letter. Use - or _ instead of spaces.",
   "link.save": "Save",
-  "link.useNumber": "Use my number",
+  "link.useNumber": "Use my number ID",
   "link.bad": "That name won’t work. It can have up to 32 letters or numbers, needs at least one letter, and can’t have spaces.",
   "link.taken": "That name is taken. Try another one.",
   "link.rate": "That’s a lot of changes at once. Wait a minute and try again.",

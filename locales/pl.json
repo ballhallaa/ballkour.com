@@ -437,7 +437,7 @@
   "link.change": "Zmień",
   "link.rules": "Wybierz dla niego nazwę: do 32 liter lub cyfr, w tym co najmniej jedna litera. Zamiast spacji użyj - lub _.",
   "link.save": "Zapisz",
-  "link.useNumber": "Użyj mojego numeru",
+  "link.useNumber": "Użyj mojego numeru ID",
   "link.bad": "Ta nazwa się nie nada. Może mieć do 32 liter lub cyfr, musi mieć co najmniej jedną literę i nie może zawierać spacji.",
   "link.taken": "Ta nazwa jest zajęta. Spróbuj innej.",
   "link.rate": "To dużo zmian naraz. Poczekaj minutę i spróbuj ponownie.",
