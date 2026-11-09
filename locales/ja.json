@@ -431,7 +431,7 @@
   "visits.other": "その他",
   "visits.note": "ブラウザでサイトが開かれるたびにサイト自身が数えるので、広告ブロッカーで見えなくなる人はおらず、ボットは数えません。同じ人は1日1回だけ数え、誰なのかは保存しません。",
   "foot.openDiscord": "Discordで開く",
-  "link.title": "あなたのリンク",
+  "link.title": "あなたのリンク：",
   "link.yours": "<b>あなたのリンク：</b>{link}",
   "link.pick": "名前を決める",
   "link.change": "変更",

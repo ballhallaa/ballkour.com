@@ -431,7 +431,7 @@
   "visits.other": "其他",
   "visits.note": "每当有人在浏览器中打开网站，都由网站自己计数，所以广告拦截器不会漏掉任何人，机器人也不计入。每个人每天只算一次，网站不会保存是谁。",
   "foot.openDiscord": "在 Discord 上打开",
-  "link.title": "你的链接",
+  "link.title": "你的链接：",
   "link.yours": "<b>你的链接：</b>{link}",
   "link.pick": "起个名字",
   "link.change": "更改",
