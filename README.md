@@ -276,6 +276,8 @@ Runs sent from the website also have an `id` (for their page: numbers in the ord
 
 Every board, and its picture, shows each player's rating beside their run's date. The newest board shows today's ratings. An older board from the history shows the ratings players had at the end of that board's day, worked out from the boards posted by then, so scrolling back shows how they stood at the time. A course's own rating, how close a run is to its record, is in the player's panel, by each course they've run.
 
+A run's time, on the boards and in a player's panel, links to its video. Clicking it plays a YouTube, Twitch, Streamable, or Medal video right on the site, in a window over the page, with a link to watch it on that site instead. Nothing loads from those sites until the time is clicked, and closing the window stops the video. Other links, and Ctrl/Cmd or middle clicks, open the video in a new tab.
+
 A player's Discord name, under their in-game name on the boards, in their panel, and on a run's page, links to their profile on Discord (`discord.com/users/<id>`, which opens the Discord app where it's installed). In Find a player it doesn't, since each row there is what's clicked to pick the player.
 
 The leaderboard bot posts the same boards and gives out the same Top % as roles on Discord (Top 0.1% to Top 90%, and Rated for everyone below, one each), with its own copy of the boards and ratings in `tools/leaderboard-bot/ratings.mjs` in the game repo. The stats on players' Discord profiles use a third copy, `cloudflare/ratings.js`. Change all three together.
