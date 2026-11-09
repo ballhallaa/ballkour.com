@@ -1810,6 +1810,14 @@ a.link-copy { text-decoration: none; }
   "pic.copyFail": "Couldn’t copy",
   "pic.share": "Share",
   "pic.player": "Picture of {player}’s stats",
+  "pic.fewest": "Fewest mistakes",
+  "pic.legacyTop": "Legacy Top 10",
+  "pic.beforeMay": "Before May 2026",
+  "pic.creator": "Creator",
+  "pic.remaker": "Remaker",
+  "pic.noVideos": "Videos weren’t required",
+  "pic.beFirst": "Be the first to set a time",
+  "pic.asOf": "As of {date}",
   "lb.sort.time": "Time",
   "lb.sort.miss": "Mistakes",
   "lb.sortedTime": "Sorted by time",
@@ -3877,7 +3885,8 @@ a.link-copy { text-decoration: none; }
   /* ---------- Board pictures ----------
      "Picture" on a board draws it the way the leaderboard bot's Discord pictures look (tools/leaderboard-bot/card.mjs
      in the game repo: keep the two alike), right here in the browser: the board that's showing, in the order it's
-     sorted, at twice the size. It can then be saved, copied or shared. Its words stay in English, like the bot's. */
+     sorted, at twice the size. It can then be saved, copied or shared. Its words are in the page's language (the bot's
+     are in English). */
   const pic = $("#pic");
   const PIC = { w: 1040, pad: 36, top: 34, head: 104, rowH: 74, gap: 4, colGap: 22 };
   const EMOJI = '"Apple Color Emoji", "Noto Color Emoji", "Ballkour Emoji", "Segoe UI Emoji", sans-serif';
@@ -3901,6 +3910,12 @@ a.link-copy { text-decoration: none; }
     ctx.restore();
   }
   const picFont = (ctx, font, spacing = 0) => { ctx.font = font; if ("letterSpacing" in ctx) ctx.letterSpacing = `${spacing}px`; };
+  // font(size) at size, or smaller (down to min) until text fits in max, for words that run longer in some languages.
+  // spacing: the letter spacing for each pixel of size.
+  function picFit(ctx, text, max, font, size, min, spacing = 0) {
+    picFont(ctx, font(size), size * spacing);
+    while (ctx.measureText(text).width > max && size > min) { size -= 0.5; picFont(ctx, font(size), size * spacing); }
+  }
   // Text at its caps' middle, so mixed fonts line up the way the card's flexboxes do
   function picText(ctx, text, x, cy, color, align = "left") {
     ctx.fillStyle = color;
@@ -3980,17 +3995,62 @@ a.link-copy { text-decoration: none; }
     picText(ctx, title, x, cy, "#ecf6f2");
     ctx.restore();
   }
-  // A line of small capitals under the title, its parts between dots: a string, or [text, color] pairs
-  function picLine(ctx, parts, cy) {
-    picFont(ctx, '600 15px "JetBrains Mono", monospace', 1.8);
-    let x = PIC.pad;
-    parts.filter(Boolean).forEach((part, i) => {
-      if (i) x += picText(ctx, "·", x, cy, "#76867f") + 10;
-      (Array.isArray(part) ? part : [[part, "#76867f"]]).forEach(([str, color], j) => { x += picText(ctx, (j ? " " : "") + str.toUpperCase(), x, cy, color); });
-      x += 10;
-    });
+  // Words on a picture, in capitals the way the page's language writes them (i is İ in Turkish). Names and codes
+  // keep plain capitals.
+  const up = (str) => String(str).toLocaleUpperCase(htmlLang());
+  // A line under the title, its parts between dots: a string, or [text, color] pairs, shrunk to fit max
+  function picLine(ctx, parts, cy, max) {
+    const list = parts.filter(Boolean).map((part) => (Array.isArray(part) ? part : [[part, "#76867f"]]));
+    const draw = (size, go) => {
+      picFont(ctx, `600 ${size}px "JetBrains Mono", monospace`, size * 0.12);
+      const put = (str, x, color) => (go ? picText(ctx, str, x, cy, color) : ctx.measureText(str).width);
+      let x = PIC.pad;
+      list.forEach((part, i) => {
+        if (i) x += put("·", x, "#76867f") + 10;
+        part.forEach(([str, color], j) => { x += put((j ? " " : "") + str, x, color); });
+        x += 10;
+      });
+      return x - 10 - PIC.pad;
+    };
+    let size = 15;
+    while (max && draw(size, false) > max && size > 10) size -= 0.5;
+    draw(size, true);
   }
-  const field = (label, value) => (value ? [[label, "#76867f"], [value, "#a7b6b0"]] : null);
+  // "CODE ABC12", its label grey and its value lighter, or nothing without a value
+  const field = (label, value) => (value ? [[up(label), "#76867f"], [String(value).toUpperCase(), "#a7b6b0"]] : null);
+  // A translation with one value in it, as [text, color] parts: its words grey and the value lighter ("COURSE 6")
+  function picSplit(key, name, value) {
+    const [before, after = ""] = t(key, { [name]: "\u0000" }).split("\u0000");
+    return [[up(before), "#76867f"], [String(value), "#a7b6b0"], [up(after), "#76867f"]].filter(([str]) => str);
+  }
+  // "DATES: YYYY-MM-DD (UTC)", its words grey and the format lighter (all grey with no colon to split it at)
+  function picDates() {
+    const str = up(t("lb.datesFormat")), m = /^(.*?[:：]\s*)(\S.*)$/.exec(str);
+    return m ? [[m[1], "#76867f"], [m[2], "#a7b6b0"]] : [[str, "#76867f"]];
+  }
+  // Parts one after another from x, or ending at x ("right"), in the font that's set
+  function picParts(ctx, parts, x, cy, align = "left") {
+    let at = align === "right" ? x - parts.reduce((sum, [str]) => sum + ctx.measureText(str).width, 0) : x;
+    parts.forEach(([str, color]) => { at += picText(ctx, str, at, cy, color); });
+  }
+  // A picture's foot: parts at the left and right, and a link in the middle, shrunk until none of them meet
+  function picFoot(ctx, W, cy, left, right, link) {
+    const mono = (size) => `600 ${size}px "JetBrains Mono", monospace`;
+    const side = (size) => {
+      picFont(ctx, mono(size), size * 0.12);
+      return Math.max(...[left, right].map((parts) => parts.reduce((sum, [str]) => sum + ctx.measureText(str).width, 0)));
+    };
+    const mid = (size) => { picFont(ctx, mono(size), size * 0.02); return ctx.measureText(link).width; };
+    const room = W - 2 * PIC.pad - 48;
+    let sideSize = 13, linkSize = 14;
+    while (2 * side(sideSize) + mid(linkSize) > room && linkSize > 10) linkSize -= 0.5;
+    while (2 * side(sideSize) + mid(linkSize) > room && sideSize > 9) sideSize -= 0.5;
+    picFont(ctx, mono(sideSize), sideSize * 0.12);
+    picParts(ctx, left, PIC.pad, cy);
+    picParts(ctx, right, W - PIC.pad, cy, "right");
+    picFont(ctx, mono(linkSize), linkSize * 0.02);
+    picText(ctx, link, W / 2, cy, "#a7b6b0", "center");
+  }
   // A file name from a name: "6-ice-palace", "ballmybloved"
   const slugOf = (str) => String(str).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   // What the picture shows: the board on screen, sorted as it is, with the fastest three in their colors
@@ -4001,7 +4061,7 @@ a.link-copy { text-decoration: none; }
     if (v.tab === "legacy" && h && h.legacy.length) {
       const seen = new Set();
       const best = h.legacy.slice().sort(byTime).filter((r) => !seen.has(playerKey(r)) && seen.add(playerKey(r)));
-      return { legacy: true, byMiss, runs: (byMiss ? best.slice().sort(byMistakes) : best).slice(0, 10), podium: (r) => best.slice(0, 3).indexOf(r), fresh: new Set(), board: 0, date: "" };
+      return { legacy: true, byMiss, runs: (byMiss ? best.slice().sort(byMistakes) : best).slice(0, 10), podium: (r) => best.slice(0, 3).indexOf(r), fresh: new Set(), board: 0, boards: 0, date: "" };
     }
     const list = boardsOf(c);
     const { top, rest } = standingsOf(c);
@@ -4010,7 +4070,7 @@ a.link-copy { text-decoration: none; }
     const pool = byMiss ? runs.slice(0, 10).concat(!list || at === list.length - 1 ? rest : []).sort(byMistakes) : runs;
     // An older board's ratings are as they were on its day, like on the page
     const then = list && at < list.length - 1 ? { day: boardDate(runs), c, runs } : null;
-    return { legacy: false, byMiss, runs: pool.slice(0, 10), podium: (r) => runs.slice(0, 3).indexOf(r), fresh: list ? freshAt(list, at) : new Set(), board: list ? at + 1 : 0, date: boardDate(runs), then };
+    return { legacy: false, byMiss, runs: pool.slice(0, 10), podium: (r) => runs.slice(0, 3).indexOf(r), fresh: list ? freshAt(list, at) : new Set(), board: list ? at + 1 : 0, boards: list ? list.length : 0, date: boardDate(runs), then };
   }
   async function drawPicture(c, d) {
     const W = PIC.w, rowsTop = PIC.top + PIC.head + 22, footY = rowsTop + 5 * PIC.rowH + 4 * PIC.gap + 18, H = Math.round(footY + 17 + 26);
@@ -4031,10 +4091,11 @@ a.link-copy { text-decoration: none; }
     picFont(ctx, `40px ${EMOJI}`);
     const flagW = c.flag ? picText(ctx, c.flag, PIC.pad, titleY, "#fff") + 16 : 0;
     picTitle(ctx, c.name.toUpperCase(), PIC.pad + flagW, titleY);
-    const line = (parts, cy) => picLine(ctx, parts, cy);
-    const sorted = d.byMiss ? "Fewest mistakes" : "";
-    line(d.legacy ? [sorted ? "Legacy" : "Legacy Top 10", sorted, "Before May 2026"] : [sorted || "Top 10", d.date, d.board ? `Board ${d.board}` : ""], textTop + 48.6 + 12 + 7.5);
-    line([field("Code", d.legacy ? c.legacyCode : c.remaker ? c.latest : c.code), field("Creator", c.by), d.legacy ? null : field("Remaker", c.remaker)], textTop + 48.6 + 12 + 15 + 9 + 7.5);
+    const line = (parts, cy) => picLine(ctx, parts, cy, W - 2 * PIC.pad - PIC.head - 24);
+    const sorted = d.byMiss ? up(t("pic.fewest")) : "";
+    line(d.legacy ? [up(t(sorted ? "lb.tab.legacy" : "pic.legacyTop")), sorted, up(t("pic.beforeMay"))]
+      : [sorted || up(t("lb.tab.top")), d.date, d.board ? up(t("lb.boardOf", { n: d.board, total: d.boards })) : ""], textTop + 48.6 + 12 + 7.5);
+    line([field(t("code.code"), d.legacy ? c.legacyCode : c.remaker ? c.latest : c.code), field(t("pic.creator"), c.by), d.legacy ? null : field(t("pic.remaker"), c.remaker)], textTop + 48.6 + 12 + 15 + 9 + 7.5);
     // The runs, in two columns of five
     const colW = (W - 2 * PIC.pad - PIC.colGap) / 2;
     const TIER = ["#ffd54f", "#d3dde2", "#e8a066"];
@@ -4090,7 +4151,8 @@ a.link-copy { text-decoration: none; }
       picIcon(ctx, "bolt", timeRight - tw - 7 - 21, y1, 21, "#00e697");
       // The name, shrunk to fit like the bot's, then the New tag
       const nameLeft = left + 34 + 12;
-      const nameMax = timeRight - tw - 7 - 21 - 12 - nameLeft - (fresh ? 9 + 44 : 0);
+      picFont(ctx, '700 11px "JetBrains Mono", monospace', 1.1);
+      const nameMax = timeRight - tw - 7 - 21 - 12 - nameLeft - (fresh ? 9 + 12 + ctx.measureText(up(t("lb.new"))).width : 0);
       const name = r ? caps(r.name) : "---";
       let size = 25;
       picFont(ctx, `700 ${size}px Barlow, sans-serif`, size * 0.03);
@@ -4100,10 +4162,11 @@ a.link-copy { text-decoration: none; }
       ctx.restore();
       if (fresh) {
         picFont(ctx, '700 11px "JetBrains Mono", monospace', 1.1);
-        const tagW = ctx.measureText("NEW").width + 12, tx = nameLeft + nw + 9;
+        const tag = up(t("lb.new"));
+        const tagW = ctx.measureText(tag).width + 12, tx = nameLeft + nw + 9;
         picBox(ctx, tx, y1 - 8.5, tagW, 17, 5);
         ctx.fillStyle = "rgba(0,230,151,.12)"; ctx.fill(); ctx.strokeStyle = "rgba(0,230,151,.4)"; ctx.stroke();
-        picText(ctx, "NEW", tx + 6, y1, "#00e697");
+        picText(ctx, tag, tx + 6, y1, "#00e697");
       }
       // Under them: the Discord name and picture, and the date
       if (who) {
@@ -4121,26 +4184,17 @@ a.link-copy { text-decoration: none; }
       picFont(ctx, '400 13.5px "JetBrains Mono", monospace');
       const dateW = date ? picText(ctx, date, right, y2, "#76867f", "right") + 14 : 0;
       if (rating !== undefined) {
-        const num = Math.round(rating).toLocaleString("en");
+        const num = points(rating);
         const numW = picText(ctx, num, right - dateW, y2, "#a7b6b0", "right");
         picIcon(ctx, "star", right - dateW - numW - 5 - 15, y2, 15, "#ffd54f");
       }
       ctx.restore();
     }
-    // The foot: the course number, the board's link in the middle, and a note
-    const fy = footY + 8.5;
-    picFont(ctx, '600 13px "JetBrains Mono", monospace', 1.56);
-    const cw = picText(ctx, "COURSE ", PIC.pad, fy, "#76867f");
-    picText(ctx, String(c.n), PIC.pad + cw, fy, "#a7b6b0");
-    const note = d.legacy ? ["VIDEOS WEREN’T REQUIRED", "#76867f"] : d.runs.length ? null : c.broken ? ["BROKEN", "#ff6a4f"] : ["BE THE FIRST TO SET A TIME", "#00e697"];
-    if (note) picText(ctx, note[0], W - PIC.pad, fy, note[1], "right");
-    else {
-      const bw = picText(ctx, "YYYY-MM-DD (UTC)", W - PIC.pad, fy, "#a7b6b0", "right");
-      picText(ctx, "DATES: ", W - PIC.pad - bw, fy, "#76867f", "right");
-    }
-    picFont(ctx, '600 14px "JetBrains Mono", monospace', 0.28);
-    // The same link as the address: an older board's has its number
-    picText(ctx, `ballkour.com/leaderboards/${c.n}${d.legacy ? "/legacy" : d.then ? `/${d.board}` : ""}`, W / 2, fy, "#a7b6b0", "center");
+    // The foot: the course number, the board's link in the middle (the same as the address: an older board's has its
+    // number), and a note, or what the dates are
+    const note = d.legacy ? [up(t("pic.noVideos")), "#76867f"] : d.runs.length ? null : c.broken ? [up(t("code.broken")), "#ff6a4f"] : [up(t("pic.beFirst")), "#00e697"];
+    picFoot(ctx, W, footY + 8.5, picSplit("course.number", "n", c.n), note ? [note] : picDates(),
+      `ballkour.com/leaderboards/${c.n}${d.legacy ? "/legacy" : d.then ? `/${d.board}` : ""}`);
     return cv;
   }
   // A picture in a window with Save, Copy and Share: titleHtml over it, draw() draws it
@@ -4173,14 +4227,15 @@ a.link-copy { text-decoration: none; }
   function openPicture(c) {
     const d = picBoard(c);
     const filename = `${c.n}-${slugOf(c.name)}${d.legacy ? "-legacy" : d.board ? `-board-${d.board}` : ""}${d.byMiss ? "-by-mistakes" : ""}.png`;
-    const alt = `${c.name} ${d.legacy ? "legacy top 10" : "top 10"}: ` + d.runs.map((r, i) => `${i + 1}. ${r.name} ${r.time}, ${r.miss} mistakes`).join("; ");
+    const alt = `${c.name} · ${t(d.legacy ? "pic.legacyTop" : "lb.tab.top")}: ` + d.runs.map((r, i) => `${i + 1}. ${r.name} ${r.time}, ${t("unit.mistakes", { count: r.miss })}`).join("; ");
     pictureWindow(esc(t("pic.title", { n: c.n, course: "\u0000" })).replace("\u0000", flagName(c)), () => drawPicture(c, d), filename, alt);
   }
 
   /* ---------- Player pictures ----------
      Picture in a player's panel (by Copy link) draws their stats the same way, to save, copy or share: their name and
      Discord, their Top 10s, Podiums and Records, the panel's five boxes (Rating, Place, Top %, Courses and Runs), then
-     every course in their panel with their place and best run there, and their link at the foot. In English too. */
+     every course in their panel with their place and best run there, and their link at the foot. In the page's
+     language too. */
   function picPlayer(key) {
     const r = ratings();
     const p = r.players.find((x) => x.key === key) || null;
@@ -4210,11 +4265,11 @@ a.link-copy { text-decoration: none; }
     picTitle(ctx, d.name || "—", PIC.pad, textTop + 24.3, W - 2 * PIC.pad - PIC.head - 24);
     const lines = [];
     if (d.dc) lines.push("discord");
-    else if (d.key.startsWith("n:")) lines.push(["Legacy", "Before May 2026"]);
-    if (d.p) lines.push([field("Top 10s", String(d.medals.top10s)), field("Podiums", String(d.medals.podiums)), field("Records", String(d.medals.records))]);
+    else if (d.key.startsWith("n:")) lines.push([up(t("lb.tab.legacy")), up(t("pic.beforeMay"))]);
+    if (d.p) lines.push([field(t("res.top10s"), localNum(d.medals.top10s)), field(t("res.podiums"), localNum(d.medals.podiums)), field(t("res.records"), localNum(d.medals.records))]);
     lines.forEach((parts, i) => {
       const cy = textTop + 48.6 + 12 + 7.5 + i * (15 + 9);
-      if (parts !== "discord") { picLine(ctx, parts, cy); return; }
+      if (parts !== "discord") { picLine(ctx, parts, cy, W - 2 * PIC.pad - PIC.head - 24); return; }
       let x = PIC.pad;
       if (pfp) {
         ctx.save(); ctx.beginPath(); ctx.arc(x + 11, cy, 11, 0, Math.PI * 2); ctx.clip();
@@ -4227,13 +4282,13 @@ a.link-copy { text-decoration: none; }
       ctx.restore();
     });
     // The panel's five boxes, in a row
-    const tier = d.p ? (d.p.tier === null ? "Rated" : `Top ${d.p.tier}%`) : "";
+    const tier = d.p ? tierLabel(d.p.tier) : "";
     const tiles = [
-      ["Rating", d.p && { icon: "star", text: Math.round(d.p.rating).toLocaleString("en") }],
-      ["Place", d.p && { text: `#${d.p.rank} of ${d.total}` }],
-      ["Top %", d.p && { tag: tier, color: d.p.tier !== null && d.p.tier <= 5 ? "#ffd54f" : "#33c6ff" }],
-      ["Courses", { icon: "map", text: `${d.p ? d.p.courses : 0}/${d.counted}` }],
-      ["Runs", { icon: "notes", text: d.runs.toLocaleString("en") }],
+      [t("pl.rating"), d.p && { icon: "star", text: points(d.p.rating) }],
+      [t("pl.place"), d.p && { text: t("res.of", { rank: d.p.rank, total: d.total }) }],
+      [t("pl.tier"), d.p && { tag: tier, color: d.p.tier !== null && d.p.tier <= 5 ? "#ffd54f" : "#33c6ff" }],
+      [t("pl.courses"), { icon: "map", text: `${d.p ? d.p.courses : 0}/${d.counted}` }],
+      [t("pl.runs"), { icon: "notes", text: localNum(d.runs) }],
     ];
     const tileW = (W - 2 * PIC.pad - 4 * tileGap) / 5;
     tiles.forEach(([label, v], i) => {
@@ -4241,16 +4296,16 @@ a.link-copy { text-decoration: none; }
       picBox(ctx, x, statsTop, tileW, statH, 11);
       ctx.fillStyle = "rgba(9,15,13,.93)"; ctx.fill();
       ctx.lineWidth = 1; ctx.strokeStyle = "rgba(196,255,232,.11)"; ctx.stroke();
-      picFont(ctx, '600 12px "JetBrains Mono", monospace', 1.3);
-      picText(ctx, label.toUpperCase(), x + 16, statsTop + 24, "#76867f");
+      picFit(ctx, up(label), tileW - 32, (size) => `600 ${size}px "JetBrains Mono", monospace`, 12, 9, 0.11);
+      picText(ctx, up(label), x + 16, statsTop + 24, "#76867f");
       let vx = x + 16;
       if (v && v.tag) {
-        picFont(ctx, '700 15px "JetBrains Mono", monospace', 0.6);
-        const tw = ctx.measureText(v.tag.toUpperCase()).width + 18;
+        picFit(ctx, up(v.tag), tileW - 32 - 18, (size) => `700 ${size}px "JetBrains Mono", monospace`, 15, 10, 0.04);
+        const tw = ctx.measureText(up(v.tag)).width + 18;
         picBox(ctx, vx, vy - 14, tw, 28, 7);
         ctx.fillStyle = `rgba(${rgb(v.color)},.1)`; ctx.fill();
         ctx.strokeStyle = `rgba(${rgb(v.color)},.34)`; ctx.stroke();
-        picText(ctx, v.tag.toUpperCase(), vx + 9, vy, v.color);
+        picText(ctx, up(v.tag), vx + 9, vy, v.color);
         return;
       }
       if (v && v.icon) { picIcon(ctx, v.icon, vx, vy, 21, "#ffd54f"); vx += 21 + 8; }
@@ -4290,13 +4345,14 @@ a.link-copy { text-decoration: none; }
       const nameLeft = left + 34 + 12;
       // On top: the flag and the course's name (shrunk to fit), Broken, and their place there at the right (or that
       // it's a legacy run, or not run yet)
-      picFont(ctx, '600 15px "JetBrains Mono", monospace', 0.6);
-      const place = best ? `#${at + 1} of ${total}` : old ? "Legacy" : "Not run yet";
-      const placeW = picText(ctx, place, right, y1, best ? tint || "#a7b6b0" : "#76867f", "right");
+      const place = best ? t("res.of", { rank: at + 1, total }) : old ? t("pl.legacy") : "";
+      picFit(ctx, place, (right - nameLeft) * 0.42, (size) => `600 ${size}px "JetBrains Mono", monospace`, 15, 10, 0.04);
+      const placeW = place ? picText(ctx, place, right, y1, best ? tint || "#a7b6b0" : "#76867f", "right") : -14;
       picFont(ctx, `22px ${EMOJI}`);
       const flagW = c.flag ? picText(ctx, c.flag, nameLeft, y1, "#fff") + 9 : 0;
       picFont(ctx, '700 11px "JetBrains Mono", monospace', 1.1);
-      const brokenW = c.broken ? ctx.measureText("BROKEN").width + 12 : 0;
+      const broken = up(t("code.broken"));
+      const brokenW = c.broken ? ctx.measureText(broken).width + 12 : 0;
       const nameMax = right - placeW - 14 - nameLeft - flagW - (brokenW ? brokenW + 9 : 0);
       let size = 23;
       picFont(ctx, `700 ${size}px Barlow, sans-serif`, size * 0.03);
@@ -4309,18 +4365,21 @@ a.link-copy { text-decoration: none; }
         picFont(ctx, '700 11px "JetBrains Mono", monospace', 1.1);
         picBox(ctx, bx, y1 - 8.5, brokenW, 17, 5);
         ctx.fillStyle = "rgba(255,106,79,.12)"; ctx.fill(); ctx.strokeStyle = "rgba(255,106,79,.4)"; ctx.stroke();
-        picText(ctx, "BROKEN", bx + 6, y1, "#ff6a4f");
+        picText(ctx, broken, bx + 6, y1, "#ff6a4f");
       }
-      // Under it: their best time and its mistakes, then the course rating it earns and its date at the right
-      picIcon(ctx, "bolt", nameLeft, y2, 19, "#00e697");
-      picFont(ctx, '700 19px "JetBrains Mono", monospace');
-      let tx = nameLeft + 19 + 6;
-      const time = run ? run.time : "-:--.--";
-      if (run && /\.--$/.test(time)) {
-        tx += picText(ctx, time.slice(0, -3), tx, y2, "#ecf6f2");
-        tx += picText(ctx, ".--", tx, y2, "#76867f");
-      } else tx += picText(ctx, time, tx, y2, run ? "#ecf6f2" : "#76867f");
-      if (run) {
+      // Under it: their best time and its mistakes, then the course rating it earns and its date at the right (or
+      // that they haven't run it yet)
+      if (!run) {
+        picFit(ctx, t("pl.notRun"), right - nameLeft, (size) => `600 ${size}px "JetBrains Mono", monospace`, 15, 10, 0.04);
+        picText(ctx, t("pl.notRun"), nameLeft, y2, "#76867f");
+      } else {
+        picIcon(ctx, "bolt", nameLeft, y2, 19, "#00e697");
+        picFont(ctx, '700 19px "JetBrains Mono", monospace');
+        let tx = nameLeft + 19 + 6;
+        if (/\.--$/.test(run.time)) {
+          tx += picText(ctx, run.time.slice(0, -3), tx, y2, "#ecf6f2");
+          tx += picText(ctx, ".--", tx, y2, "#76867f");
+        } else tx += picText(ctx, run.time, tx, y2, "#ecf6f2");
         picIcon(ctx, "skull", tx + 16, y2, 17, "#ff6a4f");
         picFont(ctx, '700 17px "JetBrains Mono", monospace');
         picText(ctx, String(run.miss), tx + 16 + 17 + 5, y2, "#a7b6b0");
@@ -4329,37 +4388,24 @@ a.link-copy { text-decoration: none; }
       const date = best ? formatDate(best.date) : "";
       const dateW = date ? picText(ctx, date, right, y2, "#76867f", "right") + 14 : 0;
       if (best && record) {
-        const num = Math.round(coursePoints(record, best)).toLocaleString("en");
+        const num = points(coursePoints(record, best));
         const numW = picText(ctx, num, right - dateW, y2, "#a7b6b0", "right");
         picIcon(ctx, "star", right - dateW - numW - 5 - 15, y2, 15, "#ffd54f");
       }
       ctx.restore();
     });
     // The foot: the day it's from, their link in the middle (as the address shows it), and what the dates are
-    const fy = footY + 8.5;
-    picFont(ctx, '600 13px "JetBrains Mono", monospace', 1.56);
-    const asOf = picText(ctx, "AS OF ", PIC.pad, fy, "#76867f");
-    const leftW = asOf + picText(ctx, new Date().toISOString().slice(0, 10), PIC.pad + asOf, fy, "#a7b6b0");
-    let rightW = 0;
-    if (d.rows.some((x) => x.best && formatDate(x.best.date))) {
-      const bw = picText(ctx, "YYYY-MM-DD (UTC)", W - PIC.pad, fy, "#a7b6b0", "right");
-      rightW = bw + picText(ctx, "DATES: ", W - PIC.pad - bw, fy, "#76867f", "right");
-    }
-    const link = `ballkour.com/players/${linkOf(d.key)}`;
-    const room = W - 2 * PIC.pad - 2 * Math.max(leftW, rightW) - 40;
-    let size = 14;
-    picFont(ctx, `600 ${size}px "JetBrains Mono", monospace`, 0.28);
-    while (ctx.measureText(link).width > room && size > 9) { size -= 0.5; picFont(ctx, `600 ${size}px "JetBrains Mono", monospace`, 0.28); }
-    picText(ctx, link, W / 2, fy, "#a7b6b0", "center");
+    picFoot(ctx, W, footY + 8.5, picSplit("pic.asOf", "date", new Date().toISOString().slice(0, 10)),
+      d.rows.some((x) => x.best && formatDate(x.best.date)) ? picDates() : [], `ballkour.com/players/${linkOf(d.key)}`);
     return cv;
   }
   function openPlayerPicture(key) {
     if (!key) return;
     const d = picPlayer(key);
     const filename = `${slugOf(d.name) || slugOf(linkOf(key)) || "player"}-stats.png`;
-    const alt = `${d.name}: ` + (d.p ? `rating ${Math.round(d.p.rating).toLocaleString("en")}, #${d.p.rank} of ${d.total}, ${d.p.tier === null ? "rated" : `top ${d.p.tier}%`}` : "unrated") +
-      `, ${d.p ? d.p.courses : 0} of ${d.counted} courses, ${d.runs} runs. ` +
-      d.rows.filter((x) => x.best).map(({ c, at, best, total }) => `${c.n}. ${c.name}: ${best.time}, ${best.miss} mistakes, #${at + 1} of ${total}`).join("; ");
+    const alt = `${d.name}: ` + (d.p ? `${t("pl.rating")} ${points(d.p.rating)}, ${t("res.of", { rank: d.p.rank, total: d.total })}, ${tierLabel(d.p.tier)}` : t("find.unrated")) +
+      `, ${t("pl.courses")} ${d.p ? d.p.courses : 0}/${d.counted}, ${t("pl.runs")} ${localNum(d.runs)}. ` +
+      d.rows.filter((x) => x.best).map(({ c, at, best, total }) => `${c.n}. ${c.name}: ${best.time}, ${t("unit.mistakes", { count: best.miss })}, ${t("res.of", { rank: at + 1, total })}`).join("; ");
     pictureWindow(esc(t("pic.player", { player: d.name })), () => drawPlayerPicture(d), filename, alt);
   }
   document.addEventListener("click", (e) => {
