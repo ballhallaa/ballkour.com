@@ -483,5 +483,5 @@
   "vid.all": "Ver los {count} comentarios en YouTube",
   "vid.likes": "Me gusta: {count}",
   "vid.replies": "Respuestas: {count}",
-  "dc.how": "Para conseguir tu rol de Top % y las estadísticas en tu perfil, inicia sesión con Discord en Mi perfil, donde también puedes activar las estadísticas. El rol llega con tu primera carrera enviada o, si es un tiempo del top 10, cuando un moderador la apruebe."
+  "dc.how": "Inicia sesión con Discord en Mi perfil para conseguir tu rol de Top % y activar las estadísticas de tu perfil. El rol llega con tu primera carrera enviada o, si es un tiempo del top 10, cuando un moderador la apruebe."
 }
