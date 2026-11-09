@@ -788,7 +788,8 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-run-num { font: 600 12.5px/1 var(--mono); color: var(--ink-3); }
 .pl-courses { list-style: none; margin: 0; padding: 0; }
 .pl-course { border-top: 1px solid var(--line); }
-/* The course's name, and under it their place, best time and course rating there */
+/* The course's name, and under it their place there and their best run's time, mistakes, course rating, and date, the
+   date on a line of its own in small, dim type, like under the runs below */
 .pl-course-btn { width: 100%; display: grid; grid-template-columns: 20px 24px minmax(0, 1fr) 15px; grid-template-areas: "num flag name chev" "num flag best chev"; align-items: center; gap: 3px 8px; padding: 10px 18px; border: 0; background: none; text-align: left; cursor: pointer; }
 .pl-course-btn .num { grid-area: num; }
 .pl-course-btn .flag { grid-area: flag; }
@@ -798,6 +799,9 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-course-name { grid-area: name; min-width: 0; font: 600 15px/1.25 var(--body); color: var(--ink); }
 .pl-course-best { grid-area: best; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; font: 600 12.5px/1.25 var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); }
 .pl-place { font-weight: 500; color: var(--ink-2); }
+.pl-course-best .stat { gap: 4px; }
+.pl-course-best .stat .icon { width: 12px; height: 12px; }
+.pl-course-date { flex-basis: 100%; font: 400 11.5px/1.2 var(--mono); color: var(--ink-3); }
 .pl-course.none .pl-course-name, .pl-course.none .pl-course-best { font-weight: 500; color: var(--ink-3); }
 .pl-course-btn .chev { width: 15px; height: 15px; color: var(--ink-3); transition: transform .2s ease; }
 .pl-course-btn[aria-expanded="true"] .chev { transform: rotate(180deg); }
@@ -3340,8 +3344,11 @@ a.link-copy { text-decoration: none; }
     rows.forEach(({ c, at, best, total, record, runs, legacy }) => {
       const open = plOpen.has(c.n);
       const summary = best
-        ? `<span class="pl-course-best"><span class="pl-place">${esc(t("res.of", { rank: at + 1, total }))}</span>${esc(best.time)}` +
-          (record ? `<span class="run-pts">${icon("star")}${esc(points(coursePoints(record, best)))}</span>` : "") + `</span>`
+        ? `<span class="pl-course-best"><span class="pl-place">${esc(t("res.of", { rank: at + 1, total }))}</span>` +
+          `<span class="stat time">${icon("bolt")}<span class="v">${esc(best.time)}</span></span>` +
+          `<span class="stat miss" title="${esc(t("unit.mistakes", { count: best.miss }))}">${icon("skull")}${esc(best.miss)}<span class="sr-only"> ${esc(t("unit.mistakes", { count: best.miss }))}</span></span>` +
+          (record ? `<span class="run-pts">${icon("star")}${esc(points(coursePoints(record, best)))}</span>` : "") +
+          (best.date ? `<span class="pl-course-date" title="${esc(t("lb.submittedOn", { date: formatDate(best.date) }))}">${esc(formatDate(best.date))}</span>` : "") + `</span>`
         : `<span class="pl-course-best">${esc(legacy.length ? t("pl.legacyBest", { time: legacy.slice().sort(byTime)[0].time }) : t("pl.notRun"))}</span>`;
       html += `<li class="pl-course${best ? "" : " none"}">` +
         `<button class="pl-course-btn" type="button" data-pl-course="${c.n}" aria-expanded="${open}" aria-controls="pl-runs-${c.n}">` +
