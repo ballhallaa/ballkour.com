@@ -24,13 +24,15 @@
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
 <!-- Fonts are served from ballkour.com (assets/fonts, Open Font License): no Google request, so the page draws
      straight away everywhere, Google never sees visitors, and it works where Google is blocked. The wordmark font
-     is preloaded so the title doesn't flash in a fallback font first. -->
-<link rel="preload" href="/assets/fonts/barlow-condensed-latin-800-italic.woff2" as="font" type="font/woff2" crossorigin>
+     (Exo 2) is preloaded so the title doesn't flash in a fallback font first. -->
+<link rel="preload" href="/assets/fonts/exo-2-latin-900-italic.woff2" as="font" type="font/woff2" crossorigin>
 <style>
 @font-face { font-family: "Barlow Condensed"; font-style: italic; font-weight: 700; font-display: swap; src: url("/assets/fonts/barlow-condensed-latin-ext-700-italic.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
 @font-face { font-family: "Barlow Condensed"; font-style: italic; font-weight: 700; font-display: swap; src: url("/assets/fonts/barlow-condensed-latin-700-italic.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
 @font-face { font-family: "Barlow Condensed"; font-style: italic; font-weight: 800; font-display: swap; src: url("/assets/fonts/barlow-condensed-latin-ext-800-italic.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
 @font-face { font-family: "Barlow Condensed"; font-style: italic; font-weight: 800; font-display: swap; src: url("/assets/fonts/barlow-condensed-latin-800-italic.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+/* Exo 2 is only for the BALLKOUR wordmark, so just its Latin letters */
+@font-face { font-family: "Exo 2"; font-style: italic; font-weight: 900; font-display: swap; src: url("/assets/fonts/exo-2-latin-900-italic.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
 @font-face { font-family: "Barlow"; font-style: normal; font-weight: 400; font-display: swap; src: url("/assets/fonts/barlow-latin-ext-400-normal.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
 @font-face { font-family: "Barlow"; font-style: normal; font-weight: 400; font-display: swap; src: url("/assets/fonts/barlow-latin-400-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
 @font-face { font-family: "Barlow"; font-style: normal; font-weight: 500; font-display: swap; src: url("/assets/fonts/barlow-latin-ext-500-normal.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
@@ -255,15 +257,15 @@ main:focus { outline: none; }
   100% { transform: rotate(-360deg) scale(1); }
 }
 
+/* The wordmark: BALL in white on an orange shadow, KOUR in the site's green on a dark green one, like the Ballkour banner art */
 .wordmark {
   margin: 20px 0 0;
-  padding-right: .06em;
-  font: italic 800 clamp(44px, 15.5vw, 136px)/.8 var(--display);
-  letter-spacing: .005em;
+  padding-right: .08em;
+  font: italic 900 clamp(40px, 15vw, 124px)/.8 "Exo 2", var(--display);
   text-transform: uppercase;
-  color: var(--ink);
-  text-shadow: .035em 0 0 rgba(255, 154, 46, .8), -.035em 0 0 rgba(51, 198, 255, .75), 0 0 .45em rgba(0, 230, 151, .3);
 }
+.wm-ball { color: #fff; text-shadow: .035em .035em 0 var(--ember), 0 0 .45em rgba(0, 230, 151, .3); }
+.wm-kour { color: var(--volt); text-shadow: .035em .035em 0 #075c3e, 0 0 .45em rgba(0, 230, 151, .35); }
 .tagline { margin: 16px 0 0; font: 500 clamp(17px, 2.4vw, 21px)/1.35 var(--body); color: var(--ink-2); text-wrap: balance; }
 
 .stat { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
@@ -1419,7 +1421,7 @@ a.link-copy { text-decoration: none; }
     <button class="badge" id="badge" type="button" data-i18n-aria="badge.label" aria-label="Give the hamster a boost">
       <img src="/assets/logo.webp" width="560" height="560" data-i18n-alt="logo.alt" alt="Ballkour logo: a hamster in goggles riding a black and orange ball">
     </button>
-    <h1 class="wordmark">Ballkour</h1>
+    <h1 class="wordmark"><span class="wm-ball">Ball</span><span class="wm-kour">kour</span></h1>
     <p class="tagline" data-i18n="hero.tagline">Wrecking Ball parkour courses for Overwatch</p>
 
     <nav class="actions" data-i18n-aria="hero.nav" aria-label="Get started">
