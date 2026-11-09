@@ -106,7 +106,7 @@
   "f.beta.tryList": "Experimente com um código Beta da lista de percursos.",
   "faq.title": "FAQ",
   "faq.intro": "As mesmas respostas do FAQ do jogo nos códigos {beta}, que abre na partida com <b><kbd>Suprema</kbd> + <kbd>Corpo a corpo</kbd></b>.",
-  "faq.issues.title": "Falta alguma pergunta?",
+  "faq.issues.title": "Falta alguma coisa?",
   "faq.issues.sub": "Sugira no GitHub",
   "faq.valid.q": "O que conta como partida válida?",
   "faq.valid.a": "Sua partida só é <fgFF4646FF>desclassificada</fg> se você pular um CP que ainda não completou nesta partida. Voltar ou reiniciar CPs, avançar para CPs já completados e <fg00BEFFFF>assistir</fg> são permitidos. Sair de um CP não completado no <fgCB87FFFF>Modo livre</fg> conta como pulá-lo. Partidas <fgFF4646FF>desclassificadas</fg> não contam para a classificação do top 10, para o <b>Top 3 do lobby</b> nem para o <b>Lobby Stats</b>.",

@@ -106,7 +106,7 @@
   "f.beta.tryList": "코스 목록의 베타 코드로 사용해 보세요.",
   "faq.title": "FAQ",
   "faq.intro": "{beta} 코드의 게임 내 FAQ와 같은 내용입니다. 매치 중 <b><kbd>궁극기</kbd> + <kbd>근접 공격</kbd></b>으로 열 수 있습니다.",
-  "faq.issues.title": "빠진 질문이 있나요?",
+  "faq.issues.title": "빠진 게 있나요?",
   "faq.issues.sub": "GitHub에 제안하기",
   "faq.valid.q": "유효한 플레이란?",
   "faq.valid.a": "이번 플레이에서 아직 클리어하지 않은 CP를 건너뛰었을 때만 <fgFF4646FF>실격</fg>됩니다. CP로 돌아가거나 다시 시작하기, 클리어한 CP로 건너뛰기, <fg00BEFFFF>관전</fg>은 괜찮습니다. <fgCB87FFFF>자유 모드</fg>로 클리어하지 않은 CP를 벗어나면 건너뛴 것으로 처리됩니다. <fgFF4646FF>실격</fg>된 플레이는 TOP 10 순위표, <b>로비 TOP 3</b>, <b>Lobby Stats</b>에 반영되지 않습니다.",
