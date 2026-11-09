@@ -1,0 +1,17 @@
+# Headers for the files Cloudflare serves without running the Worker: assets/ and locales/ (run_worker_first in
+# cloudflare/wrangler.toml). Everything else gets its headers from the Worker (SECURITY_HEADERS and file() in
+# cloudflare/worker.js): keep the two in step.
+
+# The fonts, logo, icons, and link preview picture, for a week
+/assets/*
+  Cache-Control: public, max-age=604800
+  Strict-Transport-Security: max-age=31536000
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# The translations, checked for a newer copy on every visit
+/locales/*
+  Cache-Control: no-cache
+  Strict-Transport-Security: max-age=31536000
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin

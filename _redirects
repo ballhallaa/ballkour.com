@@ -1,0 +1,6 @@
+# Redirects for the files Cloudflare serves without running the Worker (see /_headers). The Worker's own redirects are
+# shortLink() in cloudflare/worker.js, and Cloudflare's rules have the rest (see the README).
+
+# The link preview picture used to be og.png (it's og.jpg now, and og.png isn't published), and older links on Discord
+# can still ask for it
+/assets/og.png /assets/og.jpg 301

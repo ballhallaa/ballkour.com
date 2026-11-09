@@ -8,3 +8,5 @@ LICENSE
 # Wrangler's and Claude Code's own folders, in case a deploy runs from a working folder that has them
 .wrangler
 .claude
+# The link preview picture's full-size original (og.jpg is what's published; /_redirects sends og.png there)
+assets/og.png
