@@ -428,5 +428,19 @@
   "visits.home": "Sayfanın başı",
   "visits.players": "Oyuncular",
   "visits.other": "Diğer",
-  "visits.note": "Biri siteyi bir tarayıcıda her açtığında site kendisi sayar; bu yüzden reklam engelleyiciler kimseyi gizlemez ve botlar sayılmaz. Her kişi günde bir kez sayılır ve site kim olduğunu saklamaz."
+  "visits.note": "Biri siteyi bir tarayıcıda her açtığında site kendisi sayar; bu yüzden reklam engelleyiciler kimseyi gizlemez ve botlar sayılmaz. Her kişi günde bir kez sayılır ve site kim olduğunu saklamaz.",
+  "foot.openDiscord": "Discord’da aç",
+  "link.title": "Bağlantın",
+  "link.pick": "Ad seç",
+  "link.change": "Değiştir",
+  "link.rules": "Bunun için bir ad seç: en az biri harf olmak üzere en fazla 32 harf ya da rakam. Boşluk yerine - ya da _ kullan.",
+  "link.save": "Kaydet",
+  "link.useNumber": "Numaramı kullan",
+  "link.bad": "Bu ad olmaz. En fazla 32 harf ya da rakam içerebilir, en az bir harf olmalı ve boşluk içeremez.",
+  "link.taken": "Bu ad alınmış. Başka bir tane dene.",
+  "link.rate": "Bir seferde çok fazla değişiklik oldu. Bir dakika bekle, sonra tekrar dene.",
+  "link.saved": "Bağlantın artık {link}",
+  "link.their": "Bu oyuncunun bağlantısı: {link}",
+  "link.remove": "Adı kaldır",
+  "link.removed": "Bu oyuncunun bağlantısı yeniden {link} oldu."
 }

@@ -428,5 +428,19 @@
   "visits.home": "Inicio de la página",
   "visits.players": "Jugadores",
   "visits.other": "Otros",
-  "visits.note": "Las cuenta la propia web cada vez que alguien la abre en un navegador, así que los bloqueadores de anuncios no ocultan a nadie y los bots no cuentan. Cada persona cuenta una vez al día, sin que la web guarde quién es."
+  "visits.note": "Las cuenta la propia web cada vez que alguien la abre en un navegador, así que los bloqueadores de anuncios no ocultan a nadie y los bots no cuentan. Cada persona cuenta una vez al día, sin que la web guarde quién es.",
+  "foot.openDiscord": "Abrir en Discord",
+  "link.title": "Tu enlace",
+  "link.pick": "Elegir un nombre",
+  "link.change": "Cambiar",
+  "link.rules": "Elige un nombre: hasta 32 letras o números, con al menos una letra. Usa - o _ en lugar de espacios.",
+  "link.save": "Guardar",
+  "link.useNumber": "Usar mi número",
+  "link.bad": "Ese nombre no sirve. Puede tener hasta 32 letras o números, necesita al menos una letra y no puede tener espacios.",
+  "link.taken": "Ese nombre ya está en uso. Prueba con otro.",
+  "link.rate": "Son muchos cambios a la vez. Espera un minuto y vuelve a intentarlo.",
+  "link.saved": "Tu enlace ahora es {link}",
+  "link.their": "Su enlace: {link}",
+  "link.remove": "Quitar el nombre",
+  "link.removed": "Su enlace vuelve a ser {link}."
 }
