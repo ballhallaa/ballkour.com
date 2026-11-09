@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<script>if (/^\/[a-z-]+(\/[\w-]+){0,2}\/$/i.test(location.pathname)) history.replaceState(null, "", location.pathname.slice(0, -1) + location.search + location.hash);</script>
+<script>if (/^\/[a-z-]+(\/[\w%.~-]+){0,2}\/$/i.test(location.pathname)) history.replaceState(null, "", location.pathname.slice(0, -1) + location.search + location.hash);</script>
 <title>Ballkour · Wrecking Ball parkour courses for Overwatch</title>
 <meta name="description" content="Wrecking Ball parkour courses for Overwatch. Grab a course code, run through every checkpoint, and get your time on the leaderboard!">
 <link rel="canonical" href="https://ballkour.com/">
@@ -725,6 +725,12 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 @keyframes pl-in { from { transform: translateX(40px); opacity: 0; } }
 .pl::backdrop { background: rgba(2, 5, 4, .62); }
 .pl-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: flex-start; gap: 12px; padding: 18px 18px 14px; border-bottom: 1px solid var(--line); background: #08100d; }
+.pl-tools { flex: none; display: flex; gap: 8px; }
+.pl-copy .icon { width: 17px; height: 17px; }
+.pl-copy .i-check { display: none; }
+.pl-copy.copied { border-color: var(--volt); color: var(--volt-hi); }
+.pl-copy.copied .i-copy { display: none; }
+.pl-copy.copied .i-check { display: block; color: var(--volt); }
 .pl-who { flex: 1; min-width: 0; }
 .pl-name { margin: 0; font: italic 800 30px/1.05 var(--display); letter-spacing: .02em; text-transform: uppercase; overflow-wrap: anywhere; }
 .pl-name.is-name { text-transform: none; } /* a player's name, already in capitals (caps()) */
@@ -1827,6 +1833,7 @@ a.link-copy { text-decoration: none; }
   "pl.legacyBest": "Legacy: {time}",
   "pl.board": "See the board",
   "pl.seeRatings": "See where {player} places in the Player ratings",
+  "pl.copyLink": "Copy a link to {player}’s stats",
   "pl.back": "Back",
   "pl.sort.date": "Date",
   "pl.sortedRating": "Sorted by course rating, highest first",
@@ -3198,7 +3205,8 @@ a.link-copy { text-decoration: none; }
     const runTotal = rows.reduce((sum, x) => sum + x.runs.length + x.legacy.length, 0);
     let html = `<div class="pl-head"><div class="pl-who"><h2 class="pl-name is-name" id="pl-name">${esc(caps(named.name || (dc ? dc.name : "")))}</h2>` +
       (mine ? `<div class="pl-me">${dcLine}<button class="pl-signout" type="button" data-sign-out>${esc(t("sub.signout"))}</button></div>` : dcLine) +
-      `</div><button class="pl-close" type="button" data-pl-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button></div>`;
+      `</div><div class="pl-tools">${copyLinkHtml(key, named.name || (dc ? dc.name : ""))}` +
+      `<button class="pl-close" type="button" data-pl-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button></div></div>`;
     if (plView === "runs" && runTotal) return html + allRunsHtml(rows);
     // Rating, Place and Top % open the Player ratings with their row marked (see openBoard), and Runs lists every run
     // of theirs here. Before they're rated, or before their first run, there's nothing to open.
@@ -3240,6 +3248,13 @@ a.link-copy { text-decoration: none; }
         `</div></li>`;
     });
     return html + `</ul>`;
+  }
+  // Copy link, which copies their link (see playerPath) the way the site's other copy buttons do
+  function copyLinkHtml(key, name) {
+    const link = "https://ballkour.com" + playerPath(key);
+    const label = esc(t("pl.copyLink", { player: caps(name) }));
+    return `<button class="pl-close pl-copy" type="button" data-copy="${esc(link)}" aria-label="${label}" title="${label}">` +
+      `<span class="copy-val sr-only">${esc(link)}</span>${icon("link", "icon i-copy")}${icon("check", "icon i-check")}</button>`;
   }
   // Runs, in their panel: every run the tile counts on one list, each under its course, sorted by plSort. By date,
   // it's newest first: runs without a date come after the ones with one, and the legacy runs (from before May 2026,
@@ -3417,10 +3432,42 @@ a.link-copy { text-decoration: none; }
     const back = spot && pl.querySelector(spot);
     if (back) back.focus({ preventScroll: true });
   }
+  /* A player's own link, ballkour.com/players/<Discord ID> (or /players/<in-game name> for a name with no Discord ID,
+     like a legacy one), opens their panel, so their stats can be shared. The address shows it while their panel is
+     open, and Copy link in the panel copies it. Their own panel opened from My stats keeps /stats instead. */
+  const playerPath = (key) => `/players/${encodeURIComponent(key.slice(2))}`;
+  const playerOfPath = (seg) => { const v = decodeURIComponent(seg); return /^\d{17,20}$/.test(v) ? "d:" + v : "n:" + v.toUpperCase(); };
+  let playerBack = null; // while a player's panel is open, the address from before, to go back to
+  function showPlayerLink(key) {
+    if (playerBack === null) playerBack = location.pathname + location.search + location.hash;
+    const l = new URLSearchParams(location.search).get("lang");
+    try { history.replaceState(history.state, "", playerPath(key) + (l ? `?lang=${encodeURIComponent(l)}` : "")); } catch (e) { /* address stays as it is */ }
+  }
+  // A player's link someone opened: their panel. A name that nobody without a Discord ID goes by (/players/COLDSKIN,
+  // typed by hand, say) opens the one player who goes by it, or Find a player with it typed in when several do.
+  function openPlayerLink(key) {
+    const { all } = everyone();
+    if (key.startsWith("d:") || all.some((x) => x.key === key)) { openPlayer(key, 0); return; }
+    const name = key.slice(2);
+    const them = all.filter((x) => sameName(x.name, name));
+    if (them.length === 1) { openPlayer(them[0].key, 0); return; }
+    putAddressBack("/" + location.search); // the link names nobody's panel, so it doesn't stay in the address
+    openFinder();
+    pfInput().value = name;
+    renderFinder();
+  }
+  // Leaving it (closing the panel, or something else opening in its place) puts the address back. A player's link
+  // someone opened goes back to the top of the page.
+  function leavePlayer() {
+    if (playerBack === null) return;
+    const back = playerBack.replace(/^\/players\/[^/?#]+\/?/i, "/");
+    playerBack = null;
+    putAddressBack(back);
+  }
   function openPlayer(key, n) {
     leaveRun();
     // Their own panel keeps /stats in the address (back from Show on my Discord profile's Not now, say)
-    if (!me || key !== "d:" + me.id) leaveStats();
+    if (!me || key !== "d:" + me.id) { leaveStats(); showPlayerLink(key); } else leavePlayer();
     plKey = key;
     plView = "courses";
     plOpen.clear();
@@ -3447,7 +3494,7 @@ a.link-copy { text-decoration: none; }
     if (e.target.closest("[data-pl-close]")) { pl.close(); return; }
     // Submit a run (in their own empty panel): the page goes there, so the panel gets out of the way. The address goes
     // back before the section's link goes in (the panel's close event comes later).
-    if (e.target.closest("a[data-route]")) { leaveStats(); pl.close(); return; }
+    if (e.target.closest("a[data-route]")) { leaveStats(); leavePlayer(); pl.close(); return; }
     // Runs: every run of theirs in the panel's place, from its top, and Back to their stats, on Runs again
     const view = e.target.closest("[data-pl-runs], [data-pl-back]");
     if (view) {
@@ -3477,6 +3524,7 @@ a.link-copy { text-decoration: none; }
     if (e.target === pl && (e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom)) pl.close();
   });
   pl.addEventListener("close", () => { plKey = ""; });
+  pl.addEventListener("close", leavePlayer);
 
   /* ---------- Finding a player ----------
      Find a player (the box at the top, the magnifier in the section bar, the box by Courses, or the / key anywhere)
@@ -3626,6 +3674,7 @@ a.link-copy { text-decoration: none; }
     // The address goes back before the board's link goes in (the panel's close event comes later)
     leaveRun();
     leaveStats();
+    leavePlayer();
     if (pl.open) pl.close();
     const before = openCourse;
     openCourse = c.n;
@@ -4642,6 +4691,7 @@ a.link-copy { text-decoration: none; }
   function openSignIn(kind) {
     leaveRun();
     leaveStats();
+    leavePlayer();
     plKey = "";
     const mine = kind === "mine";
     const claiming = kind === "claim";
@@ -5458,6 +5508,8 @@ a.link-copy { text-decoration: none; }
   const RUN_GROUPS = ["pending", "runs", "declined", "removed"];
   // The page of a run whose link someone opened (/runs/<id>, or an old /submit?check=<id>)
   const startRun = (/^\/runs\/([\w-]{1,16})\/?$/i.exec(location.pathname) || [])[1] || (/^[\w-]{1,16}$/.test(checkParam) ? checkParam : "");
+  // The player whose link someone opened (/players/<id or name>, see playerPath)
+  const startPlayer = (() => { try { const m = /^\/players\/([^/]+)\/?$/i.exec(location.pathname); return m ? playerOfPath(m[1]) : ""; } catch (e) { return ""; } })();
   let runId = ""; // the run whose page is open
   let runBack = null; // the address from before it opened, to go back to
   let runTab = "then"; // "then" (When sent) or "now" (Today)
@@ -5775,6 +5827,7 @@ a.link-copy { text-decoration: none; }
   async function openRun(id) {
     if (!/^[\w-]{1,16}$/.test(id)) return;
     leaveStats(); // a run opened from their own panel goes back to where the page was before My stats
+    leavePlayer(); // and one from someone's panel, to where it was before that
     if (runBack === null) runBack = location.pathname + location.search + location.hash;
     plKey = "";
     runId = id;
@@ -5860,6 +5913,7 @@ a.link-copy { text-decoration: none; }
     renderSentRuns();
     if (reviewRuns.length) renderReview(); // with what each would do, now that the boards are in
     if (startRun) openRun(startRun);
+    else if (startPlayer) openPlayerLink(startPlayer);
   });
 
   /* ---------- Clean section links: ballkour.com/features, /leaderboards, … ----------
@@ -5961,7 +6015,7 @@ a.link-copy { text-decoration: none; }
   // current entry rather than adding one, so Back still leaves the page instead of stepping through sections.
   // A link someone opened (ballkour.com/faq) keeps its address until they scroll or click themselves.
   // ballkour.com/stats stays too, until My stats opens (once the page knows whether they're signed in)
-  let addressHeld = !!startRoute || !!startRun || (startStats && loginOn);
+  let addressHeld = !!startRoute || !!startRun || !!startPlayer || (startStats && loginOn);
   ["wheel", "touchstart", "keydown", "mousedown"].forEach((ev) => addEventListener(ev, () => { addressHeld = false; }, { passive: true }));
   // Opening a board or an answer puts its link in the address straight away, wherever the page is scrolled to, and
   // keeps it there until the visitor scrolls on their own. Closing it lets the address follow the page again.
@@ -5987,7 +6041,7 @@ a.link-copy { text-decoration: none; }
     return "";
   }
   function followAddress(i) {
-    if (addressHeld || runId || statsBack !== null) return; // a run's page and My stats keep their own links
+    if (addressHeld || runId || statsBack !== null || playerBack !== null) return; // a run's page, My stats, and a player's panel keep their own links
     const route = i >= 0 && (scrollY >= 2 || clicked >= 0) ? sectionLinks[i].dataset.route : null;
     let [pathname, hash = ""] = (route ? pathFor(route) : "/").split("#");
     const sub = route ? subPath(route) : "";

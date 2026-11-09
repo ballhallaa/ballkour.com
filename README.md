@@ -17,7 +17,7 @@ _headers, _redirects     headers and redirects for the files Cloudflare serves w
 .github/workflows/       checks every pull request, and deploys the site on every push to main
 ```
 
-Keep everything out of `/discord`, `/gameplay`, `/code`, `/releases`, `/courses`, `/leaderboards`, `/submit`, `/features`, `/faq`, `/source-code`, `/translations`, `/runs`, `/stats`, `/api`, and `/data`. Cloudflare redirects `/discord`, `/gameplay`, and `/releases/v*` and `/releases/site/v*` (to that release of the game or website on GitHub, which is where the version chips link), and the Worker redirects `/code/game` and `/code/site` (or `/code/website`) to the game's and this website's GitHub repos, and `/releases` and `/releases/site` (or `/releases/website`) to their release notes. Cloudflare rewrites the others (with or without a trailing slash) to the home page, which scrolls to that section; `/leaderboards` also opens Gibraltar's top 10.
+Keep everything out of `/discord`, `/gameplay`, `/code`, `/releases`, `/courses`, `/leaderboards`, `/submit`, `/features`, `/faq`, `/source-code`, `/translations`, `/runs`, `/stats`, `/players`, `/api`, and `/data`. Cloudflare redirects `/discord`, `/gameplay`, and `/releases/v*` and `/releases/site/v*` (to that release of the game or website on GitHub, which is where the version chips link), and the Worker redirects `/code/game` and `/code/site` (or `/code/website`) to the game's and this website's GitHub repos, and `/releases` and `/releases/site` (or `/releases/website`) to their release notes. Cloudflare rewrites the others (with or without a trailing slash) to the home page, which scrolls to that section; `/leaderboards` also opens Gibraltar's top 10.
 
 Links can go deeper, and the address shows them while a board or answer is open:
 
@@ -26,6 +26,7 @@ Links can go deeper, and the address shows them while a board or answer is open:
 - **An FAQ answer:** `ballkour.com/faq/pausing`. The link names are in `FAQ_LINKS`, and older links that used the translation keys (`/faq/pause`) still work.
 - **A run sent from the website:** `ballkour.com/runs/<id>`. Ballkyrie's post for it in the run submissions channel links here (see [Runs sent from the website](#runs-sent-from-the-website)), and `ballkour.com/runs` goes to the list of every one. The Worker serves the page at these addresses.
 - **Your own stats:** `ballkour.com/stats` opens **My stats** for whoever opens it (signing them in with Discord first). The Worker serves the page here too.
+- **A player's stats:** `ballkour.com/players/<Discord ID>` opens that player's panel, and `/players/<in-game name>` does for a name with no Discord ID (like a legacy one). The address shows it while their panel is open, and **Copy link** beside Close copies it, so anyone can share their stats (their own panel from My stats keeps `/stats`). The Worker serves the page here too.
 
 The older `#6-dorado` and `#pause` forms still work too.
 - **A language:** `ballkour.com/?lang=ja` opens the page in Japanese; it works with any of the links above. Picking a language puts it in the address.

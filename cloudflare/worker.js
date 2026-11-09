@@ -1566,9 +1566,10 @@ function notFound(res, block) {
 /* ---------- Pages ---------- */
 // The sections (/submit, /faq, …) and the links into them (/leaderboards/6, /leaderboards/3/legacy, /leaderboards/3/12
 // for one of its older boards, /faq/pausing), and every run sent from the website (/runs, the list under the form)
-// and each one's page (/runs/<id>), and /stats (My stats), are the home page. On ballkour.com a Cloudflare rule
+// and each one's page (/runs/<id>), /stats (My stats), and each player's panel (/players/<Discord ID or name>), are
+// the home page. On ballkour.com a Cloudflare rule
 // already serves the sections that way, but the test copy on workers.dev has no such rule, so the Worker does it too.
-const DEEP_LINK = /^\/(?:(?:courses|leaderboards|submit|features|faq|source-code|translations|runs|stats)\/?|leaderboards\/[\w-]+(?:\/legacy|\/\d+)?\/?|faq\/[\w-]+\/?|runs\/[\w-]+\/?)$/i;
+const DEEP_LINK = /^\/(?:(?:courses|leaderboards|submit|features|faq|source-code|translations|runs|stats)\/?|leaderboards\/[\w-]+(?:\/legacy|\/\d+)?\/?|faq\/[\w-]+\/?|runs\/[\w-]+\/?|players\/[^/]{1,300}\/?)$/i;
 async function page(request, env, ctx) {
   // Ask for the full page every time (no 304 Not Modified), so a browser never reuses old data from its cache
   const headers = new Headers(request.headers);
