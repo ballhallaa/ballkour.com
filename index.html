@@ -999,8 +999,14 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .rev-title .icon { width: 15px; height: 15px; color: var(--gold); }
 .rev-count { padding: 2px 7px; border-radius: 999px; background: rgba(255, 213, 79, .16); color: var(--gold); }
 .rev-note, .rev-empty { margin: 10px 0 0; font: 400 14px/1.45 var(--body); color: var(--ink-2); }
-/* Legacy runs to check, under the runs */
+/* Legacy runs to check, under the runs. Who claimed them: their Discord, like under a name on the boards, which opens
+   their Discord profile */
 .rev-title-next { margin-top: 16px; }
+.rev-dc { justify-self: start; max-width: 100%; display: inline-flex; align-items: center; gap: 6px; font: 600 13px/1.2 var(--body); color: #b9befc; text-decoration: none; }
+.rev-dc > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rev-dc .icon { flex: none; width: 12px; height: 12px; opacity: .7; }
+.rev-dc:hover > span { text-decoration: underline; text-underline-offset: 3px; }
+.rev-dc:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; border-radius: 4px; }
 .rev-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
 .rev-run { display: grid; gap: 5px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: rgba(0, 0, 0, .25); }
 .rev-run.picked { border-color: rgba(255, 213, 79, .6); box-shadow: 0 0 0 1px rgba(255, 213, 79, .25); }
@@ -1875,7 +1881,8 @@ a.link-copy { text-decoration: none; }
   "claim.maybe": "Were you {name} before May 2026? Those runs aren’t linked to anyone yet.",
   "claim.see": "See the runs",
   "claim.revTitle": "Legacy runs to check",
-  "claim.revBy": "Claimed on {date} by {name}",
+  "claim.revOn": "Claimed on {date}",
+  "claim.revProfile": "Open {name}’s profile on Discord",
   "claim.revNow": "On the boards now as {names}",
   "claim.revLinked": "Already linked",
   "claim.view": "View runs",
@@ -4808,12 +4815,20 @@ a.link-copy { text-decoration: none; }
       // Their best legacy run on each course, by the course's number and flag
       const runs = COURSES.map((c) => ({ c, r: (HISTORY[c.n] ? HISTORY[c.n].legacy : []).filter((r) => !r.discord && sameName(r.name, x.name)).sort(byTime)[0] })).filter((y) => y.r);
       const now = [...new Set(COURSES.flatMap((c) => [...c.runs, ...(MORE[c.n] || [])]).filter((r) => r.discord === x.discord).map((r) => r.name))];
+      // Who it's from: their Discord name and picture (Discord's default picture until the names are looked up),
+      // the way they'll show by the name once it's linked. It opens their Discord profile, to message them for proof.
+      const who = PLAYERS.get(x.discord);
+      const pic = who && /^https:\/\/cdn\.discordapp\.com\//.test(who.avatar) ? who.avatar
+        : /^\d{17,20}$/.test(x.discord) ? `https://cdn.discordapp.com/embed/avatars/${Number((BigInt(x.discord) >> 22n) % 6n)}.png` : "";
+      const name = discordName(x.discord);
       return `<li class="rev-run">` +
         `<span class="rev-course">${esc(t("pl.legacy"))}</span><b class="rev-name">${esc(x.name)}</b>` +
+        `<a class="rev-dc" href="https://discord.com/users/${esc(x.discord)}" target="_blank" rel="noopener" title="${esc(t("claim.revProfile", { name }))}">` +
+          (pic ? `<img class="run-pfp" src="${esc(pic)}" alt="" width="16" height="16">` : "") + `<span>${esc(name)}</span>${icon("out")}</a>` +
         `<span class="rev-line">${runs.map(({ c, r }) => `<span class="stat time nowrap" title="${esc(`${c.n} ${c.name}`)}">${esc(`${c.n} `)}` +
           `<span class="mini-flag" aria-hidden="true">${c.flag}</span> ${icon("bolt")}${esc(r.time)}</span>`).join("")}` +
           (runs.length ? "" : `<span class="tag tag-legacy">${esc(t("claim.revLinked"))}</span>`) + `</span>` +
-        `<span class="rev-meta">${withDate("claim.revBy", { date: formatDate(String(x.sentAt || "").slice(0, 10)), name: discordName(x.discord) })}</span>` +
+        `<span class="rev-meta">${withDate("claim.revOn", { date: formatDate(String(x.sentAt || "").slice(0, 10)) })}</span>` +
         (now.length ? `<span class="rev-meta">${esc(t("claim.revNow", { names: now.join(", ") }))}</span>` : "") +
         `<span class="rev-actions">${claimActions(x, i)}</span></li>`;
     };
