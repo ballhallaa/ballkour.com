@@ -895,6 +895,59 @@ async function postIn(env, channel, message, what) {
   }).catch((e) => ({ ok: false, status: String((e && e.message) || e), text: async () => "" }));
   if (!res.ok) console.error(`${what}: Ballkyrie couldn't post in channel ${channel}, Discord said ${res.status} ${(await res.text()).slice(0, 200)}`);
 }
+/* Ballkyrie tells a player in a direct message when a moderator checks their top 10 run (approved, or turned down) or
+   their claim to legacy runs (linked, or turned down), with a button to the run's page or their stats. Someone who
+   doesn't take DMs from server members, or isn't on the server, just doesn't get one (and `npx wrangler tail` says so).
+   Only with NOTIFY_PLAYERS = "on" in wrangler.toml, so the test copy never messages anyone. */
+async function tellPlayer(env, id, message, what) {
+  if (env.NOTIFY_PLAYERS !== "on" || !env.DISCORD_BOT_TOKEN || !/^\d{17,20}$/.test(id || "")) return;
+  const dm = await fetch(`${DISCORD_API}/users/@me/channels`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
+    body: JSON.stringify({ recipient_id: id }),
+    signal: AbortSignal.timeout(5000),
+  }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  if (!dm || !dm.id) { console.error(`${what}: Ballkyrie couldn't open a DM with ${id}`); return; }
+  await postIn(env, dm.id, message, what);
+}
+// What it says about a run a moderator checked
+function checkedRunMessage({ run, n, courseName, courseFlag, approve, site }) {
+  const where = `${courseFlag ? `${courseFlag} ` : ""}${courseName || `Course ${n}`}`;
+  const page = `${site}/runs/${run.id}`;
+  return {
+    allowed_mentions: { parse: [] },
+    embeds: [{
+      title: approve ? `Your ${run.time} on ${where} is on the board!` : `Your ${run.time} on ${where} was turned down`,
+      url: page,
+      color: approve ? 0x00e697 : 0xff6a4f,
+      description: approve
+        ? "A moderator checked your video and approved your run. The new top 10 goes up on our Discord in a few minutes."
+        : "A moderator checked your video and turned your run down, so it won’t go on the board. You can send it again with another video, and if you think it’s a mistake, open a ticket on our Discord.",
+      fields: [
+        { name: "Player", value: mdSafe(run.name), inline: true },
+        { name: "Time", value: run.time, inline: true },
+        { name: "Mistakes", value: String(run.mistakes), inline: true },
+      ],
+    }],
+    components: [{ type: 1, components: [{ type: 2, style: 5, label: "View run", url: page }] }],
+  };
+}
+// And about a claim to legacy runs
+function checkedClaimMessage({ claim, approve, site }) {
+  const runs = `${site}/players/${encodeURIComponent(upper(claim.name))}`;
+  return {
+    allowed_mentions: { parse: [] },
+    embeds: [{
+      title: approve ? `Your legacy runs as ${claim.name} are linked to you` : `Your claim to the legacy runs as ${claim.name} was turned down`,
+      url: approve ? `${site}/stats` : runs,
+      color: approve ? 0x00e697 : 0xff6a4f,
+      description: approve
+        ? "A moderator checked that they’re yours. They’re in My stats now, with your Discord name and picture by them on the boards."
+        : "A moderator couldn’t confirm that they’re yours. If they are, open a ticket on our Discord with proof, like an old screenshot or clip.",
+    }],
+    components: [{ type: 1, components: [{ type: 2, style: 5, label: approve ? "My stats" : "See the runs", url: approve ? `${site}/stats` : runs }] }],
+  };
+}
 // After a run is saved: its numbers first, kept for its page so they're there by the time anyone opens it from the
 // post, and in the post too. Without them, the post still goes, with just its place on the course.
 async function afterSend(env, ctx, info) {
@@ -1028,6 +1081,8 @@ async function review(request, env, ctx) {
   if (done.error) return answer(done.status, { error: done.error });
   await showSaved(done.text, null).catch(() => {});
   if (approve && run.discord) ctx.waitUntil(profileAfterRun(env, ctx, run.discord));
+  const { names, flags } = await gameInfo(env, ctx);
+  ctx.waitUntil(tellPlayer(env, run.discord, checkedRunMessage({ run, n, courseName: names[n], courseFlag: flags[n], approve, site: new URL(request.url).origin }), `run ${run.id}`));
   return answer(200, { ok: true, run });
 }
 
@@ -1180,6 +1235,7 @@ async function reviewClaim(request, env, ctx) {
   });
   await showSaved(done.text, null, linked && linked.text).catch((e) => console.error(`claim to ${name}: couldn't update the cached copy: ${(e && e.message) || e}`));
   if (done.error) return answer(done.status, { error: done.error });
+  ctx.waitUntil(tellPlayer(env, id, checkedClaimMessage({ claim: checked, approve, site: new URL(request.url).origin }), `claim to ${name}`));
   return answer(200, { ok: true, claim: checked });
 }
 
