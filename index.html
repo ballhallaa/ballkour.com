@@ -2095,7 +2095,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "link.change": "Change",
   "link.rules": "Pick a name for it: up to 32 letters or numbers, with at least one letter. Use - or _ instead of spaces.",
   "link.save": "Save",
-  "link.useNumber": "Use my number",
+  "link.useNumber": "Use my number ID",
   "link.bad": "That name won’t work. It can have up to 32 letters or numbers, needs at least one letter, and can’t have spaces.",
   "link.taken": "That name is taken. Try another one.",
   "link.rate": "That’s a lot of changes at once. Wait a minute and try again.",
@@ -5522,8 +5522,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   });
 
   /* Your link, in their own panel (see "Players' own links"): ballkour.com/players/<number or name>, with Pick a name
-     (Change, once they have one). That turns the box into the form: Save, Use my number (once they have a name), and
-     Cancel. Moderators get Remove the name in anyone else's panel whose link has one. */
+     (Change, once they have one). That turns the box into the form: Save, Use my number ID (once they have a name, with
+     the number it goes back to in parentheses), and Cancel. Moderators get Remove the name in anyone else's panel whose
+     link has one. */
   const shownLink = (key) => "ballkour.com/players/" + linkOf(key);
   function linkHtml() {
     if (!loginOn) return "";
@@ -5541,7 +5542,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         `${linkNote ? ` aria-invalid="true" aria-describedby="pl-link-note"` : ""}></div>` +
       (linkNote ? `<p class="pl-claim-note" id="pl-link-note" role="alert">${esc(t(linkNote))}</p>` : "") +
       `<div class="pl-url-go"><button class="btn btn-sm btn-primary" type="submit">${icon("check")}<span>${esc(t("link.save"))}</span></button>` +
-        (named ? `<button class="btn btn-sm" type="button" data-link-clear>${esc(t("link.useNumber"))}</button>` : "") +
+        (named ? `<button class="btn btn-sm" type="button" data-link-clear>${esc(t("link.useNumber"))} (${x.n})</button>` : "") +
         `<button class="pl-signout" type="button" data-link-cancel>${esc(t("rev.cancel"))}</button></div></form>`;
   }
   function modLinkHtml(key) {

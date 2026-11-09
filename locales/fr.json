@@ -437,7 +437,7 @@
   "link.change": "Modifier",
   "link.rules": "Choisissez-lui un nom : jusqu’à 32 lettres ou chiffres, dont au moins une lettre. Utilisez - ou _ à la place des espaces.",
   "link.save": "Enregistrer",
-  "link.useNumber": "Utiliser mon numéro",
+  "link.useNumber": "Utiliser mon numéro d’identifiant",
   "link.bad": "Ce nom ne convient pas. Il peut avoir jusqu’à 32 lettres ou chiffres, doit contenir au moins une lettre et ne peut pas contenir d’espaces.",
   "link.taken": "Ce nom est déjà pris. Essayez-en un autre.",
   "link.rate": "Ça fait beaucoup de changements d’un coup. Attendez une minute, puis réessayez.",
