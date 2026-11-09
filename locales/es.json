@@ -51,7 +51,7 @@
   "foot.writeEmail": "Escribir un correo",
   "foot.disclaimer": "Ballkour es un modo del Workshop de Overwatch creado por fans. No está afiliado a Blizzard Entertainment.",
   "steps.goto": "En Overwatch, ve a <b>Jugar → Más → Partidas personalizadas → Crear</b>.",
-  "steps.import": "Ve a <b>Configuración → Importar código</b> (en Resumen) y pega uno de los códigos de abajo (p. ej., <code>59W28</code>).",
+  "steps.import": "Ve a <b>Configuración → Importar código</b> (en <b>Resumen</b>) y pega uno de los códigos de abajo (p. ej., <code>59W28</code>).",
   "badge.label": "Dale un impulso al hámster",
   "logo.alt": "Logo de Ballkour: un hámster con gafas montado en una bola negra y naranja",
   "hero.nav": "Empezar",
