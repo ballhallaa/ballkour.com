@@ -595,7 +595,7 @@ a.stat:hover .play { color: var(--volt); }
   transition: color .15s, background-color .15s, box-shadow .15s;
 }
 .lb-tab:hover { color: var(--ink); background: var(--glass-hi); }
-.lb-tab[aria-selected="true"] { color: var(--ink); background: rgba(0, 230, 151, .12); box-shadow: inset 0 0 0 1px rgba(0, 230, 151, .35); }
+.lb-tab[aria-selected="true"], .lb-tab[aria-pressed="true"] { color: var(--ink); background: rgba(0, 230, 151, .12); box-shadow: inset 0 0 0 1px rgba(0, 230, 151, .35); }
 .lb-hist { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 11px 12px 4px; }
 .lb-hist-head { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; font: 500 11.5px/1.3 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
 .lb-hist-date { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--ink-2); letter-spacing: .02em; font-variant-numeric: tabular-nums; }
@@ -1142,18 +1142,33 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .sub-runs { margin: 0 18px 16px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255, 255, 255, .02); }
 .sub-runs .rev-title .icon { color: var(--volt); }
 .sub-runs .rev-count { background: rgba(0, 230, 151, .12); color: var(--volt); }
-.visits-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.visits-tiles .pl-stat-value .icon { color: var(--volt); }
-.visits-people { display: block; margin-top: 4px; font: 400 12.5px/1.3 var(--body); color: var(--ink-3); }
-.visits-bars { display: flex; align-items: flex-end; gap: 3px; height: 64px; margin-top: 14px; }
-.visits-bar { flex: 1; min-width: 0; border-radius: 3px 3px 0 0; background: rgba(0, 230, 151, .35); }
-.visits-bar.today { background: var(--volt); }
-.visits-axis { display: flex; justify-content: space-between; margin-top: 6px; font: 500 11px/1.2 var(--mono); color: var(--ink-3); }
-.visits-top-title { margin: 14px 0 6px; font: 600 10.5px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
-.visits-top { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
-.visits-top li { display: flex; justify-content: space-between; gap: 12px; font: 500 14px/1.35 var(--body); color: var(--ink-2); }
-.visits-top b { font: 600 13px/1.35 var(--mono); color: var(--ink); }
-@media (max-width: 600px) { .visits-tiles { grid-template-columns: 1fr; } }
+/* Stats, at the very bottom: which days (a day, or the 7 or 30 days up to it), then Page views and Runs, each with a
+   bar for every day that picks it, and its numbers for those days */
+.stats-range { display: flex; flex-wrap: wrap; gap: 4px; padding: 7px; border-bottom: 1px solid var(--line); }
+.stats-range .lb-tab { font-variant-numeric: tabular-nums; }
+.stats-part { padding: 6px 18px 4px; }
+.stats-part:last-child { padding-bottom: 18px; }
+.stats-tiles { display: grid; grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr)); gap: 8px; }
+.stats-tiles .pl-stat-value .icon { color: var(--volt); }
+.stats-chart { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; margin-top: 14px; }
+.stats-bars { display: flex; align-items: stretch; gap: 3px; height: 64px; }
+.stats-bar { flex: 1; min-width: 0; display: flex; align-items: flex-end; padding: 0; border: 0; border-radius: 3px 3px 0 0; background: none; cursor: pointer; }
+.stats-bar > span { width: 100%; border-radius: 3px 3px 0 0; background: rgba(0, 230, 151, .35); transition: background-color .15s; }
+.stats-bar:hover > span { background: rgba(0, 230, 151, .6); }
+.stats-bar[aria-pressed="true"] { background: rgba(0, 230, 151, .08); }
+.stats-bar[aria-pressed="true"] > span { background: var(--volt); }
+.stats-bar:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; }
+.stats-axis { display: flex; justify-content: space-between; margin: 6px 38px 0; font: 500 11px/1.2 var(--mono); color: var(--ink-3); }
+.stats-table { width: 100%; margin-top: 14px; border-collapse: collapse; font: 500 14px/1.35 var(--body); color: var(--ink-2); }
+.stats-table th, .stats-table td { padding: 2px 0; font: inherit; text-align: left; vertical-align: baseline; }
+.stats-table thead th { padding-bottom: 6px; font: 600 10.5px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.stats-table .num { padding-left: 16px; text-align: right; white-space: nowrap; font: 600 13px/1.35 var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); }
+.stats-table thead .num { font: 600 10.5px/1.2 var(--mono); color: var(--ink-3); }
+.stats-table .num.soft { font-weight: 500; color: var(--ink-2); }
+.stats-table .course-cell { display: inline-flex; align-items: baseline; gap: 6px; }
+.stats-link { padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-decoration-color: var(--line-hi); text-underline-offset: 3px; transition: color .15s, text-decoration-color .15s; }
+.stats-link:hover { color: var(--volt); text-decoration-color: currentColor; }
+@media (max-width: 600px) { .stats-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 a.rev-run { color: inherit; text-decoration: none; transition: border-color .15s, background-color .15s; }
 a.rev-run:hover { border-color: var(--line-hi); background: var(--glass-hi); }
 .rev-more { margin-top: 8px; }
@@ -1548,6 +1563,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       <a href="/#discord" data-route="discord" data-i18n="dc.title">Discord</a>
       <a href="/source-code" data-route="source-code" data-i18n="src.title">Source code</a>
       <a href="/translations" data-route="translations" data-i18n="tr.title">Translations</a>
+      <a href="/stats" data-route="stats" data-i18n="stats.title">Stats</a>
     </div>
     <button class="sections-more left" type="button" data-dir="-1" tabindex="-1" aria-hidden="true"><svg class="icon"><use href="#i-dots"/></svg></button>
     <button class="sections-more right" type="button" data-dir="1" tabindex="-1" aria-hidden="true"><svg class="icon"><use href="#i-dots"/></svg></button>
@@ -1792,12 +1808,12 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       </a>
     </section>
 
-    <!-- Page views, at the very bottom, for moderators only (see "Page views") -->
-    <section class="panel" id="page-views" aria-labelledby="visits-title" hidden>
+    <!-- Stats, at the very bottom: page views and runs, for a day picked in the history (see "Stats") -->
+    <section class="panel" id="stats" aria-labelledby="stats-title">
       <div class="panel-head">
-        <h2 class="panel-title" id="visits-title"><svg class="icon" aria-hidden="true"><use href="#i-stats"/></svg><span data-i18n="visits.title">Page views</span></h2>
+        <h2 class="panel-title" id="stats-title"><svg class="icon" aria-hidden="true"><use href="#i-stats"/></svg><span data-i18n="stats.title">Stats</span></h2>
       </div>
-      <div class="panel-body" id="visits"></div>
+      <div id="stats-body"></div>
     </section>
   </main>
 
@@ -2058,16 +2074,32 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "visits.today": "Today",
   "visits.week": "Last 7 days",
   "visits.month": "Last 30 days",
-  "visits.views": "{count} views",
-  "visits.people": "{count} people",
-  "visits.perDay": "{count} people a day",
+  "visits.title": "Page views",
   "visits.day": "{date}: {views} views, {people} people",
-  "visits.chart": "Page views each day over the last 30 days",
   "visits.top": "Most viewed",
   "visits.home": "Top of the page",
   "visits.players": "Players",
   "visits.other": "Other",
   "visits.note": "Counted by the site itself each time someone opens it in a browser, so ad blockers don’t hide anyone and bots don’t count. Each person counts once a day, without the site keeping who they are.",
+  "stats.weekTo": "7 days to {date}",
+  "stats.monthTo": "30 days to {date}",
+  "stats.prevDay": "Day before",
+  "stats.nextDay": "Day after",
+  "stats.views": "Views",
+  "stats.people": "People",
+  "stats.viewsChart": "Page views each day",
+  "stats.runsChart": "Runs sent each day",
+  "stats.runsDay": "{date}: {count} runs sent",
+  "stats.gained": "Rating gained",
+  "stats.straight": "Straight on the boards",
+  "stats.approved": "Approved by a moderator",
+  "stats.newPlayers": "New players",
+  "stats.rated": "Rated players",
+  "stats.totalGlobal": "Total global rating",
+  "stats.totalCourse": "Total course rating",
+  "stats.busiest": "Most runs",
+  "stats.since": "They’re counted from {date} on.",
+  "stats.runsNote": "Days go from midnight to midnight UTC. Rating gained adds up what each run added to its player’s rating, like the number in parentheses beside a run on the boards.",
   "runs.ratingGain": "{player}’s rating over every course: {rating}, with {change} from this run",
   "rev.ratingGain": "{player}’s rating over every course if it’s approved: {rating}, with {change} from this run",
   "rev.declinedBy": "Turned down by {name}",
@@ -3374,6 +3406,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     CLAIMS = (Array.isArray(data.claims) ? data.claims : []).filter((x) => x && typeof x.name === "string" && typeof x.discord === "string");
     COURSES.forEach(refreshCourse);
     renderSentRuns();
+    statsChanged();
   }
   LOADS.push(gameFile("leaderboards/runs.json").then(JSON.parse).then(applyRuns).catch(() => {}));
 
@@ -3767,7 +3800,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     return "n:" + seg.toUpperCase();
   }
   let playerBack = null; // while a player's panel is open, the address from before, to go back to
-  // The address to go back to. A player's link someone opened (or ballkour.com/stats) goes back to the top of the page.
+  // The address to go back to. A player's link someone opened (or ballkour.com/my-stats) goes back to the top of the page.
   const beforePlayer = () => playerBack.replace(/^\/(?:players\/[^/?#]+(?:\/runs)?|stats)\/?(?=[?#]|$)/i, "/");
   // Once their panel is drawn, so /runs is only in the address while Runs is what it shows
   function showPlayerLink(key) {
@@ -4961,7 +4994,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     renderCourses();
     renderSubmit();
     renderSentRuns();
-    renderVisits();
+    renderStats();
     renderRun();
     renderPlayer(); // a player's panel that opened before its language did (a link to it, say)
     renderDiscord();
@@ -5318,7 +5351,6 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     renderSubmit();
     fillName();
     loadReview();
-    loadVisits();
     // A run's page that's open gets Approve and Turn down once a reviewer is known to be signed in
     renderRunCheck();
     renderSentRuns(); // reviewers see who checked each run
@@ -5338,12 +5370,12 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      asked about Ballkyrie there, doesn't come out of nowhere). Continue with Discord there signs them in, and comes
      back with ?me=1 to open their panel. Sign in with Discord above the form opens the same panel, and comes back to
      the form.
-     ballkour.com/stats is the link to it: it opens My profile the same way. Their panel shows their own link in the
+     ballkour.com/my-stats is the link to it: it opens My profile the same way. Their panel shows their own link in the
      address (/players/<number or name>, see playerPath), like anyone's, so what's in the address works for anyone it's sent
-     to. The panel that signs them in for it shows /stats. Closing either puts the address back. */
+     to. The panel that signs them in for it shows /my-stats. Closing either puts the address back. */
   const meWrap = $("#me-wrap");
   let meKnown = false; // whether /api/me has answered, so the chip doesn't flip from signed out to signed in
-  const startStats = /^\/stats\/?$/i.test(location.pathname);
+  const startStats = /^\/my-stats\/?$/i.test(location.pathname);
   let wantMine = (() => {
     try {
       const u = new URL(location.href);
@@ -5358,10 +5390,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (me) { openPlayer("d:" + me.id, 0); return; }
     if (!loginOn) return;
     openSignIn("mine");
-    // Opened from ballkour.com/stats, it goes back to the top of the page
-    if (statsBack === null) statsBack = /^\/stats\/?$/i.test(location.pathname) ? "/" + location.search : location.pathname + location.search + location.hash;
+    // Opened from ballkour.com/my-stats, it goes back to the top of the page
+    if (statsBack === null) statsBack = /^\/my-stats\/?$/i.test(location.pathname) ? "/" + location.search : location.pathname + location.search + location.hash;
     const l = new URLSearchParams(location.search).get("lang");
-    try { history.replaceState(history.state, "", `/stats${l ? `?lang=${encodeURIComponent(l)}` : ""}`); } catch (e) { /* address stays as it is */ }
+    try { history.replaceState(history.state, "", `/my-stats${l ? `?lang=${encodeURIComponent(l)}` : ""}`); } catch (e) { /* address stays as it is */ }
   }
   // Leaving it (closing the panel, or something else opening in its place) puts the address back
   function leaveStats() {
@@ -5455,12 +5487,12 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     how.hidden = !loginOn;
     if (how.hidden) return;
     const myStats = esc(t("me.button"));
-    how.innerHTML = esc(t("dc.how")).replace(myStats, `<a href="/stats" data-my-stats>${myStats}</a>`);
+    how.innerHTML = esc(t("dc.how")).replace(myStats, `<a href="/my-stats" data-my-stats>${myStats}</a>`);
   }
   document.addEventListener("click", (e) => {
     const mine = e.target.closest("[data-my-stats]");
     if (mine) {
-      // A link to it (/stats) still opens in a new tab with Ctrl/Cmd or Shift
+      // A link to it (/my-stats) still opens in a new tab with Ctrl/Cmd or Shift
       if (mine.tagName === "A" && (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey)) return;
       e.preventDefault();
       openMine();
@@ -5654,47 +5686,314 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   let reviewRuns = [];
   let reviewAsk = null; // { id, approve, at }: the run whose buttons are asking, and when they started asking
   const checkParam = (() => { try { return new URLSearchParams(location.search).get("check") || ""; } catch (e) { return ""; } })();
-  /* ---------- Page views (moderators) ----------
-     At the very bottom of the page, for moderators only: how many times the site was opened in a browser, and by how many people, over the last 30 days. The page asks the
-     Worker who's signed in (/api/me) once each time someone opens it, and the Worker counts those (see "Page views" in
-     cloudflare/worker.js), so ad blockers don't hide anyone and bots that only fetch the page don't count.
-       GET /api/visits (moderators) → { days: [{ day: "YYYY-MM-DD", views, people }, …] (oldest first),
-                                        sections: [{ section, views }, …] (most viewed first) } */
+  /* ---------- Stats ----------
+     At the very bottom of the page, for everyone: Page views and Runs, on a day picked in the history, or over the 7
+     or 30 days up to it (the buttons at the top, the 30 days to start with). Each part has a bar for every day, 30 at
+     a time, and a click on one picks its day, as do the arrows beside them (and ←, →, Home, End, Page Up and Page Down
+     on a bar). Past either end, the 30 days on show slide along with the day picked. While Stats is on screen, the
+     address says what's picked, so the link shows the same: /stats (today, and the 30 days up to it), /stats/2026-11-05
+     (that day), and /day or /week after either for just that day or the 7 days up to it. Days are UTC days.
+     Page views come from the Worker, which counts them (see "Page views" in cloudflare/worker.js), as the page opens,
+     so they're in before anyone scrolls down to them (they're above Runs, which would jump if they came in later):
+       GET /api/visits → { since: "YYYY-MM-DD", days: [{ day, views, people, sections: { home: [views, people], … } }, …] }
+     oldest first. since is the first day counted: days picked from before it show "—", and a line says since when.
+     A section's people is null on days from before they were counted (November 2026): it adds up the days that have
+     them, and shows "—" when none of the days picked do.
+     Each person counts once a day, so over a week someone who came on three days counts three times.
+     The runs' numbers are worked out here, from the same files as the boards (see runStatsNow). */
+  const STATS_LINK = /^\/stats(?:\/(\d{4}-\d{2}-\d{2}))?(?:\/(day|week))?\/?$/i;
+  const STAT_RANGES = { day: 1, week: 7, month: 30 };
+  const statsAt = STATS_LINK.exec(location.pathname);
+  let statDay = (statsAt && statsAt[1]) || ""; // the day picked, or "" for today (which moves on at midnight)
+  let statRange = ((statsAt && statsAt[2]) || "month").toLowerCase();
+  let statEnd = ""; // the last of the 30 days on show, or "" to end them at the day picked
+  // The address's part for what's picked (see subPath): "", "2026-11-05", "2026-11-05/week", "week", …
+  const statsPath = () => [statDay, statRange !== "month" ? statRange : ""].filter(Boolean).join("/");
+  const DAY = /^\d{4}-\d{2}-\d{2}$/;
+  const utcDay = (ms) => new Date(ms).toISOString().slice(0, 10);
+  const dayAfter = (d, by = 1) => utcDay(Date.parse(`${d}T00:00:00Z`) + by * 864e5);
   let visits = null;
-  async function loadVisits() {
-    visits = null;
-    if (me && me.reviewer) {
-      try { visits = await fetch("/api/visits", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)); } catch (e) { visits = null; }
+  fetch("/api/visits").then((r) => (r.ok ? r.json() : null)).then((d) => {
+    visits = d && Array.isArray(d.days) && d.days.length ? d : null;
+    renderStats();
+  }).catch(() => {});
+  /* The runs' numbers for each day, worked out once every file is in, and again when runs.json changes:
+     - sent: the runs sent from the website that day (by when they were sent), and the ones from before it by their
+       date (see sentRuns), and of those, how many a moderator approved or turned down, and how many are waiting
+     - gained: what that day's runs added to their players' ratings. On each rated course, each player who got faster
+       that day gains their new course rating, less what their old best had against the record without their new run,
+       over the number of rated courses: the way boardRatings works out the gain beside a run.
+     - top10s, podiums, records: the new times on each course's boards that day (see freshAt), by their place
+     - players: the players whose first run was that day
+     - courses: how many runs were sent that day on each course
+     → { per: Map(day → those), first: the first day with any }, or null until the files are in
+     Rated players and the two totals are as the Player ratings were at the end of the day picked (see standingAt). */
+  let runStats = null;
+  const standingOn = new Map(); // day → the Player ratings at the end of it, added up (see standingAt)
+  function statsChanged() {
+    runStats = null;
+    standingOn.clear();
+    renderStats();
+  }
+  function runStatsNow() {
+    if (runStats || !runsReady) return runStats;
+    const per = new Map();
+    const at = (d) => {
+      if (!per.has(d)) per.set(d, { sent: 0, approved: 0, declined: 0, pending: 0, gained: 0, top10s: 0, podiums: 0, records: 0, players: 0, courses: new Map() });
+      return per.get(d);
+    };
+    sentRuns().forEach((x) => {
+      const sent = Date.parse(x.run.sentAt || "");
+      const d = Number.isFinite(sent) ? utcDay(sent) : formatDate(x.run.date);
+      if (!DAY.test(d)) return;
+      const s = at(d);
+      s.sent++;
+      if (x.group === "pending") s.pending++;
+      else if (x.group === "declined") s.declined++;
+      else if (x.run.checkedBy) s.approved++;
+      s.courses.set(x.n, (s.courses.get(x.n) || 0) + 1);
+    });
+    const rated = COURSES.filter((c) => !c.broken && !c.latestBroken);
+    const firstRun = new Map(); // player → the day of their first run
+    COURSES.forEach((c) => {
+      const byDay = new Map();
+      countedRuns(c).forEach((r) => {
+        const d = formatDate(r.date);
+        if (!DAY.test(d)) return;
+        const k = playerKey(r);
+        if (!firstRun.has(k) || d < firstRun.get(k)) firstRun.set(k, d);
+        if (!byDay.has(d)) byDay.set(d, []);
+        byDay.get(d).push(r);
+      });
+      if (rated.includes(c)) {
+        const best = new Map(); // player → their best run by the end of the day
+        [...byDay.keys()].sort().forEach((d) => {
+          const was = new Map(best);
+          byDay.get(d).forEach((r) => {
+            const k = playerKey(r);
+            const had = best.get(k);
+            if (!had || byTime(r, had) < 0) best.set(k, r);
+          });
+          const order = [...best.entries()].sort((a, b) => byTime(a[1], b[1]));
+          const [first, record] = order[0];
+          const next = order[1] ? order[1][1] : null;
+          let gained = 0;
+          best.forEach((run, k) => {
+            const old = was.get(k);
+            if (old === run) return;
+            // The record without their new run: theirs is only the record's when they hold it
+            const without = k === first ? [next, old].filter(Boolean).sort(byTime)[0] : record;
+            gained += coursePoints(record, run) - (old ? coursePoints(without, old) : 0);
+          });
+          if (gained) at(d).gained += gained / rated.length;
+        });
+      }
+      const live = standingsOf(c).top;
+      const list = boardsOf(c) || (live.length ? [live] : []);
+      list.forEach((board, i) => {
+        const fresh = freshAt(list, i);
+        board.forEach((r, place) => {
+          const d = formatDate(r.date);
+          if (!fresh.has(r) || !DAY.test(d)) return;
+          const s = at(d);
+          s.top10s++;
+          if (place < 3) s.podiums++;
+          if (place === 0 && isRecord(list, i)) s.records++;
+        });
+      });
+    });
+    firstRun.forEach((d) => { at(d).players++; });
+    runStats = { per, first: [...per.keys()].sort()[0] || "" };
+    return runStats;
+  }
+  // The Player ratings at the end of a day, as they were then: how many players were rated, everyone's ratings added up
+  // (global), and every course rating everyone had added up (course: their points on each rated course)
+  function standingAt(day, today) {
+    if (!standingOn.has(day)) {
+      const { players } = today ? ratings() : ratings({ day });
+      standingOn.set(day, {
+        rated: players.length,
+        global: players.reduce((a, p) => a + p.rating, 0),
+        course: players.reduce((a, p) => a + Object.values(p.points).reduce((b, x) => b + x, 0), 0),
+      });
     }
-    renderVisits();
+    return standingOn.get(day);
+  }
+  // Every day there's anything for (and at least the last 30), oldest first, the day picked, and the 30 on show
+  function statPick() {
+    const today = utcDay(Date.now());
+    let first = dayAfter(today, -29);
+    if (visits && visits.days[0].day < first) first = visits.days[0].day;
+    const rs = runStatsNow();
+    if (rs && rs.first && rs.first < first) first = rs.first;
+    const days = [];
+    for (let d = first; d <= today && days.length < 5000; d = dayAfter(d)) days.push(d);
+    const last = days.length - 1;
+    let pick = statDay ? days.indexOf(statDay) : last;
+    if (pick < 0) pick = statDay < days[0] ? 0 : last;
+    let end = statEnd ? days.indexOf(statEnd) : -1;
+    if (end < 0) end = Math.min(last, Math.max(pick, 29));
+    if (pick > end) end = pick;
+    if (pick < end - 29) end = pick + 29;
+    return { days, last, pick, end, from: Math.max(0, end - 29) };
+  }
+  // Each section in Most viewed links to it: the top of the page, a section (scrolling there like the section bar), My
+  // profile, or Find a player for players (a player's panel, which has no section). "Other" has nowhere to go.
+  const STAT_ROUTES = ["courses", "leaderboards", "submit", "runs", "features", "faq", "source-code", "translations", "stats"];
+  function statSectionHtml(key) {
+    const name = esc(t(STAT_NAMES[key] || "visits.other"));
+    if (key === "home") return `<a class="stats-link" href="/" data-stat-top>${name}</a>`;
+    if (STAT_ROUTES.includes(key)) return `<a class="stats-link" href="/${key}" data-route="${key}">${name}</a>`;
+    if (key === "my-stats") return `<a class="stats-link" href="/my-stats" data-my-stats>${name}</a>`;
+    if (key === "players") return `<button class="stats-link" type="button" data-find>${name}</button>`;
+    return name;
   }
   // Each section's name, from the words the site already uses for it where it has them
-  const VISIT_SECTIONS = { home: "visits.home", courses: "courses.title", leaderboards: "nav.leaderboards", submit: "nav.submit", runs: "pl.runs",
-    players: "visits.players", stats: "me.button", features: "run.title", faq: "faq.title", "source-code": "src.title", translations: "tr.title" };
-  function renderVisits() {
-    const panel = $("#page-views"), box = $("#visits");
-    const days = visits && Array.isArray(visits.days) && visits.days.length ? visits.days : null;
-    const shown = !!(me && me.reviewer && days);
-    panel.hidden = !shown;
-    if (!shown) return;
-    const n = (v) => Number(v || 0).toLocaleString(htmlLang());
-    const sum = (list, k) => list.reduce((a, d) => a + (Number(d[k]) || 0), 0);
-    // Today's people, and over a week or a month, people a day on average (someone back the next day counts again)
-    const tile = (label, list) => `<div class="pl-stat"><span class="pl-stat-label">${esc(t(label))}</span>` +
-      `<span class="pl-stat-value">${icon("eye")}<span>${esc(t("visits.views", { count: n(sum(list, "views")) }))}</span></span>` +
-      `<span class="visits-people">${esc(list.length === 1 ? t("visits.people", { count: n(sum(list, "people")) })
-        : t("visits.perDay", { count: n(Math.round(sum(list, "people") / list.length)) }))}</span></div>`;
-    const most = Math.max(1, ...days.map((d) => Number(d.views) || 0));
-    const bars = days.map((d, i) => `<span class="visits-bar${i === days.length - 1 ? " today" : ""}" style="height:${Math.max(3, Math.round((Number(d.views) || 0) / most * 100))}%" ` +
-      `title="${esc(t("visits.day", { date: d.day, views: n(d.views), people: n(d.people) }))}"></span>`).join("");
-    const top = (Array.isArray(visits.sections) ? visits.sections : []).slice(0, 6)
-      .map((x) => `<li><span>${esc(t(VISIT_SECTIONS[x.section] || "visits.other"))}</span><b>${esc(n(x.views))}</b></li>`).join("");
-    box.innerHTML = `<div class="visits-tiles">${tile("visits.today", days.slice(-1))}${tile("visits.week", days.slice(-7))}${tile("visits.month", days.slice(-30))}</div>` +
-      `<div class="visits-bars" role="img" aria-label="${esc(t("visits.chart"))}">${bars}</div>` +
-      `<div class="visits-axis"><span>${esc(days[0].day)}</span><span>${esc(t("visits.today"))}</span></div>` +
-      (top ? `<p class="visits-top-title">${esc(t("visits.top"))}</p><ul class="visits-top">${top}</ul>` : "") +
-      `<p class="rev-note">${esc(t("visits.note"))}</p>`;
+  const STAT_NAMES = { home: "visits.home", courses: "courses.title", leaderboards: "nav.leaderboards", submit: "nav.submit", runs: "pl.runs",
+    players: "visits.players", stats: "stats.title", "my-stats": "me.button", features: "run.title", faq: "faq.title", "source-code": "src.title", translations: "tr.title" };
+  // Which days a button covers: "Today", "Last 7 days", … for today, and "2026-11-05", "7 days to 2026-11-05", … before
+  function statLabel(range, day, today) {
+    if (today) return t(range === "day" ? "visits.today" : range === "week" ? "visits.week" : "visits.month");
+    return range === "day" ? day : t(range === "week" ? "stats.weekTo" : "stats.monthTo", { date: day });
   }
+  function renderStats() {
+    const box = $("#stats-body");
+    const rs = runStatsNow();
+    if (!visits && !rs) { box.innerHTML = ""; return; }
+    const { days, last, pick, end, from } = statPick();
+    const n = (v) => Math.round(Number(v) || 0).toLocaleString(htmlLang());
+    const day = days[pick];
+    const today = pick === last;
+    const span = days.slice(Math.max(0, pick - STAT_RANGES[statRange] + 1), pick + 1);
+    const tile = (key, value, ico) => `<div class="pl-stat"><span class="pl-stat-label">${esc(t(key))}</span>` +
+      `<span class="pl-stat-value">${icon(ico)}<span>${esc(value)}</span></span></div>`;
+    // The 30 days on show, ‹ and › beside them, each bar as tall as its share of the busiest of them
+    const chart = (name, key, valueOf, labelOf) => {
+      const shown = days.slice(from, end + 1);
+      const most = Math.max(1, ...shown.map(valueOf));
+      const bars = shown.map((d) => `<button class="stats-bar" type="button" data-stat-day="${d}" tabindex="${d === day ? 0 : -1}" ` +
+        `aria-pressed="${d === day}" aria-label="${esc(labelOf(d))}" title="${esc(labelOf(d))}">` +
+        `<span style="height:${Math.max(4, Math.round(valueOf(d) / most * 100))}%"></span></button>`).join("");
+      const step = (dir, to, label) => `<button class="lb-step ${dir}" type="button" data-stat-step="${to || ""}" aria-label="${esc(t(label))}"${to ? "" : " disabled"}>${icon("chev")}</button>`;
+      return `<div class="stats-chart" data-stat-chart="${name}">${step("prev", days[pick - 1], "stats.prevDay")}` +
+        `<div class="stats-bars" role="group" aria-label="${esc(t(key))}">${bars}</div>${step("next", days[pick + 1], "stats.nextDay")}</div>` +
+        `<div class="stats-axis"><span>${esc(days[from])}</span><span>${esc(end === last ? t("visits.today") : days[end])}</span></div>`;
+    };
+    let html = `<div class="stats-range" role="group" aria-label="${esc(t("stats.title"))}">` +
+      Object.keys(STAT_RANGES).map((k) => `<button class="lb-tab" type="button" data-stat-range="${k}" aria-pressed="${statRange === k}">${esc(statLabel(k, day, today))}</button>`).join("") +
+      `</div>`;
+    if (visits) {
+      const byDay = new Map(visits.days.map((d) => [d.day, d]));
+      const v = (d) => byDay.get(d) || { views: 0, people: 0, sections: {} };
+      // Each section over the days picked, most viewed first. People: once a day each, added up
+      const sections = new Map();
+      span.forEach((d) => Object.entries(v(d).sections || {}).forEach(([key, x]) => {
+        const [views, people] = Array.isArray(x) ? x : [0, null];
+        const s = sections.get(key) || { views: 0, people: 0, known: false };
+        s.views += Number(views) || 0;
+        if (people !== null && people !== undefined) {
+          s.known = true;
+          s.people += Number(people) || 0;
+        }
+        sections.set(key, s);
+      }));
+      const top = [...sections].filter(([, x]) => x.views > 0).sort((a, b) => b[1].views - a[1].views || b[1].people - a[1].people).slice(0, 6);
+      const sum = (k) => span.reduce((a, d) => a + (Number(v(d)[k]) || 0), 0);
+      // Days from before page views were counted have none to show, rather than 0
+      const since = DAY.test(visits.since || "") ? visits.since : visits.days[0].day;
+      const before = day < since;
+      html += `<h3 class="by src-group">${esc(t("visits.title"))}</h3><div class="stats-part">` +
+        `<div class="stats-tiles">${tile("stats.people", before ? "—" : n(sum("people")), "user")}${tile("stats.views", before ? "—" : n(sum("views")), "eye")}</div>` +
+        chart("views", "stats.viewsChart", (d) => Number(v(d).views) || 0, (d) => t("visits.day", { date: d, views: n(v(d).views), people: n(v(d).people) })) +
+        (top.length ? `<table class="stats-table"><thead><tr><th scope="col">${esc(t("visits.top"))}</th>` +
+          `<th class="num" scope="col">${esc(t("stats.people"))}</th><th class="num" scope="col">${esc(t("stats.views"))}</th></tr></thead><tbody>` +
+          top.map(([key, x]) => `<tr><th scope="row">${statSectionHtml(key)}</th>` +
+            `<td class="num soft">${x.known ? esc(n(x.people)) : "—"}</td><td class="num">${esc(n(x.views))}</td></tr>`).join("") +
+          `</tbody></table>` : "") +
+        `<p class="rev-note">${esc(t("visits.note"))}${span[0] < since ? ` ${esc(t("stats.since", { date: since }))}` : ""}</p></div>`;
+    }
+    if (rs) {
+      const of = (d) => rs.per.get(d) || {};
+      const add = (k) => span.reduce((a, d) => a + (of(d)[k] || 0), 0);
+      const sent = add("sent"), approved = add("approved"), declined = add("declined"), pending = add("pending");
+      // The course with the most runs sent (the lower number when two have as many)
+      const courses = new Map();
+      span.forEach((d) => (of(d).courses || new Map()).forEach((count, cn) => courses.set(cn, (courses.get(cn) || 0) + count)));
+      const [busiest, most] = [...courses].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0] || [];
+      const bc = busiest && course(busiest);
+      const row = (key, html) => `<tr><th scope="row">${esc(t(key))}</th><td class="num">${html}</td></tr>`;
+      const standing = standingAt(day, today);
+      html += `<h3 class="by src-group">${esc(t("pl.runs"))}</h3><div class="stats-part">` +
+        `<div class="stats-tiles" style="--n: 4">${tile("runs.title", n(sent), "upload")}${tile("stats.gained", signed(add("gained")), "star")}` +
+        `${tile("res.top10s", n(add("top10s")), "bolt")}${tile("res.records", n(add("records")), "trophy")}</div>` +
+        chart("runs", "stats.runsChart", (d) => of(d).sent || 0, (d) => t("stats.runsDay", { date: d, count: n(of(d).sent) })) +
+        `<table class="stats-table"><tbody>` +
+          row("stats.straight", esc(n(sent - approved - declined - pending))) + row("stats.approved", esc(n(approved))) +
+          row("run.declined", esc(n(declined))) + row("run.pending", esc(n(pending))) + row("res.podiums", esc(n(add("podiums")))) +
+          row("stats.newPlayers", esc(n(add("players")))) + row("stats.rated", esc(n(standing.rated))) +
+          row("stats.totalGlobal", esc(n(standing.global))) + row("stats.totalCourse", esc(n(standing.course))) +
+          (bc ? row("stats.busiest", `<span class="course-cell">${esc(String(bc.n))} ${flagName(bc)} · ${esc(n(most))}</span>`) : "") +
+        `</tbody></table><p class="rev-note">${esc(t("stats.runsNote"))}</p></div>`;
+    }
+    box.innerHTML = html;
+  }
+  // Picking a day (d) from a chart ("views" or "runs"): keyboard focus goes back to the same chart's bar, or arrow
+  // (what: "bar", "prev" or "next"). The 30 days on show stay put unless the day is past either end.
+  function pickStat(d, chart, what) {
+    const { days, last, end } = statPick();
+    const i = days.indexOf(d);
+    if (i < 0) return;
+    let e = end;
+    if (i > e) e = i;
+    if (i < e - 29) e = i + 29;
+    statDay = i === last ? "" : d;
+    statEnd = days[Math.min(e, last)];
+    statsPicked();
+    const wrap = $(`#stats-body [data-stat-chart="${chart}"]`);
+    if (!wrap) return;
+    const arrow = what === "prev" || what === "next" ? wrap.querySelector(`.lb-step.${what}:not(:disabled)`) : null;
+    const el = arrow || wrap.querySelector('.stats-bar[aria-pressed="true"]');
+    if (el) el.focus();
+  }
+  // After a pick: draw it, say it, and put it in the address (replacing it, like a board's scrubber)
+  function statsPicked() {
+    renderStats();
+    const { days, last, pick } = statPick();
+    announce.textContent = statLabel(statRange, days[pick], pick === last);
+    showLink("stats", subPath("stats"));
+  }
+  $("#stats-body").addEventListener("click", (e) => {
+    // Top of the page: back up there, like Back to the plain address does (a new tab with Ctrl/Cmd or Shift)
+    const up = e.target.closest("a[data-stat-top]");
+    if (up && !(e.ctrlKey || e.metaKey || e.shiftKey || e.altKey)) {
+      e.preventDefault();
+      try { history.pushState(null, "", "/" + location.search); } catch (err) { /* address stays as it is */ }
+      clicked = -1;
+      queueSpy();
+      window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
+      return;
+    }
+    const bar = e.target.closest("[data-stat-day]");
+    const step = e.target.closest("[data-stat-step]");
+    const range = e.target.closest("[data-stat-range]");
+    if (bar) pickStat(bar.dataset.statDay, bar.closest("[data-stat-chart]").dataset.statChart, "bar");
+    else if (step && !step.disabled) pickStat(step.dataset.statStep, step.closest("[data-stat-chart]").dataset.statChart, step.classList.contains("prev") ? "prev" : "next");
+    else if (range && range.dataset.statRange !== statRange) {
+      statRange = range.dataset.statRange;
+      statsPicked();
+      const again = $(`#stats-body [data-stat-range="${statRange}"]`);
+      if (again) again.focus();
+    }
+  });
+  $("#stats-body").addEventListener("keydown", (e) => {
+    const bar = e.target.closest(".stats-bar");
+    if (!bar) return;
+    const { days, last, pick } = statPick();
+    const to = { ArrowLeft: pick - 1, ArrowRight: pick + 1, Home: 0, End: last, PageUp: pick - 30, PageDown: pick + 30 }[e.key];
+    if (to === undefined) return;
+    e.preventDefault();
+    pickStat(days[Math.max(0, Math.min(last, to))], bar.closest("[data-stat-chart]").dataset.statChart, "bar");
+  });
   async function loadReview() {
     if (!me || !me.reviewer) { renderReview(); return; }
     try {
@@ -6862,6 +7161,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   Promise.allSettled(LOADS).then(() => {
     runsReady = true;
     renderSentRuns();
+    statsChanged();
     if (reviewRuns.length) renderReview(); // with what each would do, now that the boards are in
     if (startRun) openRun(startRun);
     else if (startPlayer) openPlayerLink(keyOfLink(startPlayer.seg), startPlayer.runs);
@@ -6873,9 +7173,14 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      /leaderboards opens Gibraltar's top 10. */
   // route → section id. Discord stays /#discord, since /discord already goes straight to the server.
   // runs is Submitted runs, under the form (or the form, while there are none)
-  const ROUTES = { courses: "courses", leaderboards: "leaderboards", submit: "submit", runs: "sub-runs", features: "features", faq: "faq", discord: "discord", "source-code": "source", translations: "translations" };
+  const ROUTES = { courses: "courses", leaderboards: "leaderboards", submit: "submit", runs: "sub-runs", features: "features", faq: "faq", discord: "discord", "source-code": "source", translations: "translations", stats: "stats" };
   const pathFor = (route) => (route === "discord" ? "/#discord" : "/" + route);
-  const routeOf = (path) => { const m = /^\/([a-z-]+)(?:\/[\w-]+(?:\/(?:legacy|\d+))?)?\/?$/i.exec(path); const r = m && m[1].toLowerCase(); return r && r !== "discord" && ROUTES[r] ? r : null; };
+  const routeOf = (path) => {
+    if (STATS_LINK.test(path)) return "stats"; // /stats/2026-11-05/week, … (see "Stats")
+    const m = /^\/([a-z-]+)(?:\/[\w-]+(?:\/(?:legacy|\d+))?)?\/?$/i.exec(path);
+    const r = m && m[1].toLowerCase();
+    return r && r !== "discord" && ROUTES[r] ? r : null;
+  };
   // The board or answer a link names: /leaderboards/6 (/leaderboards/6/legacy for its Legacy tab, /leaderboards/6/3
   // for its third board), /faq/pausing, or the older /leaderboards/6-dorado, /faq/pause, #6-dorado and #pause
   const subOf = (path, hash) => { const m = /^\/(?:leaderboards\/([\w-]+)(?:\/(?:legacy|\d+))?|faq\/([\w-]+))\/?$/i.exec(path); return m ? (m[1] || m[2]).toLowerCase() : /^#[\w-]+$/.test(hash) ? hash.slice(1) : null; };
@@ -6965,7 +7270,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // The address follows the section on screen (/faq, /features, …), and is / at the very top. It replaces the
   // current entry rather than adding one, so Back still leaves the page instead of stepping through sections.
   // A link someone opened (ballkour.com/faq) keeps its address until they scroll or click themselves.
-  // ballkour.com/stats stays too, until My profile opens (once the page knows whether they're signed in)
+  // ballkour.com/my-stats stays too, until My profile opens (once the page knows whether they're signed in)
   let addressHeld = !!startRoute || !!startRun || !!startPlayer || (startStats && loginOn);
   ["wheel", "touchstart", "keydown", "mousedown"].forEach((ev) => addEventListener(ev, () => { addressHeld = false; }, { passive: true }));
   // Opening a board or an answer puts its link in the address straight away, wherever the page is scrolled to, and
@@ -6980,8 +7285,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     }
   }
   // While a board or an answer is open, the address links to it: /leaderboards/6, /leaderboards/3/legacy,
-  // /leaderboards/3/12 (an older board, while the history is scrubbed back to it), /leaderboards/ratings, /faq/pausing
+  // /leaderboards/3/12 (an older board, while the history is scrubbed back to it), /leaderboards/ratings, /faq/pausing.
+  // Stats' links to the day picked: /stats/2026-11-05, /stats/2026-11-05/week, …
   function subPath(route) {
+    if (route === "stats") return statsPath();
     if (route === "leaderboards" && openCourse === RATINGS.n) return RATINGS.n;
     if (route === "leaderboards" && openCourse) {
       const c = course(openCourse);
