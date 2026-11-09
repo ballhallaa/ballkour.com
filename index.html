@@ -940,8 +940,19 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pic-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
 .pic-title { flex: 1; min-width: 0; margin: 0; font: 600 13px/1.3 var(--body); letter-spacing: .14em; text-transform: uppercase; }
 .pic-wait { margin: 0; padding: 60px 16px; text-align: center; font: 500 14px/1.4 var(--mono); color: var(--ink-2); }
-.pic-img { display: block; width: calc(100% - 32px); height: auto; margin: 16px 16px 0; border-radius: 10px; border: 1px solid var(--line); }
-.pic-actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 16px 0; }
+.pic-img { display: block; width: calc(100% - 32px); height: auto; margin: 16px 16px 0; border-radius: 10px; border: 1px solid var(--line); transition: opacity .15s; }
+.pic-actions { position: relative; display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 16px 0; }
+.pic-actions[hidden] { display: none; }
+/* The picture's language: a square 文A button before Save, with the site's language menu over the picture, above it.
+   On a phone a short picture has no room over it, so there it opens in the window under the buttons instead, like the
+   site's on a phone. While another language's picture is drawn, the one that's there, and Save, Copy, and Share, are
+   dimmed. */
+.pic-lang-wrap, .pic-btns { display: contents; }
+.pic-lang { width: 36px; padding: 0; color: var(--ink-2); }
+.pic-lang[aria-expanded="true"] { border-color: var(--volt); color: var(--ink); }
+.pic-lang-menu { width: 244px; max-width: calc(100% - 32px); top: auto; bottom: calc(100% - 6px); left: 16px; right: auto; transform-origin: bottom left; order: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; }
+@media (max-width: 520px) { .pic-lang-menu { position: static; flex: 1 0 100%; width: auto; max-width: none; } }
+.pic-busy .pic-img, .pic-busy .pic-btns > * { opacity: .45; pointer-events: none; }
 /* Find a player: a search box over everyone, each row like the Player ratings' (place, name, Top %, Discord, rating,
    courses run). Near the top of the screen like a command palette; the whole screen on phones. */
 .pf { width: min(580px, calc(100vw - 32px)); max-width: none; max-height: min(680px, calc(100dvh - 80px)); margin: max(40px, 9vh) auto auto; padding: 0; border: 1px solid var(--line-hi); border-radius: var(--r); background: #08100d; color: var(--ink); overflow: hidden; box-shadow: 0 30px 80px rgba(0, 0, 0, .6); }
@@ -1809,6 +1820,7 @@ a.link-copy { text-decoration: none; }
   "pic.copied": "Copied",
   "pic.copyFail": "Couldn’t copy",
   "pic.share": "Share",
+  "pic.lang": "Picture’s language",
   "pic.player": "Picture of {player}’s stats",
   "pic.fewest": "Fewest mistakes",
   "pic.legacyTop": "Legacy Top 10",
@@ -2228,6 +2240,15 @@ a.link-copy { text-decoration: none; }
     if (vars) s = s.replace(/\{(\w+)\}/g, (m, v) => (v in vars ? String(vars[v]) : m));
     return s;
   }
+  // fn() with its words (t(), and the numbers and capitals) in another language that's fetched already, then the
+  // site's again. fn mustn't wait for anything: nothing else runs until it's done, so the rest of the page never sees
+  // the other language. (A picture in another language, see "Board pictures".)
+  function inLang(code, fn) {
+    const was = [lang, dict];
+    lang = code;
+    dict = cache[code] || {};
+    try { return fn(); } finally { [lang, dict] = was; }
+  }
   // Translations may only use <b> and <code>; everything else is shown as text. {beta} becomes the Beta tag.
   const safeHtml = (s) => esc(s).replace(/&lt;(\/?)(b|code|kbd)&gt;/g, "<$1$2>")
     .replace("{beta}", `<span class="tag tag-beta">${esc(t("tag.beta"))}</span>`);
@@ -2283,17 +2304,22 @@ a.link-copy { text-decoration: none; }
     }
     return "en";
   }
-  async function setLang(code, save) {
-    if (!LANGS.some((l) => l[0] === code)) code = "en";
-    if (!cache[code]) {
-      try {
-        const r = await fetch(`/locales/${code}.json`, { cache: "no-cache" });
-        if (!r.ok) throw new Error(r.status);
-        cache[code] = await r.json();
-      } catch (e) {
-        code = "en";
-      }
+  // A language's translation, fetched the first time it's needed. Says which language there are words for: that one,
+  // or English when it couldn't be fetched.
+  async function fetchLang(code) {
+    if (!LANGS.some((l) => l[0] === code)) return "en";
+    if (cache[code]) return code;
+    try {
+      const r = await fetch(`/locales/${code}.json`, { cache: "no-cache" });
+      if (!r.ok) throw new Error(r.status);
+      cache[code] = await r.json();
+      return code;
+    } catch (e) {
+      return "en";
     }
+  }
+  async function setLang(code, save) {
+    code = await fetchLang(code);
     lang = code;
     dict = cache[code] || {};
     if (save) { storeLang(code); putLangInAddress(code); }
@@ -3886,7 +3912,7 @@ a.link-copy { text-decoration: none; }
      "Picture" on a board draws it the way the leaderboard bot's Discord pictures look (tools/leaderboard-bot/card.mjs
      in the game repo: keep the two alike), right here in the browser: the board that's showing, in the order it's
      sorted, at twice the size. It can then be saved, copied or shared. Its words are in the page's language (the bot's
-     are in English). */
+     are in English), or another one picked in its window. */
   const pic = $("#pic");
   const PIC = { w: 1040, pad: 36, top: 34, head: 104, rowH: 74, gap: 4, colGap: 22 };
   const EMOJI = '"Apple Color Emoji", "Noto Color Emoji", "Ballkour Emoji", "Segoe UI Emoji", sans-serif';
@@ -3941,12 +3967,22 @@ a.link-copy { text-decoration: none; }
     img.onerror = () => { clearTimeout(done); resolve(null); };
     img.src = src;
   });
+  // A picture's fonts, loaded before it's drawn, with the parts that have its language's letters (a font only loads the
+  // parts for letters on the page, so a picture in another language, Russian on an English page say, would miss
+  // some), and the emoji in emoji
+  async function picFonts(fonts, emoji, code) {
+    if (!document.fonts) return;
+    const letters = "AZ09" + [...new Set(Object.values(cache[code] || {}).join(""))].filter((ch) => ch > "\u007f").join("");
+    await Promise.all(fonts.map((f) => document.fonts.load(f, f.includes("Emoji") ? emoji : letters).catch(() => null)));
+  }
   // A picture's canvas, at twice the size, with its background and the logo at the top right
   function picCanvas(W, H, logo) {
     const cv = document.createElement("canvas");
     cv.width = W * 2; cv.height = H * 2;
     const ctx = cv.getContext("2d");
     ctx.scale(2, 2);
+    // Its language, for the letters that look different in Japanese and Chinese
+    if ("lang" in ctx) ctx.lang = htmlLang();
     // The background: the site's warp field, bursting from behind the logo, as a still frame
     ctx.fillStyle = "#030605"; ctx.fillRect(0, 0, W, H);
     const ox = W - PIC.pad - PIC.head / 2, oy = PIC.top + PIC.head / 2;
@@ -4072,18 +4108,20 @@ a.link-copy { text-decoration: none; }
     const then = list && at < list.length - 1 ? { day: boardDate(runs), c, runs } : null;
     return { legacy: false, byMiss, runs: pool.slice(0, 10), podium: (r) => runs.slice(0, 3).indexOf(r), fresh: list ? freshAt(list, at) : new Set(), board: list ? at + 1 : 0, boards: list ? list.length : 0, date: boardDate(runs), then };
   }
-  async function drawPicture(c, d) {
-    const W = PIC.w, rowsTop = PIC.top + PIC.head + 22, footY = rowsTop + 5 * PIC.rowH + 4 * PIC.gap + 18, H = Math.round(footY + 17 + 26);
-    if (document.fonts) {
-      await Promise.all([
-        'italic 800 54px "Barlow Condensed"', '700 25px Barlow', '600 16px Barlow', '700 23px "JetBrains Mono"',
-        '600 15px "JetBrains Mono"', '400 13.5px "JetBrains Mono"', `40px ${EMOJI}`,
-      ].map((f) => document.fonts.load(f, f.includes("Emoji") ? c.flag : "AZ09").catch(() => null)));
-    }
+  // The board picture in a language (code), once its fonts and pictures have loaded
+  async function drawPicture(c, d, code) {
+    await picFonts([
+      'italic 800 54px "Barlow Condensed"', '700 25px Barlow', '600 16px Barlow', '700 23px "JetBrains Mono"',
+      '600 15px "JetBrains Mono"', '400 13.5px "JetBrains Mono"', `40px ${EMOJI}`,
+    ], c.flag, code);
     const people = d.runs.map((r) => (r.discord && PLAYERS.get(r.discord)) || null);
+    const [logo, ...pfps] = await Promise.all([loadImg("/assets/logo.webp"), ...people.map((p) => (p && /^https:\/\/cdn\.discordapp\.com\//.test(p.avatar) ? loadImg(p.avatar, true) : null))]);
+    return inLang(code, () => paintPicture(c, d, logo, people, pfps));
+  }
+  function paintPicture(c, d, logo, people, pfps) {
+    const W = PIC.w, rowsTop = PIC.top + PIC.head + 22, footY = rowsTop + 5 * PIC.rowH + 4 * PIC.gap + 18, H = Math.round(footY + 17 + 26);
     // Each player's rating over every course, beside the date like the bot's pictures (legacy boards don't count)
     const ratingOf = d.legacy ? new Map() : ratingsBy(d.then);
-    const [logo, ...pfps] = await Promise.all([loadImg("/assets/logo.webp"), ...people.map((p) => (p && /^https:\/\/cdn\.discordapp\.com\//.test(p.avatar) ? loadImg(p.avatar, true) : null))]);
     const { cv, ctx } = picCanvas(W, H, logo);
     // The title, with the site's orange and blue edges, and the two lines under it
     const textTop = PIC.top + (PIC.head - 99.6) / 2;
@@ -4197,38 +4235,85 @@ a.link-copy { text-decoration: none; }
       `ballkour.com/leaderboards/${c.n}${d.legacy ? "/legacy" : d.then ? `/${d.board}` : ""}`);
     return cv;
   }
-  // A picture in a window with Save, Copy and Share: titleHtml over it, draw() draws it
-  async function pictureWindow(titleHtml, draw, filename, alt) {
-    pic.innerHTML = `<div class="pic-head"><h2 class="pic-title" id="pic-title">${titleHtml}</h2>` +
-      `<button class="pl-close" type="button" data-pic-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button></div>` +
-      `<p class="pic-wait">${esc(t("pic.drawing"))}</p>`;
-    if (!pic.open) pic.showModal();
+  /* The picture's window: its title and Close, then the picture, with its language (文A), Save, Copy and Share under
+     it. The picture starts in the site's language. Picking another draws it again in that one, to share somewhere
+     that speaks it, and leaves the site, and the window around the picture, as they are. */
+  pic.innerHTML = `<div class="pic-head"><h2 class="pic-title" id="pic-title"></h2>` +
+    `<button class="pl-close" type="button" data-pic-close>${icon("x")}</button></div>` +
+    `<div class="pic-body"></div>` +
+    `<div class="pic-actions" hidden>` +
+      `<div class="pic-lang-wrap" id="pic-lang-wrap">` +
+        `<button class="btn btn-sm pic-lang" id="pic-lang-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="pic-lang-menu">${icon("langs")}<span class="sr-only"></span></button>` +
+        `<ul class="menu pic-lang-menu" id="pic-lang-menu" role="listbox" tabindex="-1" hidden></ul>` +
+      `</div>` +
+      `<span class="pic-btns"></span>` +
+    `</div>`;
+  let picLang = "en";
+  let picNow = null; // the picture in the window: { draw(code), filename, alt }
+  let picJob = 0; // which drawing is the latest, so an older one that finishes later doesn't replace it
+  const picLangPicker = makeMenu($("#pic-lang-wrap"), $("#pic-lang-btn"), $("#pic-lang-menu"), 2, (code) => { if (code !== picLang) drawPictureIn(code); });
+  picLangPicker.fill(LANGS.map(([code, name, tag]) =>
+    `<li class="opt" role="option" id="pic-lang-opt-${code}" data-value="${code}" lang="${tag}" aria-selected="false"><span class="opt-label">${esc(name)}</span>${CHECK}</li>`).join(""));
+  function renderPicLang() {
+    const cur = LANGS.find((l) => l[0] === picLang) || LANGS[0];
+    const btn = $("#pic-lang-btn");
+    btn.title = `${t("pic.lang")}: ${cur[1]}`;
+    $(".sr-only", btn).innerHTML = `${esc(t("pic.lang"))} <span lang="${cur[2]}">${esc(cur[1])}</span>`;
+    $("#pic-lang-menu").setAttribute("aria-label", t("pic.lang"));
+    picLangPicker.select(picLang);
+  }
+  // The picture in a language, fetched first if it isn't yet (English if it can't be). The picture that's there stays,
+  // dimmed, until the new one is ready.
+  async function drawPictureIn(code) {
+    const job = ++picJob;
+    picLang = code;
+    renderPicLang();
+    pic.classList.add("pic-busy");
+    const got = await fetchLang(code);
+    if (job !== picJob) return;
+    if (got !== code) { picLang = got; renderPicLang(); }
     let url, blob;
     try {
-      const cv = await draw();
+      const cv = await picNow.draw(got);
       url = cv.toDataURL("image/png");
       blob = await new Promise((resolve) => cv.toBlob(resolve, "image/png"));
     } catch (e) {
-      $(".pic-wait", pic).textContent = t("pic.fail");
+      if (job !== picJob) return;
+      pic.classList.remove("pic-busy");
+      $(".pic-body", pic).innerHTML = `<p class="pic-wait">${esc(t("pic.fail"))}</p>`;
+      $(".pic-actions", pic).hidden = true;
       return;
     }
+    if (job !== picJob) return;
+    const { filename, alt } = picNow;
     const file = blob && typeof File === "function" ? new File([blob], filename, { type: "image/png" }) : null;
     const canCopy = !!(blob && navigator.clipboard && navigator.clipboard.write && window.ClipboardItem);
     const canShare = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
-    $(".pic-wait", pic).outerHTML = `<img class="pic-img" src="${url}" alt="${esc(alt)}" width="${PIC.w}">` +
-      `<div class="pic-actions">` +
-        `<a class="btn btn-sm btn-primary" href="${url}" download="${esc(filename)}">${icon("down")}<span>${esc(t("pic.save"))}</span></a>` +
-        (canCopy ? `<button class="btn btn-sm" type="button" data-pic-copy>${icon("copy")}<span>${esc(t("pic.copy"))}</span></button>` : "") +
-        (canShare ? `<button class="btn btn-sm" type="button" data-pic-share>${icon("out")}<span>${esc(t("pic.share"))}</span></button>` : "") +
-      `</div>`;
+    pic.classList.remove("pic-busy");
+    $(".pic-body", pic).innerHTML = `<img class="pic-img" src="${url}" alt="${esc(alt)}" width="${PIC.w}">`;
+    $(".pic-btns", pic).innerHTML =
+      `<a class="btn btn-sm btn-primary" href="${url}" download="${esc(filename)}">${icon("down")}<span>${esc(t("pic.save"))}</span></a>` +
+      (canCopy ? `<button class="btn btn-sm" type="button" data-pic-copy>${icon("copy")}<span>${esc(t("pic.copy"))}</span></button>` : "") +
+      (canShare ? `<button class="btn btn-sm" type="button" data-pic-share>${icon("out")}<span>${esc(t("pic.share"))}</span></button>` : "");
+    $(".pic-actions", pic).hidden = false;
     pic._blob = blob;
     pic._file = file;
+  }
+  // A picture in the window: titleHtml over it, draw(code) draws it in a language
+  function pictureWindow(titleHtml, draw, filename, alt) {
+    $("#pic-title").innerHTML = titleHtml;
+    $("[data-pic-close]", pic).setAttribute("aria-label", t("pl.close"));
+    $(".pic-body", pic).innerHTML = `<p class="pic-wait">${esc(t("pic.drawing"))}</p>`;
+    $(".pic-actions", pic).hidden = true;
+    picNow = { draw, filename, alt };
+    if (!pic.open) pic.showModal();
+    drawPictureIn(lang);
   }
   function openPicture(c) {
     const d = picBoard(c);
     const filename = `${c.n}-${slugOf(c.name)}${d.legacy ? "-legacy" : d.board ? `-board-${d.board}` : ""}${d.byMiss ? "-by-mistakes" : ""}.png`;
     const alt = `${c.name} · ${t(d.legacy ? "pic.legacyTop" : "lb.tab.top")}: ` + d.runs.map((r, i) => `${i + 1}. ${r.name} ${r.time}, ${t("unit.mistakes", { count: r.miss })}`).join("; ");
-    pictureWindow(esc(t("pic.title", { n: c.n, course: "\u0000" })).replace("\u0000", flagName(c)), () => drawPicture(c, d), filename, alt);
+    pictureWindow(esc(t("pic.title", { n: c.n, course: "\u0000" })).replace("\u0000", flagName(c)), (code) => drawPicture(c, d, code), filename, alt);
   }
 
   /* ---------- Player pictures ----------
@@ -4246,19 +4331,20 @@ a.link-copy { text-decoration: none; }
     const runs = rows.reduce((sum, x) => sum + x.runs.length + x.legacy.length, 0);
     return { key, p, total: r.players.length, counted: r.counted.length, rows, dc, runs, medals: medalsOf(key), name: caps(named.name || (dc ? dc.name : "")) };
   }
-  async function drawPlayerPicture(d) {
+  // The player picture in a language (code), once its fonts and pictures have loaded
+  async function drawPlayerPicture(d, code) {
+    await picFonts([
+      'italic 800 54px "Barlow Condensed"', '700 23px Barlow', '600 17px Barlow', '700 24px "JetBrains Mono"', '700 23px "JetBrains Mono"',
+      '600 15px "JetBrains Mono"', '600 12px "JetBrains Mono"', '400 13.5px "JetBrains Mono"', `22px ${EMOJI}`,
+    ], d.rows.map((x) => x.c.flag).join(""), code);
+    const avatar = d.dc && /^https:\/\/cdn\.discordapp\.com\//.test(d.dc.avatar) ? d.dc.avatar : "";
+    const [logo, pfp] = await Promise.all([loadImg("/assets/logo.webp"), avatar ? loadImg(avatar, true) : null]);
+    return inLang(code, () => paintPlayerPicture(d, logo, pfp));
+  }
+  function paintPlayerPicture(d, logo, pfp) {
     const W = PIC.w, statsTop = PIC.top + PIC.head + 22, statH = 78, tileGap = 10;
     const rowsTop = statsTop + statH + 22, perCol = Math.max(1, Math.ceil(d.rows.length / 2));
     const footY = rowsTop + perCol * PIC.rowH + (perCol - 1) * PIC.gap + 18, H = Math.round(footY + 17 + 26);
-    const flags = d.rows.map((x) => x.c.flag).join("");
-    if (document.fonts) {
-      await Promise.all([
-        'italic 800 54px "Barlow Condensed"', '700 23px Barlow', '600 17px Barlow', '700 24px "JetBrains Mono"', '700 23px "JetBrains Mono"',
-        '600 15px "JetBrains Mono"', '600 12px "JetBrains Mono"', '400 13.5px "JetBrains Mono"', `22px ${EMOJI}`,
-      ].map((f) => document.fonts.load(f, f.includes("Emoji") ? flags : "AZ09").catch(() => null)));
-    }
-    const avatar = d.dc && /^https:\/\/cdn\.discordapp\.com\//.test(d.dc.avatar) ? d.dc.avatar : "";
-    const [logo, pfp] = await Promise.all([loadImg("/assets/logo.webp"), avatar ? loadImg(avatar, true) : null]);
     const { cv, ctx } = picCanvas(W, H, logo);
     // Their name, then their Discord (or that it's a name from the legacy boards) and their Top 10s, Podiums and Records
     const textTop = PIC.top + (PIC.head - 99.6) / 2;
@@ -4406,7 +4492,7 @@ a.link-copy { text-decoration: none; }
     const alt = `${d.name}: ` + (d.p ? `${t("pl.rating")} ${points(d.p.rating)}, ${t("res.of", { rank: d.p.rank, total: d.total })}, ${tierLabel(d.p.tier)}` : t("find.unrated")) +
       `, ${t("pl.courses")} ${d.p ? d.p.courses : 0}/${d.counted}, ${t("pl.runs")} ${localNum(d.runs)}. ` +
       d.rows.filter((x) => x.best).map(({ c, at, best, total }) => `${c.n}. ${c.name}: ${best.time}, ${t("unit.mistakes", { count: best.miss })}, ${t("res.of", { rank: at + 1, total })}`).join("; ");
-    pictureWindow(esc(t("pic.player", { player: d.name })), () => drawPlayerPicture(d), filename, alt);
+    pictureWindow(esc(t("pic.player", { player: d.name })), (code) => drawPlayerPicture(d, code), filename, alt);
   }
   document.addEventListener("click", (e) => {
     const b = e.target.closest(".lb-pic");
