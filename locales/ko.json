@@ -432,6 +432,8 @@
   "visits.note": "누군가 브라우저에서 사이트를 열 때마다 사이트가 직접 셉니다. 대부분의 봇은 세지 않습니다. 한 사람은 하루에 한 번만 세며, 누구인지는 저장하지 않습니다.",
   "stats.title": "통계",
   "stats.fromTo": "{from}부터 {to}까지",
+  "stats.none": "선택한 날에는 없습니다.",
+  "stats.backTo": "{list}(으)로 돌아가기",
   "stats.prevDay": "전날",
   "stats.nextDay": "다음 날",
   "stats.views": "조회수",

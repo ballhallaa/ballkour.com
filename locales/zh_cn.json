@@ -432,6 +432,8 @@
   "visits.note": "每当有人在浏览器中打开网站，都由网站自己计数。大多数机器人不计入。每个人每天只算一次，网站不会保存是谁。",
   "stats.title": "统计",
   "stats.fromTo": "{from} 至 {to}",
+  "stats.none": "所选日期内没有。",
+  "stats.backTo": "返回{list}",
   "stats.prevDay": "前一天",
   "stats.nextDay": "后一天",
   "stats.views": "浏览量",

@@ -432,6 +432,8 @@
   "visits.note": "Contadas pelo próprio site toda vez que alguém o abre em um navegador. A maioria dos bots não conta. Cada pessoa conta uma vez por dia, sem que o site guarde quem ela é.",
   "stats.title": "Estatísticas",
   "stats.fromTo": "De {from} a {to}",
+  "stats.none": "Nenhum nos dias escolhidos.",
+  "stats.backTo": "Voltar para {list}",
   "stats.prevDay": "Dia anterior",
   "stats.nextDay": "Dia seguinte",
   "stats.views": "Visualizações",
