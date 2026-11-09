@@ -296,6 +296,8 @@
   "rev.view": "View run",
   "rev.more": "Show {count} more",
   "rev.approvedBy": "Approved by {name}",
+  "runs.ratingGain": "{player}’s rating over every course: {rating}, with {change} from this run",
+  "rev.ratingGain": "{player}’s rating over every course if it’s approved: {rating}, with {change} from this run",
   "rev.declinedBy": "Turned down by {name}",
   "claim.title": "Is this you?",
   "claim.what": "Link these runs from before May 2026 to your Discord, so they show in My stats, with your Discord name and picture by them on the boards. A moderator checks that they’re yours first, and may message you on Discord to ask for proof, like an old screenshot or clip.",

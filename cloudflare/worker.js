@@ -853,15 +853,17 @@ async function sentStats(env, ctx, { n, run, before }) {
   if (!game || !game.files || !Array.isArray(game.courses)) throw new Error("the game data has no course list yet");
   return runStats(game, before, run, n);
 }
-// Where a run would place (waiting for a check) or placed: "Course: #1 of 12 • Global: #1 of 16 • ⭐ 1,818", its
-// place on the course, and its player's place and rating in the player ratings (like Runs to check on the site).
-// stats (runStats) can be null, and then it's just "Course: #1".
+// Where a run would place (waiting for a check) or placed: "Course: #1 of 12 • Global: #1 of 16 • ⭐ 1,818 (+909)", its
+// place on the course, and its player's place and rating in the player ratings, with what the run adds to it (like
+// Runs to check on the site). stats (runStats) can be null, and then it's just "Course: #1".
 function placeText(run, rank, stats) {
   const s = stats && stats.best === run.time && stats.bestMiss === run.mistakes ? stats : null;
+  const rating = s && s.rating ? Math.round(s.rating[1]) : null;
+  const gain = rating === null ? 0 : rating - Math.round(s.rating[0] ?? 0);
   return [
     s && s.place ? `Course: #${s.place} of ${s.players}` : `Course: #${rank}`,
     s && s.rank && `Global: #${s.rank[1]} of ${s.of}`,
-    s && s.rating && `⭐ ${s.rating[1].toLocaleString("en-US")}`,
+    rating !== null && `⭐ ${rating.toLocaleString("en-US")} (${gain < 0 ? "−" : "+"}${Math.abs(gain).toLocaleString("en-US")})`,
   ].filter(Boolean).join(" • ");
 }
 // The run's post in the run submissions channel: the run, where it would place (waiting for a check) or placed (on the
