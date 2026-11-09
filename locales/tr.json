@@ -431,8 +431,6 @@
   "visits.other": "Diğer",
   "visits.note": "Biri siteyi bir tarayıcıda her açtığında site kendisi sayar. Çoğu bot sayılmaz. Her kişi günde bir kez sayılır ve site kim olduğunu saklamaz.",
   "stats.title": "İstatistikler",
-  "stats.weekTo": "{date} tarihine kadar 7 gün",
-  "stats.monthTo": "{date} tarihine kadar 30 gün",
   "stats.fromTo": "{from} ile {to} arası",
   "stats.prevDay": "Önceki gün",
   "stats.nextDay": "Sonraki gün",
