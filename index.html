@@ -1007,6 +1007,11 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .rev-dc .icon { flex: none; width: 12px; height: 12px; opacity: .7; }
 .rev-dc:hover > span { text-decoration: underline; text-underline-offset: 3px; }
 .rev-dc:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; border-radius: 4px; }
+/* A claim's legacy runs, one per line: the course (like Submitted runs names it), then the time */
+.rev-legacy { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.rev-legacy li { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.rev-legacy .rev-course { min-width: 0; }
+.rev-legacy .stat { flex: none; font: 600 14px/1 var(--mono); }
 .rev-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
 .rev-run { display: grid; gap: 5px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: rgba(0, 0, 0, .25); }
 .rev-run.picked { border-color: rgba(255, 213, 79, .6); box-shadow: 0 0 0 1px rgba(255, 213, 79, .25); }
@@ -4825,9 +4830,11 @@ a.link-copy { text-decoration: none; }
         `<span class="rev-course">${esc(t("pl.legacy"))}</span><b class="rev-name">${esc(x.name)}</b>` +
         `<a class="rev-dc" href="https://discord.com/users/${esc(x.discord)}" target="_blank" rel="noopener" title="${esc(t("dc.profile", { name }))}">` +
           (pic ? `<img class="run-pfp" src="${esc(pic)}" alt="" width="16" height="16">` : "") + `<span>${esc(name)}</span>${icon("out")}</a>` +
-        `<span class="rev-line">${runs.map(({ c, r }) => `<span class="stat time nowrap" title="${esc(`${c.n} ${c.name}`)}">${esc(`${c.n} `)}` +
-          `<span class="mini-flag" aria-hidden="true">${c.flag}</span> ${icon("bolt")}${esc(r.time)}</span>`).join("")}` +
-          (runs.length ? "" : `<span class="tag tag-legacy">${esc(t("claim.revLinked"))}</span>`) + `</span>` +
+        // One run per line: the course, the way Submitted runs names it, then the time
+        (runs.length
+          ? `<ul class="rev-legacy">${runs.map(({ c, r }) => `<li><span class="rev-course">${esc(`${c.n} `)}${flagName(c)}</span>` +
+            `<span class="stat time">${icon("bolt")}${esc(r.time)}</span></li>`).join("")}</ul>`
+          : `<span class="rev-line"><span class="tag tag-legacy">${esc(t("claim.revLinked"))}</span></span>`) +
         `<span class="rev-meta">${withDate("claim.revOn", { date: formatDate(String(x.sentAt || "").slice(0, 10)) })}</span>` +
         (now.length ? `<span class="rev-meta">${esc(t("claim.revNow", { names: now.join(", ") }))}</span>` : "") +
         `<span class="rev-actions">${claimActions(x, i)}</span></li>`;
