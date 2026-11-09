@@ -277,6 +277,7 @@
   "signin.continue": "Continue with Discord",
   "signin.notNow": "Not now",
   "rt.coursePoints": "{points} course rating points",
+  "rt.coursePointsGain": "{points} course rating points, with {change} from this run",
   "lb.rating": "Rating over every course: {points}",
   "lb.ratingNote": "Ratings: each player’s rating over every course",
   "lb.ratingThen": "Ratings: each player’s rating over every course, as it was on {date}",
