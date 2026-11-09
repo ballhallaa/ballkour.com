@@ -19,7 +19,7 @@
                        links: see "Players' own links".
    /runs/<id>          A run sent from the website: the home page, which opens the run's page. Ballkyrie's post for
                        it in the run submissions channel links here. See "Each run's page".
-   /stats              The home page, which opens My stats: the visitor's own player panel (signing them in first).
+   /stats              The home page, which opens My profile: the visitor's own player panel (signing them in first).
    /players/<…>        The home page, which opens a player's panel: by their number, or the name they picked for their
                        link. See "Players' own links".
    /api/visits         How many times the site was opened, and by how many people, for moderators. See "Page views".
@@ -955,10 +955,10 @@ function checkedClaimMessage({ claim, approve, site }) {
       url: approve ? `${site}/stats` : runs,
       color: approve ? 0x00e697 : 0xff6a4f,
       description: approve
-        ? "A moderator checked that they’re yours. They’re in My stats now, with your Discord name and picture by them on the boards."
+        ? "A moderator checked that they’re yours. They’re in My profile now, with your Discord name and picture by them on the boards."
         : "A moderator couldn’t confirm that they’re yours. If they are, open a ticket on our Discord with proof, like an old screenshot or clip.",
     }],
-    components: [{ type: 1, components: [{ type: 2, style: 5, label: approve ? "My stats" : "See the runs", url: approve ? `${site}/stats` : runs }] }],
+    components: [{ type: 1, components: [{ type: 2, style: 5, label: approve ? "My profile" : "See the runs", url: approve ? `${site}/stats` : runs }] }],
   };
 }
 // After a run is saved: its numbers first, kept for its page so they're there by the time anyone opens it from the
@@ -1102,7 +1102,7 @@ async function review(request, env, ctx) {
 /* ---------- Claiming legacy runs ----------
    The legacy boards (history.json's "legacy", from before May 2026) have runs under just an in-game name, with no
    Discord ID. Those runs aren't anyone's on the site: they're their own player, with no Discord name or picture, and
-   they don't show in anyone's My stats. A signed-in player can say a legacy name is theirs (Is this you? in its panel
+   they don't show in anyone's My profile. A signed-in player can say a legacy name is theirs (Is this you? in its panel
    on the site). The claim waits in runs.json's "claims" until a moderator checks that it's really them, under the form
    at ballkour.com/submit, and Ballkyrie posts it in the legacy claims channel (CLAIMS_CHANNEL in wrangler.toml) so
    moderators know. Ballkyrie needs to be able to see it, send messages and embed links there. Without it (or
@@ -2016,7 +2016,7 @@ function previewOf(pathname, data, players) {
 /* ---------- Pages ---------- */
 // The sections (/submit, /faq, …) and the links into them (/leaderboards/6, /leaderboards/3/legacy, /leaderboards/3/12
 // for one of its older boards, /faq/pausing), and every run sent from the website (/runs, the list under the form)
-// and each one's page (/runs/<id>), /stats (My stats), and each player's panel (/players/<number or name>, see
+// and each one's page (/runs/<id>), /stats (My profile), and each player's panel (/players/<number or name>, see
 // "Players' own links", and /players/<…>/runs for their Runs), are the home page. On ballkour.com a Cloudflare rule
 // already serves the sections that way, but the test copy on workers.dev has no such rule, so the Worker does it too.
 const DEEP_LINK = /^\/(?:(?:courses|leaderboards|submit|features|faq|source-code|translations|runs|stats)\/?|leaderboards\/[\w-]+(?:\/legacy|\/\d+)?\/?|faq\/[\w-]+\/?|runs\/[\w-]+\/?|players\/[^/]{1,300}(?:\/runs)?\/?)$/i;
