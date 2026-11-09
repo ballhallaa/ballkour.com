@@ -1021,7 +1021,7 @@ async function postClaim(env, { claim, runs, files, names, flags, site }) {
       ],
       timestamp: claim.sentAt,
     }],
-    components: [{ type: 1, components: [{ type: 2, style: 5, label: "Check it", url: `${site}/submit` }] }],
+    components: [{ type: 1, components: [{ type: 2, style: 5, label: "Verify", url: `${site}/submit` }] }],
   }, `claim to ${claim.name}`);
 }
 async function claim(request, env, ctx) {

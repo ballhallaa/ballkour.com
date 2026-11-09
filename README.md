@@ -147,7 +147,7 @@ Each claim waits in `"claims"` in `runs.json` on `leaderboard-data`, one per lin
 ]
 ```
 
-Ballkyrie posts every claim in the legacy claims channel (`CLAIMS_CHANNEL` in `cloudflare/wrangler.toml`) with who it's from, the legacy runs, the names they go by on the boards now, and a **Check it** button to ballkour.com/submit. Ballkyrie needs to be able to see that channel, send messages, and embed links there.
+Ballkyrie posts every claim in the legacy claims channel (`CLAIMS_CHANNEL` in `cloudflare/wrangler.toml`) with who it's from, the legacy runs, the names they go by on the boards now, and a **Verify** button to ballkour.com/submit. Ballkyrie needs to be able to see that channel, send messages, and embed links there.
 
 Moderators get **Legacy runs to check** under Runs to check there. Each claim shows the legacy runs, and who claimed them: their Discord name and picture, which open their Discord profile so a moderator can message them. Then come **View runs** (the name's panel), **Link**, and **Turn down**, which ask first like a run's. Legacy runs have no videos, so ask the player for proof on Discord before linking, like an old screenshot or clip. **Link** adds their Discord ID to every legacy run under that name in `history.json` that doesn't have one yet (the same as doing it by hand), and marks the claim `"approved"`. **Turn down** marks it `"declined"` and leaves the runs alone. That player can't claim the same name again from the site, so they'd open a ticket instead. Both keep who checked it and when (`checkedBy` and `checkedAt`).
 
