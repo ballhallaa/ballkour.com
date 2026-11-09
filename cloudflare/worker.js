@@ -1549,7 +1549,7 @@ const csp = (nonce) => [
   "font-src 'self'",
   "img-src 'self' data: https://cdn.discordapp.com",
   "connect-src 'self' https://cloudflareinsights.com",
-  "frame-src https://www.youtube-nocookie.com https://clips.twitch.tv https://player.twitch.tv https://streamable.com",
+  "frame-src https://www.youtube-nocookie.com https://clips.twitch.tv https://player.twitch.tv https://streamable.com https://medal.tv",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'none'",

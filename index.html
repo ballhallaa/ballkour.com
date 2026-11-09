@@ -5515,7 +5515,7 @@ a.link-copy { text-decoration: none; }
      also get Approve and Turn down for a run waiting for a check, and see who checked one. Old ?check=<id> links (the
      Verify buttons from before) open it too. The runs from before the website's form have a page too, with just Today
      (see pastRuns).
-     The video plays on the page for YouTube, Twitch, and Streamable links, but nothing loads from those sites until
+     The video plays on the page for YouTube, Twitch, Streamable, and Medal links, but nothing loads from those sites until
      Play is pressed (the site never sends visitors to anyone else on its own). Other links get a button to the video. */
   const RUN_GROUPS = ["pending", "runs", "declined", "removed"];
   // The page of a run whose link someone opened (/runs/<id>, or an old /submit?check=<id>)
@@ -5676,6 +5676,9 @@ a.link-copy { text-decoration: none; }
     if (vod) return { site: "Twitch", src: `https://player.twitch.tv/?video=${vod}&parent=${parent}&autoplay=true` };
     const st = host === "streamable.com" ? match(/^\/(?:e\/)?(\w+)\/?$/) : "";
     if (st) return { site: "Streamable", src: `https://streamable.com/e/${st}?autoplay=1` };
+    // Medal clips (medal.tv/games/overwatch/clips/<id>/<title>), in Medal's own player, the iframe its oEmbed hands out
+    const medal = host === "medal.tv" ? /^\/games\/([\w-]+)\/clips?\/([A-Za-z0-9]+)(?:\/|$)/.exec(path) : null;
+    if (medal) return { site: "Medal", src: `https://medal.tv/games/${medal[1]}/clip/${medal[2]}` };
     return null;
   }
   function videoHtml(url) {
