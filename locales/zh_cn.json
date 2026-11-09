@@ -431,8 +431,6 @@
   "visits.other": "其他",
   "visits.note": "每当有人在浏览器中打开网站，都由网站自己计数。大多数机器人不计入。每个人每天只算一次，网站不会保存是谁。",
   "stats.title": "统计",
-  "stats.weekTo": "截至 {date} 的 7 天",
-  "stats.monthTo": "截至 {date} 的 30 天",
   "stats.fromTo": "{from} 至 {to}",
   "stats.prevDay": "前一天",
   "stats.nextDay": "后一天",

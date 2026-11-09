@@ -431,8 +431,6 @@
   "visits.other": "その他",
   "visits.note": "ブラウザでサイトが開かれるたびにサイト自身が数えます。ほとんどのボットは数えません。同じ人は1日1回だけ数え、誰なのかは保存しません。",
   "stats.title": "統計",
-  "stats.weekTo": "{date}までの7日間",
-  "stats.monthTo": "{date}までの30日間",
   "stats.fromTo": "{from}から{to}まで",
   "stats.prevDay": "前の日",
   "stats.nextDay": "次の日",
