@@ -959,8 +959,9 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .sub-pick .chev { width: 16px; height: 16px; flex: none; color: var(--ink-3); transition: transform .2s ease; }
 .sub-pick[aria-expanded="true"] .chev { transform: rotate(180deg); }
 .sub-course-menu { left: 0; right: 0; top: calc(100% + 6px); max-height: 340px; overflow-y: auto; overscroll-behavior: contain; transform-origin: top center; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; }
-/* A broken course: dimmed, and struck through like its code in the course list. It can't be picked. */
-.opt.broken { cursor: default; color: var(--ink-3); }
+/* A broken course: dimmed, and struck through like its code in the course list. It lights up under the pointer like
+   the others, with a "not allowed" cursor, but it can't be picked. */
+.opt.broken { cursor: not-allowed; color: var(--ink-3); }
 .opt.broken .opt-label { text-decoration-line: line-through; text-decoration-color: var(--coral); text-decoration-thickness: 2px; }
 .opt.broken .opt-flag { opacity: .45; }
 @media (max-width: 600px) {
@@ -2083,17 +2084,20 @@ a.link-copy { text-decoration: none; }
 
   /* A button that opens a listbox menu: mouse, touch and keyboard (arrows, Home/End, Enter, Escape). cols is how many
      columns it has, or a function that says, for a menu whose columns change with the screen's width. An option with
-     aria-disabled="true" (a broken course in the course picker) shows, but can't be picked: the arrows go on past it,
-     the way they were going. */
+     aria-disabled="true" (a broken course in the course picker) shows, and lights up under the pointer, but can't be
+     picked: the arrows go on past it, the way they were going. */
   function makeMenu(wrap, btn, menu, cols, onChoose) {
     let opts = [];
     let active = 0;
     const off = (o) => o.getAttribute("aria-disabled") === "true";
+    // step is which way the arrows were going, to skip options that can't be picked; 0 (the pointer) skips none
     function setActive(i, scroll, step = 1) {
       if (!opts.length) return;
       const at = (j) => ((j % opts.length) + opts.length) % opts.length;
-      for (let tries = 0; tries < opts.length && off(opts[at(i)]); tries++) i += step;
-      if (off(opts[at(i)])) return;
+      if (step) {
+        for (let tries = 0; tries < opts.length && off(opts[at(i)]); tries++) i += step;
+        if (off(opts[at(i)])) return;
+      }
       active = at(i);
       opts.forEach((o, j) => o.classList.toggle("active", j === active));
       menu.setAttribute("aria-activedescendant", opts[active].id);
@@ -2118,7 +2122,7 @@ a.link-copy { text-decoration: none; }
       if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); open(); }
     });
     menu.addEventListener("click", (e) => { const o = e.target.closest('[role="option"]'); if (o && !off(o)) choose(o.dataset.value); });
-    menu.addEventListener("pointermove", (e) => { const o = e.target.closest('[role="option"]'); if (o && !off(o)) setActive(opts.indexOf(o), false); });
+    menu.addEventListener("pointermove", (e) => { const o = e.target.closest('[role="option"]'); if (o) setActive(opts.indexOf(o), false, 0); });
     menu.addEventListener("keydown", (e) => {
       const n = typeof cols === "function" ? cols() : cols;
       const step = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: n, ArrowUp: -n }[e.key];
