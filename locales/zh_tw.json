@@ -51,7 +51,7 @@
   "foot.writeEmail": "寫電子郵件",
   "foot.disclaimer": "Ballkour 是粉絲製作的鬥陣特攻工作坊模式，與 Blizzard Entertainment 無關。",
   "steps.goto": "在鬥陣特攻中前往<b>開始遊戲 → 更多 → 自訂對戰 → 建立</b>。",
-  "steps.import": "前往<b>設定 → 匯入代碼</b>（在「摘要」下），然後貼上下方任一代碼（例如 <code>59W28</code>）。",
+  "steps.import": "前往<b>設定 → 匯入代碼</b>（在<b>摘要</b>下），然後貼上下方任一代碼（例如 <code>59W28</code>）。",
   "badge.label": "幫倉鼠加速",
   "logo.alt": "Ballkour 標誌：戴著護目鏡的倉鼠騎在黑橘相間的球上",
   "hero.nav": "開始",

@@ -51,7 +51,7 @@
   "foot.writeEmail": "E-posta yaz",
   "foot.disclaimer": "Ballkour, hayranlar tarafından yapılmış bir Overwatch Workshop modudur. Blizzard Entertainment ile bağlantılı değildir.",
   "steps.goto": "Overwatch’ta <b>Oyna → Diğer → Özel Oyunlar → Oluştur</b> yolunu izle.",
-  "steps.import": "<b>Ayarlar → Kodu İçe Aktar</b> (Özet altında) bölümüne git ve aşağıdaki kodlardan birini yapıştır (ör. <code>59W28</code>).",
+  "steps.import": "<b>Ayarlar → Kodu İçe Aktar</b> (<b>Özet</b> altında) bölümüne git ve aşağıdaki kodlardan birini yapıştır (ör. <code>59W28</code>).",
   "badge.label": "Hamstere hız kazandır",
   "logo.alt": "Ballkour logosu: siyah-turuncu bir topa binen gözlüklü bir hamster",
   "hero.nav": "Başla",
