@@ -1021,7 +1021,7 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 /* Player ratings: a row like a course's, its board with each player's rating, courses run and Top % tier */
 .rt-flag { display: grid; place-items: center; color: var(--gold); }
 .rt-flag .icon { width: 20px; height: 20px; }
-/* Fixed columns, so the icons line up whatever the numbers' widths: up to 10,000 points and 99/99 courses */
+/* Fixed columns, so the icons line up whatever the numbers' widths: up to 1,000 points and 99/99 courses */
 .rt-board .run { grid-template-columns: 26px minmax(0, 1fr) 78px 64px; }
 .rt-board .run .stat { justify-content: space-between; }
 .rt-board .stat.time .icon { color: var(--gold); }
@@ -1125,7 +1125,7 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 /* Its time, mistakes, and rating, then where it is (on a phone, that goes under them) */
 .rev-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
 .rev-line .stat { font: 600 14px/1 var(--mono); }
-/* Would be #1 of 12 · Global #1 of 16 · ★ 1,818, which can wrap onto two lines on a phone */
+/* Would be #1 of 12 · Global #1 of 16 · ★ 182, which can wrap onto two lines on a phone */
 .rev-would { display: inline-block; height: auto; padding: 1px 7px; line-height: 14px; }
 .rev-would .icon { width: 10px; height: 10px; margin-right: 3px; vertical-align: -1px; }
 .rev-meta { font: 400 12.5px/1.3 var(--mono); color: var(--ink-3); }
@@ -1711,7 +1711,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         </li>
         <li class="feature">
           <span class="f-icon" style="--c: var(--gold)"><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg></span>
-          <div><p class="f-title"><span data-i18n="rt.title">Player ratings</span></p><p class="f-text" data-i18n="f.ratings.text">Every course is worth up to 10,000 points, and your rating is your average over all of them. Your Top % is where you place among every rated player, and you automatically receive the role on our Discord.</p></div>
+          <div><p class="f-title"><span data-i18n="rt.title">Player ratings</span></p><p class="f-text" data-i18n="f.ratings.text">Every course is worth up to 1,000 points, and your rating is your average over all of them. Your Top % is where you place among every rated player, and you automatically receive the role on our Discord.</p></div>
         </li>
       </ul>
     </section>
@@ -1923,11 +1923,11 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "rt.empty": "No ratings yet. Set a time on any course to get rated.",
   "rt.tier": "Top {pct}%",
   "rt.courses": "{n} of {total} courses run",
-  "rt.how": "Every course is worth up to 10,000 points: the record gets all of them, and the further behind it a run is, the fewer it gets. Your rating is your average over every course that works, with 0 for any you haven’t run, so every new or faster run raises it. Be the first on a course and it’s all yours.",
+  "rt.how": "Every course is worth up to 1,000 points: the record gets all of them, and the further behind it a run is, the fewer it gets. Your rating is your average over every course that works, with 0 for any you haven’t run, so every new or faster run raises it. Be the first on a course and it’s all yours.",
   "rt.tiers": "Top % is where you place among all {count} rated players. On our Discord, it’s your role: everyone below Top 90% is Rated, and anyone without a rating yet is Unrated.",
   "rt.counted": "Courses that count: {courses}. Broken courses don’t.",
   "rt.mathTitle": "The formulas",
-  "rt.mathCourse": "Course rating = 10,000 × [ln(1 + (e − 1) × record ÷ your time)]²",
+  "rt.mathCourse": "Course rating = 1,000 × [ln(1 + (e − 1) × record ÷ your time)]²",
   "rt.mathRating": "Rating = (your course ratings added up) ÷ {n}",
   "rt.mathNote": "ln is the natural log, and e is about 2.718. {n} is the number of courses that count, and a course you haven’t run adds 0. With a 4:00.00 record, a 5:00.00 run gets a course rating of {a}, and an 8:00.00 run gets {b}.",
   "sub.pick": "Pick a course",
@@ -3199,7 +3199,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      any more was taken off it (or the board was cleared), not pushed off. A player is their Discord ID, or for a run
      without one, its in-game name (in-game names aren't unique: Overwatch hides the BattleTag number).
 
-     Player ratings: every course is worth up to 10,000 points, 10000 × ln(1 + (e − 1) × record ÷ time)², so the record
+     Player ratings: every course is worth up to 1,000 points, 1000 × ln(1 + (e − 1) × record ÷ time)², so the record
      gets all of them (lucio.surf's curve for a player who has run every map). A rating is the average over every course
      that isn't broken, with 0 for the ones a player hasn't run (and for courses nobody has run yet), so a new or
      faster run never lowers it, and the first run on a course changes nobody else's rating. Their tier is their place over the number of rated players (#4 of 40 is in the Top 10%),
@@ -3233,9 +3233,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const all = bestEach([...live, ...old]);
     return { top: all.slice(0, 10), rest: all.slice(10) };
   }
-  // A run's course rating: up to 10,000 points, all of them for the record. The Player ratings board shows this and
+  // A run's course rating: up to 1,000 points, all of them for the record. The Player ratings board shows this and
   // the rating's formula (rt.mathCourse, rt.mathRating): change them with it.
-  const coursePoints = (record, r) => 10000 * Math.log(1 + (Math.E - 1) * toSeconds(record.time) / toSeconds(r.time)) ** 2;
+  const coursePoints = (record, r) => 1000 * Math.log(1 + (Math.E - 1) * toSeconds(record.time) / toSeconds(r.time)) ** 2;
   /* A course's board as it was at the end of a day ("2026-06-11"), for the ratings back then: its last board posted
      by that day (board: or this one, the older board on screen), then the players past its #10 with runs sent by
      that day, only slower than its #10 as on today's board. A course without boards then has the runs sent by that
@@ -3306,7 +3306,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     });
   }
   /* Each player's rating over every course, and what their run on c's board adds to it (gain): their rating with it,
-     less their rating without it (see pointsWithout), like a run's page and the run lists show it ("⭐ 855 (+98)").
+     less their rating without it (see pointsWithout), like a run's page and the run lists show it ("⭐ 86 (+10)").
      Only c's course rating changes without it, so that's all that's worked out again. A run on a course that isn't
      rated adds nothing, so it has no gain (null). then: an older board's day, as for ratings, or none for today's.
      → Map: player (see playerKey) → { rating, gain } */
@@ -3329,11 +3329,13 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     });
     return out;
   }
-  const points = (n) => Math.round(n).toLocaleString(htmlLang());
+  // Ratings, course ratings and what runs add to them, with no thousands separator: they only reach 1000 (a record),
+  // and "1,000" among numbers like 86 and 182 is just noise
+  const points = (n) => Math.round(n).toLocaleString(htmlLang(), { useGrouping: false });
   // A run's player's rating over every course with it, and what it added (s: what it did, from statsFrom or the
-  // Worker): "⭐ 855 (+98)", the way the run lists show it. Nothing when it doesn't count for the ratings.
+  // Worker): "⭐ 86 (+10)", the way the run lists show it. Nothing when it doesn't count for the ratings.
   const signed = (n) => `${n < 0 ? "−" : "+"}${points(Math.abs(n))}`;
-  // " (+98)" after a rating, or nothing when there's no gain to show (null)
+  // " (+10)" after a rating, or nothing when there's no gain to show (null)
   const gainText = (gain) => (gain === null || gain === undefined ? "" : ` (${signed(gain)})`);
   function ratingAdded(s) {
     if (!s || !s.rating) return null;
@@ -3940,7 +3942,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const ran = p ? t("rt.courses", { n: p.courses, total }) : "";
     const tier = p && p.tier ? t("rt.tier", { pct: p.tier.toLocaleString(htmlLang()) }) : "";
     const unrated = t(x.legacy ? "pl.legacy" : "find.unrated");
-    // Read out as "BALLMYBLOVED, ball シ, #1 of 16, Rating 1,818, Top 10%, 2 of 11 courses run"
+    // Read out as "BALLMYBLOVED, ball シ, #1 of 16, Rating 182, Top 10%, 2 of 11 courses run"
     const label = [x.name, dc && dc.name, ...(p ? [t("res.of", { rank: p.rank, total: r.players.length }), `${t("pl.rating")} ${points(p.rating)}`, tier, ran] : [unrated])]
       .filter(Boolean).join(", ");
     return `<li class="run${p && p.rank <= 3 ? " p" + p.rank : ""}${i === pfActive ? " active" : ""}" role="option" id="pf-opt-${i}" aria-selected="${i === pfActive}" aria-label="${esc(label)}">` +
@@ -5924,7 +5926,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       const row = (key, html) => `<tr><th scope="row">${esc(t(key))}</th><td class="num">${html}</td></tr>`;
       const standing = standingAt(day, today);
       html += `<h3 class="by src-group">${esc(t("pl.runs"))}</h3><div class="stats-part">` +
-        `<div class="stats-tiles" style="--n: 4">${tile("runs.title", n(sent), "upload")}${tile("stats.gained", signed(add("gained")), "star")}` +
+        `<div class="stats-tiles" style="--n: 4">${tile("runs.title", n(sent), "upload")}${tile("stats.gained", `${add("gained") < 0 ? "−" : "+"}${n(Math.abs(add("gained")))}`, "star")}` +
         `${tile("res.top10s", n(add("top10s")), "bolt")}${tile("res.records", n(add("records")), "trophy")}</div>` +
         chart("runs", "stats.runsChart", (d) => of(d).sent || 0, (d) => t("stats.runsDay", { date: d, count: n(of(d).sent) })) +
         `<table class="stats-table"><tbody>` +
@@ -6020,7 +6022,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       const s = run && runNow({ run: r, n: c.n, group: "pending", status: "pending" });
       return s && isTheirBest(s, run) ? s : null;
     };
-    // "Would be #1 of 12 · Global #1 of 16 · ★ 1,818 (+909)": its place on the course, and its player's place and rating
+    // "Would be #1 of 12 · Global #1 of 16 · ★ 182 (+91)": its place on the course, and its player's place and rating
     // in the player ratings, with what it adds to it (the same as by the run under Submitted runs). On a phone, it only
     // breaks between them. Until the boards are in, it's just "Would be #1".
     const wouldTag = (r, s) => [
@@ -6060,7 +6062,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const reviewer = !!(me && me.reviewer);
     const left = Math.max(0, all.length - runsShown);
     // Its player's rating over every course with it, and what it added, as on its page today (if it's approved, for
-    // one waiting for a check): "⭐ 855 (+98)". One that isn't their best, or isn't on the board, adds nothing, so it
+    // one waiting for a check): "⭐ 86 (+10)". One that isn't their best, or isn't on the board, adds nothing, so it
     // has no star.
     const gainOf = (x) => {
       const s = (x.status === "pending" || x.status === "up") && runNow(x);
@@ -6480,14 +6482,14 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (s.points) {
       const [from, to] = s.points;
       html += resRow(t("res.course"), (from !== null && from !== to ? was(esc(points(from))) : "") + esc(points(to)),
-        deltaHtml(from === null ? null : to - from, Math.abs(to - (from || 0)).toLocaleString(htmlLang())));
+        deltaHtml(from === null ? null : to - from, points(Math.abs(to - (from || 0)))));
     }
     if (s.rating) {
       const [from, to] = s.rating;
       const rated = from !== null; // they had a rating before
       const change = rated ? to - from : null;
       html += resRow(t("res.rating"), (rated && change ? was(esc(points(from))) : "") + esc(points(to)),
-        deltaHtml(change, Math.abs(change || 0).toLocaleString(htmlLang())),
+        deltaHtml(change, points(Math.abs(change || 0))),
         rated && s.courses[0] !== s.courses[1] ? esc(t("rt.courses", { n: s.courses[1], total: s.counted })) : "");
       const [rankFrom, rankTo] = s.rank;
       html += resRow(t("res.place"), (rated && rankFrom !== rankTo ? was(`#${rankFrom}`) : "") + esc(t("res.of", { rank: rankTo, total: s.of })),
@@ -7068,7 +7070,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (runThen[id]) return;
     if (!again) runAsking.add(id);
     let stats = null;
-    try { stats = (await fetch(`/api/run?id=${encodeURIComponent(id)}`).then((r) => (r.ok ? r.json() : {}))).stats || null; } catch (e) { stats = null; }
+    // &scale: a new address since ratings went to 1,000 a course, so no browser reuses numbers it kept from before
+    try { stats = (await fetch(`/api/run?id=${encodeURIComponent(id)}&scale=1000`).then((r) => (r.ok ? r.json() : {}))).stats || null; } catch (e) { stats = null; }
     runAsking.delete(id);
     if (stats && typeof stats === "object") runThen[id] = stats;
     if (runId === id) renderRunStats();
