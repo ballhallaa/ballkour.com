@@ -10,9 +10,10 @@ assets/                  logo, icons, link-preview image (og.jpg)
 assets/fonts/            the site's fonts (Open Font License), served from ballkour.com
 locales/*.json           translations, one file per language (managed on Weblate)
 tools/extract-en.py      rebuilds locales/en.json from index.html
+tools/check.py           checks the scripts, settings, and translations (every pull request runs it)
 cloudflare/              the Worker that serves the site, plus the GitHub and Discord data the page uses
 .assetsignore            what isn't published: this README, tools/, the Worker's own code, …
-.github/workflows/       deploys the site on every push to main
+.github/workflows/       checks every pull request, and deploys the site on every push to main
 ```
 
 Keep everything out of `/discord`, `/gameplay`, `/code`, `/releases`, `/courses`, `/leaderboards`, `/submit`, `/features`, `/faq`, `/source-code`, `/translations`, `/runs`, `/stats`, `/api`, and `/data`. Cloudflare redirects `/discord`, `/gameplay`, and `/releases/v*` and `/releases/site/v*` (to that release of the game or website on GitHub, which is where the version chips link), and the Worker redirects `/code/game` and `/code/site` (or `/code/website`) to the game's and this website's GitHub repos, and `/releases` and `/releases/site` (or `/releases/website`) to their release notes. Cloudflare rewrites the others (with or without a trailing slash) to the home page, which scrolls to that section; `/leaderboards` also opens Gibraltar's top 10.
@@ -44,13 +45,18 @@ Every push to `main` deploys through `.github/workflows/deploy.yml`, including m
 
 The workflow pins Wrangler to a 4.x version (`wranglerVersion`). The action's default is Wrangler 3, which ignores `run_worker_first` in `wrangler.toml`, and pages then go out without their data. When updating it, keep it at 4 or newer.
 
-The deploy fails if `locales/en.json` doesn't match `index.html`. After changing English text in `index.html`, run:
+Every pull request, Weblate's too, gets checked first (`.github/workflows/check.yml`), and so does every deploy:
+
+- `locales/en.json` matches `index.html`. After changing English text in `index.html`, run `python3 tools/extract-en.py` and commit `locales/en.json` along with it.
+- The scripts in the pages and the Worker parse, so a typo can't take the page down (`python3 tools/check.py`, which also checks the rest).
+- Every translation keeps English's `{placeholders}` and only uses the tags the site allows. A mistake there shows on the pull request; fix it in Weblate.
+
+Run both before pushing, if you like:
 
 ```
-python3 tools/extract-en.py
+python3 tools/extract-en.py --check
+python3 tools/check.py
 ```
-
-and commit `locales/en.json` along with it.
 
 To try changes before merging, deploy a test copy from `cloudflare/`. It has no route and runs on workers.dev, built from your working folder:
 
