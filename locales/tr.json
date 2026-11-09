@@ -463,5 +463,5 @@
   "vid.all": "YouTube’da {count} yorumun tümünü gör",
   "vid.likes": "Beğeni: {count}",
   "vid.replies": "Yanıt: {count}",
-  "dc.how": "İlk % rolünü ve profil istatistiklerini almak için Profilim’de Discord ile giriş yap. Rol, gönderdiğin ilk koşuyla gelir; istatistikleri de oradan açabilirsin."
+  "dc.how": "İlk % rolünü ve profil istatistiklerini almak için Profilim’de Discord ile giriş yap; istatistikleri de oradan açabilirsin. Rol, gönderdiğin ilk koşuyla gelir; bu bir ilk 10 süresiyse bir moderatör onayladığında gelir."
 }

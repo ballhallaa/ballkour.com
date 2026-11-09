@@ -463,5 +463,5 @@
   "vid.all": "Voir les {count} commentaires sur YouTube",
   "vid.likes": "J’aime : {count}",
   "vid.replies": "Réponses : {count}",
-  "dc.how": "Pour obtenir votre rôle Top % et vos stats sur votre profil, connectez-vous avec Discord dans Mon profil. Le rôle arrive avec votre première partie envoyée, et vous pouvez aussi y activer les stats."
+  "dc.how": "Pour obtenir votre rôle Top % et vos stats sur votre profil, connectez-vous avec Discord dans Mon profil, où vous pouvez aussi activer les stats. Le rôle arrive avec votre première partie envoyée, ou quand un modérateur l’approuve si c’est un temps du top 10."
 }

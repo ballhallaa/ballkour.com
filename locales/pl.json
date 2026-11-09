@@ -463,5 +463,5 @@
   "vid.all": "Zobacz wszystkie komentarze w serwisie YouTube ({count})",
   "vid.likes": "Polubienia: {count}",
   "vid.replies": "Odpowiedzi: {count}",
-  "dc.how": "Aby dostać rolę Top % i statystyki na profilu, zaloguj się przez Discord w sekcji Mój profil. Rolę dostajesz z pierwszym przesłanym przejściem, a statystyki możesz tam też włączyć."
+  "dc.how": "Aby dostać rolę Top % i statystyki na profilu, zaloguj się przez Discord w sekcji Mój profil, gdzie możesz też włączyć statystyki. Rolę dostajesz z pierwszym przesłanym przejściem, a jeśli to czas z top 10, dopiero gdy moderator je zatwierdzi."
 }
