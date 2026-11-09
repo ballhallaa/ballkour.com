@@ -134,6 +134,7 @@
   "pic.copied": "Copied",
   "pic.copyFail": "Couldn’t copy",
   "pic.share": "Share",
+  "pic.player": "Picture of {player}’s stats",
   "lb.sort.time": "Time",
   "lb.sort.miss": "Mistakes",
   "lb.sortedTime": "Sorted by time",

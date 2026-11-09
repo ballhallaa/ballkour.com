@@ -726,7 +726,8 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl::backdrop { background: rgba(2, 5, 4, .62); }
 .pl-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: flex-start; gap: 12px; padding: 18px 18px 14px; border-bottom: 1px solid var(--line); background: #08100d; }
 .pl-tools { flex: none; display: flex; gap: 8px; }
-.pl-copy .icon { width: 17px; height: 17px; }
+.pl-copy .icon, .pl-pic .icon { width: 17px; height: 17px; }
+.pl-pic .icon { color: var(--arc); }
 .pl-copy .i-check { display: none; }
 .pl-copy.copied { border-color: var(--volt); color: var(--volt-hi); }
 .pl-copy.copied .i-copy { display: none; }
@@ -1808,6 +1809,7 @@ a.link-copy { text-decoration: none; }
   "pic.copied": "Copied",
   "pic.copyFail": "Couldn’t copy",
   "pic.share": "Share",
+  "pic.player": "Picture of {player}’s stats",
   "lb.sort.time": "Time",
   "lb.sort.miss": "Mistakes",
   "lb.sortedTime": "Sorted by time",
@@ -3297,17 +3299,22 @@ a.link-copy { text-decoration: none; }
       return sum + runs.length + legacy.length;
     }, 0);
   }
-  function playerHtml() {
-    const key = plKey;
-    const r = ratings();
-    const p = r.players.find((x) => x.key === key) || null;
-    const rows = COURSES.map((c) => {
+  // Every course in a player's panel (and its picture): their place and best run there, and every run they've sent for
+  // it. Broken courses only when they've run them.
+  function plRows(key) {
+    return COURSES.map((c) => {
       const { top, rest } = standingsOf(c);
       const all = top.concat(rest);
       const at = all.findIndex((x) => playerKey(x) === key);
       const best = at >= 0 ? all[at] : null;
       return { c, at, best, total: all.length, record: c.broken || c.latestBroken ? null : all[0], ...runsOf(key, c, best) };
     }).filter((x) => !x.c.broken || x.runs.length || x.legacy.length);
+  }
+  function playerHtml() {
+    const key = plKey;
+    const r = ratings();
+    const p = r.players.find((x) => x.key === key) || null;
+    const rows = plRows(key);
     const named = p || rows.map((x) => x.best || x.runs[0] || x.legacy[0]).find(Boolean) || { name: "" };
     const discord = key.startsWith("d:") ? key.slice(2) : "";
     const dc = discord && PLAYERS.get(discord);
@@ -3320,7 +3327,7 @@ a.link-copy { text-decoration: none; }
     const runTotal = rows.reduce((sum, x) => sum + x.runs.length + x.legacy.length, 0);
     let html = `<div class="pl-head"><div class="pl-who"><h2 class="pl-name is-name" id="pl-name">${esc(caps(named.name || (dc ? dc.name : "")))}</h2>` +
       (mine ? `<div class="pl-me">${dcLine}<button class="pl-signout" type="button" data-sign-out>${esc(t("sub.signout"))}</button></div>` : dcLine) +
-      `</div><div class="pl-tools">${copyLinkHtml(key, named.name || (dc ? dc.name : ""), plView === "runs" && runTotal > 0)}` +
+      `</div><div class="pl-tools">${runTotal ? picButtonHtml(named.name || (dc ? dc.name : "")) : ""}${copyLinkHtml(key, named.name || (dc ? dc.name : ""), plView === "runs" && runTotal > 0)}` +
       `<button class="pl-close" type="button" data-pl-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button></div></div>`;
     if (plView === "runs" && runTotal) return html + allRunsHtml(rows);
     // Rating, Place and Top % open the Player ratings with their row marked (see openBoard), and Runs lists every run
@@ -3367,6 +3374,11 @@ a.link-copy { text-decoration: none; }
         `</div></li>`;
     });
     return html + `</ul>`;
+  }
+  // Picture, which draws their stats as a picture to save, copy or share (see "Player pictures")
+  function picButtonHtml(name) {
+    const label = esc(t("pic.player", { player: caps(name) }));
+    return `<button class="pl-close pl-pic" type="button" data-pl-pic aria-label="${label}" title="${label}">${icon("image")}</button>`;
   }
   // Copy link, which copies their link (see playerPath, with /runs on Runs) the way the site's other copy buttons do
   function copyLinkHtml(key, name, runs) {
@@ -3644,6 +3656,7 @@ a.link-copy { text-decoration: none; }
   });
   pl.addEventListener("click", (e) => {
     if (e.target.closest("[data-pl-close]")) { pl.close(); return; }
+    if (e.target.closest("[data-pl-pic]")) { openPlayerPicture(plKey); return; }
     // Submit a run (in their own empty panel): the page goes there, so the panel gets out of the way. The address goes
     // back before the section's link goes in (the panel's close event comes later).
     if (e.target.closest("a[data-route]")) { leaveStats(); leavePlayer(); pl.close(); return; }
@@ -3872,6 +3885,8 @@ a.link-copy { text-decoration: none; }
     bolt: { fill: true, paths: ["M13 2 3 14h9l-1 8 10-12h-9l1-8z"] },
     star: { fill: true, paths: ["M11.53 2.3a.53.53 0 0 1 .94 0l2.31 4.68a2.12 2.12 0 0 0 1.6 1.16l5.16.75a.53.53 0 0 1 .3.91l-3.74 3.64a2.12 2.12 0 0 0-.61 1.88l.88 5.14a.53.53 0 0 1-.77.56l-4.62-2.43a2.12 2.12 0 0 0-1.97 0L6.4 21.01a.53.53 0 0 1-.77-.56l.88-5.14a2.12 2.12 0 0 0-.61-1.88L2.16 9.8a.53.53 0 0 1 .3-.91l5.16-.75a2.12 2.12 0 0 0 1.6-1.16z"] },
     skull: { paths: ["m12.5 17-.5-1-.5 1h1z", "M15 22a1 1 0 0 0 1-1v-1a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20v1a1 1 0 0 0 1 1z"], dots: [[15, 12], [9, 12]] },
+    map: { paths: ["M14.1 5.55a2 2 0 0 0 1.8 0l3.65-1.83A1 1 0 0 1 21 4.62v12.76a1 1 0 0 1-.55.9l-4.55 2.27a2 2 0 0 1-1.8 0l-4.2-2.1a2 2 0 0 0-1.8 0l-3.65 1.83A1 1 0 0 1 3 19.38V6.62a1 1 0 0 1 .55-.9L8.1 3.45a2 2 0 0 1 1.8 0z", "M15 5.76v15", "M9 3.24v15"] },
+    notes: { paths: ["M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", "M14 2v4a2 2 0 0 0 2 2h4", "M10 13H8", "M16 17H8", "M16 13h-2"] },
   };
   function picIcon(ctx, name, x, cy, size, color) {
     const ic = PIC_ICONS[name];
@@ -3911,37 +3926,8 @@ a.link-copy { text-decoration: none; }
     img.onerror = () => { clearTimeout(done); resolve(null); };
     img.src = src;
   });
-  // What the picture shows: the board on screen, sorted as it is, with the fastest three in their colors
-  function picBoard(c) {
-    const v = viewOf(c);
-    const byMiss = boardSort === "miss";
-    const h = HISTORY[c.n];
-    if (v.tab === "legacy" && h && h.legacy.length) {
-      const seen = new Set();
-      const best = h.legacy.slice().sort(byTime).filter((r) => !seen.has(playerKey(r)) && seen.add(playerKey(r)));
-      return { legacy: true, byMiss, runs: (byMiss ? best.slice().sort(byMistakes) : best).slice(0, 10), podium: (r) => best.slice(0, 3).indexOf(r), fresh: new Set(), board: 0, date: "" };
-    }
-    const list = boardsOf(c);
-    const { top, rest } = standingsOf(c);
-    const at = list ? (v.at < 0 || v.at >= list.length ? list.length - 1 : v.at) : -1;
-    const runs = list ? list[at] : top;
-    const pool = byMiss ? runs.slice(0, 10).concat(!list || at === list.length - 1 ? rest : []).sort(byMistakes) : runs;
-    // An older board's ratings are as they were on its day, like on the page
-    const then = list && at < list.length - 1 ? { day: boardDate(runs), c, runs } : null;
-    return { legacy: false, byMiss, runs: pool.slice(0, 10), podium: (r) => runs.slice(0, 3).indexOf(r), fresh: list ? freshAt(list, at) : new Set(), board: list ? at + 1 : 0, date: boardDate(runs), then };
-  }
-  async function drawPicture(c, d) {
-    const W = PIC.w, rowsTop = PIC.top + PIC.head + 22, footY = rowsTop + 5 * PIC.rowH + 4 * PIC.gap + 18, H = Math.round(footY + 17 + 26);
-    if (document.fonts) {
-      await Promise.all([
-        'italic 800 54px "Barlow Condensed"', '700 25px Barlow', '600 16px Barlow', '700 23px "JetBrains Mono"',
-        '600 15px "JetBrains Mono"', '400 13.5px "JetBrains Mono"', `40px ${EMOJI}`,
-      ].map((f) => document.fonts.load(f, f.includes("Emoji") ? c.flag : "AZ09").catch(() => null)));
-    }
-    const people = d.runs.map((r) => (r.discord && PLAYERS.get(r.discord)) || null);
-    // Each player's rating over every course, beside the date like the bot's pictures (legacy boards don't count)
-    const ratingOf = d.legacy ? new Map() : ratingsBy(d.then);
-    const [logo, ...pfps] = await Promise.all([loadImg("/assets/logo.webp"), ...people.map((p) => (p && /^https:\/\/cdn\.discordapp\.com\//.test(p.avatar) ? loadImg(p.avatar, true) : null))]);
+  // A picture's canvas, at twice the size, with its background and the logo at the top right
+  function picCanvas(W, H, logo) {
     const cv = document.createElement("canvas");
     cv.width = W * 2; cv.height = H * 2;
     const ctx = cv.getContext("2d");
@@ -3980,29 +3966,72 @@ a.link-copy { text-decoration: none; }
       }
       ctx.drawImage(logo, lx, ly, PIC.head, PIC.head);
     }
+    return { cv, ctx };
+  }
+  // A title, with the site's orange and blue edges, shrunk to fit max when there is one
+  function picTitle(ctx, title, x, cy, max) {
+    let size = 54;
+    picFont(ctx, `italic 800 ${size}px "Barlow Condensed", "Arial Narrow", sans-serif`, size * 0.005);
+    while (max && ctx.measureText(title).width > max && size > 30) { size -= 1; picFont(ctx, `italic 800 ${size}px "Barlow Condensed", "Arial Narrow", sans-serif`, size * 0.005); }
+    ctx.save();
+    picText(ctx, title, x + 1.9, cy, "rgba(255,154,46,.8)");
+    picText(ctx, title, x - 1.9, cy, "rgba(51,198,255,.75)");
+    ctx.shadowColor = "rgba(0,230,151,.3)"; ctx.shadowBlur = 24;
+    picText(ctx, title, x, cy, "#ecf6f2");
+    ctx.restore();
+  }
+  // A line of small capitals under the title, its parts between dots: a string, or [text, color] pairs
+  function picLine(ctx, parts, cy) {
+    picFont(ctx, '600 15px "JetBrains Mono", monospace', 1.8);
+    let x = PIC.pad;
+    parts.filter(Boolean).forEach((part, i) => {
+      if (i) x += picText(ctx, "·", x, cy, "#76867f") + 10;
+      (Array.isArray(part) ? part : [[part, "#76867f"]]).forEach(([str, color], j) => { x += picText(ctx, (j ? " " : "") + str.toUpperCase(), x, cy, color); });
+      x += 10;
+    });
+  }
+  const field = (label, value) => (value ? [[label, "#76867f"], [value, "#a7b6b0"]] : null);
+  // A file name from a name: "6-ice-palace", "ballmybloved"
+  const slugOf = (str) => String(str).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  // What the picture shows: the board on screen, sorted as it is, with the fastest three in their colors
+  function picBoard(c) {
+    const v = viewOf(c);
+    const byMiss = boardSort === "miss";
+    const h = HISTORY[c.n];
+    if (v.tab === "legacy" && h && h.legacy.length) {
+      const seen = new Set();
+      const best = h.legacy.slice().sort(byTime).filter((r) => !seen.has(playerKey(r)) && seen.add(playerKey(r)));
+      return { legacy: true, byMiss, runs: (byMiss ? best.slice().sort(byMistakes) : best).slice(0, 10), podium: (r) => best.slice(0, 3).indexOf(r), fresh: new Set(), board: 0, date: "" };
+    }
+    const list = boardsOf(c);
+    const { top, rest } = standingsOf(c);
+    const at = list ? (v.at < 0 || v.at >= list.length ? list.length - 1 : v.at) : -1;
+    const runs = list ? list[at] : top;
+    const pool = byMiss ? runs.slice(0, 10).concat(!list || at === list.length - 1 ? rest : []).sort(byMistakes) : runs;
+    // An older board's ratings are as they were on its day, like on the page
+    const then = list && at < list.length - 1 ? { day: boardDate(runs), c, runs } : null;
+    return { legacy: false, byMiss, runs: pool.slice(0, 10), podium: (r) => runs.slice(0, 3).indexOf(r), fresh: list ? freshAt(list, at) : new Set(), board: list ? at + 1 : 0, date: boardDate(runs), then };
+  }
+  async function drawPicture(c, d) {
+    const W = PIC.w, rowsTop = PIC.top + PIC.head + 22, footY = rowsTop + 5 * PIC.rowH + 4 * PIC.gap + 18, H = Math.round(footY + 17 + 26);
+    if (document.fonts) {
+      await Promise.all([
+        'italic 800 54px "Barlow Condensed"', '700 25px Barlow', '600 16px Barlow', '700 23px "JetBrains Mono"',
+        '600 15px "JetBrains Mono"', '400 13.5px "JetBrains Mono"', `40px ${EMOJI}`,
+      ].map((f) => document.fonts.load(f, f.includes("Emoji") ? c.flag : "AZ09").catch(() => null)));
+    }
+    const people = d.runs.map((r) => (r.discord && PLAYERS.get(r.discord)) || null);
+    // Each player's rating over every course, beside the date like the bot's pictures (legacy boards don't count)
+    const ratingOf = d.legacy ? new Map() : ratingsBy(d.then);
+    const [logo, ...pfps] = await Promise.all([loadImg("/assets/logo.webp"), ...people.map((p) => (p && /^https:\/\/cdn\.discordapp\.com\//.test(p.avatar) ? loadImg(p.avatar, true) : null))]);
+    const { cv, ctx } = picCanvas(W, H, logo);
     // The title, with the site's orange and blue edges, and the two lines under it
     const textTop = PIC.top + (PIC.head - 99.6) / 2;
     const titleY = textTop + 24.3;
     picFont(ctx, `40px ${EMOJI}`);
     const flagW = c.flag ? picText(ctx, c.flag, PIC.pad, titleY, "#fff") + 16 : 0;
-    picFont(ctx, 'italic 800 54px "Barlow Condensed", "Arial Narrow", sans-serif', 0.27);
-    const title = c.name.toUpperCase();
-    ctx.save();
-    picText(ctx, title, PIC.pad + flagW + 1.9, titleY, "rgba(255,154,46,.8)");
-    picText(ctx, title, PIC.pad + flagW - 1.9, titleY, "rgba(51,198,255,.75)");
-    ctx.shadowColor = "rgba(0,230,151,.3)"; ctx.shadowBlur = 24;
-    picText(ctx, title, PIC.pad + flagW, titleY, "#ecf6f2");
-    ctx.restore();
-    const line = (parts, cy) => {
-      picFont(ctx, '600 15px "JetBrains Mono", monospace', 1.8);
-      let x = PIC.pad;
-      parts.filter(Boolean).forEach((part, i) => {
-        if (i) x += picText(ctx, "·", x, cy, "#76867f") + 10;
-        (Array.isArray(part) ? part : [[part, "#76867f"]]).forEach(([s, color], j) => { x += picText(ctx, (j ? " " : "") + s.toUpperCase(), x, cy, color); });
-        x += 10;
-      });
-    };
-    const field = (label, value) => (value ? [[label, "#76867f"], [value, "#a7b6b0"]] : null);
+    picTitle(ctx, c.name.toUpperCase(), PIC.pad + flagW, titleY);
+    const line = (parts, cy) => picLine(ctx, parts, cy);
     const sorted = d.byMiss ? "Fewest mistakes" : "";
     line(d.legacy ? [sorted ? "Legacy" : "Legacy Top 10", sorted, "Before May 2026"] : [sorted || "Top 10", d.date, d.board ? `Board ${d.board}` : ""], textTop + 48.6 + 12 + 7.5);
     line([field("Code", d.legacy ? c.legacyCode : c.remaker ? c.latest : c.code), field("Creator", c.by), d.legacy ? null : field("Remaker", c.remaker)], textTop + 48.6 + 12 + 15 + 9 + 7.5);
@@ -4114,25 +4143,21 @@ a.link-copy { text-decoration: none; }
     picText(ctx, `ballkour.com/leaderboards/${c.n}${d.legacy ? "/legacy" : d.then ? `/${d.board}` : ""}`, W / 2, fy, "#a7b6b0", "center");
     return cv;
   }
-  // The picture, in a window with Save, Copy and Share
-  async function openPicture(c) {
-    const d = picBoard(c);
-    pic.innerHTML = `<div class="pic-head"><h2 class="pic-title" id="pic-title">${esc(t("pic.title", { n: c.n, course: "\u0000" })).replace("\u0000", flagName(c))}</h2>` +
+  // A picture in a window with Save, Copy and Share: titleHtml over it, draw() draws it
+  async function pictureWindow(titleHtml, draw, filename, alt) {
+    pic.innerHTML = `<div class="pic-head"><h2 class="pic-title" id="pic-title">${titleHtml}</h2>` +
       `<button class="pl-close" type="button" data-pic-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button></div>` +
       `<p class="pic-wait">${esc(t("pic.drawing"))}</p>`;
     if (!pic.open) pic.showModal();
     let url, blob;
     try {
-      const cv = await drawPicture(c, d);
+      const cv = await draw();
       url = cv.toDataURL("image/png");
       blob = await new Promise((resolve) => cv.toBlob(resolve, "image/png"));
     } catch (e) {
       $(".pic-wait", pic).textContent = t("pic.fail");
       return;
     }
-    const slug = c.name.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-    const filename = `${c.n}-${slug}${d.legacy ? "-legacy" : d.board ? `-board-${d.board}` : ""}${d.byMiss ? "-by-mistakes" : ""}.png`;
-    const alt = `${c.name} ${d.legacy ? "legacy top 10" : "top 10"}: ` + d.runs.map((r, i) => `${i + 1}. ${r.name} ${r.time}, ${r.miss} mistakes`).join("; ");
     const file = blob && typeof File === "function" ? new File([blob], filename, { type: "image/png" }) : null;
     const canCopy = !!(blob && navigator.clipboard && navigator.clipboard.write && window.ClipboardItem);
     const canShare = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
@@ -4144,6 +4169,198 @@ a.link-copy { text-decoration: none; }
       `</div>`;
     pic._blob = blob;
     pic._file = file;
+  }
+  function openPicture(c) {
+    const d = picBoard(c);
+    const filename = `${c.n}-${slugOf(c.name)}${d.legacy ? "-legacy" : d.board ? `-board-${d.board}` : ""}${d.byMiss ? "-by-mistakes" : ""}.png`;
+    const alt = `${c.name} ${d.legacy ? "legacy top 10" : "top 10"}: ` + d.runs.map((r, i) => `${i + 1}. ${r.name} ${r.time}, ${r.miss} mistakes`).join("; ");
+    pictureWindow(esc(t("pic.title", { n: c.n, course: "\u0000" })).replace("\u0000", flagName(c)), () => drawPicture(c, d), filename, alt);
+  }
+
+  /* ---------- Player pictures ----------
+     Picture in a player's panel (by Copy link) draws their stats the same way, to save, copy or share: their name and
+     Discord, their Top 10s, Podiums and Records, the panel's five boxes (Rating, Place, Top %, Courses and Runs), then
+     every course in their panel with their place and best run there, and their link at the foot. In English too. */
+  function picPlayer(key) {
+    const r = ratings();
+    const p = r.players.find((x) => x.key === key) || null;
+    const rows = plRows(key);
+    const named = p || rows.map((x) => x.best || x.runs[0] || x.legacy[0]).find(Boolean) || { name: "" };
+    const discord = key.startsWith("d:") ? key.slice(2) : "";
+    const dc = (discord && PLAYERS.get(discord)) || null;
+    const runs = rows.reduce((sum, x) => sum + x.runs.length + x.legacy.length, 0);
+    return { key, p, total: r.players.length, counted: r.counted.length, rows, dc, runs, medals: medalsOf(key), name: caps(named.name || (dc ? dc.name : "")) };
+  }
+  async function drawPlayerPicture(d) {
+    const W = PIC.w, statsTop = PIC.top + PIC.head + 22, statH = 78, tileGap = 10;
+    const rowsTop = statsTop + statH + 22, perCol = Math.max(1, Math.ceil(d.rows.length / 2));
+    const footY = rowsTop + perCol * PIC.rowH + (perCol - 1) * PIC.gap + 18, H = Math.round(footY + 17 + 26);
+    const flags = d.rows.map((x) => x.c.flag).join("");
+    if (document.fonts) {
+      await Promise.all([
+        'italic 800 54px "Barlow Condensed"', '700 23px Barlow', '600 17px Barlow', '700 24px "JetBrains Mono"', '700 23px "JetBrains Mono"',
+        '600 15px "JetBrains Mono"', '600 12px "JetBrains Mono"', '400 13.5px "JetBrains Mono"', `22px ${EMOJI}`,
+      ].map((f) => document.fonts.load(f, f.includes("Emoji") ? flags : "AZ09").catch(() => null)));
+    }
+    const avatar = d.dc && /^https:\/\/cdn\.discordapp\.com\//.test(d.dc.avatar) ? d.dc.avatar : "";
+    const [logo, pfp] = await Promise.all([loadImg("/assets/logo.webp"), avatar ? loadImg(avatar, true) : null]);
+    const { cv, ctx } = picCanvas(W, H, logo);
+    // Their name, then their Discord (or that it's a name from the legacy boards) and their Top 10s, Podiums and Records
+    const textTop = PIC.top + (PIC.head - 99.6) / 2;
+    picTitle(ctx, d.name || "—", PIC.pad, textTop + 24.3, W - 2 * PIC.pad - PIC.head - 24);
+    const lines = [];
+    if (d.dc) lines.push("discord");
+    else if (d.key.startsWith("n:")) lines.push(["Legacy", "Before May 2026"]);
+    if (d.p) lines.push([field("Top 10s", String(d.medals.top10s)), field("Podiums", String(d.medals.podiums)), field("Records", String(d.medals.records))]);
+    lines.forEach((parts, i) => {
+      const cy = textTop + 48.6 + 12 + 7.5 + i * (15 + 9);
+      if (parts !== "discord") { picLine(ctx, parts, cy); return; }
+      let x = PIC.pad;
+      if (pfp) {
+        ctx.save(); ctx.beginPath(); ctx.arc(x + 11, cy, 11, 0, Math.PI * 2); ctx.clip();
+        ctx.drawImage(pfp, x, cy - 11, 22, 22); ctx.restore();
+        x += 30;
+      }
+      picFont(ctx, '600 17px Barlow, sans-serif');
+      ctx.save(); ctx.beginPath(); ctx.rect(x, cy - 13, W - 2 * PIC.pad - PIC.head - 24 - x, 26); ctx.clip();
+      picText(ctx, d.dc.name, x, cy, "#b9befc");
+      ctx.restore();
+    });
+    // The panel's five boxes, in a row
+    const tier = d.p ? (d.p.tier === null ? "Rated" : `Top ${d.p.tier}%`) : "";
+    const tiles = [
+      ["Rating", d.p && { icon: "star", text: Math.round(d.p.rating).toLocaleString("en") }],
+      ["Place", d.p && { text: `#${d.p.rank} of ${d.total}` }],
+      ["Top %", d.p && { tag: tier, color: d.p.tier !== null && d.p.tier <= 5 ? "#ffd54f" : "#33c6ff" }],
+      ["Courses", { icon: "map", text: `${d.p ? d.p.courses : 0}/${d.counted}` }],
+      ["Runs", { icon: "notes", text: d.runs.toLocaleString("en") }],
+    ];
+    const tileW = (W - 2 * PIC.pad - 4 * tileGap) / 5;
+    tiles.forEach(([label, v], i) => {
+      const x = PIC.pad + i * (tileW + tileGap), vy = statsTop + 52;
+      picBox(ctx, x, statsTop, tileW, statH, 11);
+      ctx.fillStyle = "rgba(9,15,13,.93)"; ctx.fill();
+      ctx.lineWidth = 1; ctx.strokeStyle = "rgba(196,255,232,.11)"; ctx.stroke();
+      picFont(ctx, '600 12px "JetBrains Mono", monospace', 1.3);
+      picText(ctx, label.toUpperCase(), x + 16, statsTop + 24, "#76867f");
+      let vx = x + 16;
+      if (v && v.tag) {
+        picFont(ctx, '700 15px "JetBrains Mono", monospace', 0.6);
+        const tw = ctx.measureText(v.tag.toUpperCase()).width + 18;
+        picBox(ctx, vx, vy - 14, tw, 28, 7);
+        ctx.fillStyle = `rgba(${rgb(v.color)},.1)`; ctx.fill();
+        ctx.strokeStyle = `rgba(${rgb(v.color)},.34)`; ctx.stroke();
+        picText(ctx, v.tag.toUpperCase(), vx + 9, vy, v.color);
+        return;
+      }
+      if (v && v.icon) { picIcon(ctx, v.icon, vx, vy, 21, "#ffd54f"); vx += 21 + 8; }
+      // Shrunk to fit, for a place like #1,234 of 5,678
+      const text = v ? v.text : "—";
+      let size = 24;
+      picFont(ctx, `700 ${size}px "JetBrains Mono", monospace`);
+      while (ctx.measureText(text).width > x + tileW - 14 - vx && size > 14) { size -= 1; picFont(ctx, `700 ${size}px "JetBrains Mono", monospace`); }
+      picText(ctx, text, vx, vy, v ? "#ecf6f2" : "#76867f");
+    });
+    // Every course, in two columns, like their panel: their place there (in its color for the top three), their best
+    // time and mistakes, the course rating it earns, and its date. Courses they haven't run are dimmed.
+    const colW = (W - 2 * PIC.pad - PIC.colGap) / 2;
+    const TIER = ["#ffd54f", "#d3dde2", "#e8a066"];
+    d.rows.forEach(({ c, at, best, total, record, legacy }, i) => {
+      const old = !best && legacy.length ? legacy.slice().sort(byTime)[0] : null;
+      const run = best || old;
+      const x = PIC.pad + (i < perCol ? 0 : colW + PIC.colGap), y = rowsTop + (i % perCol) * (PIC.rowH + PIC.gap);
+      const tint = best && at < 3 ? TIER[at] : null;
+      ctx.save();
+      if (!run) ctx.globalAlpha = 0.38;
+      picBox(ctx, x, y, colW, PIC.rowH, 11);
+      if (tint) {
+        const g = ctx.createLinearGradient(x, 0, x + colW, 0);
+        g.addColorStop(0, mix(rgb(tint), [9, 15, 13], 0.17)); g.addColorStop(0.7, "rgba(9,15,13,.93)");
+        ctx.fillStyle = g;
+      } else ctx.fillStyle = "rgba(9,15,13,.93)";
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = tint ? `rgba(${rgb(tint)},.3)` : "rgba(196,255,232,.11)";
+      ctx.stroke();
+      const left = x + 16, right = x + colW - 16, midY = y + PIC.rowH / 2;
+      picFont(ctx, '700 22px "JetBrains Mono", monospace');
+      picText(ctx, String(c.n), left, midY, tint || "#76867f");
+      const blockTop = y + (PIC.rowH - (27.5 + 8 + 20)) / 2;
+      const y1 = blockTop + 13.75, y2 = blockTop + 27.5 + 8 + 10;
+      const nameLeft = left + 34 + 12;
+      // On top: the flag and the course's name (shrunk to fit), Broken, and their place there at the right (or that
+      // it's a legacy run, or not run yet)
+      picFont(ctx, '600 15px "JetBrains Mono", monospace', 0.6);
+      const place = best ? `#${at + 1} of ${total}` : old ? "Legacy" : "Not run yet";
+      const placeW = picText(ctx, place, right, y1, best ? tint || "#a7b6b0" : "#76867f", "right");
+      picFont(ctx, `22px ${EMOJI}`);
+      const flagW = c.flag ? picText(ctx, c.flag, nameLeft, y1, "#fff") + 9 : 0;
+      picFont(ctx, '700 11px "JetBrains Mono", monospace', 1.1);
+      const brokenW = c.broken ? ctx.measureText("BROKEN").width + 12 : 0;
+      const nameMax = right - placeW - 14 - nameLeft - flagW - (brokenW ? brokenW + 9 : 0);
+      let size = 23;
+      picFont(ctx, `700 ${size}px Barlow, sans-serif`, size * 0.03);
+      while (ctx.measureText(c.name).width > nameMax && size > 15) { size -= 0.5; picFont(ctx, `700 ${size}px Barlow, sans-serif`, size * 0.03); }
+      ctx.save(); ctx.beginPath(); ctx.rect(nameLeft + flagW, y, Math.max(0, nameMax), PIC.rowH); ctx.clip();
+      const nw = Math.min(nameMax, picText(ctx, c.name, nameLeft + flagW, y1, tint || (run ? "#ecf6f2" : "#76867f")));
+      ctx.restore();
+      if (brokenW) {
+        const bx = nameLeft + flagW + nw + 9;
+        picFont(ctx, '700 11px "JetBrains Mono", monospace', 1.1);
+        picBox(ctx, bx, y1 - 8.5, brokenW, 17, 5);
+        ctx.fillStyle = "rgba(255,106,79,.12)"; ctx.fill(); ctx.strokeStyle = "rgba(255,106,79,.4)"; ctx.stroke();
+        picText(ctx, "BROKEN", bx + 6, y1, "#ff6a4f");
+      }
+      // Under it: their best time and its mistakes, then the course rating it earns and its date at the right
+      picIcon(ctx, "bolt", nameLeft, y2, 19, "#00e697");
+      picFont(ctx, '700 19px "JetBrains Mono", monospace');
+      let tx = nameLeft + 19 + 6;
+      const time = run ? run.time : "-:--.--";
+      if (run && /\.--$/.test(time)) {
+        tx += picText(ctx, time.slice(0, -3), tx, y2, "#ecf6f2");
+        tx += picText(ctx, ".--", tx, y2, "#76867f");
+      } else tx += picText(ctx, time, tx, y2, run ? "#ecf6f2" : "#76867f");
+      if (run) {
+        picIcon(ctx, "skull", tx + 16, y2, 17, "#ff6a4f");
+        picFont(ctx, '700 17px "JetBrains Mono", monospace');
+        picText(ctx, String(run.miss), tx + 16 + 17 + 5, y2, "#a7b6b0");
+      }
+      picFont(ctx, '400 13.5px "JetBrains Mono", monospace');
+      const date = best ? formatDate(best.date) : "";
+      const dateW = date ? picText(ctx, date, right, y2, "#76867f", "right") + 14 : 0;
+      if (best && record) {
+        const num = Math.round(coursePoints(record, best)).toLocaleString("en");
+        const numW = picText(ctx, num, right - dateW, y2, "#a7b6b0", "right");
+        picIcon(ctx, "star", right - dateW - numW - 5 - 15, y2, 15, "#ffd54f");
+      }
+      ctx.restore();
+    });
+    // The foot: the day it's from, their link in the middle (as the address shows it), and what the dates are
+    const fy = footY + 8.5;
+    picFont(ctx, '600 13px "JetBrains Mono", monospace', 1.56);
+    const asOf = picText(ctx, "AS OF ", PIC.pad, fy, "#76867f");
+    const leftW = asOf + picText(ctx, new Date().toISOString().slice(0, 10), PIC.pad + asOf, fy, "#a7b6b0");
+    let rightW = 0;
+    if (d.rows.some((x) => x.best && formatDate(x.best.date))) {
+      const bw = picText(ctx, "YYYY-MM-DD (UTC)", W - PIC.pad, fy, "#a7b6b0", "right");
+      rightW = bw + picText(ctx, "DATES: ", W - PIC.pad - bw, fy, "#76867f", "right");
+    }
+    const link = `ballkour.com/players/${linkOf(d.key)}`;
+    const room = W - 2 * PIC.pad - 2 * Math.max(leftW, rightW) - 40;
+    let size = 14;
+    picFont(ctx, `600 ${size}px "JetBrains Mono", monospace`, 0.28);
+    while (ctx.measureText(link).width > room && size > 9) { size -= 0.5; picFont(ctx, `600 ${size}px "JetBrains Mono", monospace`, 0.28); }
+    picText(ctx, link, W / 2, fy, "#a7b6b0", "center");
+    return cv;
+  }
+  function openPlayerPicture(key) {
+    if (!key) return;
+    const d = picPlayer(key);
+    const filename = `${slugOf(d.name) || slugOf(linkOf(key)) || "player"}-stats.png`;
+    const alt = `${d.name}: ` + (d.p ? `rating ${Math.round(d.p.rating).toLocaleString("en")}, #${d.p.rank} of ${d.total}, ${d.p.tier === null ? "rated" : `top ${d.p.tier}%`}` : "unrated") +
+      `, ${d.p ? d.p.courses : 0} of ${d.counted} courses, ${d.runs} runs. ` +
+      d.rows.filter((x) => x.best).map(({ c, at, best, total }) => `${c.n}. ${c.name}: ${best.time}, ${best.miss} mistakes, #${at + 1} of ${total}`).join("; ");
+    pictureWindow(esc(t("pic.player", { player: d.name })), () => drawPlayerPicture(d), filename, alt);
   }
   document.addEventListener("click", (e) => {
     const b = e.target.closest(".lb-pic");
