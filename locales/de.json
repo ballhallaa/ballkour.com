@@ -429,7 +429,7 @@
   "visits.home": "Seitenanfang",
   "visits.players": "Spieler",
   "visits.other": "Sonstiges",
-  "visits.note": "Von der Seite selbst gezählt, jedes Mal, wenn jemand sie im Browser öffnet, also verstecken Werbeblocker niemanden und Bots zählen nicht. Jede Person zählt einmal pro Tag, ohne dass die Seite speichert, wer sie ist.",
+  "visits.note": "Von der Seite selbst gezählt, jedes Mal, wenn jemand sie im Browser öffnet. Die meisten Bots zählen nicht. Jede Person zählt einmal pro Tag, ohne dass die Seite speichert, wer sie ist.",
   "stats.title": "Statistiken",
   "stats.weekTo": "7 Tage bis {date}",
   "stats.monthTo": "30 Tage bis {date}",

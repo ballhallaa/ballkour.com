@@ -325,7 +325,7 @@
   "visits.home": "Top of the page",
   "visits.players": "Players",
   "visits.other": "Other",
-  "visits.note": "Counted by the site itself each time someone opens it in a browser, so ad blockers don’t hide anyone and bots don’t count. Each person counts once a day, without the site keeping who they are.",
+  "visits.note": "Counted by the site itself each time someone opens it in a browser. Most bots don’t count. Each person counts once a day, without the site keeping who they are.",
   "stats.weekTo": "7 days to {date}",
   "stats.monthTo": "30 days to {date}",
   "stats.prevDay": "Day before",

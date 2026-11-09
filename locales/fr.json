@@ -429,7 +429,7 @@
   "visits.home": "Haut de la page",
   "visits.players": "Joueurs",
   "visits.other": "Autre",
-  "visits.note": "Comptées par le site lui-même chaque fois que quelqu’un l’ouvre dans un navigateur : les bloqueurs de pub ne cachent personne et les bots ne comptent pas. Chaque personne compte une fois par jour, sans que le site garde qui elle est.",
+  "visits.note": "Comptées par le site lui-même chaque fois que quelqu’un l’ouvre dans un navigateur. La plupart des bots ne comptent pas. Chaque personne compte une fois par jour, sans que le site garde qui elle est.",
   "stats.title": "Statistiques",
   "stats.weekTo": "7 jours jusqu’au {date}",
   "stats.monthTo": "30 jours jusqu’au {date}",

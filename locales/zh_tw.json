@@ -429,7 +429,7 @@
   "visits.home": "頁面頂端",
   "visits.players": "玩家",
   "visits.other": "其他",
-  "visits.note": "每當有人在瀏覽器中開啟網站，都由網站自己計數，所以廣告封鎖工具不會漏掉任何人，機器人也不計入。每個人每天只算一次，網站不會保存是誰。",
+  "visits.note": "每當有人在瀏覽器中開啟網站，都由網站自己計數。大多數機器人不計入。每個人每天只算一次，網站不會保存是誰。",
   "stats.title": "統計",
   "stats.weekTo": "截至 {date} 的 7 天",
   "stats.monthTo": "截至 {date} 的 30 天",
