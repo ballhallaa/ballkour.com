@@ -445,6 +445,8 @@
   "stats.approved": "Von einem Moderator angenommen",
   "stats.newPlayers": "Neue Spieler",
   "stats.rated": "Gewertete Spieler",
+  "stats.totalGlobal": "Globale Wertung insgesamt",
+  "stats.totalCourse": "Streckenwertung insgesamt",
   "stats.busiest": "Meiste Läufe",
   "stats.since": "Sie werden seit dem {date} gezählt.",
   "stats.runsNote": "Ein Tag geht von Mitternacht bis Mitternacht UTC. Die gewonnene Wertung zählt zusammen, was jeder Lauf zur Wertung seines Spielers beigetragen hat, wie die Zahl in Klammern neben einem Lauf auf den Listen.",

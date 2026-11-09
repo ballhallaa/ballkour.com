@@ -445,6 +445,8 @@
   "stats.approved": "Aprobadas por un moderador",
   "stats.newPlayers": "Jugadores nuevos",
   "stats.rated": "Jugadores con puntuación",
+  "stats.totalGlobal": "Puntuación global total",
+  "stats.totalCourse": "Puntuación de recorridos total",
   "stats.busiest": "Más carreras",
   "stats.since": "Se cuentan desde el {date}.",
   "stats.runsNote": "Los días van de medianoche a medianoche UTC. La puntuación ganada suma lo que cada carrera añadió a la puntuación de su jugador, como el número entre paréntesis junto a una carrera en las clasificaciones.",

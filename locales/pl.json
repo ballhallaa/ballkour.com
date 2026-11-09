@@ -445,6 +445,8 @@
   "stats.approved": "Zatwierdzone przez moderatora",
   "stats.newPlayers": "Nowi gracze",
   "stats.rated": "Gracze z rankingiem",
+  "stats.totalGlobal": "Łączny ranking globalny",
+  "stats.totalCourse": "Łączny ranking tras",
   "stats.busiest": "Najwięcej przejść",
   "stats.since": "Są liczone od {date}.",
   "stats.runsNote": "Dzień trwa od północy do północy UTC. Zdobyty ranking sumuje to, co każde przejście dodało do rankingu swojego gracza, jak liczba w nawiasie obok przejścia na tablicach.",

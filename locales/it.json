@@ -445,6 +445,8 @@
   "stats.approved": "Approvate da un moderatore",
   "stats.newPlayers": "Nuovi giocatori",
   "stats.rated": "Giocatori con punteggio",
+  "stats.totalGlobal": "Punteggio globale totale",
+  "stats.totalCourse": "Punteggio dei percorsi totale",
   "stats.busiest": "Più run",
   "stats.since": "Vengono contate dal {date}.",
   "stats.runsNote": "I giorni vanno da mezzanotte a mezzanotte UTC. Il punteggio guadagnato somma quanto ogni run ha aggiunto al punteggio del suo giocatore, come il numero tra parentesi accanto a una run nelle classifiche.",

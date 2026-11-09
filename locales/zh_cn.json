@@ -445,6 +445,8 @@
   "stats.approved": "管理员通过",
   "stats.newPlayers": "新玩家",
   "stats.rated": "有积分的玩家",
+  "stats.totalGlobal": "全局积分总和",
+  "stats.totalCourse": "关卡积分总和",
   "stats.busiest": "成绩最多",
   "stats.since": "从 {date} 开始统计。",
   "stats.runsNote": "每天按 UTC 从午夜到下一个午夜计算。获得的积分是每个成绩为其玩家积分增加的分数之和，就像排行榜上成绩旁边括号里的数字。",

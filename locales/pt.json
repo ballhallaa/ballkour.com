@@ -445,6 +445,8 @@
   "stats.approved": "Aprovadas por um moderador",
   "stats.newPlayers": "Jogadores novos",
   "stats.rated": "Jogadores com pontuação",
+  "stats.totalGlobal": "Pontuação global total",
+  "stats.totalCourse": "Pontuação de percurso total",
   "stats.busiest": "Mais corridas",
   "stats.since": "Elas são contadas desde {date}.",
   "stats.runsNote": "Os dias vão de meia-noite a meia-noite UTC. A pontuação ganha soma o que cada corrida acrescentou à pontuação do seu jogador, como o número entre parênteses ao lado de uma corrida nas classificações.",

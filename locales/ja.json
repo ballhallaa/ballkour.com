@@ -445,6 +445,8 @@
   "stats.approved": "モデレーターが承認",
   "stats.newPlayers": "新しいプレイヤー",
   "stats.rated": "レーティングのあるプレイヤー",
+  "stats.totalGlobal": "グローバルレーティングの合計",
+  "stats.totalCourse": "コースレーティングの合計",
   "stats.busiest": "記録が最も多いコース",
   "stats.since": "{date}から数えています。",
   "stats.runsNote": "1日はUTCの午前0時から次の午前0時までです。獲得したレーティングは、各記録がそのプレイヤーのレーティングに加えた分の合計で、ランキングで記録の横にあるかっこ内の数字と同じものです。",

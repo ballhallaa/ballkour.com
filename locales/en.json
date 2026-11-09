@@ -336,6 +336,8 @@
   "stats.approved": "Approved by a moderator",
   "stats.newPlayers": "New players",
   "stats.rated": "Rated players",
+  "stats.totalGlobal": "Total global rating",
+  "stats.totalCourse": "Total course rating",
   "stats.busiest": "Most runs",
   "stats.since": "They’re counted from {date} on.",
   "stats.runsNote": "Days go from midnight to midnight UTC. Rating gained adds up what each run added to its player’s rating, like the number in parentheses beside a run on the boards.",

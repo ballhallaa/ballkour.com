@@ -445,6 +445,8 @@
   "stats.approved": "Approuvées par un modérateur",
   "stats.newPlayers": "Nouveaux joueurs",
   "stats.rated": "Joueurs classés",
+  "stats.totalGlobal": "Score global total",
+  "stats.totalCourse": "Score de parcours total",
   "stats.busiest": "Le plus de parties",
   "stats.since": "Elles sont comptées depuis le {date}.",
   "stats.runsNote": "Les jours vont de minuit à minuit UTC. Le score gagné additionne ce que chaque partie a ajouté au score de son joueur, comme le nombre entre parenthèses à côté d’une partie dans les classements.",
