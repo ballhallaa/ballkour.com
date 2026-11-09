@@ -565,7 +565,7 @@ async function memberOf(env, id, maxAge) {
    Turn down, so taking someone's role away takes their reviewing away too (and the page catches up within a minute). The leaderboard bot and the website's boards only read "runs" and
    "removed", so a waiting or turned-down run is on no board.
      GET  /api/pending   the runs waiting for a check (reviewers only)
-     POST /api/review    { course, id, approve } (reviewers only) */
+     POST /api/review    { course, id, approve } (reviewers only, and never on their own run: { error: "own" }) */
 const idList = (s) => String(s || "").split(/[\s,]+/).filter(Boolean);
 // Whether a member (from memberOf) has a reviewer role
 const isReviewerIn = (env, member) => !!member && idList(env.REVIEWER_ROLES).some((r) => member.roles.includes(r));
@@ -1006,6 +1006,8 @@ async function review(request, env, ctx) {
     const waiting = listIn(data.pending, n);
     const at = waiting.findIndex((r) => r && r.id === id);
     if (at < 0) return { error: "gone", status: 404 }; // someone else checked it already
+    // Nobody checks their own run: another moderator has to
+    if (waiting[at].discord === user.id) return { error: "own", status: 403 };
     run = { ...waiting.splice(at, 1)[0], checkedBy: user.id, checkedAt: stamp() };
     listIn(approve ? data.runs : data.declined, n).push(run);
     return { message: `chore(leaderboard): ${approve ? "add" : "turn down"} ${run.name}'s ${run.time} on course ${n}, checked by ${user.name}` };
@@ -1031,7 +1033,8 @@ async function review(request, env, ctx) {
                               under that name are left without a Discord ID), declined (a moderator turned their claim
                               to it down), rate (too many), off or bad
      POST /api/claim/review   { name, discord, approve } (reviewers only) → { ok: true, claim } or { error }: gone
-                              (someone checked it already), taken (its runs are someone else's now), off or bad
+                              (someone checked it already), taken (its runs are someone else's now), own (it's
+                              theirs: another moderator has to check it), off or bad
    /api/pending lists the claims waiting too. Each claim is one line in "claims":
      { "name", "discord" (theirs), "sentAt", "status": "pending" | "approved" | "declined", "checkedBy", "checkedAt" } */
 const upper = (s) => String(s).trim().toUpperCase();
@@ -1131,6 +1134,8 @@ async function reviewClaim(request, env, ctx) {
   try { body = JSON.parse(await request.text()); } catch (e) { body = null; }
   const name = String((body && body.name) || "").trim(), id = String((body && body.discord) || ""), approve = !!(body && body.approve);
   if (!name || name.length > 64 || !/^\d{17,20}$/.test(id)) return answer(400, { error: "bad" });
+  // Nobody checks their own claim: another moderator has to
+  if (id === user.id) return answer(403, { error: "own" });
   const isIt = (x) => x && x.status === "pending" && x.discord === id && upper(x.name) === upper(name);
   // Still waiting? (Asked again as it's saved, in case another moderator got there in between)
   try {
