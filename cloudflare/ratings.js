@@ -9,7 +9,7 @@
    "removed"). Below its top 10 come the players who dropped out of it, from the boards in history.json, but only with
    runs slower than today's #10.
 
-   Every course is worth up to 10,000 points: 10000 × ln(1 + (e − 1) × record ÷ time)². A rating is the average over
+   Every course is worth up to 1,000 points: 1000 × ln(1 + (e − 1) × record ÷ time)². A rating is the average over
    every course that isn't broken, with 0 for the ones a player hasn't run. A player's tier is their place divided by
    the number of rated players: #4 of 40 is in the Top 10%. Everyone past the last tier (the bottom 10%) is just Rated. */
 
@@ -62,7 +62,7 @@ export function rate(courses) {
       const p = players.get(key);
       // Named as on their newest run
       if ((r.date || "") > p.date) { p.date = r.date; p.name = r.name; }
-      p.points[c.n] = 10000 * Math.log(1 + (Math.E - 1) * record / seconds(r.time)) ** 2;
+      p.points[c.n] = 1000 * Math.log(1 + (Math.E - 1) * record / seconds(r.time)) ** 2;
     }
   }
   const list = [...players.values()].map((p) => {

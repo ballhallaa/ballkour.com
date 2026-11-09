@@ -791,11 +791,22 @@ const courseFile = (files, n) => files && Object.keys(files).find((k) => k.start
    doesn't change as other runs come in.
      GET /api/run?id=<id>   { stats } (null when there are none: PROFILES isn't set up, or it isn't saved yet) */
 const statsKey = (id) => `run:${id}`;
+// What a course is worth, all of it for the record (see ratings.js). It was 10,000 until November 2026, and what was
+// kept for a run before then has no scale: it's served on today's, a tenth of it (onScale), so its page agrees with
+// the boards.
+const RATING_SCALE = 1000;
+function onScale(stats) {
+  if (!stats || stats.scale === RATING_SCALE) return stats;
+  const tenth = (v) => (typeof v === "number" ? Math.round(v / 10) : v);
+  const pair = (p) => (Array.isArray(p) ? p.map(tenth) : p);
+  const alone = stats.alone && typeof stats.alone === "object" ? { ...stats.alone, points: tenth(stats.alone.points) } : stats.alone;
+  return { ...stats, points: pair(stats.points), rating: pair(stats.rating), alone, scale: RATING_SCALE };
+}
 // What a run did to the boards: where its player stood on its course and in the player ratings just before it, and
 // with it (a run waiting for a check, as if it were on the board already). before is runs.json as it was just before.
 // The page works out the same numbers from today's boards (statsFrom() in index.html): keep the two in step.
 //   { place, was, players, best, bestMiss, old, record, passed, points, rating, rank, of, tier, courses, counted,
-//     top10s, podiums, records }
+//     top10s, podiums, records, scale, alone }
 // place and was are their place on the course with and before the run (was is null on their first run there),
 // players how many players are on the course's board with it (what was kept before there was players has none), best
 // and old their best time there with and before it, and bestMiss the mistakes on that best (it isn't the run when its
@@ -805,7 +816,8 @@ const statsKey = (id) => `run:${id}`;
 // how many players are rated, courses [before, with] the rated courses they've run out of counted, and top10s,
 // podiums and records [before, with] over every course. alone is the run by itself, for one that isn't its player's
 // best (which changes none of the above): { place } among everyone else's bests, and the course rating its time gets
-// ({ points }, null when the course isn't rated).
+// ({ points }, null when the course isn't rated). scale is what a course was worth when they were worked out (see
+// RATING_SCALE).
 function runStats(game, before, run, n) {
   const key = playerKey(run);
   const after = structuredClone(before);
@@ -854,9 +866,10 @@ function runStats(game, before, run, n) {
     top10s: [b.medals.top10s, a.medals.top10s],
     podiums: [b.medals.podiums, a.medals.podiums],
     records: [b.medals.records, a.medals.records],
+    scale: RATING_SCALE,
     alone: {
       place: 1 + a.board.filter((r) => playerKey(r) !== key && runByTime(r, run) < 0).length,
-      points: rated && record ? Math.round(10000 * Math.log(1 + (Math.E - 1) * toSeconds(record.time) / toSeconds(run.time)) ** 2) : null,
+      points: rated && record ? Math.round(RATING_SCALE * Math.log(1 + (Math.E - 1) * toSeconds(record.time) / toSeconds(run.time)) ** 2) : null,
     },
   };
 }
@@ -867,7 +880,7 @@ async function sentStats(env, ctx, { n, run, before }) {
   if (!game || !game.files || !Array.isArray(game.courses)) throw new Error("the game data has no course list yet");
   return runStats(game, before, run, n);
 }
-// Where a run would place (waiting for a check) or placed: "Course: #1 of 12 • Global: #1 of 16 • ⭐ 1,818 (+909)", its
+// Where a run would place (waiting for a check) or placed: "Course: #1 of 12 • Global: #1 of 16 • ⭐ 182 (+91)", its
 // place on the course, and its player's place and rating in the player ratings, with what the run adds to it (like
 // Runs to check on the site). stats (runStats) can be null, and then it's just "Course: #1".
 function placeText(run, rank, stats) {
@@ -877,7 +890,7 @@ function placeText(run, rank, stats) {
   return [
     s && s.place ? `Course: #${s.place} of ${s.players}` : `Course: #${rank}`,
     s && s.rank && `Global: #${s.rank[1]} of ${s.of}`,
-    rating !== null && `⭐ ${rating.toLocaleString("en-US")} (${gain < 0 ? "−" : "+"}${Math.abs(gain).toLocaleString("en-US")})`,
+    rating !== null && `⭐ ${rating} (${gain < 0 ? "−" : "+"}${Math.abs(gain)})`, // no separator: a rating only reaches 1000
   ].filter(Boolean).join(" • ");
 }
 // The run's post in the run submissions channel: the run, where it would place (waiting for a check) or placed (on the
@@ -975,7 +988,7 @@ async function afterSend(env, ctx, info) {
 async function runInfo(request, env) {
   const id = new URL(request.url).searchParams.get("id") || "";
   if (!/^[\w-]{1,16}$/.test(id)) return answer(400, { error: "bad" });
-  const stats = env.PROFILES ? await env.PROFILES.get(statsKey(id), "json").catch(() => null) : null;
+  const stats = onScale(env.PROFILES ? await env.PROFILES.get(statsKey(id), "json").catch(() => null) : null);
   const res = answer(200, { stats });
   if (stats) res.headers.set("Cache-Control", "public, max-age=86400"); // they never change
   return res;
@@ -1431,7 +1444,7 @@ async function setLink(request, env, ctx) {
    "role connection", which shows as:
      ballkour.com · Top 0.1%      their Top % (Rated for the bottom 10%, Unrated before they have a rating)
      DUCKLING · #3                their in-game name and place in the player ratings
-     8123 ⭐ Rating  4 ⚡ Top 10s  2 🏆 Podiums  1 👑 Records  12 🗺️ Courses run
+     812 ⭐ Rating  4 ⚡ Top 10s  2 🏆 Podiums  1 👑 Records  12 🗺️ Courses run
    PROFILE_FIELDS are the numbers on the last line. Discord allows at most 5 per app, whole numbers only (so Top %,
    with its 0.1, goes in the text above), and shows each as "<number> <name>", so each name's emoji comes right
    after its number. Changing a name only needs a deploy: Discord gets the new names, and everyone's profile shows
@@ -1475,7 +1488,7 @@ const SEND_CALLS = 7;
 // type 2: a whole number, which linked roles check with "at least". Keys can't change without everyone's profile
 // losing that number until they're sent again.
 const PROFILE_FIELDS = [
-  { key: "rating", name: "⭐ Rating", description: "Their player rating over every course, out of 10,000" },
+  { key: "rating", name: "⭐ Rating", description: "Their player rating over every course, out of 1,000" },
   { key: "top10s", name: "⚡ Top 10s", description: "How many courses they're on the top 10 of" },
   { key: "podiums", name: "🏆 Podiums", description: "How many courses they're in the top 3 of" },
   { key: "records", name: "👑 Records", description: "How many courses they hold the record on" },
@@ -2016,7 +2029,7 @@ function pastId(n, key) {
   return `${n}-${h.toString(36)}`;
 }
 const mistakesText = (n) => `${n} mistake${n === 1 ? "" : "s"}`;
-const ratingText = (r) => `⭐ ${Math.round(r).toLocaleString("en-US")}`;
+const ratingText = (r) => `⭐ ${Math.round(r)}`; // no separator: a rating only reaches 1000 (see points() in index.html)
 // The addresses that have a preview of their own
 const PREVIEWED = /^\/(?:runs|leaderboards|players)\/./i;
 function previewOf(pathname, data, players) {
