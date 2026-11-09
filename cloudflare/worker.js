@@ -1478,8 +1478,9 @@ function secure(res) {
   for (const [name, value] of Object.entries(SECURITY_HEADERS)) out.headers.set(name, value);
   return out;
 }
-// One of the site's files, cached like Caddy did: logo, icons and preview image for a week; the page and
-// translations are checked for a newer copy on every visit
+// One of the site's files, with the page and the rest checked for a newer copy on every visit. The files in assets/ and
+// locales/ don't come through here: Cloudflare serves them straight away, with the headers in /_headers (see
+// run_worker_first in wrangler.toml). If they ever did, assets/ would get a week, the same as there.
 async function file(request, env) {
   const res = await env.ASSETS.fetch(request);
   const out = new Response(res.body, res);

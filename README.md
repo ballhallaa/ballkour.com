@@ -13,6 +13,7 @@ tools/extract-en.py      rebuilds locales/en.json from index.html
 tools/check.py           checks the scripts, settings, and translations (every pull request runs it)
 cloudflare/              the Worker that serves the site, plus the GitHub and Discord data the page uses
 .assetsignore            what isn't published: this README, tools/, the Worker's own code, …
+_headers, _redirects     headers and redirects for the files Cloudflare serves without the Worker (assets/ and locales/)
 .github/workflows/       checks every pull request, and deploys the site on every push to main
 ```
 
@@ -66,9 +67,20 @@ npx wrangler deploy --env test
 
 The test copy doesn't have the Worker's secrets, so player names and pictures are missing there. When you're done, delete it in the Cloudflare dashboard (Workers & Pages → ballkour-discord-widget-test → Settings). Don't use `wrangler delete` without `--env test`: that deletes the live site.
 
+### The free plan's daily limit
+
+Cloudflare's free plan allows 100,000 requests a day that run the Worker: pages and `/api/`, not the fonts, pictures, and translations. A first visit runs it about twice. Past the limit, the site shows an error until midnight UTC, so it's worth one rate limiting rule (the free plan gets one) to stop anyone from using it all up with a loop. In the Cloudflare dashboard, open ballkour.com, then **Security rules** → **Create rule** → **Rate limiting rules**:
+
+- **If incoming requests match:** URI Path *contains* `/` (that's every request)
+- **With the same characteristics:** IP (the only one on the free plan)
+- **When rate exceeds:** 100 requests per 10 seconds
+- **Then take action:** Block, for 10 seconds
+
+Someone browsing never gets near 100 in 10 seconds (a first visit is about 13, fonts and pictures included), and a loop gets cut off in seconds.
+
 ## Cloudflare Worker
 
-`cloudflare/worker.js` is a Cloudflare Worker on `ballkour.com/*` that serves the whole site: every request runs it first, and it hands out the site's own files along with the data below. Visitors' browsers only ever talk to ballkour.com: the Worker fetches what the page needs from GitHub and Discord, caches it at Cloudflare and serves it from here. That keeps the site fast, keeps visitors' IPs away from GitHub and Discord, avoids GitHub's limits on anonymous requests, and works where GitHub and Discord are blocked.
+`cloudflare/worker.js` is a Cloudflare Worker on `ballkour.com/*` that serves the whole site: every request runs it first, and it hands out the site's own files along with the data below. The fonts, pictures, and translations (`assets/` and `locales/`) are the exception: Cloudflare serves them straight away (`run_worker_first` in `cloudflare/wrangler.toml`), with the headers in `_headers` and the redirects in `_redirects`. Visitors' browsers only ever talk to ballkour.com: the Worker fetches what the page needs from GitHub and Discord, caches it at Cloudflare and serves it from here. That keeps the site fast, keeps visitors' IPs away from GitHub and Discord, avoids GitHub's limits on anonymous requests, and works where GitHub and Discord are blocked.
 
 - `/data/game.json`: the game repo's leaderboard files and in-game FAQ from `develop`, its runs and leaderboard history from `leaderboard-data`, plus the latest releases. Refreshed at most once a minute.
 - `/data/widget.json`: the Discord server's member count and voice channels. Refreshed at most once a minute.
@@ -81,7 +93,7 @@ The test copy doesn't have the Worker's secrets, so player names and pictures ar
 
 Each page also gets the latest copy of all three as it's served, with the "• N members" counts already filled in, so nothing pops in after the page loads. If GitHub or Discord can't be reached, the last copy that worked is served for up to a week.
 
-It also sets the site's headers. The security headers, including the Content-Security-Policy, are in `SECURITY_HEADERS`; if you add an outside service to the page, add its address to the CSP there. Files in `assets/` are cached for a week, and everything else is checked for a newer copy on every visit.
+It also sets the site's headers. The security headers, including the Content-Security-Policy, are in `SECURITY_HEADERS`; if you add an outside service to the page, add its address to the CSP there. Files in `assets/` are cached for a week, and everything else is checked for a newer copy on every visit. The files Cloudflare serves without the Worker get theirs from `_headers` instead: keep the two in step.
 
 It's deployed together with the site (see Deploying). It uses two secrets, which deploys keep. Set each once from the `cloudflare/` folder (it asks you to paste the value):
 

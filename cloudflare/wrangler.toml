@@ -6,12 +6,15 @@ workers_dev = false
 routes = [{ pattern = "ballkour.com/*", zone_name = "ballkour.com" }]
 
 # The site's files: the repo root, minus what's listed in /.assetsignore. Cloudflare serves them, so the
-# site doesn't need the VPS. Every request still runs worker.js first, so pages get their data baked in.
+# site doesn't need the VPS. Every request runs worker.js first, so pages get their data baked in, except the fonts,
+# pictures, and translations (assets/ and locales/): Cloudflare serves those straight away, with the headers in
+# /_headers. That's most of a first visit's requests, and requests that don't run the Worker don't count toward the
+# free plan's 100,000 a day.
 [assets]
 directory = ".."
 binding = "ASSETS"
 not_found_handling = "404-page"
-run_worker_first = true
+run_worker_first = ["/*", "!/assets/*", "!/locales/*"]
 
 # Who can approve or turn down top 10 runs sent from the website, at ballkour.com/submit: everyone on the server with a
 # role in REVIEWER_ROLES. Role IDs, separated by commas (in Discord: Developer Mode on, then Server Settings → Roles →
