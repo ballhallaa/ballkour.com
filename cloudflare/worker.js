@@ -1905,7 +1905,8 @@ function previewOf(pathname, data, players) {
   let loaded = null;
   const courses = () => loaded || (loaded = loadCourses(data.files, data.courses));
   const boardOf = (n) => { const c = courses().find((x) => x.n === n); if (!c) return []; const { top, rest } = standings(c); return [...top, ...rest]; };
-  const name = (n) => `${data.flags[n] ? `${data.flags[n]} ` : ""}${data.names[n] || `Course ${n}`}`;
+  // Its number, flag, and name, like the page's ("1 🇬🇮 Watchpoint: Gibraltar")
+  const name = (n) => (data.names[n] ? `${n} ${data.flags[n] ? `${data.flags[n]} ` : ""}${data.names[n]}` : `Course ${n}`);
   const history = (() => { try { return JSON.parse(data.files[HISTORY_FILE]) || {}; } catch (e) { return {}; } })();
   const top3 = (runs) => runs.slice(0, 3).map((r, i) => `${i + 1}. ${caps(r.name)} ${r.time}`).join(" · ");
   let m;
@@ -1964,7 +1965,7 @@ function previewOf(pathname, data, players) {
       const legacy = ((history[n] && history[n].legacy) || []).filter((r) => r && typeof r.name === "string" && typeof r.time === "string")
         .map((r) => ({ ...r, time: r.time.replace(".--", "") })).sort((a, b) => toSeconds(a.time) - toSeconds(b.time))
         .filter((r) => !seen.has(playerKey(r)) && seen.add(playerKey(r)));
-      return { title: `${name(n)} · Legacy top 10`, description: legacy.length ? `Before May 2026: ${top3(legacy)}` : "Before May 2026" };
+      return { title: `${name(n)} · Legacy Top 10`, description: legacy.length ? `Before May 2026: ${top3(legacy)}` : "Before May 2026" };
     }
     // The boards in its history, then today's when it's changed since the last one (boardsOf() in index.html), so an
     // older board's number is the same as on the page
