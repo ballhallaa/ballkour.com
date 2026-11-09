@@ -441,6 +441,7 @@
   "stats.viewsChart": "Wyświetlenia każdego dnia",
   "stats.runsChart": "Przesłane przejścia każdego dnia",
   "stats.runsDay": "{date}: przesłane przejścia {count}",
+  "stats.month": "Miesiąc",
   "stats.gained": "Zdobyty ranking",
   "stats.straight": "Od razu na tablicę",
   "stats.approved": "Zatwierdzone przez moderatora",

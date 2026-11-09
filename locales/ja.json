@@ -441,6 +441,7 @@
   "stats.viewsChart": "1日ごとのページビュー",
   "stats.runsChart": "1日ごとの提出された記録",
   "stats.runsDay": "{date}：記録の提出{count}件",
+  "stats.month": "月",
   "stats.gained": "獲得したレーティング",
   "stats.straight": "そのままランキングに掲載",
   "stats.approved": "モデレーターが承認",

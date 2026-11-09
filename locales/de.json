@@ -441,6 +441,7 @@
   "stats.viewsChart": "Seitenaufrufe pro Tag",
   "stats.runsChart": "Eingereichte Läufe pro Tag",
   "stats.runsDay": "{date}: {count} Läufe eingereicht",
+  "stats.month": "Monat",
   "stats.gained": "Gewonnene Wertung",
   "stats.straight": "Direkt auf die Liste",
   "stats.approved": "Von einem Moderator angenommen",

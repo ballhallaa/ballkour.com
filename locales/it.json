@@ -441,6 +441,7 @@
   "stats.viewsChart": "Visualizzazioni al giorno",
   "stats.runsChart": "Run inviate al giorno",
   "stats.runsDay": "{date}: {count} run inviate",
+  "stats.month": "Mese",
   "stats.gained": "Punteggio guadagnato",
   "stats.straight": "Dirette in classifica",
   "stats.approved": "Approvate da un moderatore",

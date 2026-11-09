@@ -1149,6 +1149,14 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .sub-runs .rev-count { background: rgba(0, 230, 151, .12); color: var(--volt); }
 /* Stats, at the very bottom: which days (a day, or the 7 or 30 days up to it), then Runs and Page views, each with a
    bar for every day that picks it, and its numbers for those days */
+/* The month menu, in Stats' header where Find a player is in Courses': a button like the course picker's that opens a
+   menu like the languages', newest month first, scrolling once there are more than fit */
+.stats-month-wrap { position: relative; margin-inline-start: auto; }
+.stats-month { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 8px 0 11px; border: 1px solid var(--line-hi); border-radius: 9px; background: rgba(0, 0, 0, .25); color: var(--ink); font: 500 14px/1 var(--body); cursor: pointer; transition: border-color .15s; }
+.stats-month:hover, .stats-month[aria-expanded="true"] { border-color: var(--volt); }
+.stats-month .chev { width: 16px; height: 16px; flex: none; color: var(--ink-3); transition: transform .2s ease; }
+.stats-month[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.stats-month-menu { min-width: 100%; width: max-content; max-height: 340px; overflow-y: auto; overscroll-behavior: contain; display: grid; gap: 2px; }
 .stats-range { display: flex; flex-wrap: wrap; gap: 4px; padding: 7px; border-bottom: 1px solid var(--line); }
 .stats-range .lb-tab { font-variant-numeric: tabular-nums; }
 .stats-part { padding: 6px 18px 4px; }
@@ -1817,6 +1825,14 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     <section class="panel" id="stats" aria-labelledby="stats-title">
       <div class="panel-head">
         <h2 class="panel-title" id="stats-title"><svg class="icon" aria-hidden="true"><use href="#i-stats"/></svg><span data-i18n="stats.title">Stats</span></h2>
+        <div class="stats-month-wrap" id="stats-month-wrap" hidden>
+          <span class="sr-only" id="stats-month-label" data-i18n="stats.month">Month</span>
+          <button class="stats-month" id="stats-month" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="stats-month-menu" aria-labelledby="stats-month-label stats-month-current">
+            <span class="stats-month-current" id="stats-month-current"></span>
+            <svg class="icon chev" aria-hidden="true"><use href="#i-chev"/></svg>
+          </button>
+          <ul class="menu stats-month-menu" id="stats-month-menu" role="listbox" tabindex="-1" aria-labelledby="stats-month-label" hidden></ul>
+        </div>
       </div>
       <div id="stats-body"></div>
     </section>
@@ -5739,7 +5755,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      At the very bottom of the page, for everyone: Runs and Page views, on a day picked in the history, or over the 7
      or 30 days up to it (the buttons at the top, the 30 days to start with). Each part has a bar for every day, 30 at
      a time, and a click on one picks its day, as do the arrows beside them (and ←, →, Home, End, Page Up and Page Down
-     on a bar). Past either end, the 30 days on show slide along with the day picked. While Stats is on screen, the
+     on a bar). Past either end, the 30 days on show slide along with the day picked. The month menu in the header
+     jumps to a month (see statMonthPicker). While Stats is on screen, the
      address says what's picked, so the link shows the same: /stats (today, and the 30 days up to it), /stats/2026-11-05
      (that day), and /day or /week after either for just that day or the 7 days up to it. Days are UTC days.
      Page views come from the Worker, which counts them (see "Page views" in cloudflare/worker.js), as the page opens,
@@ -5761,6 +5778,25 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   const DAY = /^\d{4}-\d{2}-\d{2}$/;
   const utcDay = (ms) => new Date(ms).toISOString().slice(0, 10);
   const dayAfter = (d, by = 1) => utcDay(Date.parse(`${d}T00:00:00Z`) + by * 864e5);
+  /* The month menu, in Stats' header: every month in the history, newest first, named in the site's language with the
+     years the rest of the site uses ("October 2026", "ตุลาคม 2026" rather than Thai's 2569), and a capital first letter
+     like the other menus' options ("Octubre de 2026"). Picking one picks its last day (today for this month) and puts
+     the 30 days up to it on show. */
+  const monthName = (m) => {
+    try {
+      const s = new Intl.DateTimeFormat(htmlLang(), { month: "long", year: "numeric", calendar: "gregory", timeZone: "UTC" }).format(Date.parse(`${m}-01T00:00:00Z`));
+      return s.charAt(0).toLocaleUpperCase(htmlLang()) + s.slice(1);
+    } catch (e) { return m; }
+  };
+  const statMonthPicker = makeMenu($("#stats-month-wrap"), $("#stats-month"), $("#stats-month-menu"), 1, (m) => {
+    const { days, last } = statPick();
+    const d = days.filter((x) => x.startsWith(m)).pop();
+    if (!d) return;
+    statDay = d === days[last] ? "" : d;
+    statEnd = d;
+    statsPicked();
+  });
+  let statMonths = ""; // the language and months the menu has, so it's only filled again when they change
   let visits = null;
   fetch("/api/visits").then((r) => (r.ok ? r.json() : null)).then((d) => {
     visits = d && Array.isArray(d.days) && d.days.length ? d : null;
@@ -5912,7 +5948,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   function renderStats() {
     const box = $("#stats-body");
     const rs = runStatsNow();
-    if (!visits && !rs) { box.innerHTML = ""; return; }
+    const monthWrap = $("#stats-month-wrap");
+    if (!visits && !rs) { box.innerHTML = ""; monthWrap.hidden = true; return; }
     const { days, last, pick, end, from } = statPick();
     const n = (v) => Math.round(Number(v) || 0).toLocaleString(htmlLang());
     // "+12" or "−3", rounded first so a tiny drop shows as +0, not −0
@@ -5922,6 +5959,15 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const span = days.slice(Math.max(0, pick - STAT_RANGES[statRange] + 1), pick + 1);
     const tile = (key, value, ico) => `<div class="pl-stat"><span class="pl-stat-label">${esc(t(key))}</span>` +
       `<span class="pl-stat-value">${icon(ico)}<span>${esc(value)}</span></span></div>`;
+    const months = [...new Set(days.map((d) => d.slice(0, 7)))].reverse();
+    if (statMonths !== lang + months.join()) {
+      statMonths = lang + months.join();
+      statMonthPicker.fill(months.map((m) => `<li class="opt" role="option" id="stats-month-${m}" data-value="${m}" aria-selected="false">` +
+        `<span class="opt-label">${esc(monthName(m))}</span>${CHECK}</li>`).join(""));
+    }
+    statMonthPicker.select(day.slice(0, 7));
+    $("#stats-month-current").textContent = monthName(day.slice(0, 7));
+    monthWrap.hidden = false;
     // The 30 days on show, ‹ and › beside them, each bar as tall as its share of the busiest of them
     const chart = (name, key, valueOf, labelOf) => {
       const shown = days.slice(from, end + 1);

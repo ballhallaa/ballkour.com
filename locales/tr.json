@@ -441,6 +441,7 @@
   "stats.viewsChart": "Günlük sayfa görüntülemeleri",
   "stats.runsChart": "Günlük gönderilen koşular",
   "stats.runsDay": "{date}: {count} koşu gönderildi",
+  "stats.month": "Ay",
   "stats.gained": "Kazanılan puan",
   "stats.straight": "Doğrudan tabloya",
   "stats.approved": "Moderatör onayladı",

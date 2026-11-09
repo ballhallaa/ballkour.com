@@ -441,6 +441,7 @@
   "stats.viewsChart": "일별 페이지 조회수",
   "stats.runsChart": "일별 제출된 기록",
   "stats.runsDay": "{date}: 기록 {count}개 제출",
+  "stats.month": "월",
   "stats.gained": "얻은 레이팅",
   "stats.straight": "바로 순위표에 오름",
   "stats.approved": "운영진 승인",
