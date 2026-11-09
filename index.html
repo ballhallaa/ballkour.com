@@ -2787,12 +2787,30 @@ a.link-copy { text-decoration: none; }
      The leaderboards, their history, the in-game FAQ and the latest releases all come from the game repo on GitHub
      (the website's own releases from its repo), through the Cloudflare Worker (cloudflare/worker.js): it puts its latest copy into the page as it's served, or
      serves it at /data/game.json. The browser never talks to GitHub itself. */
+  /* Which courses are broken comes from courses.json in the game repo (the game data's courses), so marking a course
+     broken there, or fixing it, does it here too. A remake's broken is its latest code: its Beta code still works. The
+     broken and latestBroken in COURSES above are only for when the game data can't be loaded. → whether any changed */
+  function applyBroken(list) {
+    let changed = false;
+    (Array.isArray(list) ? list : []).forEach((x) => {
+      const c = x && course(x.n);
+      if (!c || typeof x.broken !== "boolean") return;
+      const k = c.remaker ? "latestBroken" : "broken";
+      if (!!c[k] !== x.broken) { c[k] = x.broken; changed = true; }
+    });
+    return changed;
+  }
   const gameData = (() => {
     try {
       const d = JSON.parse($("#game-data").textContent);
-      if (d && d.files) return Promise.resolve(d);
+      // In the page: before anything's drawn, so it starts out right
+      if (d && d.files) { applyBroken(d.courses); return Promise.resolve(d); }
     } catch (e) { /* not in the page */ }
-    return fetch("/data/game.json").then((r) => (r.ok ? r.json() : Promise.reject(r.status)));
+    return fetch("/data/game.json").then((r) => (r.ok ? r.json() : Promise.reject(r.status))).then((d) => {
+      // Fetched once the page was drawn: the courses are drawn again, and so is the form's list
+      if (applyBroken(d.courses)) { COURSES.forEach(refreshCourse); renderSubmit(); }
+      return d;
+    });
   })();
   // A file from the game repo, like "leaderboards/history.json" (see /data/game.json in cloudflare/worker.js)
   const gameFile = (path) => gameData.then((d) => {

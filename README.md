@@ -200,7 +200,7 @@ The emoji font has the flags of the course countries and of the other Overwatch 
 
 ## Courses and leaderboards
 
-Course numbers, flags, codes and broken flags live in the `COURSES` list in the script at the bottom of `index.html`.
+Course numbers, flags, and codes live in the `COURSES` list in the script at the bottom of `index.html`. Which courses are broken comes from `tools/leaderboard-bot/courses.json` in the game repo (`"broken": true`), through the Worker, so marking a course broken there, or fixing it, does it on the site too, along with the boards, the ratings, and the form. For a remake, broken means its latest code: its Beta code still works, so it can still be run and sent. The broken flags in `COURSES` are only for when the game data can't be loaded. The Worker turns away runs on a broken course (other than a remake), like the form.
 
 Leaderboards load live from the game repo's `develop` branch (through the Worker), so they update without a deploy:
 
