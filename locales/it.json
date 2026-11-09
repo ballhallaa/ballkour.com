@@ -411,5 +411,8 @@
   "claim.declinedNote": "Rifiutata la richiesta di {who} per le run come {name}.",
   "claim.gone": "Qualcuno ha già controllato la richiesta di {who} per le run come {name}.",
   "claim.takenRev": "Le run come {name} sono già collegate a qualcun altro, quindi rifiuta questa richiesta.",
-  "claim.own": "Questa richiesta è tua, quindi deve controllarla un altro moderatore."
+  "claim.own": "Questa richiesta è tua, quindi deve controllarla un altro moderatore.",
+  "f.site.group": "Su ballkour.com",
+  "f.stats.text": "Accedi con Discord per vedere il tuo punteggio, la tua posizione e il tuo Top %, ogni percorso che hai fatto e tutte le tue run. Condividili con un link o mostrali sul tuo profilo Discord.",
+  "f.ratings.text": "Ogni percorso vale fino a 10.000 punti, e il tuo punteggio è la tua media su tutti. Il tuo Top % è la tua posizione tra tutti i giocatori con punteggio, e ricevi automaticamente il ruolo sul nostro Discord."
 }
