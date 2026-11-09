@@ -1771,6 +1771,7 @@ a.link-copy { text-decoration: none; }
   "lb.submittedOn": "Submitted on {date}",
   "lb.submittedBy": "Submitted on {date} by {name}",
   "lb.playerOpen": "See every run by {player}",
+  "dc.profile": "Open {name}’s profile on Discord",
   "pl.close": "Close",
   "pl.rating": "Rating",
   "pl.place": "Place",
@@ -1882,7 +1883,6 @@ a.link-copy { text-decoration: none; }
   "claim.see": "See the runs",
   "claim.revTitle": "Legacy runs to check",
   "claim.revOn": "Claimed on {date}",
-  "claim.revProfile": "Open {name}’s profile on Discord",
   "claim.revNow": "On the boards now as {names}",
   "claim.revLinked": "Already linked",
   "claim.view": "View runs",
@@ -4823,7 +4823,7 @@ a.link-copy { text-decoration: none; }
       const name = discordName(x.discord);
       return `<li class="rev-run">` +
         `<span class="rev-course">${esc(t("pl.legacy"))}</span><b class="rev-name">${esc(x.name)}</b>` +
-        `<a class="rev-dc" href="https://discord.com/users/${esc(x.discord)}" target="_blank" rel="noopener" title="${esc(t("claim.revProfile", { name }))}">` +
+        `<a class="rev-dc" href="https://discord.com/users/${esc(x.discord)}" target="_blank" rel="noopener" title="${esc(t("dc.profile", { name }))}">` +
           (pic ? `<img class="run-pfp" src="${esc(pic)}" alt="" width="16" height="16">` : "") + `<span>${esc(name)}</span>${icon("out")}</a>` +
         `<span class="rev-line">${runs.map(({ c, r }) => `<span class="stat time nowrap" title="${esc(`${c.n} ${c.name}`)}">${esc(`${c.n} `)}` +
           `<span class="mini-flag" aria-hidden="true">${c.flag}</span> ${icon("bolt")}${esc(r.time)}</span>`).join("")}` +
