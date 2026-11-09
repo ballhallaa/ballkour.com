@@ -307,6 +307,8 @@
   "rev.title": "Run da controllare",
   "rev.none": "Nessuna run da controllare al momento.",
   "rev.would": "Sarebbe #{rank}",
+  "rev.wouldOf": "Sarebbe #{rank} su {total}",
+  "rev.global": "Globale #{rank} su {total}",
   "rev.watch": "Guarda",
   "rev.approve": "Approva",
   "rev.decline": "Rifiuta",

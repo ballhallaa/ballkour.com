@@ -261,6 +261,8 @@
   "rev.title": "Runs to check",
   "rev.none": "No runs to check right now.",
   "rev.would": "Would be #{rank}",
+  "rev.wouldOf": "Would be #{rank} of {total}",
+  "rev.global": "Global #{rank} of {total}",
   "rev.watch": "Watch",
   "rev.approve": "Approve",
   "rev.decline": "Turn down",

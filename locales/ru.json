@@ -307,6 +307,8 @@
   "rev.title": "Забеги на проверку",
   "rev.none": "Сейчас нет забегов на проверку.",
   "rev.would": "Будет #{rank}",
+  "rev.wouldOf": "Будет #{rank} из {total}",
+  "rev.global": "В общем #{rank} из {total}",
   "rev.watch": "Смотреть",
   "rev.approve": "Принять",
   "rev.decline": "Отклонить",

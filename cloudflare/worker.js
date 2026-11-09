@@ -676,9 +676,10 @@ const statsKey = (id) => `run:${id}`;
 // What a run did to the boards: where its player stood on its course and in the player ratings just before it, and
 // with it (a run waiting for a check, as if it were on the board already). before is runs.json as it was just before.
 // The page works out the same numbers from today's boards (statsFrom() in index.html): keep the two in step.
-//   { place, was, best, bestMiss, old, record, passed, points, rating, rank, of, tier, courses, counted, top10s,
-//     podiums, records }
-// place and was are their place on the course with and before the run (was is null on their first run there), best
+//   { place, was, players, best, bestMiss, old, record, passed, points, rating, rank, of, tier, courses, counted,
+//     top10s, podiums, records }
+// place and was are their place on the course with and before the run (was is null on their first run there),
+// players how many players are on the course's board with it (what was kept before there was players has none), best
 // and old their best time there with and before it, and bestMiss the mistakes on that best (it isn't the run when its
 // time or mistakes aren't the run's: a tie on time goes to fewer mistakes), passed the
 // names of the players it put them ahead of. points (the course rating), rating, rank (their place in the ratings) and
@@ -719,6 +720,7 @@ function runStats(game, before, run, n) {
   return {
     place: a.at >= 0 ? a.at + 1 : null,
     was: b.at >= 0 ? b.at + 1 : null,
+    players: a.board.length,
     best: a.best ? a.best.time : null,
     bestMiss: a.best ? a.best.mistakes : null,
     old: b.best ? b.best.time : null,
@@ -740,16 +742,27 @@ function runStats(game, before, run, n) {
     },
   };
 }
-// Works out what a run did as it's sent, and keeps it for its page
-async function saveStats(env, ctx, { n, run, before }) {
-  if (!env.PROFILES || !before) return;
+// Works out what a run did as it's sent (runStats)
+async function sentStats(env, ctx, { n, run, before }) {
+  if (!before) return null;
   const game = await gameData(env, ctx);
   if (!game || !game.files || !Array.isArray(game.courses)) throw new Error("the game data has no course list yet");
-  await env.PROFILES.put(statsKey(run.id), JSON.stringify(runStats(game, before, run, n)));
+  return runStats(game, before, run, n);
+}
+// Where a run would place (waiting for a check) or placed: "Course: #1 of 12 • Global: #1 of 16 • ⭐ 1,818", its
+// place on the course, and its player's place and rating in the player ratings (like Runs to check on the site).
+// stats (runStats) can be null, and then it's just "Course: #1".
+function placeText(run, rank, stats) {
+  const s = stats && stats.best === run.time && stats.bestMiss === run.mistakes ? stats : null;
+  return [
+    s && s.place ? `Course: #${s.place} of ${s.players}` : `Course: #${rank}`,
+    s && s.rank && `Global: #${s.rank[1]} of ${s.of}`,
+    s && s.rating && `⭐ ${s.rating[1].toLocaleString("en-US")}`,
+  ].filter(Boolean).join(" • ");
 }
 // The run's post in the run submissions channel: the run, where it would place (waiting for a check) or placed (on the
 // board, when it's the player's new best there), and View run, which opens its page
-async function postRun(env, { n, courseName, courseFlag, run, pending, rank, newBest, site }) {
+async function postRun(env, { n, courseName, courseFlag, run, pending, rank, newBest, site, stats }) {
   if (!env.RUNS_CHANNEL || !env.DISCORD_BOT_TOKEN) return;
   const where = `Course ${n}${courseName ? ` · ${courseFlag ? `${courseFlag} ` : ""}${courseName}` : ""}`;
   const page = `${site}/runs/${run.id}`;
@@ -758,7 +771,7 @@ async function postRun(env, { n, courseName, courseFlag, run, pending, rank, new
     { name: "Time", value: run.time, inline: true },
     { name: "Mistakes", value: String(run.mistakes), inline: true },
     { name: "Sent by", value: `<@${run.discord}>`, inline: true },
-    ...(pending ? [{ name: "Would be", value: `#${rank}`, inline: true }] : newBest ? [{ name: "Place", value: `#${rank}`, inline: true }] : []),
+    ...(pending || newBest ? [{ name: pending ? "Would be" : "Place", value: placeText(run, rank, stats) }] : []),
     { name: "Video", value: `<${run.video}>` },
   ];
   const message = {
@@ -774,10 +787,13 @@ async function postRun(env, { n, courseName, courseFlag, run, pending, rank, new
   }).catch((e) => ({ ok: false, status: String((e && e.message) || e), text: async () => "" }));
   if (!res.ok) console.error(`run ${run.id}: Ballkyrie couldn't post in channel ${env.RUNS_CHANNEL}, Discord said ${res.status} ${(await res.text()).slice(0, 200)}`);
 }
-// After a run is saved: its numbers first, so they're there by the time anyone opens its page from the post
+// After a run is saved: its numbers first, kept for its page so they're there by the time anyone opens it from the
+// post, and in the post too. Without them, the post still goes, with just its place on the course.
 async function afterSend(env, ctx, info) {
-  await saveStats(env, ctx, info).catch((e) => console.error(`run ${info.run.id}: couldn't save what it did: ${(e && e.message) || e}`));
-  await postRun(env, info);
+  const fail = (what) => (e) => { console.error(`run ${info.run.id}: couldn't ${what}: ${(e && e.message) || e}`); return null; };
+  const stats = await sentStats(env, ctx, info).catch(fail("work out what it did"));
+  if (stats && env.PROFILES) await env.PROFILES.put(statsKey(info.run.id), JSON.stringify(stats)).catch(fail("save what it did"));
+  await postRun(env, { ...info, stats });
 }
 async function runInfo(request, env) {
   const id = new URL(request.url).searchParams.get("id") || "";

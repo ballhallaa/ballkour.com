@@ -307,6 +307,8 @@
   "rev.title": "Zu prüfende Läufe",
   "rev.none": "Gerade gibt es keine Läufe zu prüfen.",
   "rev.would": "Wäre #{rank}",
+  "rev.wouldOf": "Wäre #{rank} von {total}",
+  "rev.global": "Gesamt #{rank} von {total}",
   "rev.watch": "Ansehen",
   "rev.approve": "Annehmen",
   "rev.decline": "Ablehnen",
