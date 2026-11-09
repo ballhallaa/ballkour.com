@@ -206,6 +206,7 @@
   "pl.legacyBest": "Legacy: {time}",
   "pl.board": "See the board",
   "pl.seeRatings": "See where {player} places in the Player ratings",
+  "pl.copyLink": "Copy a link to {player}’s stats",
   "pl.back": "Back",
   "pl.sort.date": "Date",
   "pl.sortedRating": "Sorted by course rating, highest first",
