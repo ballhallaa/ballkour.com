@@ -2262,7 +2262,8 @@ a.link-copy { text-decoration: none; }
     $$("[data-i18n-aria]").forEach((el) => { el.setAttribute("aria-label", t(el.dataset.i18nAria)); });
     $$("[data-i18n-alt]").forEach((el) => { el.setAttribute("alt", t(el.dataset.i18nAlt)); });
     document.documentElement.lang = htmlLang();
-    document.title = `Ballkour · ${t("hero.tagline")}`;
+    // A run's, a board's, or a player's link keeps the title the Worker gave it ("COLDSKIN · Ballkour")
+    if (!document.querySelector("title[data-own]")) document.title = `Ballkour · ${t("hero.tagline")}`;
   }
   function storedLang() { try { return localStorage.getItem("ballkour-lang"); } catch (e) { return null; } }
   function storeLang(code) {
