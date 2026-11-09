@@ -2625,7 +2625,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // The rows past the top 10 (rows() draws them), and the row that shows or hides them
   function moreHtml(row, rows, total, count) {
     if (!count) return "";
-    const all = viewOf(row).all;
+    const all = !!viewOf(row).all; // false until it's first pressed, so screen readers hear that it's collapsed
     const label = all ? t("lb.fewer") : t("lb.all", { count: total.toLocaleString(htmlLang()) });
     return (all ? `<ol class="board board-rest">${rows().join("")}</ol>` : "") +
       `<button class="lb-more" type="button" data-course="${row.n}" aria-expanded="${all}"><span>${esc(label)}</span>${icon("chev", "icon chev")}</button>`;
