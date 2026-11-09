@@ -20,9 +20,13 @@ run_worker_first = true
 # RUNS_CHANNEL is the run submissions channel: Ballkyrie posts every run sent from the website there, with a View run
 # button to its page (ballkour.com/runs/<id>). Ballkyrie needs to be able to see it, send messages and embed links
 # there. The test copy below leaves it out, so its runs aren't posted.
+#
+# CLAIMS_CHANNEL is where Ballkyrie posts every claim to legacy runs (runs from before May 2026, see "Claiming legacy
+# runs" in worker.js) for moderators to check, with the same permissions there. The test copy leaves it out too.
 [vars]
 REVIEWER_ROLES = "1497735437979226194" # mod
 RUNS_CHANNEL = "1569040889756655658" # run-submissions
+CLAIMS_CHANNEL = "1569164212901773453" # legacy claims
 
 # Runs sent from the website: at most 5 a minute from one Discord account (submit() in worker.js). The test copy below
 # doesn't get it, since environments don't inherit bindings, and goes without the limit.
