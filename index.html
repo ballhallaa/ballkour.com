@@ -661,6 +661,7 @@ a.stat:hover .play { color: var(--volt); }
 .lb-pic .icon { color: var(--arc); }
 .lb-sort button[data-sort="time"] .icon { color: var(--volt); }
 .lb-sort button[data-sort="miss"] .icon { color: var(--coral); }
+.lb-sort button[data-sort="date"] .icon { color: var(--arc); }
 .lb-sort button:hover, .lb-pic:hover { color: var(--ink); border-color: var(--line-hi); }
 .lb-sort button[aria-pressed="true"] { color: var(--ink); background: rgba(0, 230, 151, .1); border-color: rgba(0, 230, 151, .35); }
 /* Find a player on a board by their in-game or Discord name: first in the bar, taking the room the buttons leave */
@@ -785,6 +786,10 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-sort [data-pl-sort="miss"] .icon { color: var(--coral); }
 .pl-sort [data-pl-sort="rating"] .icon { color: var(--gold); }
 .pl-sort [data-pl-sort="date"] .icon { color: var(--arc); }
+/* The pressed sort's arrow: which way it goes (see sortArrow) */
+.lb-sort button .sort-dir { display: inline-grid; place-items: center; margin-inline-start: -2px; }
+.lb-sort button .sort-dir .icon { width: 11px; height: 11px; color: currentColor; transition: transform .15s; }
+.lb-sort button .sort-dir.up .icon { transform: rotate(180deg); }
 .pl-back { display: inline-flex; align-items: center; gap: 4px; margin: -4px 0; padding: 4px 0; border: 0; background: none; font: 500 13px/1.3 var(--mono); color: var(--volt); cursor: pointer; }
 .pl-back:hover { text-decoration: underline; text-underline-offset: 3px; }
 .pl-back .icon { width: 13px; height: 13px; transform: rotate(90deg); }
@@ -1907,6 +1912,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "lb.sort.miss": "Mistakes",
   "lb.sortedTime": "Sorted by time",
   "lb.sortedMiss": "Sorted by mistakes, fewest first",
+  "lb.sortedTimeSlow": "Sorted by time, slowest first",
+  "lb.sortedMissMost": "Sorted by mistakes, most first",
   "lb.fewer": "Show the top 10 only",
   "lb.search": "Player or Discord name",
   "lb.searchLabel": "Find a player on this board by in-game or Discord name",
@@ -1985,6 +1992,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "pl.sort.date": "Date",
   "pl.sortedRating": "Sorted by course rating, highest first",
   "pl.sortedDate": "Sorted by date, newest first",
+  "pl.sortedDateOld": "Sorted by date, oldest first",
+  "pl.sortedRatingLow": "Sorted by course rating, lowest first",
   "pl.mineEmpty": "No runs yet. Send your first one and your places, times and rating show up here.",
   "dcp.what": "Show your Top %, rating, and top 10s on your Discord profile. Discord asks if Ballkyrie can update them, and they keep up to date with the boards from then on.",
   "dcp.add": "Show on my Discord profile",
@@ -2692,11 +2701,12 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const day = old ? boardDate(runs) : "";
     const ratingOf = boardRatings(c, old ? { day, c, runs } : null);
     let top = runs.slice(0, 10);
-    // Sorted by mistakes, everyone on it is ranked again (the newest board's top 10 can then take players from past it)
-    const byMiss = boardSort === "miss";
-    const podium = byMiss ? (r) => runs.slice(0, 3).indexOf(r) : () => undefined;
-    if (byMiss) {
-      const all = top.concat(rest).sort(byMistakes);
+    // Sorted by mistakes or by date, everyone on it is ranked again (the newest board's top 10 can then take players from
+    // past it), and the podium's colors stay with the three fastest
+    const resort = boardOrder(false);
+    const podium = resort ? (r) => runs.slice(0, 3).indexOf(r) : () => undefined;
+    if (resort) {
+      const all = top.concat(rest).sort(resort);
       top = all.slice(0, 10);
       rest = all.slice(10);
     }
@@ -2708,17 +2718,42 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     return sortHtml(c) + rowsHtml(c, top, rest, (r, i) => runRow(r, i, i < top.length ? fresh : null, false, ratingOf, podium(r), isMarked(c, r))) +
       (notes.length ? `<p class="lb-foot">${notes.map((s) => `<span>${esc(s)}</span>`).join("")}</p>` : "");
   }
-  // Boards are sorted by time (the leaderboard itself) or by mistakes, fewest first and then fastest. The choice holds
-  // for every course's board until the page is left.
+  // Boards are sorted by time (the leaderboard itself), by mistakes (fewest first, then fastest), or by date (newest
+  // first, then fastest, and runs with no date last). Pressing the sort that's on again turns it around (boardRev):
+  // slowest first, most mistakes first (then fastest), or oldest first (runs with no date still last). The choice
+  // holds for every course's board until the page is left. Legacy boards have no dates, so they have no Date, and
+  // show by time while it's picked.
   let boardSort = "time";
+  let boardRev = false;
   const byMistakes = (a, b) => a.miss - b.miss || toSeconds(a.time) - toSeconds(b.time);
+  const runDay = (r) => { const d = formatDate(r.date); return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : ""; };
+  const byNewest = (a, b) => runDay(b).localeCompare(runDay(a)) || toSeconds(a.time) - toSeconds(b.time);
+  // Each sort's order, then turned around. null is the leaderboard's own (by time, fastest first).
+  const BOARD_SORTS = {
+    time: [null, (a, b) => byTime(b, a)],
+    miss: [byMistakes, (a, b) => b.miss - a.miss || toSeconds(a.time) - toSeconds(b.time)],
+    date: [byNewest, (a, b) => !runDay(a) - !runDay(b) || runDay(a).localeCompare(runDay(b)) || toSeconds(a.time) - toSeconds(b.time)],
+  };
+  // How a board is sorted, [sort, turned around], a Legacy board by time while Date is picked; and its order
+  const boardSortOf = (legacy) => (legacy && boardSort === "date" ? ["time", false] : [boardSort, boardRev]);
+  const boardOrder = (legacy) => { const [k, rev] = boardSortOf(legacy); return BOARD_SORTS[k][rev ? 1 : 0]; };
+  // What each sort says when it's picked (read out, and the pressed button's hint), then turned around, for the
+  // boards and for a player's Runs
+  const SORTED = { time: ["lb.sortedTime", "lb.sortedTimeSlow"], miss: ["lb.sortedMiss", "lb.sortedMissMost"],
+    date: ["pl.sortedDate", "pl.sortedDateOld"], rating: ["pl.sortedRating", "pl.sortedRatingLow"] };
+  // The arrow on the pressed sort button: up when the smallest comes first (fastest, fewest mistakes, oldest, lowest
+  // rating), down when the biggest does. Pressing it again turns the sort, and the arrow, around.
+  const sortArrow = (k, rev) => `<span class="sort-dir${(k === "date" || k === "rating" ? rev : !rev) ? " up" : ""}" aria-hidden="true">${icon("chev")}</span>`;
+  const sortHint = (k, rev) => ` title="${esc(t(SORTED[k][rev ? 1 : 0]))}"`;
   // The bar above a board: its search (see "Searching a board") and picture (see "Board pictures") on the left, how
-  // it's sorted on the right
-  function sortHtml(c) {
-    const b = (key, ico, label) => `<button type="button" data-sort="${key}" data-course="${c.n}" aria-pressed="${boardSort === key}">${icon(ico)}<span>${esc(t(label))}</span></button>`;
+  // it's sorted on the right. legacy: a Legacy board, which has no Date (it's by time while Date is picked)
+  function sortHtml(c, legacy) {
+    const [on, rev] = boardSortOf(legacy);
+    const b = (key, ico, label) => `<button type="button" data-sort="${key}" data-course="${c.n}" aria-pressed="${on === key}"${on === key ? sortHint(key, rev) : ""}>` +
+      `${icon(ico)}<span>${esc(t(label))}</span>${on === key ? sortArrow(key, rev) : ""}</button>`;
     return `<div class="lb-bar">${searchHtml(c)}<button class="lb-pic" type="button" data-course="${c.n}">${icon("image")}<span>${esc(t("pic.button"))}</span></button>` +
       `<div class="lb-sort" role="group" aria-label="${esc(t("lb.sortBy"))}"><span class="lb-sort-label" aria-hidden="true">${esc(t("lb.sortBy"))}</span>` +
-      b("time", "bolt", "lb.sort.time") + b("miss", "skull", "lb.sort.miss") + `</div></div>`;
+      b("time", "bolt", "lb.sort.time") + b("miss", "skull", "lb.sort.miss") + (legacy ? "" : b("date", "calendar", "pl.sort.date")) + `</div></div>`;
   }
   // The rows past the top 10 (rows() draws them), and the row that shows or hides them
   function moreHtml(row, rows, total, count) {
@@ -2733,12 +2768,12 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   function legacyHtml(c, runs) {
     const seen = new Set();
     const best = runs.slice().sort(byTime).filter((r) => !seen.has(playerKey(r)) && seen.add(playerKey(r)));
-    const byMiss = boardSort === "miss";
-    const sorted = byMiss ? best.slice().sort(byMistakes) : best;
+    const order = boardOrder(true);
+    const sorted = order ? best.slice().sort(order) : best;
     const top = sorted.slice(0, 10);
     const rest = sorted.slice(10);
-    const podium = (r) => (byMiss ? best.slice(0, 3).indexOf(r) : undefined);
-    return `<div class="board-meta"><span>${esc(t("lb.legacy.title"))}</span></div>` + sortHtml(c) +
+    const podium = (r) => (order ? best.slice(0, 3).indexOf(r) : undefined);
+    return `<div class="board-meta"><span>${esc(t("lb.legacy.title"))}</span></div>` + sortHtml(c, true) +
       rowsHtml(c, top, rest, (r, i) => runRow(r, i, null, true, null, podium(r))) +
       `<p class="lb-foot"><span>${esc(t("lb.legacy.note"))}</span></p>`;
   }
@@ -2889,10 +2924,13 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   document.addEventListener("click", (e) => {
     const sort = e.target.closest(".lb-sort [data-sort]");
     if (sort) {
-      if (boardSort === sort.dataset.sort) return;
+      // The one that's on (Time on a Legacy board while Date is picked) turns around; another starts its own way
+      const c = course(Number(sort.dataset.course));
+      const [on, rev] = boardSortOf(viewOf(c).tab === "legacy");
+      boardRev = on === sort.dataset.sort ? !rev : false;
       boardSort = sort.dataset.sort;
-      refreshBoard(course(Number(sort.dataset.course)), `.lb-sort [data-sort="${boardSort}"]`);
-      announce.textContent = t(boardSort === "miss" ? "lb.sortedMiss" : "lb.sortedTime");
+      refreshBoard(c, `.lb-sort [data-sort="${boardSort}"]`);
+      announce.textContent = t(SORTED[boardSort][boardRev ? 1 : 0]);
       return;
     }
     const more = e.target.closest(".lb-more");
@@ -3451,7 +3489,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // How Runs is sorted: "date", "time", "miss" or "rating" (see allRunsHtml). Like a board's sort, it holds for every
   // player's Runs until the page is left.
   let plSort = "date";
-  const PL_SORTED = { time: "lb.sortedTime", miss: "lb.sortedMiss", rating: "pl.sortedRating", date: "pl.sortedDate" };
+  let plRev = false; // turned around: pressing the sort that's on again (see SORTED)
   // Every run a player has sent for a course, fastest first: the course's file, runs.json (slower runs too) and the
   // old boards, minus removed runs. A run from an old board only counts if it's no faster than their best on today's
   // board, the same as on the board itself. Then their legacy runs, from before May 2026.
@@ -3614,10 +3652,16 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       ...runs.map((r) => ({ r, day: day(r), order: day(r) ? 0 : 1, pts: record ? coursePoints(record, r) : -1, html: plRunHtml(r, record, r === best, false, c, gain) })),
       ...legacy.map((r) => ({ r, day: "", order: 2, pts: -1, html: plRunHtml(r, null, false, true, c) })),
     ]);
-    list.sort((a, b) => a.order - b.order || b.day.localeCompare(a.day));
-    const by = { time: (a, b) => byTime(a.r, b.r), miss: (a, b) => byMistakes(a.r, b.r), rating: (a, b) => b.pts - a.pts }[plSort];
+    // Turned around (plRev): oldest first (still with the ones without a date after), slowest first, most mistakes
+    // first (then fastest), or lowest course rating first (still with the ones that have none last)
+    const back = plRev && plSort === "date";
+    list.sort((a, b) => a.order - b.order || (back ? a.day.localeCompare(b.day) : b.day.localeCompare(a.day)));
+    const by = (plRev
+      ? { time: (a, b) => byTime(b.r, a.r), miss: (a, b) => b.r.miss - a.r.miss || toSeconds(a.r.time) - toSeconds(b.r.time), rating: (a, b) => (a.pts < 0) - (b.pts < 0) || a.pts - b.pts }
+      : { time: (a, b) => byTime(a.r, b.r), miss: (a, b) => byMistakes(a.r, b.r), rating: (a, b) => b.pts - a.pts })[plSort];
     if (by) list.sort(by);
-    const b = (key, ico, label) => `<button type="button" data-pl-sort="${key}" aria-pressed="${plSort === key}">${icon(ico)}<span>${esc(t(label))}</span></button>`;
+    const b = (key, ico, label) => `<button type="button" data-pl-sort="${key}" aria-pressed="${plSort === key}"${plSort === key ? sortHint(key, plRev) : ""}>` +
+      `${icon(ico)}<span>${esc(t(label))}</span>${plSort === key ? sortArrow(key, plRev) : ""}</button>`;
     return `<div class="pl-all">` +
       `<div class="pl-all-head"><button class="pl-back" type="button" data-pl-back>${icon("chev")}<span>${esc(t("pl.back"))}</span></button>` +
       `<p class="pl-runs-count"><span>${esc(t("pl.allRuns"))}</span><b>${esc(localNum(list.length))}</b></p>` +
@@ -3887,10 +3931,12 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     // Runs' sort: the list is drawn again, with the same button in focus
     const sort = e.target.closest("[data-pl-sort]");
     if (sort) {
-      if (plSort === sort.dataset.plSort || !PL_SORTED[sort.dataset.plSort]) return;
+      if (!SORTED[sort.dataset.plSort]) return;
+      // The one that's on turns around; another starts its own way
+      plRev = plSort === sort.dataset.plSort ? !plRev : false;
       plSort = sort.dataset.plSort;
       renderPlayer(`[data-pl-sort="${plSort}"]`);
-      announce.textContent = t(PL_SORTED[plSort]);
+      announce.textContent = t(SORTED[plSort][plRev ? 1 : 0]);
       return;
     }
     const toggle = e.target.closest("[data-pl-course]");
