@@ -2519,7 +2519,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     return `<div class="lb-tabs" role="tablist" aria-label="${esc(t("lb.toggle", { course: `${c.n} ${c.name}` }))}">${tab("top", "lb.tab.top")}${tab("legacy", "lb.tab.legacy")}</div>` +
       `<div role="tabpanel" id="lbp-${c.n}" aria-labelledby="lbt-${c.n}-${v.tab}">${v.tab === "legacy" ? legacyHtml(c, h.legacy) : topHtml(c, v)}</div>`;
   }
-  // The newest board also lists everyone past its top 10 (see "Every run, and the ratings"); older boards are as posted
+  // A board's top 10 is as posted, and Show all lists everyone past it (see "Every run, and the ratings")
   function topHtml(c, v) {
     const list = boardsOf(c);
     const { top, rest } = standingsOf(c);
@@ -2527,7 +2527,15 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const at = v.at < 0 || v.at >= list.length ? list.length - 1 : v.at;
     const fresh = freshAt(list, at);
     const newest = at === list.length - 1;
-    return (list.length > 1 ? historyHtml(c, list, at) : "") + congratsHtml(list[at], fresh) + runsHtml(c, list[at], fresh, newest ? rest : [], !newest);
+    return (list.length > 1 ? historyHtml(c, list, at) : "") + congratsHtml(list[at], fresh) + runsHtml(c, list[at], fresh, restAt(c, list, at), !newest);
+  }
+  // Everyone past the top 10 of a course's board from its history (list[at]): today's for the newest board, and for
+  // an older one, everyone else with a run sent by its day, the way its ratings count them (see standingsOn)
+  function restAt(c, list, at) {
+    if (at === list.length - 1) return standingsOf(c).rest;
+    const board = list[at];
+    const on = new Set(board.map(playerKey));
+    return standingsOn(c, boardDate(board), board).filter((r) => !on.has(playerKey(r)));
   }
   // The player's Discord name and picture, from /data/players.json (the Cloudflare Worker looks them up)
   const PLAYERS = new Map();
@@ -4233,7 +4241,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const { top, rest } = standingsOf(c);
     const at = list ? (v.at < 0 || v.at >= list.length ? list.length - 1 : v.at) : -1;
     const runs = list ? list[at] : top;
-    const pool = byMiss ? runs.slice(0, 10).concat(!list || at === list.length - 1 ? rest : []).sort(byMistakes) : runs;
+    // Sorted by mistakes, everyone on the board is ranked again, past its top 10 too, like on the page
+    const pool = byMiss ? runs.slice(0, 10).concat(list ? restAt(c, list, at) : rest).sort(byMistakes) : runs;
     // An older board's ratings are as they were on its day, like on the page
     const then = list && at < list.length - 1 ? { day: boardDate(runs), c, runs } : null;
     return { legacy: false, byMiss, runs: pool.slice(0, 10), podium: (r) => runs.slice(0, 3).indexOf(r), fresh: list ? freshAt(list, at) : new Set(), board: list ? at + 1 : 0, boards: list ? list.length : 0, date: boardDate(runs), then };
