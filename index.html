@@ -780,8 +780,14 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-all { padding-top: 12px; }
 .pl-all-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 14px; padding: 0 18px 12px; }
 .pl-all-head .pl-runs-count { margin: 0; padding: 0; }
-/* Its sort, on a line of its own: like a board's, with Rating and Date too, and on two lines where they don't fit */
-.pl-all-head .pl-sort { flex-basis: 100%; flex-wrap: wrap; justify-content: flex-end; row-gap: 6px; }
+/* Its sort, on a line of its own: like a board's, with Rating and Date too. The same over a course's runs (see
+   .pl-runs-head). */
+.pl-all-head .pl-sort, .pl-runs-head .pl-sort { flex-basis: 100%; min-width: 0; flex-wrap: nowrap; justify-content: flex-end; }
+/* Its buttons in a row beside "Sort by", or where they don't fit on one line (.two, see fitSorts), two on each line,
+   lined up in two columns, with "Sort by" halfway down beside them */
+.pl-sort .sort-btns { flex: none; display: grid; grid-auto-flow: column; gap: 6px 4px; }
+.pl-sort.two .sort-btns { grid-auto-flow: row; grid-template-columns: auto auto; }
+.pl-sort.two .sort-btns button { justify-content: center; }
 .pl-sort [data-pl-sort="time"] .icon { color: var(--volt); }
 .pl-sort [data-pl-sort="miss"] .icon { color: var(--coral); }
 .pl-sort [data-pl-sort="rating"] .icon { color: var(--gold); }
@@ -823,6 +829,9 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-run-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 .pl-runs-count { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; margin: 0 0 6px; padding: 0 10px; font: 600 10.5px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
 .pl-runs-count b { font: 600 13px/1 var(--mono); letter-spacing: 0; font-variant-numeric: tabular-nums; color: var(--ink); }
+/* Over a course's runs: how many, and their sort under it, like Runs' */
+.pl-runs-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 0 0 6px; padding: 0 10px; }
+.pl-runs-head .pl-runs-count { margin: 0; padding: 0; }
 .pl-run { display: grid; grid-template-columns: auto 48px minmax(0, 1fr); grid-template-areas: "time miss tags" "meta meta meta"; align-items: center; gap: 3px 12px; padding: 7px 10px; border-radius: 8px; font-variant-numeric: tabular-nums; }
 .pl-run .stat { font: 600 14px/1 var(--mono); color: var(--ink-2); }
 .pl-run .stat.time { grid-area: time; }
@@ -3537,6 +3546,11 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // player's Runs until the page is left.
   let plSort = "date";
   let plRev = false; // turned around: pressing the sort that's on again (see SORTED)
+  // How the runs under each course in a player's panel are sorted, the same ways (see courseRunsHtml): fastest first,
+  // like the course's board, until another is picked. It holds for every course, in every player's panel, until the
+  // page is left.
+  let plCourseSort = "time";
+  let plCourseRev = false;
   // Every run a player has sent for a course, fastest first: the course's file, runs.json (slower runs too) and the
   // old boards, minus removed runs. A run from an old board only counts if it's no faster than their best on today's
   // board, the same as on the board itself. Then their legacy runs, from before May 2026.
@@ -3667,9 +3681,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
           summary + icon("chev", "icon chev") +
         `</button>` +
         `<div class="pl-runs" id="pl-runs-${c.n}"${open ? "" : " hidden"}>` +
-          (runs.length || legacy.length
-            ? runsCountHtml(runs.length + legacy.length) + `<ol class="pl-run-list">${runs.map((x) => plRunHtml(x, record, x === best, false, null, gain)).join("")}${legacy.map((x) => plRunHtml(x, null, false, true)).join("")}</ol>`
-            : `<p class="pl-empty">${esc(t("pl.noRuns"))}</p>`) +
+          (runs.length || legacy.length ? courseRunsHtml({ c, best, record, gain, runs, legacy }) : `<p class="pl-empty">${esc(t("pl.noRuns"))}</p>`) +
           `<a class="pl-board" href="/leaderboards/${c.n}" data-board="${c.n}">${esc(t("pl.board"))}${icon("chev", "icon chev")}</a>` +
         `</div></li>`;
     });
@@ -3687,34 +3699,60 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     return `<button class="pl-close pl-copy" type="button" data-copy="${esc(link)}" aria-label="${label}" title="${label}">` +
       `<span class="copy-val sr-only">${esc(link)}</span>${icon("link", "icon i-copy")}${icon("check", "icon i-check")}</button>`;
   }
-  // Runs, in their panel: every run the tile counts on one list, each under its course, sorted by plSort. By date,
-  // it's newest first: runs without a date come after the ones with one, and the legacy runs (from before May 2026,
-  // which had no dates) last, and runs from the same day keep the courses' order, fastest first. That's also the order
-  // runs that tie keep under the other sorts: by time (fastest first, whatever the course), by mistakes (fewest
-  // first, then fastest, like a board's), and by course rating (highest first, with the runs that have none, legacy
-  // runs and runs on broken courses, last).
-  function allRunsHtml(rows) {
-    const day = (r) => { const d = formatDate(r.date); return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : ""; };
-    const list = rows.flatMap(({ c, best, record, gain, runs, legacy }) => [
-      ...runs.map((r) => ({ r, day: day(r), order: day(r) ? 0 : 1, pts: record ? coursePoints(record, r) : -1, html: plRunHtml(r, record, r === best, false, c, gain) })),
-      ...legacy.map((r) => ({ r, day: "", order: 2, pts: -1, html: plRunHtml(r, null, false, true, c) })),
-    ]);
-    // Turned around (plRev): oldest first (still with the ones without a date after), slowest first, most mistakes
-    // first (then fastest), or lowest course rating first (still with the ones that have none last)
-    const back = plRev && plSort === "date";
+  // A player's runs on a list, to sort (see sortRuns): a course's (see plRows), each as { r: the run, day, order, pts:
+  // its course rating, or -1 for none, html }. named: each with its course's name over it, on the list of every run.
+  function runItems({ c, best, record, gain, runs, legacy }, named) {
+    return [
+      ...runs.map((r) => ({ r, day: runDay(r), order: runDay(r) ? 0 : 1, pts: record ? coursePoints(record, r) : -1, html: plRunHtml(r, record, r === best, false, named ? c : null, gain) })),
+      ...legacy.map((r) => ({ r, day: "", order: 2, pts: -1, html: plRunHtml(r, null, false, true, named ? c : null) })),
+    ];
+  }
+  // A list of a player's runs (see runItems), sorted by sort ("time", "miss", "rating" or "date"), turned around with
+  // rev. By date, it's newest first: runs without a date come after the ones with one, and the legacy runs (from
+  // before May 2026, which had no dates) last, and runs from the same day keep the list's order (each course's runs
+  // fastest first). That's also the order runs that tie keep under the other sorts: by time (fastest first, whatever
+  // the course), by mistakes (fewest first, then fastest, like a board's), and by course rating (highest first, with
+  // the runs that have none, legacy runs and runs on broken courses, last). Turned around: oldest first (still with the
+  // ones without a date after), slowest first, most mistakes first (then fastest), or lowest course rating first
+  // (still with the ones that have none last).
+  function sortRuns(list, sort, rev) {
+    const back = rev && sort === "date";
     list.sort((a, b) => a.order - b.order || (back ? a.day.localeCompare(b.day) : b.day.localeCompare(a.day)));
-    const by = (plRev
+    const by = (rev
       ? { time: (a, b) => byTime(b.r, a.r), miss: (a, b) => b.r.miss - a.r.miss || toSeconds(a.r.time) - toSeconds(b.r.time), rating: (a, b) => (a.pts < 0) - (b.pts < 0) || a.pts - b.pts }
-      : { time: (a, b) => byTime(a.r, b.r), miss: (a, b) => byMistakes(a.r, b.r), rating: (a, b) => b.pts - a.pts })[plSort];
+      : { time: (a, b) => byTime(a.r, b.r), miss: (a, b) => byMistakes(a.r, b.r), rating: (a, b) => b.pts - a.pts })[sort];
     if (by) list.sort(by);
-    const b = (key, ico, label) => `<button type="button" data-pl-sort="${key}" aria-pressed="${plSort === key}"${plSort === key ? sortHint(key, plRev) : ""}>` +
-      `${icon(ico)}<span>${esc(t(label))}</span>${plSort === key ? sortArrow(key, plRev) : ""}</button>`;
+    return list;
+  }
+  // The sort over a list of a player's runs, like a board's: on and rev, how it's sorted now. keys: the sorts it has,
+  // of RUN_SORTS (each one's icon and name), in that order.
+  const RUN_SORTS = { time: ["bolt", "lb.sort.time"], miss: ["skull", "lb.sort.miss"], rating: ["star", "pl.rating"], date: ["calendar", "pl.sort.date"] };
+  function runSortHtml(on, rev, keys = Object.keys(RUN_SORTS)) {
+    const b = (key, [ico, label]) => `<button type="button" data-pl-sort="${key}" aria-pressed="${on === key}"${on === key ? sortHint(key, rev) : ""}>` +
+      `${icon(ico)}<span>${esc(t(label))}</span>${on === key ? sortArrow(key, rev) : ""}</button>`;
+    return `<div class="lb-sort pl-sort" role="group" aria-label="${esc(t("lb.sortBy"))}"><span class="lb-sort-label" aria-hidden="true">${esc(t("lb.sortBy"))}</span>` +
+      `<span class="sort-btns">${keys.map((k) => b(k, RUN_SORTS[k])).join("")}</span></div>`;
+  }
+  // Runs, in their panel: every run the tile counts on one list, each under its course, sorted by plSort (see sortRuns)
+  function allRunsHtml(rows) {
+    const list = sortRuns(rows.flatMap((x) => runItems(x, true)), plSort, plRev);
     return `<div class="pl-all">` +
       `<div class="pl-all-head"><button class="pl-back" type="button" data-pl-back>${icon("chev")}<span>${esc(t("pl.back"))}</span></button>` +
       `<p class="pl-runs-count"><span>${esc(t("pl.allRuns"))}</span><b>${esc(localNum(list.length))}</b></p>` +
-      `<div class="lb-sort pl-sort" role="group" aria-label="${esc(t("lb.sortBy"))}"><span class="lb-sort-label" aria-hidden="true">${esc(t("lb.sortBy"))}</span>` +
-        b("time", "bolt", "lb.sort.time") + b("miss", "skull", "lb.sort.miss") + b("rating", "star", "pl.rating") + b("date", "calendar", "pl.sort.date") + `</div></div>` +
+      runSortHtml(plSort, plRev) + `</div>` +
       `<ol class="pl-run-list">${list.map((x) => x.html).join("")}</ol></div>`;
+  }
+  // The runs under a course in a player's panel (row: see plRows), sorted by plCourseSort (see sortRuns), with how
+  // many over them. The sort is there once there's more than one run. It has Rating only where a run has a course
+  // rating (not on a broken course), and Date only where a run has a date (legacy runs have neither), and the runs are
+  // by time while one it doesn't have is picked.
+  function courseRunsHtml(row) {
+    const items = runItems(row, false);
+    const keys = Object.keys(RUN_SORTS).filter((k) => (k === "rating" ? items.some((x) => x.pts >= 0) : k === "date" ? items.some((x) => x.day) : true));
+    const [on, rev] = keys.includes(plCourseSort) ? [plCourseSort, plCourseRev] : ["time", false];
+    const list = sortRuns(items, on, rev);
+    return `<div class="pl-runs-head">${runsCountHtml(list.length)}${list.length > 1 ? runSortHtml(on, rev, keys) : ""}</div>` +
+      `<ol class="pl-run-list">${list.map((x) => x.html).join("")}</ol>`;
   }
   /* Their own panel: their stats on their Discord profile (see "Stats on Discord profiles" in cloudflare/worker.js),
      or a way to put them there, through Discord and back to this panel. me.profile is null when that isn't set up.
@@ -3865,10 +3903,25 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const spot = focusSel || (pl.contains(document.activeElement) && document.activeElement.dataset.plCourse ? `[data-pl-course="${document.activeElement.dataset.plCourse}"]` : null);
     const scroll = pl.scrollTop;
     pl.innerHTML = statBackHtml() + playerHtml();
+    fitSorts();
     pl.scrollTop = scroll;
     const back = spot && pl.querySelector(spot);
     if (back) back.focus({ preventScroll: true });
   }
+  /* A sort over a player's runs (see runSortHtml) has its buttons in a row beside "Sort by" where they fit, and two on
+     each line where they don't (.two): on phones, and in the longer languages. They're measured in a row each time
+     the panel is drawn, when the window changes size, and once the fonts have loaded. A course's runs that are
+     closed measure nothing, and they're drawn again when they're opened. */
+  function fitSorts() {
+    pl.querySelectorAll(".pl-sort").forEach((s) => {
+      s.classList.remove("two");
+      const box = [...s.children].map((el) => el.getBoundingClientRect());
+      const need = Math.max(...box.map((b) => b.right)) - Math.min(...box.map((b) => b.left));
+      if (need > s.getBoundingClientRect().width + 0.5) s.classList.add("two");
+    });
+  }
+  addEventListener("resize", () => { if (pl.open) fitSorts(); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (pl.open) fitSorts(); });
   /* A player's own link, ballkour.com/players/<number or name> (see "Players' own links"), opens their panel, so their
      stats can be shared, and /players/<…>/runs opens it on Runs. The address shows it while their panel is open (their
      own too, from My profile or their name on a board), and Copy link in the panel copies it. */
@@ -3975,10 +4028,21 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       showPlayerLink(plKey);
       return;
     }
-    // Runs' sort: the list is drawn again, with the same button in focus
+    // Runs' sort, or the sort over a course's runs: the list is drawn again, with the same button in focus
     const sort = e.target.closest("[data-pl-sort]");
     if (sort) {
       if (!SORTED[sort.dataset.plSort]) return;
+      const runs = sort.closest(".pl-runs");
+      if (runs) {
+        // The one that's on turns around (Time, too, while the course is by time because it doesn't have the one
+        // picked); another starts its own way. Every course's runs are sorted again, not just this one's.
+        const on = runs.querySelector('[data-pl-sort][aria-pressed="true"]').dataset.plSort;
+        plCourseRev = on === sort.dataset.plSort ? !(on === plCourseSort && plCourseRev) : false;
+        plCourseSort = sort.dataset.plSort;
+        renderPlayer(`#${runs.id} [data-pl-sort="${plCourseSort}"]`);
+        announce.textContent = t(SORTED[plCourseSort][plCourseRev ? 1 : 0]);
+        return;
+      }
       // The one that's on turns around; another starts its own way
       plRev = plSort === sort.dataset.plSort ? !plRev : false;
       plSort = sort.dataset.plSort;
