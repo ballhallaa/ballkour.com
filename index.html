@@ -1147,7 +1147,7 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .sub-runs { margin: 0 18px 16px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255, 255, 255, .02); }
 .sub-runs .rev-title .icon { color: var(--volt); }
 .sub-runs .rev-count { background: rgba(0, 230, 151, .12); color: var(--volt); }
-/* Stats, at the very bottom: which days (a day, or the 7 or 30 days up to it), then Page views and Runs, each with a
+/* Stats, at the very bottom: which days (a day, or the 7 or 30 days up to it), then Runs and Page views, each with a
    bar for every day that picks it, and its numbers for those days */
 .stats-range { display: flex; flex-wrap: wrap; gap: 4px; padding: 7px; border-bottom: 1px solid var(--line); }
 .stats-range .lb-tab { font-variant-numeric: tabular-nums; }
@@ -5735,14 +5735,14 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   let reviewAsk = null; // { id, approve, at }: the run whose buttons are asking, and when they started asking
   const checkParam = (() => { try { return new URLSearchParams(location.search).get("check") || ""; } catch (e) { return ""; } })();
   /* ---------- Stats ----------
-     At the very bottom of the page, for everyone: Page views and Runs, on a day picked in the history, or over the 7
+     At the very bottom of the page, for everyone: Runs and Page views, on a day picked in the history, or over the 7
      or 30 days up to it (the buttons at the top, the 30 days to start with). Each part has a bar for every day, 30 at
      a time, and a click on one picks its day, as do the arrows beside them (and ←, →, Home, End, Page Up and Page Down
      on a bar). Past either end, the 30 days on show slide along with the day picked. While Stats is on screen, the
      address says what's picked, so the link shows the same: /stats (today, and the 30 days up to it), /stats/2026-11-05
      (that day), and /day or /week after either for just that day or the 7 days up to it. Days are UTC days.
      Page views come from the Worker, which counts them (see "Page views" in cloudflare/worker.js), as the page opens,
-     so they're in before anyone scrolls down to them (they're above Runs, which would jump if they came in later):
+     so they're in before anyone scrolls down to them:
        GET /api/visits → { since: "YYYY-MM-DD", days: [{ day, views, people, sections: { home: [views, people], … } }, …] }
      oldest first. since is the first day counted: days picked from before it show "—", and a line says since when.
      A section's people is null on days from before they were counted (November 2026): it adds up the days that have
@@ -5930,6 +5930,30 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     let html = `<div class="stats-range" role="group" aria-label="${esc(t("stats.title"))}">` +
       Object.keys(STAT_RANGES).map((k) => `<button class="lb-tab" type="button" data-stat-range="${k}" aria-pressed="${statRange === k}">${esc(statLabel(k, day, today))}</button>`).join("") +
       `</div>`;
+    // Runs first, then Page views
+    if (rs) {
+      const of = (d) => rs.per.get(d) || {};
+      const add = (k) => span.reduce((a, d) => a + (of(d)[k] || 0), 0);
+      const sent = add("sent"), approved = add("approved"), declined = add("declined"), pending = add("pending");
+      // The course with the most runs sent (the lower number when two have as many)
+      const courses = new Map();
+      span.forEach((d) => (of(d).courses || new Map()).forEach((count, cn) => courses.set(cn, (courses.get(cn) || 0) + count)));
+      const [busiest, most] = [...courses].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0] || [];
+      const bc = busiest && course(busiest);
+      const row = (key, html) => `<tr><th scope="row">${esc(t(key))}</th><td class="num">${html}</td></tr>`;
+      const standing = standingAt(day, today);
+      html += `<h3 class="by src-group">${esc(t("pl.runs"))}</h3><div class="stats-part">` +
+        `<div class="stats-tiles" style="--n: 4">${tile("runs.title", n(sent), "upload")}${tile("stats.gained", `${add("gained") < 0 ? "−" : "+"}${n(Math.abs(add("gained")))}`, "star")}` +
+        `${tile("res.top10s", n(add("top10s")), "bolt")}${tile("res.records", n(add("records")), "trophy")}</div>` +
+        chart("runs", "stats.runsChart", (d) => of(d).sent || 0, (d) => t("stats.runsDay", { date: d, count: n(of(d).sent) })) +
+        `<table class="stats-table"><tbody>` +
+          row("stats.straight", esc(n(sent - approved - declined - pending))) + row("stats.approved", esc(n(approved))) +
+          row("run.declined", esc(n(declined))) + row("run.pending", esc(n(pending))) + row("res.podiums", esc(n(add("podiums")))) +
+          row("stats.newPlayers", esc(n(add("players")))) + row("stats.rated", esc(n(standing.rated))) +
+          row("stats.totalGlobal", esc(n(standing.global))) + row("stats.totalCourse", esc(n(standing.course))) +
+          (bc ? row("stats.busiest", `<span class="course-cell">${esc(String(bc.n))} ${flagName(bc)} · ${esc(n(most))}</span>`) : "") +
+        `</tbody></table><p class="rev-note">${esc(t("stats.runsNote"))}</p></div>`;
+    }
     if (visits) {
       const byDay = new Map(visits.days.map((d) => [d.day, d]));
       const v = (d) => byDay.get(d) || { views: 0, people: 0, sections: {} };
@@ -5959,29 +5983,6 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
             `<td class="num soft">${x.known ? esc(n(x.people)) : "—"}</td><td class="num">${esc(n(x.views))}</td></tr>`).join("") +
           `</tbody></table>` : "") +
         `<p class="rev-note">${esc(t("visits.note"))}${span[0] < since ? ` ${esc(t("stats.since", { date: since }))}` : ""}</p></div>`;
-    }
-    if (rs) {
-      const of = (d) => rs.per.get(d) || {};
-      const add = (k) => span.reduce((a, d) => a + (of(d)[k] || 0), 0);
-      const sent = add("sent"), approved = add("approved"), declined = add("declined"), pending = add("pending");
-      // The course with the most runs sent (the lower number when two have as many)
-      const courses = new Map();
-      span.forEach((d) => (of(d).courses || new Map()).forEach((count, cn) => courses.set(cn, (courses.get(cn) || 0) + count)));
-      const [busiest, most] = [...courses].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0] || [];
-      const bc = busiest && course(busiest);
-      const row = (key, html) => `<tr><th scope="row">${esc(t(key))}</th><td class="num">${html}</td></tr>`;
-      const standing = standingAt(day, today);
-      html += `<h3 class="by src-group">${esc(t("pl.runs"))}</h3><div class="stats-part">` +
-        `<div class="stats-tiles" style="--n: 4">${tile("runs.title", n(sent), "upload")}${tile("stats.gained", `${add("gained") < 0 ? "−" : "+"}${n(Math.abs(add("gained")))}`, "star")}` +
-        `${tile("res.top10s", n(add("top10s")), "bolt")}${tile("res.records", n(add("records")), "trophy")}</div>` +
-        chart("runs", "stats.runsChart", (d) => of(d).sent || 0, (d) => t("stats.runsDay", { date: d, count: n(of(d).sent) })) +
-        `<table class="stats-table"><tbody>` +
-          row("stats.straight", esc(n(sent - approved - declined - pending))) + row("stats.approved", esc(n(approved))) +
-          row("run.declined", esc(n(declined))) + row("run.pending", esc(n(pending))) + row("res.podiums", esc(n(add("podiums")))) +
-          row("stats.newPlayers", esc(n(add("players")))) + row("stats.rated", esc(n(standing.rated))) +
-          row("stats.totalGlobal", esc(n(standing.global))) + row("stats.totalCourse", esc(n(standing.course))) +
-          (bc ? row("stats.busiest", `<span class="course-cell">${esc(String(bc.n))} ${flagName(bc)} · ${esc(n(most))}</span>`) : "") +
-        `</tbody></table><p class="rev-note">${esc(t("stats.runsNote"))}</p></div>`;
     }
     box.innerHTML = html;
   }
