@@ -2037,6 +2037,7 @@ a.link-copy { text-decoration: none; }
   "claim.takenRev": "The runs as {name} are already linked to someone else, so turn this claim down.",
   "claim.own": "This is your own claim, so another moderator has to check it.",
   "link.title": "Your link",
+  "link.yours": "<b>Your link:</b> {link}",
   "link.pick": "Pick a name",
   "link.change": "Change",
   "link.rules": "Pick a name for it: up to 32 letters or numbers, with at least one letter. Use - or _ instead of spaces.",
@@ -5356,7 +5357,7 @@ a.link-copy { text-decoration: none; }
     const x = LINKS.get(me.id);
     const named = !!(x && x.link);
     if (!linkEditing) {
-      return `<div class="pl-claim pl-url"><p class="pl-claim-text"><b>${esc(t("link.title"))}</b> <span class="pl-url-text" dir="ltr">${esc(shownLink("d:" + me.id))}</span></p>` +
+      return `<div class="pl-claim pl-url"><p class="pl-claim-text">${safeHtml(t("link.yours", { link: "\u0000" })).replace("\u0000", `<span class="pl-url-text" dir="ltr">${esc(shownLink("d:" + me.id))}</span>`)}</p>` +
         `<button class="btn btn-sm" type="button" data-link-edit>${icon("pencil")}<span>${esc(t(named ? "link.change" : "link.pick"))}</span></button></div>`;
     }
     const value = linkDraft !== null ? linkDraft : named ? x.link : "";

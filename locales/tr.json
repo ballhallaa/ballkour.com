@@ -430,6 +430,7 @@
   "visits.note": "Biri siteyi bir tarayıcıda her açtığında site kendisi sayar; bu yüzden reklam engelleyiciler kimseyi gizlemez ve botlar sayılmaz. Her kişi günde bir kez sayılır ve site kim olduğunu saklamaz.",
   "foot.openDiscord": "Discord’da aç",
   "link.title": "Bağlantın",
+  "link.yours": "<b>Bağlantın:</b> {link}",
   "link.pick": "Ad seç",
   "link.change": "Değiştir",
   "link.rules": "Bunun için bir ad seç: en az biri harf olmak üzere en fazla 32 harf ya da rakam. Boşluk yerine - ya da _ kullan.",
