@@ -2655,7 +2655,7 @@ a.link-copy { text-decoration: none; }
     } catch (e) { /* not in the page */ }
     return fetch("/data/game.json").then((r) => (r.ok ? r.json() : Promise.reject(r.status)));
   })();
-  // A file from the game repo's develop branch, like "leaderboards/history.json"
+  // A file from the game repo, like "leaderboards/history.json" (see /data/game.json in cloudflare/worker.js)
   const gameFile = (path) => gameData.then((d) => {
     const key = Object.keys(d.files || {}).find((k) => k.normalize("NFC") === path.normalize("NFC"));
     return key && typeof d.files[key] === "string" ? d.files[key] : Promise.reject(path);
@@ -2711,7 +2711,7 @@ a.link-copy { text-decoration: none; }
   });
 
   /* ---------- Leaderboard history ----------
-     leaderboards/history.json on the game's develop branch keeps every board posted to Discord, oldest first,
+     leaderboards/history.json on the game's leaderboard-data branch keeps every board posted to Discord, oldest first,
      and the legacy boards from before May 2026, by course number:
        { "1": { "course": "Watchpoint: Gibraltar", "legacy": [run, …], "boards": [[run, …], …] }, … }
      Runs are { "name", "discord", "time", "mistakes", "date", "video" }, like the classic files. Paste each new board at the
@@ -2772,7 +2772,7 @@ a.link-copy { text-decoration: none; }
     .catch(() => {}));
 
   /* ---------- Every run, and the ratings ----------
-     A course's board ranks every run in its file and in leaderboards/runs.json on the game's develop branch (the runs
+     A course's board ranks every run in its file and in leaderboards/runs.json on the game's leaderboard-data branch (the runs
      sent from the website, and runs that never made a top 10), once each per player with their best run, minus the
      runs taken off for good:
        { "runs": { "1": [run, …], … }, "removed": { "1": [{ "name", "discord", "time" }, …], … } }

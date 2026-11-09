@@ -54,8 +54,8 @@ routes = []
 [env.test.triggers]
 crons = []
 
-# The test copy saves runs sent from it to the game repo's test-runs branch, never develop, so the real boards
-# aren't touched. Environments don't inherit [vars], so its reviewers are here too.
+# The test copy reads and saves the runs and the leaderboard history on the game repo's test-runs branch, never
+# leaderboard-data, so the real boards aren't touched. Environments don't inherit [vars], so its reviewers are here too.
 [env.test.vars]
 REVIEWER_ROLES = "1497735437979226194" # mod
-RUNS_BRANCH = "test-runs"
+DATA_BRANCH = "test-runs"
