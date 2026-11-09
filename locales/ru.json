@@ -440,6 +440,7 @@
   "stats.viewsChart": "Просмотры по дням",
   "stats.runsChart": "Отправленные забеги по дням",
   "stats.runsDay": "{date}: отправлено забегов {count}",
+  "stats.month": "Месяц",
   "stats.gained": "Набранный рейтинг",
   "stats.straight": "Сразу в таблицу",
   "stats.approved": "Принято модератором",

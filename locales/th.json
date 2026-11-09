@@ -440,6 +440,7 @@
   "stats.viewsChart": "ยอดเข้าชมรายวัน",
   "stats.runsChart": "การวิ่งที่ส่งมารายวัน",
   "stats.runsDay": "{date}: ส่งการวิ่ง {count} ครั้ง",
+  "stats.month": "เดือน",
   "stats.gained": "เรตติ้งที่ได้",
   "stats.straight": "ขึ้นกระดานทันที",
   "stats.approved": "ผู้ดูแลอนุมัติ",

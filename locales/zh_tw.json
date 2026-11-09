@@ -440,6 +440,7 @@
   "stats.viewsChart": "每天的頁面瀏覽量",
   "stats.runsChart": "每天提交的成績",
   "stats.runsDay": "{date}：提交了 {count} 個成績",
+  "stats.month": "月份",
   "stats.gained": "獲得的積分",
   "stats.straight": "直接上榜",
   "stats.approved": "管理員通過",
