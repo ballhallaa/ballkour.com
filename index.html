@@ -727,6 +727,10 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-name.is-name { text-transform: none; } /* a player's name, already in capitals (caps()) */
 .pl-dc { margin-top: 7px; display: flex; align-items: center; gap: 7px; font: 600 14px/1.2 var(--body); color: #b9befc; }
 .pl-dc .run-pfp { width: 18px; height: 18px; }
+/* A Discord name that opens their profile on Discord (dcLink()): only as wide as the name, underlined on hover */
+.dc-link { width: fit-content; max-width: 100%; text-decoration: none; }
+.dc-link:hover > span { text-decoration: underline; text-underline-offset: 3px; }
+.dc-link:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; border-radius: 4px; }
 .pl-bot { display: inline-flex; align-items: center; gap: 5px; vertical-align: bottom; font-weight: 600; color: #b9befc; white-space: nowrap; }
 .pl-bot .run-pfp { width: 18px; height: 18px; }
 /* Their own panel: their Discord, and Sign out beside it */
@@ -1756,6 +1760,7 @@ a.link-copy { text-decoration: none; }
   "lb.submittedOn": "Submitted on {date}",
   "lb.submittedBy": "Submitted on {date} by {name}",
   "lb.playerOpen": "See every run by {player}",
+  "dc.profile": "Open {name}’s profile on Discord",
   "pl.close": "Close",
   "pl.rating": "Rating",
   "pl.place": "Place",
@@ -2239,7 +2244,17 @@ a.link-copy { text-decoration: none; }
   }
   // The player's Discord name and picture, from /data/players.json (the Cloudflare Worker looks them up)
   const PLAYERS = new Map();
-  function dcHtml(r) {
+  // Their Discord name and picture as a link to their profile on Discord (discord.com/users/<id>, which opens the
+  // Discord app where it's installed), in a new tab. cls is how it looks: run-dc on the boards, pl-dc in a panel.
+  function dcLink(id, cls, size) {
+    const p = id && /^\d{17,20}$/.test(id) && PLAYERS.get(id);
+    if (!p) return "";
+    const pfp = /^https:\/\/cdn\.discordapp\.com\//.test(p.avatar) ? `<img class="run-pfp" src="${esc(p.avatar)}" alt="" width="${size}" height="${size}" loading="lazy" decoding="async">` : "";
+    return `<a class="${cls} dc-link" href="https://discord.com/users/${id}" target="_blank" rel="noopener" title="${esc(t("dc.profile", { name: p.name }))}">${pfp}<span>${esc(p.name)}</span></a>`;
+  }
+  // On a board's row. Where the whole row is what's clicked (Find a player's), it's just the name and picture (linked: false).
+  function dcHtml(r, linked = true) {
+    if (linked) return dcLink(r.discord, "run-dc", 16);
     const p = r.discord && PLAYERS.get(r.discord);
     if (!p) return "";
     const pfp = /^https:\/\/cdn\.discordapp\.com\//.test(p.avatar) ? `<img class="run-pfp" src="${esc(p.avatar)}" alt="" width="16" height="16" loading="lazy" decoding="async">` : "";
@@ -3047,7 +3062,7 @@ a.link-copy { text-decoration: none; }
     const ranNone = !rows.some((x) => x.best || x.runs.length || x.legacy.length);
     const stat = statTile;
     const tier = p ? `<span class="tag tag-tier${p.tier !== null && p.tier <= 5 ? " elite" : ""}">${esc(p.tier === null ? t("rt.rated") : t("rt.tier", { pct: p.tier.toLocaleString(htmlLang()) }))}</span>` : "—";
-    const dcLine = dc && named.name ? `<span class="pl-dc">${/^https:\/\/cdn\.discordapp\.com\//.test(dc.avatar) ? `<img class="run-pfp" src="${esc(dc.avatar)}" alt="" width="18" height="18">` : ""}<span>${esc(dc.name)}</span></span>` : "";
+    const dcLine = dc && named.name ? dcLink(discord, "pl-dc", 18) : "";
     let html = `<div class="pl-head"><div class="pl-who"><h2 class="pl-name is-name" id="pl-name">${esc(caps(named.name || (dc ? dc.name : "")))}</h2>` +
       (mine ? `<div class="pl-me">${dcLine}<button class="pl-signout" type="button" data-sign-out>${esc(t("sub.signout"))}</button></div>` : dcLine) +
       `</div><button class="pl-close" type="button" data-pl-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button></div>` +
@@ -3324,7 +3339,7 @@ a.link-copy { text-decoration: none; }
       (p ? `<span class="stat time">${icon("star")}<span class="v">${esc(points(p.rating))}</span></span>` +
           `<span class="stat miss">${icon("map")}<span>${p.courses}/${total}</span></span>`
         : `<span class="stat pf-unrated">${x.legacy ? `<span class="tag tag-legacy">${esc(unrated)}</span>` : esc(unrated)}</span>`) +
-      dcHtml(x) + `</li>`;
+      dcHtml(x, false) + `</li>`;
   }
   // The list, for what's typed so far
   function renderFinder() {
@@ -5268,9 +5283,7 @@ a.link-copy { text-decoration: none; }
     const box = runId && pl.open ? $("#run-tags", pl) : null;
     const x = box && sentRun(runId);
     if (!x) return;
-    const p = x.run.discord && PLAYERS.get(x.run.discord);
-    const pfp = p && /^https:\/\/cdn\.discordapp\.com\//.test(p.avatar) ? `<img class="run-pfp" src="${esc(p.avatar)}" alt="" width="18" height="18">` : "";
-    box.innerHTML = (p ? `<span class="pl-dc">${pfp}<span>${esc(p.name)}</span></span>` : "") + statusTag(x);
+    box.innerHTML = dcLink(x.run.discord, "pl-dc", 18) + statusTag(x);
   }
   // Reviewers: Approve and Turn down for a run waiting for a check (note: what just happened), and who checked one.
   // Signed out, a run waiting for a check says moderators can sign in to check it.

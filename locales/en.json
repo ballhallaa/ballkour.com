@@ -189,6 +189,7 @@
   "lb.submittedOn": "Submitted on {date}",
   "lb.submittedBy": "Submitted on {date} by {name}",
   "lb.playerOpen": "See every run by {player}",
+  "dc.profile": "Open {name}’s profile on Discord",
   "pl.close": "Close",
   "pl.rating": "Rating",
   "pl.place": "Place",
