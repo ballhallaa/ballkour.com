@@ -2010,6 +2010,8 @@ a.link-copy { text-decoration: none; }
   const rowOf = (key) => (String(key) === RATINGS.n ? RATINGS : course(Number(key)));
   // Board links: ballkour.com/leaderboards/6 opens Dorado's top 10. Only the number counts, so older links with the
   // course's name after it (/leaderboards/6-dorado) still work. The leaderboard bot links each post the same way.
+  // /leaderboards/6/3 opens its third board in the history, counted from the oldest, so the number stays the same
+  // as new boards come in (see subPath() and startAt).
   const boardHash = (c) => String(c.n);
   const courseOfHash = (hash) => { const m = /^#?(\d+)(?:-|$)/.exec(hash); return m ? course(Number(m[1])) || null : null; };
   const remakes = COURSES.filter((c) => c.remaker);
@@ -2516,13 +2518,16 @@ a.link-copy { text-decoration: none; }
     if (from === "next" && at < last) sel = ".lb-step.next";
     refreshBoard(c, sel);
     announce.textContent = `${t("lb.boardOf", { n: at + 1, total: list.length })} · ${boardDate(list[at])}`;
+    // The address follows the scrubber (/leaderboards/3/12, or /leaderboards/3 on the newest board), replacing
+    // itself rather than adding a step to Back for every board
+    if (openCourse === n) showLink("leaderboards", subPath("leaderboards"));
   }
   function showTab(n, tab) {
     const c = course(n);
     if (!c || viewOf(c).tab === tab) return;
     viewOf(c).tab = tab;
     refreshBoard(c, `.lb-tab[data-tab="${tab}"]`);
-    if (openCourse === n) showLink("leaderboards", subPath("leaderboards")); // /leaderboards/3 or /leaderboards/3/legacy
+    if (openCourse === n) showLink("leaderboards", subPath("leaderboards")); // /leaderboards/3 (or /3/12) or /leaderboards/3/legacy
   }
   document.addEventListener("click", (e) => {
     const sort = e.target.closest(".lb-sort [data-sort]");
@@ -3693,7 +3698,8 @@ a.link-copy { text-decoration: none; }
       picText(ctx, "DATES: ", W - PIC.pad - bw, fy, "#76867f", "right");
     }
     picFont(ctx, '600 14px "JetBrains Mono", monospace', 0.28);
-    picText(ctx, `ballkour.com/leaderboards/${c.n}${d.legacy ? "/legacy" : ""}`, W / 2, fy, "#a7b6b0", "center");
+    // The same link as the address: an older board's has its number
+    picText(ctx, `ballkour.com/leaderboards/${c.n}${d.legacy ? "/legacy" : d.then ? `/${d.board}` : ""}`, W / 2, fy, "#a7b6b0", "center");
     return cv;
   }
   // The picture, in a window with Save, Copy and Share
@@ -5460,10 +5466,11 @@ a.link-copy { text-decoration: none; }
   // runs is Submitted runs, under the form (or the form, while there are none)
   const ROUTES = { courses: "courses", leaderboards: "leaderboards", submit: "submit", runs: "sub-runs", features: "features", faq: "faq", discord: "discord", "source-code": "source", translations: "translations" };
   const pathFor = (route) => (route === "discord" ? "/#discord" : "/" + route);
-  const routeOf = (path) => { const m = /^\/([a-z-]+)(?:\/[\w-]+(?:\/legacy)?)?\/?$/i.exec(path); const r = m && m[1].toLowerCase(); return r && r !== "discord" && ROUTES[r] ? r : null; };
-  // The board or answer a link names: /leaderboards/6 (/leaderboards/6/legacy for its Legacy tab), /faq/pausing, or
-  // the older /leaderboards/6-dorado, /faq/pause, #6-dorado and #pause
-  const subOf = (path, hash) => { const m = /^\/(?:leaderboards\/([\w-]+)(?:\/legacy)?|faq\/([\w-]+))\/?$/i.exec(path); return m ? (m[1] || m[2]).toLowerCase() : /^#[\w-]+$/.test(hash) ? hash.slice(1) : null; };
+  const routeOf = (path) => { const m = /^\/([a-z-]+)(?:\/[\w-]+(?:\/(?:legacy|\d+))?)?\/?$/i.exec(path); const r = m && m[1].toLowerCase(); return r && r !== "discord" && ROUTES[r] ? r : null; };
+  // The board or answer a link names: /leaderboards/6 (/leaderboards/6/legacy for its Legacy tab, /leaderboards/6/3
+  // for its third board), /faq/pausing, or the older /leaderboards/6-dorado, /faq/pause, #6-dorado and #pause
+  const subOf = (path, hash) => { const m = /^\/(?:leaderboards\/([\w-]+)(?:\/(?:legacy|\d+))?|faq\/([\w-]+))\/?$/i.exec(path); return m ? (m[1] || m[2]).toLowerCase() : /^#[\w-]+$/.test(hash) ? hash.slice(1) : null; };
+  const BOARD_LINK = /^\/leaderboards\/[\w-]+\/(\d+)\/?$/i; // a link to one of a course's boards, like /leaderboards/6/3
   // Old hash links still work too, including #leaderboard from the workshop.codes README
   const hashRoute = (hash) => { const h = hash.slice(1).toLowerCase(); return h === "leaderboard" ? "leaderboards" : Object.keys(ROUTES).find((r) => ROUTES[r] === h) || null; };
   const startRoute = routeOf(location.pathname) || hashRoute(location.hash);
@@ -5473,6 +5480,21 @@ a.link-copy { text-decoration: none; }
   if (startBoard && /^\/leaderboards\/[\w-]+\/legacy\/?$/i.test(location.pathname)) viewOf(startBoard).tab = "legacy";
   const startFaq = startRoute === "faq" && startSub ? faqOfLink(startSub) : null;
   if (startRoute === "leaderboards") openCourse = startBoard ? startBoard.n : 1;
+  // A link to one of a course's boards (/leaderboards/6/3) opens on that board, counted from its oldest, once the
+  // history is in. Until every board's files have loaded, the newest board can still change, so only then does a
+  // link to the newest board (or past it, or to a course without a history) show the newest board, and its link
+  // become /leaderboards/6, like the link to any newest board.
+  const startAt = startBoard && BOARD_LINK.exec(location.pathname);
+  if (startAt) {
+    if (startBoard !== RATINGS) viewOf(startBoard).at = Number(startAt[1]) - 1;
+    Promise.allSettled(LOADS).then(() => {
+      const v = viewOf(startBoard);
+      const list = startBoard !== RATINGS && boardsOf(startBoard);
+      if (v.at >= 0 && (!list || v.at >= list.length - 1)) { v.at = -1; refreshCourse(startBoard); }
+      const sub = subPath("leaderboards");
+      if (openCourse === startBoard.n && BOARD_LINK.test(location.pathname) && location.pathname !== `/leaderboards/${sub}`) showLink("leaderboards", sub);
+    });
+  }
   if (startFaq) pendingFaq = openFaq = startFaq;
   function goTo(route, smooth) {
     if (route === "leaderboards" && !openCourse) { openCourse = 1; refreshCourse(course(1)); }
@@ -5549,12 +5571,13 @@ a.link-copy { text-decoration: none; }
     }
   }
   // While a board or an answer is open, the address links to it: /leaderboards/6, /leaderboards/3/legacy,
-  // /leaderboards/ratings, /faq/pausing
+  // /leaderboards/3/12 (an older board, while the history is scrubbed back to it), /leaderboards/ratings, /faq/pausing
   function subPath(route) {
     if (route === "leaderboards" && openCourse === RATINGS.n) return RATINGS.n;
     if (route === "leaderboards" && openCourse) {
       const c = course(openCourse);
-      return boardHash(c) + (viewOf(c).tab === "legacy" ? "/legacy" : "");
+      const v = viewOf(c);
+      return boardHash(c) + (v.tab === "legacy" ? "/legacy" : v.at >= 0 ? `/${v.at + 1}` : "");
     }
     if (route === "faq" && openFaq && $(`.qa[data-id="${CSS.escape(openFaq)}"][open]`)) return faqLink(openFaq);
     return "";

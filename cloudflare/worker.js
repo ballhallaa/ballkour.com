@@ -34,8 +34,8 @@
    and the PROFILES KV namespace (wrangler.toml), for the stats on players' Discord profiles and each run's numbers from
    when it was sent.
 
-   Board, answer and run links (/leaderboards/6, /leaderboards/3/legacy, /faq/pausing, /runs/<id>) get the home page,
-   like /leaderboards and /faq do; the page opens the board, answer or run itself.
+   Board, answer and run links (/leaderboards/6, /leaderboards/3/legacy, /leaderboards/3/12, /faq/pausing, /runs/<id>)
+   get the home page, like /leaderboards and /faq do; the page opens the board, answer or run itself.
 
    /code/game and /code/site (also /code/website) redirect to the game's and this website's GitHub repos, and
    /releases and /releases/site (also /releases/website) to their release notes. Anything after them carries over,
@@ -1186,11 +1186,11 @@ async function file(request, env) {
 }
 
 /* ---------- Pages ---------- */
-// The sections (/submit, /faq, …) and the links into them (/leaderboards/6, /leaderboards/3/legacy, /faq/pausing), and
-// every run sent from the website (/runs, the list under the form) and each one's page (/runs/<id>), and /stats (My
-// stats), are the home page. On ballkour.com a Cloudflare rule already serves the sections that way, but the test
-// copy on workers.dev has no such rule, so the Worker does it too.
-const DEEP_LINK = /^\/(?:(?:courses|leaderboards|submit|features|faq|source-code|translations|runs|stats)\/?|leaderboards\/[\w-]+(?:\/legacy)?\/?|faq\/[\w-]+\/?|runs\/[\w-]+\/?)$/i;
+// The sections (/submit, /faq, …) and the links into them (/leaderboards/6, /leaderboards/3/legacy, /leaderboards/3/12
+// for one of its older boards, /faq/pausing), and every run sent from the website (/runs, the list under the form)
+// and each one's page (/runs/<id>), and /stats (My stats), are the home page. On ballkour.com a Cloudflare rule
+// already serves the sections that way, but the test copy on workers.dev has no such rule, so the Worker does it too.
+const DEEP_LINK = /^\/(?:(?:courses|leaderboards|submit|features|faq|source-code|translations|runs|stats)\/?|leaderboards\/[\w-]+(?:\/legacy|\/\d+)?\/?|faq\/[\w-]+\/?|runs\/[\w-]+\/?)$/i;
 async function page(request, env, ctx) {
   // Ask for the full page every time (no 304 Not Modified), so a browser never reuses old data from its cache
   const headers = new Headers(request.headers);
