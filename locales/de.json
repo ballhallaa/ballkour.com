@@ -432,6 +432,8 @@
   "visits.note": "Von der Seite selbst gezählt, jedes Mal, wenn jemand sie im Browser öffnet. Die meisten Bots zählen nicht. Jede Person zählt einmal pro Tag, ohne dass die Seite speichert, wer sie ist.",
   "stats.title": "Statistiken",
   "stats.fromTo": "{from} bis {to}",
+  "stats.none": "Keine für die gewählten Tage.",
+  "stats.backTo": "Zurück zu {list}",
   "stats.prevDay": "Tag davor",
   "stats.nextDay": "Tag danach",
   "stats.views": "Aufrufe",

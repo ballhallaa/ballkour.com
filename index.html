@@ -1172,24 +1172,42 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .stats-bar[aria-pressed="true"] > span { background: var(--volt); }
 .stats-bar:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; }
 .stats-axis { display: flex; justify-content: space-between; margin: 6px 38px 0; font: 500 11px/1.2 var(--mono); color: var(--ink-3); }
-.stats-table { width: 100%; margin-top: 14px; border-collapse: collapse; font: 500 14px/1.35 var(--body); color: var(--ink-2); }
-.stats-table th, .stats-table td { padding: 2px 0; font: inherit; text-align: left; vertical-align: baseline; }
-.stats-table thead th { padding-bottom: 6px; font: 600 10.5px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
-.stats-table .num { padding-left: 16px; text-align: right; white-space: nowrap; font: 600 13px/1.35 var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); }
-.stats-table thead .num { font: 600 10.5px/1.2 var(--mono); color: var(--ink-3); }
-.stats-table .num.soft { font-weight: 500; color: var(--ink-2); }
-.stats-table .course-cell { display: inline-flex; align-items: baseline; gap: 6px; }
-/* Most runs, on its own line under the list, looking like one of its rows. In the list, its course ("1 🇬🇮 Watchpoint:
-   Gibraltar · 1") made the numbers' column that wide for every row, which on a phone squeezed every name above it onto
-   two or three lines. Here, when the name and the course don't fit on one line, the course goes on the next, on the
-   right like the numbers. */
-.stats-busiest { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 16px; margin: 0; padding: 2px 0; font: 500 14px/1.35 var(--body); color: var(--ink-2); }
-.stats-busiest .course-cell { display: inline-flex; align-items: baseline; gap: 6px; margin-inline-start: auto; font: 600 13px/1.35 var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); text-align: right; }
-.stats-link { padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-decoration-color: var(--line-hi); text-underline-offset: 3px; transition: color .15s, text-decoration-color .15s; }
-.stats-link:hover { color: var(--volt); text-decoration-color: currentColor; }
+/* The list under Runs: each row a button that opens what makes up its number (see "What a number in Stats is made
+   of"), its name on the left and its number on the right with an arrow, lit up under the pointer edge to edge. Each
+   row is its own line, so a long one can't squeeze the others: Most runs' course ("1 🇬🇮 Watchpoint: Gibraltar · 1")
+   goes on the next line, on the right, when it and the name don't fit on one. */
+.stats-rows { list-style: none; margin: 14px -8px 0; padding: 0; }
+.stats-row { width: 100%; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 16px; padding: 2px 8px; border: 0; border-radius: 6px; background: none; font: 500 14px/1.35 var(--body); color: var(--ink-2); text-align: left; cursor: pointer; transition: background-color .15s, color .15s; }
+.stats-row { text-decoration: none; }
+.stats-row:hover { background: var(--glass-hi); color: var(--ink); }
+div.stats-row { cursor: default; }
+div.stats-row:hover { background: none; color: var(--ink-2); }
+.stats-row-value { margin-inline-start: auto; display: inline-flex; align-items: baseline; gap: 6px; text-align: right; }
+.stats-row .num { white-space: nowrap; font: 600 13px/1.35 var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); }
+.stats-row .course-cell { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; align-items: baseline; gap: 0 6px; font: 600 13px/1.35 var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); }
+.stats-row-arrow { flex: none; align-self: center; width: 11px; height: 11px; transform: rotate(-90deg); color: var(--ink-3); transition: color .15s; }
+.stats-row:hover .stats-row-arrow { color: var(--volt); }
+/* Most viewed: the same rows, with People and Views in two columns under their names. Every row (and the names over
+   the columns) lays itself out on the list's own columns (subgrid), so the numbers line up however wide they or the
+   names in that language are. */
+.stats-cols { display: grid; grid-template-columns: minmax(0, 1fr) auto auto 11px; column-gap: 16px; }
+.stats-cols > li, .stats-cols .stats-row { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: baseline; }
+.stats-cols .num { text-align: right; }
+.stats-row .num.soft { font-weight: 500; color: var(--ink-2); }
+.stats-cols-head { padding: 0 8px 6px; font: 600 10.5px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.stats-cols-head > span + span { text-align: right; }
+/* A list in the panel: its name with the number it explains, and its runs or players. A run's page or a player's
+   panel opened from it has Back to it over the top. */
+.stats-list-count { display: inline-block; margin-inline-start: 8px; padding: 3px 9px; border-radius: 999px; background: rgba(255, 213, 79, .16); color: var(--gold); font: 600 14px/1.2 var(--mono); font-style: normal; letter-spacing: 0; vertical-align: 5px; font-variant-numeric: tabular-nums; }
+.stats-list { padding: 14px 18px 0; }
+.stats-list .rev-list { margin: 0; }
+.stats-list .rev-empty { margin: 0; }
+.stats-back { margin: 0; padding: 14px 18px 0; }
+.stat.place .icon { color: var(--gold); }
 @media (max-width: 600px) { .stats-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-a.rev-run { color: inherit; text-decoration: none; transition: border-color .15s, background-color .15s; }
-a.rev-run:hover { border-color: var(--line-hi); background: var(--glass-hi); }
+a.rev-run, button.rev-run { color: inherit; text-decoration: none; transition: border-color .15s, background-color .15s; }
+button.rev-run { width: 100%; font: inherit; text-align: left; cursor: pointer; }
+a.rev-run:hover, button.rev-run:hover { border-color: var(--line-hi); background: var(--glass-hi); }
 .rev-more { margin-top: 8px; }
 .nowrap { white-space: nowrap; }
 /* A run's status: on the board, waiting for a check, turned down, taken off, or not its player's best */
@@ -2113,6 +2131,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "visits.other": "Other",
   "visits.note": "Counted by the site itself each time someone opens it in a browser. Most bots don’t count. Each person counts once a day, without the site keeping who they are.",
   "stats.fromTo": "{from} to {to}",
+  "stats.none": "None for the days picked.",
+  "stats.backTo": "Back to {list}",
   "stats.prevDay": "Day before",
   "stats.nextDay": "Day after",
   "stats.views": "Views",
@@ -3509,6 +3529,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // What the panel lists under its name: "courses" (their stats, then every course), or "runs" (Runs: every run of
   // theirs, newest first, under Back; see allRunsHtml)
   let plView = "courses";
+  // A list from Stats in the panel ("sent", "top10s", …, see STAT_LISTS), and the one a run's page or a player's panel
+  // was opened from, for its Back (see "What a number in Stats is made of")
+  let statList = "";
+  let statListBack = "";
   // How Runs is sorted: "date", "time", "miss" or "rating" (see allRunsHtml). Like a board's sort, it holds for every
   // player's Runs until the page is left.
   let plSort = "date";
@@ -3840,7 +3864,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (!plKey || !pl.open) return;
     const spot = focusSel || (pl.contains(document.activeElement) && document.activeElement.dataset.plCourse ? `[data-pl-course="${document.activeElement.dataset.plCourse}"]` : null);
     const scroll = pl.scrollTop;
-    pl.innerHTML = playerHtml();
+    pl.innerHTML = statBackHtml() + playerHtml();
     pl.scrollTop = scroll;
     const back = spot && pl.querySelector(spot);
     if (back) back.focus({ preventScroll: true });
@@ -5762,7 +5786,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      or 30 days up to it (the buttons at the top, the 30 days to start with). Each part has a bar for every day, 30 at
      a time, and a click on one picks its day, as do the arrows beside them (and ←, →, Home, End, Page Up and Page Down
      on a bar). Past either end, the 30 days on show slide along with the day picked. The month menu in the header
-     jumps to a month (see statMonthPicker). While Stats is on screen, the
+     jumps to a month (see statMonthPicker), and each box and row under Runs opens what makes up its number (see "What a
+     number in Stats is made of"). While Stats is on screen, the
      address says what's picked, so the link shows the same: /stats (today, and the 30 days up to it), /stats/2026-11-05
      (that day), and /day or /week after either for just that day or the 7 days up to it. Days are UTC days.
      Page views come from the Worker, which counts them (see "Page views" in cloudflare/worker.js), as the page opens,
@@ -5775,6 +5800,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      The runs' numbers are worked out here, from the same files as the boards (see runStatsNow). */
   const STATS_LINK = /^\/stats(?:\/(\d{4}-\d{2}-\d{2}))?(?:\/(day|week))?\/?$/i;
   const STAT_RANGES = { day: 1, week: 7, month: 30 };
+  const statNum = (v) => Math.round(Number(v) || 0).toLocaleString(htmlLang());
+  // "+12" or "−3", rounded first so a tiny drop shows as +0, not −0
+  const statChange = (v) => { const r = Math.round(Number(v) || 0); return `${r < 0 ? "−" : "+"}${statNum(Math.abs(r))}`; };
   const statsAt = STATS_LINK.exec(location.pathname);
   let statDay = (statsAt && statsAt[1]) || ""; // the day picked, or "" for today (which moves on at midnight)
   let statRange = ((statsAt && statsAt[2]) || "month").toLowerCase();
@@ -5817,7 +5845,11 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      - top10s, podiums, records: the new times on each course's boards that day (see freshAt), by their place
      - players: the players whose first run was that day
      - courses: how many runs were sent that day on each course
-     → { per: Map(day → those), first: the first day with any }, or null until the files are in
+     and what makes them up, for the lists (see "What a number in Stats is made of"): runs (the runs sent, as sentRuns
+     has them), gains ({ r, n, g }: each run that added to its player's rating, and how much), fresh ({ r, n, place,
+     record }: the new times on the boards) and newcomers ({ key, r, n }: each new player's first run)
+     → { per: Map(day → those), first: the first day with any, entryOf(n, r): a board's run as sentRuns has it (so its
+     page), or null }, or null until the files are in
      Rated players and the two totals are as the Player ratings were at the end of the day picked (see standingAt), and
      the two changes are how far the totals moved from the end of the day before the days picked. Unlike gained, they
      count everyone, so they also take off what other players lose when a record gets faster. */
@@ -5832,10 +5864,22 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (runStats || !runsReady) return runStats;
     const per = new Map();
     const at = (d) => {
-      if (!per.has(d)) per.set(d, { sent: 0, approved: 0, declined: 0, pending: 0, gained: 0, top10s: 0, podiums: 0, records: 0, players: 0, courses: new Map() });
+      if (!per.has(d)) per.set(d, { sent: 0, approved: 0, declined: 0, pending: 0, gained: 0, top10s: 0, podiums: 0, records: 0, players: 0, courses: new Map(),
+        runs: [], gains: [], fresh: [], newcomers: [] });
       return per.get(d);
     };
-    sentRuns().forEach((x) => {
+    const all = sentRuns();
+    // Each run as sentRuns has it, by course, player, time, and mistakes, or by video, for the boards' runs to find
+    // their pages. The newest wins, unless it was turned down and an older one wasn't.
+    const index = new Map();
+    const put = (k, x) => { const had = index.get(k); if (!had || (had.group === "declined" && x.group !== "declined")) index.set(k, x); };
+    all.forEach((x) => {
+      const r = cleanRun(x.run);
+      if (!r) return;
+      put(`${x.n}|${playerKey(r)}|${r.time}|${r.miss}`, x);
+      if (r.video) put(`${x.n}|${r.video}`, x);
+    });
+    all.forEach((x) => {
       const sent = Date.parse(x.run.sentAt || "");
       const d = Number.isFinite(sent) ? utcDay(sent) : formatDate(x.run.date);
       if (!DAY.test(d)) return;
@@ -5845,16 +5889,17 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       else if (x.group === "declined") s.declined++;
       else if (x.run.checkedBy) s.approved++;
       s.courses.set(x.n, (s.courses.get(x.n) || 0) + 1);
+      s.runs.push(x);
     });
     const rated = COURSES.filter((c) => !c.broken && !c.latestBroken);
-    const firstRun = new Map(); // player → the day of their first run
+    const firstRun = new Map(); // player → the day of their first run, it, and its course
     COURSES.forEach((c) => {
       const byDay = new Map();
       countedRuns(c).forEach((r) => {
         const d = formatDate(r.date);
         if (!DAY.test(d)) return;
         const k = playerKey(r);
-        if (!firstRun.has(k) || d < firstRun.get(k)) firstRun.set(k, d);
+        if (!firstRun.has(k) || d < firstRun.get(k).d) firstRun.set(k, { d, r, n: c.n });
         if (!byDay.has(d)) byDay.set(d, []);
         byDay.get(d).push(r);
       });
@@ -5876,7 +5921,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
             if (old === run) return;
             // The record without their new run: theirs is only the record's when they hold it
             const without = k === first ? [next, old].filter(Boolean).sort(byTime)[0] : record;
-            gained += coursePoints(record, run) - (old ? coursePoints(without, old) : 0);
+            const g = coursePoints(record, run) - (old ? coursePoints(without, old) : 0);
+            gained += g;
+            if (g) at(d).gains.push({ r: run, n: c.n, g: g / rated.length });
           });
           if (gained) at(d).gained += gained / rated.length;
         });
@@ -5891,16 +5938,24 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
           const s = at(d);
           s.top10s++;
           if (place < 3) s.podiums++;
-          if (place === 0 && isRecord(list, i)) s.records++;
+          const record = place === 0 && isRecord(list, i);
+          if (record) s.records++;
+          s.fresh.push({ r, n: c.n, place, record });
         });
       });
     });
-    firstRun.forEach((d) => { at(d).players++; });
-    runStats = { per, first: [...per.keys()].sort()[0] || "" };
+    firstRun.forEach(({ d, r, n }, key) => {
+      const s = at(d);
+      s.players++;
+      s.newcomers.push({ key, r, n });
+    });
+    const entryOf = (n, r) => index.get(`${n}|${playerKey(r)}|${r.time}|${r.miss}`) || (r.video && index.get(`${n}|${r.video}`)) || null;
+    runStats = { per, first: [...per.keys()].sort()[0] || "", entryOf };
     return runStats;
   }
   // The Player ratings at the end of a day, as they were then: how many players were rated, everyone's ratings added up
-  // (global), and every course rating everyone had added up (course: their points on each rated course)
+  // (global), and every course rating everyone had added up (course: their points on each rated course), and the
+  // players themselves (see ratings), for the lists
   function standingAt(day, today) {
     if (!standingOn.has(day)) {
       const { players } = today ? ratings() : ratings({ day });
@@ -5908,6 +5963,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         rated: players.length,
         global: players.reduce((a, p) => a + p.rating, 0),
         course: players.reduce((a, p) => a + Object.values(p.points).reduce((b, x) => b + x, 0), 0),
+        players,
       });
     }
     return standingOn.get(day);
@@ -5930,16 +5986,18 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (pick < end - 29) end = pick + 29;
     return { days, last, pick, end, from: Math.max(0, end - 29) };
   }
-  // Each section in Most viewed links to it: the top of the page, a section (scrolling there like the section bar), My
-  // profile, or Find a player for players (a player's panel, which has no section). "Other" has nowhere to go.
+  // Each section in Most viewed is a row that goes to it, like the list under Runs: the top of the page, a section
+  // (scrolling there like the section bar), My profile, or Find a player for players (a player's panel, which has no
+  // section). "Other" has nowhere to go, so its row is just its numbers, with no arrow. nums: its People and Views.
   const STAT_ROUTES = ["courses", "leaderboards", "submit", "runs", "features", "faq", "source-code", "translations", "stats"];
-  function statSectionHtml(key) {
-    const name = esc(t(STAT_NAMES[key] || "visits.other"));
-    if (key === "home") return `<a class="stats-link" href="/" data-stat-top>${name}</a>`;
-    if (STAT_ROUTES.includes(key)) return `<a class="stats-link" href="/${key}" data-route="${key}">${name}</a>`;
-    if (key === "my-stats") return `<a class="stats-link" href="/my-stats" data-my-stats>${name}</a>`;
-    if (key === "players") return `<button class="stats-link" type="button" data-find>${name}</button>`;
-    return name;
+  function statSectionRow(key, nums) {
+    const inner = `<span>${esc(t(STAT_NAMES[key] || "visits.other"))}</span>${nums}`;
+    const arrow = icon("chev", "icon stats-row-arrow");
+    if (key === "home") return `<li><a class="stats-row" href="/" data-stat-top>${inner}${arrow}</a></li>`;
+    if (STAT_ROUTES.includes(key)) return `<li><a class="stats-row" href="/${key}" data-route="${key}">${inner}${arrow}</a></li>`;
+    if (key === "my-stats") return `<li><a class="stats-row" href="/my-stats" data-my-stats>${inner}${arrow}</a></li>`;
+    if (key === "players") return `<li><button class="stats-row" type="button" data-find>${inner}${arrow}</button></li>`;
+    return `<li><div class="stats-row">${inner}</div></li>`;
   }
   // Each section's name, from the words the site already uses for it where it has them
   const STAT_NAMES = { home: "visits.home", courses: "courses.title", leaderboards: "nav.leaderboards", submit: "nav.submit", runs: "pl.runs",
@@ -5957,14 +6015,16 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const monthWrap = $("#stats-month-wrap");
     if (!visits && !rs) { box.innerHTML = ""; monthWrap.hidden = true; return; }
     const { days, last, pick, end, from } = statPick();
-    const n = (v) => Math.round(Number(v) || 0).toLocaleString(htmlLang());
-    // "+12" or "−3", rounded first so a tiny drop shows as +0, not −0
-    const change = (v) => { const r = Math.round(Number(v) || 0); return `${r < 0 ? "−" : "+"}${n(Math.abs(r))}`; };
+    const n = statNum, change = statChange;
     const day = days[pick];
     const today = pick === last;
     const span = days.slice(Math.max(0, pick - STAT_RANGES[statRange] + 1), pick + 1);
-    const tile = (key, value, ico) => `<div class="pl-stat"><span class="pl-stat-label">${esc(t(key))}</span>` +
-      `<span class="pl-stat-value">${icon(ico)}<span>${esc(value)}</span></span></div>`;
+    // A box, which opens what makes up its number with list (see STAT_LISTS)
+    const tile = (key, value, ico, list) => {
+      const tag = list ? "button" : "div";
+      return `<${tag} class="pl-stat${list ? ` pl-stat-go" type="button" data-stat-list="${list}` : ""}"><span class="pl-stat-label">${esc(t(key))}` +
+        `${list ? icon("chev", "icon pl-stat-arrow") : ""}</span><span class="pl-stat-value">${icon(ico)}<span>${esc(value)}</span></span></${tag}>`;
+    };
     const months = [...new Set(days.map((d) => d.slice(0, 7)))].reverse();
     if (statMonths !== lang + months.join()) {
       statMonths = lang + months.join();
@@ -5999,23 +6059,23 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       span.forEach((d) => (of(d).courses || new Map()).forEach((count, cn) => courses.set(cn, (courses.get(cn) || 0) + count)));
       const [busiest, most] = [...courses].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0] || [];
       const bc = busiest && course(busiest);
-      const row = (key, html) => `<tr><th scope="row">${esc(t(key))}</th><td class="num">${html}</td></tr>`;
+      // A row of the list under them, which opens what makes up its number (html: what it shows in place of it)
+      const row = (key, value, list, html) => `<li><button class="stats-row" type="button" data-stat-list="${list}"><span>${esc(t(key))}</span>` +
+        `<span class="stats-row-value">${html || `<span class="num">${esc(value)}</span>`}${icon("chev", "icon stats-row-arrow")}</span></button></li>`;
       const standing = standingAt(day, today);
       const before = standingAt(dayAfter(span[0], -1), false); // the totals the day before the days picked
       html += `<h3 class="by src-group">${esc(t("pl.runs"))}</h3><div class="stats-part">` +
-        `<div class="stats-tiles" style="--n: 4">${tile("runs.title", n(sent), "upload")}${tile("stats.gained", change(add("gained")), "star")}` +
-        `${tile("res.top10s", n(add("top10s")), "bolt")}${tile("res.records", n(add("records")), "trophy")}</div>` +
+        `<div class="stats-tiles" style="--n: 4">${tile("runs.title", n(sent), "upload", "sent")}${tile("stats.gained", change(add("gained")), "star", "gained")}` +
+        `${tile("res.top10s", n(add("top10s")), "bolt", "top10s")}${tile("res.records", n(add("records")), "trophy", "records")}</div>` +
         chart("runs", "stats.runsChart", (d) => of(d).sent || 0, (d) => t("stats.runsDay", { date: d, count: n(of(d).sent) })) +
-        `<table class="stats-table"><tbody>` +
-          row("stats.straight", esc(n(sent - approved - declined - pending))) + row("stats.approved", esc(n(approved))) +
-          row("run.declined", esc(n(declined))) + row("run.pending", esc(n(pending))) + row("res.podiums", esc(n(add("podiums")))) +
-          row("stats.newPlayers", esc(n(add("players")))) + row("stats.rated", esc(n(standing.rated))) +
-          row("stats.totalGlobal", esc(n(standing.global))) + row("stats.changeGlobal", esc(change(standing.global - before.global))) +
-          row("stats.totalCourse", esc(n(standing.course))) + row("stats.changeCourse", esc(change(standing.course - before.course))) +
-        `</tbody></table>` +
-        // Most runs goes under the list instead of in it, so its course can't widen the numbers' column (see .stats-busiest)
-        (bc ? `<p class="stats-busiest"><span>${esc(t("stats.busiest"))}</span>` +
-          `<span class="course-cell">${esc(String(bc.n))} ${flagName(bc)} · ${esc(n(most))}</span></p>` : "") +
+        `<ul class="stats-rows">` +
+          row("stats.straight", n(sent - approved - declined - pending), "straight") + row("stats.approved", n(approved), "approved") +
+          row("run.declined", n(declined), "declined") + row("run.pending", n(pending), "pending") + row("res.podiums", n(add("podiums")), "podiums") +
+          row("stats.newPlayers", n(add("players")), "players") + row("stats.rated", n(standing.rated), "rated") +
+          row("stats.totalGlobal", n(standing.global), "global") + row("stats.changeGlobal", change(standing.global - before.global), "globalChange") +
+          row("stats.totalCourse", n(standing.course), "course") + row("stats.changeCourse", change(standing.course - before.course), "courseChange") +
+          (bc ? row("stats.busiest", "", "busiest", `<span class="course-cell">${esc(String(bc.n))} ${flagName(bc)} · ${esc(n(most))}</span>`) : "") +
+        `</ul>` +
         `<p class="rev-note">${esc(t("stats.runsNote"))}</p></div>`;
     }
     if (visits) {
@@ -6041,14 +6101,17 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       html += `<h3 class="by src-group">${esc(t("visits.title"))}</h3><div class="stats-part">` +
         `<div class="stats-tiles">${tile("stats.people", before ? "—" : n(sum("people")), "user")}${tile("stats.views", before ? "—" : n(sum("views")), "eye")}</div>` +
         chart("views", "stats.viewsChart", (d) => Number(v(d).views) || 0, (d) => t("visits.day", { date: d, views: n(v(d).views), people: n(v(d).people) })) +
-        (top.length ? `<table class="stats-table"><thead><tr><th scope="col">${esc(t("visits.top"))}</th>` +
-          `<th class="num" scope="col">${esc(t("stats.people"))}</th><th class="num" scope="col">${esc(t("stats.views"))}</th></tr></thead><tbody>` +
-          top.map(([key, x]) => `<tr><th scope="row">${statSectionHtml(key)}</th>` +
-            `<td class="num soft">${x.known ? esc(n(x.people)) : "—"}</td><td class="num">${esc(n(x.views))}</td></tr>`).join("") +
-          `</tbody></table>` : "") +
+        // Most viewed: People and Views in columns under their names. Each number also says which it is, for screen
+        // readers, which read the row as one link.
+        (top.length ? `<ul class="stats-rows stats-cols" aria-label="${esc(t("visits.top"))}">` +
+          `<li class="stats-cols-head" aria-hidden="true"><span>${esc(t("visits.top"))}</span><span>${esc(t("stats.people"))}</span><span>${esc(t("stats.views"))}</span></li>` +
+          top.map(([key, x]) => statSectionRow(key, `<span class="num soft"><span class="sr-only">${esc(t("stats.people"))} </span>${x.known ? esc(n(x.people)) : "—"}</span>` +
+            `<span class="num"><span class="sr-only">${esc(t("stats.views"))} </span>${esc(n(x.views))}</span>`)).join("") +
+          `</ul>` : "") +
         `<p class="rev-note">${esc(t("visits.note"))}${span[0] < since ? ` ${esc(t("stats.since", { date: since }))}` : ""}</p></div>`;
     }
     box.innerHTML = html;
+    renderStatList();
   }
   // Picking a day (d) from a chart ("views" or "runs"): keyboard focus goes back to the same chart's bar, or arrow
   // (what: "bar", "prev" or "next"). The 30 days on show stay put unless the day is past either end.
@@ -6076,6 +6139,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     showLink("stats", subPath("stats"));
   }
   $("#stats-body").addEventListener("click", (e) => {
+    const list = e.target.closest("[data-stat-list]");
+    if (list) { openStatList(list.dataset.statList); return; }
     // Top of the page: back up there, like Back to the plain address does (a new tab with Ctrl/Cmd or Shift)
     const up = e.target.closest("a[data-stat-top]");
     if (up && !(e.ctrlKey || e.metaKey || e.shiftKey || e.altKey)) {
@@ -6107,6 +6172,128 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     e.preventDefault();
     pickStat(days[Math.max(0, Math.min(last, to))], bar.closest("[data-stat-chart]").dataset.statChart, "bar");
   });
+  /* ---------- What a number in Stats is made of ----------
+     Each box and row under Runs opens a list in the panel of what makes up its number, for the days picked, with that
+     number by its name: the runs (each opening its page) or, for the ratings, the players (each opening their panel).
+     Either has Back to the list over the top, until the panel closes. Rated players and the two totals are as the
+     Player ratings were at the end of the day picked, and the two changes count from the end of the day before the
+     days picked, like the numbers themselves (see standingAt). Newest first, the rating gained and the changes the
+     most first. A list with nothing in it says so. */
+  const STAT_LISTS = { sent: "runs.title", gained: "stats.gained", top10s: "res.top10s", records: "res.records",
+    straight: "stats.straight", approved: "stats.approved", declined: "run.declined", pending: "run.pending", podiums: "res.podiums",
+    players: "stats.newPlayers", rated: "stats.rated", global: "stats.totalGlobal", globalChange: "stats.changeGlobal",
+    course: "stats.totalCourse", courseChange: "stats.changeCourse", busiest: "stats.busiest" };
+  // A player on a list: their place at the end of the day picked, their name and Discord, and value
+  const playerItemHtml = (p, value) => `<li><button class="rev-run" type="button" data-stat-player="${esc(p.key)}">` +
+    `<span class="rev-course">#${esc(String(p.rank))}</span><b class="rev-name">${esc(caps(p.name))}</b>` +
+    `<span class="rev-line">${value}</span>${p.discord && PLAYERS.get(p.discord) ? `<span class="rev-meta">${dcHtml(p, false)}</span>` : ""}</button></li>`;
+  const starHtml = (text) => `<span class="stat pts">${icon("star")}${esc(text)}</span>`;
+  // → { when: the days it's for, value: its number as Stats shows it, rows: [html, …] }, or null before the runs are in
+  function statListNow(kind) {
+    const rs = runStatsNow();
+    if (!rs || !STAT_LISTS[kind]) return null;
+    const { days, last, pick } = statPick();
+    const day = days[pick], today = pick === last;
+    const span = days.slice(Math.max(0, pick - STAT_RANGES[statRange] + 1), pick + 1);
+    const range = statLabel(statRange, days, pick, today);
+    const each = (k) => span.flatMap((d) => (rs.per.get(d) || {})[k] || []);
+    const when = (x) => String(x.run.sentAt || formatDate(x.run.date) || "");
+    // The runs sent that are, newest first
+    const sent = (that) => {
+      const list = each("runs").filter(that).sort((a, b) => when(b).localeCompare(when(a)));
+      return { when: range, value: statNum(list.length), rows: list.map((x) => runItemHtml(x)) };
+    };
+    // A board's run with its page, or as itself when it has none
+    const item = (r, n) => rs.entryOf(n, r) || { run: { name: r.name, discord: r.discord, time: r.time, mistakes: r.miss, date: r.date || "", id: "" }, n, group: "past", status: "" };
+    const kept = (x) => x.group !== "pending" && x.group !== "declined";
+    if (kind === "sent") return sent(() => true);
+    if (kind === "straight") return sent((x) => kept(x) && !x.run.checkedBy);
+    if (kind === "approved") return sent((x) => kept(x) && !!x.run.checkedBy);
+    if (kind === "declined") return sent((x) => x.group === "declined");
+    if (kind === "pending") return sent((x) => x.group === "pending");
+    if (kind === "busiest") {
+      // The course with the most runs sent (the lower number when two have as many), as under Runs
+      const count = new Map();
+      each("runs").forEach((x) => count.set(x.n, (count.get(x.n) || 0) + 1));
+      const [busiest] = [...count].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0] || [];
+      return sent((x) => x.n === busiest);
+    }
+    if (kind === "gained") {
+      const list = each("gains").filter((x) => Math.round(x.g) !== 0).sort((a, b) => b.g - a.g);
+      return { when: range, value: statChange(each("gains").reduce((a, x) => a + x.g, 0)), rows: list.map((x) => runItemHtml(item(x.r, x.n), starHtml(signed(x.g)))) };
+    }
+    if (kind === "top10s" || kind === "podiums" || kind === "records") {
+      const list = each("fresh").filter((x) => kind === "top10s" || (kind === "podiums" ? x.place < 3 : x.record))
+        .sort((a, b) => formatDate(b.r.date).localeCompare(formatDate(a.r.date)) || a.place - b.place);
+      return { when: range, value: statNum(list.length), rows: list.map((x) => runItemHtml(item(x.r, x.n),
+        `<span class="stat place">${x.record ? icon("trophy") : ""}#${x.place + 1}</span>`)) };
+    }
+    if (kind === "players") {
+      const list = each("newcomers").sort((a, b) => formatDate(b.r.date).localeCompare(formatDate(a.r.date)));
+      return { when: range, value: statNum(list.length), rows: list.map((x) => runItemHtml(item(x.r, x.n))) };
+    }
+    const now = standingAt(day, today).players;
+    const coursePts = (p) => Object.values(p.points).reduce((a, x) => a + x, 0);
+    if (kind === "rated" || kind === "global") {
+      return { when: today ? t("visits.today") : day, value: statNum(kind === "rated" ? now.length : now.reduce((a, p) => a + p.rating, 0)),
+        rows: now.map((p) => playerItemHtml(p, starHtml(points(p.rating)))) };
+    }
+    if (kind === "course") {
+      const list = now.map((p) => ({ p, pts: coursePts(p) })).sort((a, b) => b.pts - a.pts);
+      return { when: today ? t("visits.today") : day, value: statNum(list.reduce((a, x) => a + x.pts, 0)), rows: list.map((x) => playerItemHtml(x.p, starHtml(points(x.pts)))) };
+    }
+    // The changes: everyone whose rating (or course ratings added up) went up or down since the day before the days picked
+    const of = kind === "globalChange" ? (p) => p.rating : coursePts;
+    const was = new Map(standingAt(dayAfter(span[0], -1), false).players.map((p) => [p.key, p]));
+    const moved = new Map(now.map((p) => [p.key, { p, by: of(p) - (was.has(p.key) ? of(was.get(p.key)) : 0) }]));
+    was.forEach((p, key) => { if (!moved.has(key)) moved.set(key, { p, by: -of(p) }); });
+    const list = [...moved.values()].filter((x) => Math.round(x.by) !== 0).sort((a, b) => b.by - a.by);
+    return { when: range, value: statChange([...moved.values()].reduce((a, x) => a + x.by, 0)), rows: list.map((x) => playerItemHtml(x.p, starHtml(signed(x.by)))) };
+  }
+  function renderStatList() {
+    if (!statList || !pl.open) return;
+    const x = statListNow(statList);
+    if (!x) return;
+    const scroll = pl.scrollTop;
+    pl.innerHTML = `<div class="pl-head"><div class="pl-who"><p class="pl-eyebrow">${icon("stats")}<span>${esc(x.when)}</span></p>` +
+        `<h2 class="pl-name" id="pl-name">${esc(t(STAT_LISTS[statList]))}<span class="stats-list-count">${esc(x.value)}</span></h2></div>${runClose()}</div>` +
+      `<div class="stats-list">${x.rows.length ? `<ul class="rev-list">${x.rows.join("")}</ul>` : `<p class="rev-empty">${esc(t("stats.none"))}</p>`}</div>`;
+    pl.scrollTop = scroll;
+  }
+  // from: the run (its ID) or player (their key) it's coming back from, which gets the focus
+  function openStatList(kind, from) {
+    if (!STAT_LISTS[kind]) return;
+    leaveRun();
+    leavePlayer();
+    plKey = "";
+    statList = kind;
+    statListBack = "";
+    if (!pl.open) pl.showModal();
+    pl.scrollTop = 0;
+    renderStatList();
+    const back = from && [...pl.querySelectorAll("[data-run-open], [data-stat-player]")].find((el) => (el.dataset.runOpen || el.dataset.statPlayer) === from);
+    if (back) { back.focus({ preventScroll: true }); back.scrollIntoView({ block: "center" }); }
+    else { const close = pl.querySelector("[data-pl-close]"); if (close) close.focus(); }
+  }
+  // Back to the list, over a run's page or a player's panel opened from it
+  function statBackHtml() {
+    if (!statListBack || !STAT_LISTS[statListBack]) return "";
+    const name = t(STAT_LISTS[statListBack]);
+    return `<p class="stats-back"><button class="pl-back" type="button" data-stat-back aria-label="${esc(t("stats.backTo", { list: name }))}">${icon("chev")}<span>${esc(name)}</span></button></p>`;
+  }
+  pl.addEventListener("click", (e) => {
+    if (e.target.closest("[data-stat-back]")) { openStatList(statListBack, runId || plKey); return; }
+    if (!statList) return;
+    const run = e.target.closest("[data-run-open]");
+    const who = e.target.closest("[data-stat-player]");
+    if (!run && !who) return;
+    // A run opened in a new tab leaves the list where it is
+    if (run && run.tagName === "A" && (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0)) return;
+    statListBack = statList;
+    statList = "";
+    if (who) openPlayer(who.dataset.statPlayer); // a run opens its page from the click itself (see openRun)
+  });
+  pl.addEventListener("close", () => { statList = ""; statListBack = ""; });
   async function loadReview() {
     if (!me || !me.reviewer) { renderReview(); return; }
     try {
@@ -6164,13 +6351,26 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      every board to load, so it doesn't fill in bit by bit, and it's hidden until there's a run to show. */
   let runsShown = 5;
   let runsReady = false;
+  // A run on a list (x: as sentRuns has it): its course, player, time and mistakes, extra (what the list says about
+  // it), where it is now, who sent it, and for reviewers, who checked it. It opens its page, when it has one.
+  function runItemHtml(x, extra = "") {
+    const r = x.run;
+    const c = course(x.n);
+    const who = r.discord && PLAYERS.get(r.discord);
+    const checker = me && me.reviewer && checkerOf(r);
+    const checked = checker ? t(x.group === "declined" ? "rev.declinedBy" : "rev.approvedBy", { name: checker.name }) : "";
+    const inner = `<span class="rev-course">${esc(`${x.n} `)}${flagName(c)}</span>` +
+      `<b class="rev-name">${esc(r.name)}</b><span class="rev-line"><span class="stat time">${icon("bolt")}${esc(r.time)}</span><span class="stat miss">${icon("skull")}${esc(r.mistakes)}</span>` +
+      `${extra}${x.status ? statusTag(x) : ""}</span>` +
+      [sentBy(r.date, who && who.name), checked && esc(checked)].filter(Boolean).map((h) => `<span class="rev-meta">${h}</span>`).join("");
+    return r.id ? `<li><a class="rev-run" href="/runs/${esc(r.id)}" data-run-open="${esc(r.id)}">${inner}</a></li>` : `<li><div class="rev-run">${inner}</div></li>`;
+  }
   function renderSentRuns() {
     const box = $("#sub-runs");
     if (!runsReady) return;
     const all = sentRuns();
     box.hidden = !all.length;
     if (box.hidden) return;
-    const reviewer = !!(me && me.reviewer);
     const left = Math.max(0, all.length - runsShown);
     // Its player's rating over every course with it, and what it added, as on its page today (if it's approved, for
     // one waiting for a check): "⭐ 86 (+10)". One that isn't their best, or isn't on the board, adds nothing, so it
@@ -6180,18 +6380,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       return s && isTheirBest(s, cleanRun(x.run)) ? ratingAdded(s) : null;
     };
     const row = (x) => {
-      const r = x.run;
-      const c = course(x.n);
-      const who = r.discord && PLAYERS.get(r.discord);
-      const checker = reviewer && checkerOf(r);
-      const checked = checker ? t(x.group === "declined" ? "rev.declinedBy" : "rev.approvedBy", { name: checker.name }) : "";
       const gain = gainOf(x);
-      return `<li><a class="rev-run" href="/runs/${esc(r.id)}" data-run-open="${esc(r.id)}">` +
-        `<span class="rev-course">${esc(`${x.n} `)}${flagName(c)}</span>` +
-        `<b class="rev-name">${esc(r.name)}</b><span class="rev-line"><span class="stat time">${icon("bolt")}${esc(r.time)}</span><span class="stat miss">${icon("skull")}${esc(r.mistakes)}</span>` +
-        (gain ? `<span class="stat pts" title="${esc(t(x.status === "pending" ? "rev.ratingGain" : "runs.ratingGain", { rating: points(gain.rating), change: signed(gain.gain), player: r.name }))}">${ratingAddedHtml(gain)}</span>` : "") +
-        `${statusTag(x)}</span>` +
-        [sentBy(r.date, who && who.name), checked && esc(checked)].filter(Boolean).map((h) => `<span class="rev-meta">${h}</span>`).join("") + `</a></li>`;
+      return runItemHtml(x, gain ? `<span class="stat pts" title="${esc(t(x.status === "pending" ? "rev.ratingGain" : "runs.ratingGain", { rating: points(gain.rating), change: signed(gain.gain), player: x.run.name }))}">${ratingAddedHtml(gain)}</span>` : "");
     };
     box.innerHTML = `<p class="rev-title">${icon("notes")}<span>${esc(t("runs.title"))}</span><span class="rev-count">${all.length.toLocaleString(htmlLang())}</span></p>` +
       `<ul class="rev-list">${all.slice(0, runsShown).map(row).join("")}</ul>` +
@@ -7053,10 +7243,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (!runId || !pl.open) return;
     const x = sentRun(runId);
     const close = runClose();
-    if (!x) { pl.innerHTML = runEmpty(`<p class="run-missing">${esc(t("run.missing"))}</p>`); return; }
+    if (!x) { pl.innerHTML = statBackHtml() + runEmpty(`<p class="run-missing">${esc(t("run.missing"))}</p>`); return; }
     const c = course(x.n);
     const run = cleanRun(x.run);
-    pl.innerHTML = `<div class="pl-head"><div class="pl-who">` +
+    pl.innerHTML = statBackHtml() + `<div class="pl-head"><div class="pl-who">` +
         `<p class="pl-eyebrow">${icon("play")}<span class="nowrap">${esc(`${c.n} `)}${flagName(c)}</span></p>` +
         `<h2 class="pl-name is-name" id="pl-name"><button class="run-name" type="button" data-run-player="${esc(playerKey(run))}" title="${esc(t("lb.playerOpen", { player: run.name }))}">${esc(caps(run.name))}</button></h2>` +
         `<div class="run-tags" id="run-tags"></div></div>${close}</div>` +

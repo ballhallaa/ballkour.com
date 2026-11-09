@@ -432,6 +432,8 @@
   "visits.note": "Liczone przez samą stronę za każdym razem, gdy ktoś otworzy ją w przeglądarce. Większość botów się nie liczy. Każda osoba liczy się raz dziennie, a strona nie zapisuje, kim jest.",
   "stats.title": "Statystyki",
   "stats.fromTo": "Od {from} do {to}",
+  "stats.none": "Brak w wybranych dniach.",
+  "stats.backTo": "Wróć do: {list}",
   "stats.prevDay": "Poprzedni dzień",
   "stats.nextDay": "Następny dzień",
   "stats.views": "Wyświetlenia",
