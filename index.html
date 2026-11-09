@@ -959,6 +959,18 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pic-lang-menu { width: 244px; max-width: calc(100% - 32px); top: auto; bottom: calc(100% - 6px); left: 16px; right: auto; transform-origin: bottom left; order: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; }
 @media (max-width: 520px) { .pic-lang-menu { position: static; flex: 1 0 100%; width: auto; max-width: none; } }
 .pic-busy .pic-img, .pic-busy .pic-btns > * { opacity: .45; pointer-events: none; }
+/* A run's video: a window as big as the screen leaves room for (its height too, so the whole video fits), with the
+   course, the player, the time and mistakes over it, and a link to it on its own site under it */
+.vid { width: min(960px, calc(100vw - 32px), max(320px, calc((100dvh - 170px) * 16 / 9))); max-width: none; max-height: calc(100dvh - 32px); margin: auto; padding: 0 0 14px; border: 1px solid var(--line-hi); border-radius: var(--r); background: #08100d; color: var(--ink); overflow-y: auto; box-shadow: 0 30px 80px rgba(0, 0, 0, .6); }
+.vid[open] { animation: pop .18s ease-out; }
+.vid::backdrop { background: rgba(2, 5, 4, .78); }
+.vid-head { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px 12px; }
+.vid-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
+.vid-line .pl-name { font-size: 26px; }
+.vid-stats { display: inline-flex; gap: 16px; white-space: nowrap; } /* the time and mistakes move under the name together */
+.vid-line .stat { font: 600 16px/1 var(--mono); }
+.vid .run-frame { margin: 0 16px; border-radius: 10px; }
+.vid .run-out { margin: 10px 16px 0; }
 /* Find a player: a search box over everyone, each row like the Player ratings' (place, name, Top %, Discord, rating,
    courses run). Near the top of the screen like a command palette; the whole screen on phones. */
 .pf { width: min(580px, calc(100vw - 32px)); max-width: none; max-height: min(680px, calc(100dvh - 80px)); margin: max(40px, 9vh) auto auto; padding: 0; border: 1px solid var(--line-hi); border-radius: var(--r); background: #08100d; color: var(--ink); overflow: hidden; box-shadow: 0 30px 80px rgba(0, 0, 0, .6); }
@@ -1782,6 +1794,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
 <dialog class="pl" id="pl" aria-labelledby="pl-name"></dialog>
 <!-- A board's picture, from Picture above it (see "Board pictures") -->
 <dialog class="pic" id="pic" aria-labelledby="pic-title"></dialog>
+<!-- A run's video, from its time on a board or in a player's panel (see "Watching a run's video") -->
+<dialog class="vid" id="vid"></dialog>
 <!-- Find a player: everyone who has run a course, by name (see "Finding a player") -->
 <dialog class="pf" id="pf"></dialog>
 
@@ -2517,20 +2531,25 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const split = legacy ? /^(.*?)(\.--)?$/.exec(r.time) : null;
     const shown = split ? esc(split[1]) + (split[2] ? `<span class="na">.--</span>` : "") : esc(r.time);
     const time = `${icon("bolt")}<span class="v">${shown}</span>`;
-    const timeCell = r.video
-      ? `<a class="stat time" href="${esc(r.video)}" target="_blank" rel="noopener" title="${esc(t("lb.watch", { time: r.time, player: r.name }))}">${time}${icon("play", "play")}</a>`
-      : `<span class="stat time">${time}</span>`;
     return `<li class="run${place >= 0 && place < 3 ? " p" + (place + 1) : ""}${isNew ? " fresh" : ""}${mark ? " mark" : ""}" data-k="${esc(r.name)}">` +
       `<span class="run-rank">${i + 1}</span>` +
       `<span class="run-who"><span class="run-line">${nameButton(playerKey(r), r.name)}${isNew ? `<span class="tag tag-new">${esc(t("lb.new"))}</span>` : ""}` +
         `${mark ? `<span class="tag tag-this">${esc(t("lb.thisRun"))}</span>` : ""}</span></span>` +
-      timeCell +
+      timeLink(r, time) +
       `<span class="stat miss" title="${esc(t("unit.mistakes", { count: r.miss }))}">${icon("skull")}${esc(r.miss)}<span class="sr-only"> ${esc(t("unit.mistakes", { count: r.miss }))}</span></span>` +
       (r.date || rating !== undefined ? `<span class="run-date">` +
         (rating !== undefined ? `<span class="run-pts" title="${esc(t("lb.rating", { points: points(rating) }))}">${icon("star")}${esc(points(rating))}</span>` : "") +
         `${r.date ? `<span title="${esc(t("lb.submittedOn", { date: formatDate(r.date) }))}">${esc(formatDate(r.date))}</span>` : ""}</span>` : "") +
       dcHtml(r) +
       `</li>`;
+  }
+  // A run's time (time: drawn already), on a board or in a player's panel. With a video, it's a link to it, which
+  // plays it here in a window (see "Watching a run's video"). n: its course, on a list of runs from every course (on
+  // a board or under a course in a player's panel, the window finds it from there)
+  function timeLink(r, time, n) {
+    if (!r.video) return `<span class="stat time">${time}</span>`;
+    return `<a class="stat time" href="${esc(r.video)}" target="_blank" rel="noopener" title="${esc(t("lb.watch", { time: r.time, player: r.name }))}" ` +
+      `data-watch="${n || ""}" data-player-name="${esc(r.name)}" data-run-time="${esc(r.time)}" data-run-miss="${esc(r.miss)}">${time}${icon("play", "play")}</a>`;
   }
   /* ---------- Searching a board ----------
      Every board (and the Player ratings) has a box that finds players by their in-game or Discord name, anywhere on
@@ -3331,7 +3350,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const date = r.date ? formatDate(r.date) : "";
     return `<li class="pl-run${isBest ? " best" : ""}">` +
       (c ? `<span class="pl-run-course"><span class="pl-run-num">${c.n}</span> ${flagName(c)}${c.broken ? ` <span class="tag tag-broken">${esc(t("code.broken"))}</span>` : ""}</span>` : "") +
-      (r.video ? `<a class="stat time" href="${esc(r.video)}" target="_blank" rel="noopener" title="${esc(t("lb.watch", { time: r.time, player: r.name }))}">${time}${icon("play", "play")}</a>` : `<span class="stat time">${time}</span>`) +
+      timeLink(r, time, c && c.n) +
       `<span class="stat miss" title="${esc(t("unit.mistakes", { count: r.miss }))}">${icon("skull")}${esc(r.miss)}</span>` +
       `<span class="pl-run-tags">${isBest ? `<span class="tag tag-latest">${esc(t("pl.best"))}</span>` : ""}${legacy ? `<span class="tag tag-legacy">${esc(t("pl.legacy"))}</span>` : ""}</span>` +
       `<span class="pl-run-meta">` +
@@ -6375,8 +6394,64 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         `<span class="run-play-label">${esc(t("run.play"))}</span></button></div>` +
       `<p class="run-out"><a href="${esc(url)}" target="_blank" rel="noopener">${esc(t("run.open", { site: e.site }))}${icon("out")}</a></p></div>`;
   }
+  // A video's player (src: from embedOf), with what it is for screen readers
+  function videoFrame(src, title) {
+    const f = document.createElement("iframe");
+    f.src = src;
+    f.title = title;
+    f.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+    f.allowFullscreen = true;
+    f.referrerPolicy = "strict-origin-when-cross-origin";
+    return f;
+  }
 
-  const runClose = () => `<button class="pl-close" type="button" data-pl-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button>`;
+  /* ---------- Watching a run's video ----------
+     A run's time links to its video, on the boards and in a player's panel (timeLink). Clicking it plays a YouTube,
+     Twitch, Streamable, or Medal video right here, in a window over the page, with its course, player, time, and
+     mistakes over it and a link to it on its own site under it. Clicking the time is pressing Play, so the player loads
+     then, and not before. Closing the window stops the video. Other links, and Ctrl/Cmd/Shift/middle clicks, open the
+     video in a new tab, as before. */
+  const vid = $("#vid");
+  // The window for a time's link (a), or false for a link that can't play here
+  function openVideo(a) {
+    const e = embedOf(a.href);
+    if (!e) return false;
+    // Its course: what the link says, or else the board it's on, or the course it's under in a player's panel
+    const box = a.closest(".course-board, .pl-runs");
+    const at = box && /-(\d+)$/.exec(box.id);
+    const c = course(Number(a.dataset.watch || (at ? at[1] : 0)));
+    const { playerName: name, runTime: time, runMiss: miss } = a.dataset;
+    const label = t("lb.watch", { time, player: name });
+    vid.setAttribute("aria-label", label);
+    vid.innerHTML = `<div class="vid-head"><div class="pl-who">` +
+        (c ? `<p class="pl-eyebrow">${icon("play")}<span class="nowrap">${esc(`${c.n} `)}${flagName(c)}</span></p>` : "") +
+        `<div class="vid-line"><h2 class="pl-name is-name">${esc(caps(name))}</h2>` +
+          `<span class="vid-stats"><span class="stat time">${icon("bolt")}<span>${esc(time)}</span></span>` +
+          `<span class="stat miss" title="${esc(t("unit.mistakes", { count: Number(miss) }))}">${icon("skull")}<span>${esc(miss)}</span>` +
+            `<span class="sr-only"> ${esc(t("unit.mistakes", { count: Number(miss) }))}</span></span></span></div></div>` +
+        `<button class="pl-close" type="button" data-vid-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button></div>` +
+      `<div class="run-frame"></div>` +
+      `<p class="run-out"><a href="${esc(a.href)}" target="_blank" rel="noopener">${esc(t("run.open", { site: e.site }))}${icon("out")}</a></p>`;
+    $(".run-frame", vid).append(videoFrame(e.src, label));
+    vid.showModal();
+    return true;
+  }
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest("a[data-watch]");
+    if (!a || e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+    if (openVideo(a)) e.preventDefault();
+  });
+  vid.addEventListener("click", (e) => {
+    if (e.target.closest("[data-vid-close]")) { vid.close(); return; }
+    // Watching it on its own site instead: the window closes once the new tab has opened, so it isn't playing twice
+    if (e.target.closest(".run-out a")) { setTimeout(() => vid.close()); return; }
+    // A click on the dark around the window
+    const box = vid.getBoundingClientRect();
+    if (e.target === vid && (e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom)) vid.close();
+  });
+  vid.addEventListener("close", () => vid.replaceChildren());
+
+  const runClose =() => `<button class="pl-close" type="button" data-pl-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button>`;
   // Just its title and Close, while it looks for the run (more: what to say under them)
   const runEmpty = (more = "") => `<div class="pl-head"><div class="pl-who"><h2 class="pl-name" id="pl-name">${esc(t("rev.view"))}</h2></div>${runClose()}</div>${more}`;
   // The whole page. Only a new language redraws it all: everything that changes after that (where it is now, the
@@ -6585,12 +6660,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const play = e.target.closest("[data-run-play]");
     if (play) {
       const frame = play.closest(".run-frame");
-      const f = document.createElement("iframe");
-      f.src = frame.dataset.src;
-      f.title = t("run.play");
-      f.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
-      f.allowFullscreen = true;
-      f.referrerPolicy = "strict-origin-when-cross-origin";
+      const f = videoFrame(frame.dataset.src, t("run.play"));
       frame.replaceChildren(f);
       f.focus();
       return;

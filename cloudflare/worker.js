@@ -1796,8 +1796,9 @@ const SECURITY_HEADERS = {
    withNonce), plus the site's own files and Cloudflare's Web Analytics. So even if a player's name or anything else
    ever got onto the page as HTML, a script in it wouldn't run. Cloudflare's own bot check, which it adds to pages,
    copies the nonce from this header. Browsers that know nonces ignore 'unsafe-inline' when there's one: it's only for
-   browsers too old for them. frame-src is for the video players on a run's page, which only load once someone presses
-   Play there (embedOf() in index.html). If you add an outside service to the page, add its address here. */
+   browsers too old for them. frame-src is for the video players on a run's page and in the window a run's time opens
+   on the boards, which only load once someone presses Play or clicks the time (embedOf() in index.html). If you add
+   an outside service to the page, add its address here. */
 const csp = (nonce) => [
   "default-src 'self'",
   `script-src 'self'${nonce ? ` 'nonce-${nonce}'` : ""} 'unsafe-inline' https://static.cloudflareinsights.com`,
