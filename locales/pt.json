@@ -462,5 +462,6 @@
   "vid.fail": "Não foi possível carregar os comentários. Tente de novo mais tarde.",
   "vid.all": "Ver todos os {count} comentários no YouTube",
   "vid.likes": "Curtidas: {count}",
-  "vid.replies": "Respostas: {count}"
+  "vid.replies": "Respostas: {count}",
+  "dc.how": "Para ganhar seu cargo de Top % e as estatísticas no perfil, entre com o Discord em Meu perfil. O cargo vem com a sua primeira corrida enviada, e você também pode ativar as estatísticas lá."
 }

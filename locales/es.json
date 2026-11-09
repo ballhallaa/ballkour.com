@@ -462,5 +462,6 @@
   "vid.fail": "No se pudieron cargar los comentarios. Inténtalo de nuevo más tarde.",
   "vid.all": "Ver los {count} comentarios en YouTube",
   "vid.likes": "Me gusta: {count}",
-  "vid.replies": "Respuestas: {count}"
+  "vid.replies": "Respuestas: {count}",
+  "dc.how": "Para conseguir tu rol de Top % y las estadísticas en tu perfil, inicia sesión con Discord en Mi perfil. El rol llega con tu primera carrera enviada, y ahí también puedes activar las estadísticas."
 }

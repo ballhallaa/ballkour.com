@@ -462,5 +462,6 @@
   "vid.fail": "Die Kommentare konnten nicht geladen werden. Versuch es später noch mal.",
   "vid.all": "Alle {count} Kommentare auf YouTube ansehen",
   "vid.likes": "Likes: {count}",
-  "vid.replies": "Antworten: {count}"
+  "vid.replies": "Antworten: {count}",
+  "dc.how": "Für deine Rolle zu deinem Top % und deine Stats auf dem Profil melde dich unter Mein Profil mit Discord an. Die Rolle kommt mit deinem ersten eingereichten Lauf, und dort kannst du auch die Stats einschalten."
 }

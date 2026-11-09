@@ -1384,6 +1384,9 @@ a.rev-run:hover { border-color: var(--line-hi); background: var(--glass-hi); }
 .voice-more[open] summary .chev { transform: rotate(180deg); }
 .voice-more .voice { margin: 4px 0 0; }
 .join { margin-top: 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.dc-how { margin: 12px 0 0; max-width: 62ch; font: 400 13.5px/1.5 var(--body); color: var(--ink-3); }
+.dc-how a { color: var(--volt); text-decoration: underline; text-underline-offset: 3px; }
+.dc-how a:hover { color: var(--volt-hi); }
 .link-copy {
   display: inline-flex;
   align-items: center;
@@ -1726,6 +1729,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
           <a class="btn btn-primary" href="https://discord.gg/Skz6cg9rbR" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-discord"/></svg><span data-i18n="hero.discord">Join our Discord</span><span class="count" data-members-wrap hidden><span class="dot"></span><span data-members></span></span></a>
           <button class="link-copy" type="button" data-copy="https://ballkour.com/discord"><span class="sr-only" data-i18n="dc.copyLink">Copy link</span><span class="copy-val">ballkour.com/discord</span><svg class="icon i-copy" aria-hidden="true"><use href="#i-copy"/></svg><svg class="icon i-check" aria-hidden="true"><use href="#i-check"/></svg></button>
         </div>
+        <!-- How to get the role and the stats on their profile: My profile (see renderDcHow) -->
+        <p class="dc-how" id="dc-how" hidden></p>
       </div>
     </section>
 
@@ -2157,6 +2162,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "sub.err.net": "Your run couldn’t be sent. Check your connection and try again.",
   "dc.voice": "{channel} · {count} in voice",
   "dc.voiceMore": "+{count} more",
+  "dc.how": "To get your Top % role and profile stats, sign in with Discord in My profile. The role comes with your first submitted run, and you can turn on the stats there too.",
   "faq.all": "Show all {count} questions",
   "faq.fewer": "Show fewer questions",
   "faq.valid.q": "What counts as a valid run?",
@@ -5292,6 +5298,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       $("#sub-me-name").innerHTML = esc(t("sub.as", { name: "\u0000" })).replace("\u0000", `<b>${esc(me.name)}</b>`);
     }
     renderMe();
+    renderDcHow();
   }
   // Their in-game name: the one they used last time on this device, or on their newest run
   function fillName() {
@@ -5325,7 +5332,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (wantClaim) { const name = wantClaim; wantClaim = ""; openClaim(name); }
   }
   /* My profile: their own player panel, the one a click on their name on any board opens, with Sign out in it too. It's
-     by the language picker, next to Sign out and under a run's result. Signed out, the one by the language picker
+     by the language picker, next to Sign out and under a run's result, and linked under Join our Discord (renderDcHow).
+     Signed out, the one by the language picker
      first opens a panel saying what signing in with Discord is for and what it shares (so being sent to Discord, and
      asked about Ballkyrie there, doesn't come out of nowhere). Continue with Discord there signs them in, and comes
      back with ?me=1 to open their panel. Sign in with Discord above the form opens the same panel, and comes back to
@@ -5440,8 +5448,24 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     meWrap.innerHTML = `<button class="top-btn me-btn" type="button" data-my-stats aria-label="${esc(t("me.button"))}" ` +
       `title="${esc(t(me ? "me.button" : "me.signin"))}">${icon("user")}</button>`;
   }
+  // Under Join our Discord: how to get the role and the stats on their profile, with My profile (the button's own name,
+  // in every language) as a link to it. Without signing in on the site, there's no My profile, so it doesn't show.
+  function renderDcHow() {
+    const how = $("#dc-how");
+    how.hidden = !loginOn;
+    if (how.hidden) return;
+    const myStats = esc(t("me.button"));
+    how.innerHTML = esc(t("dc.how")).replace(myStats, `<a href="/stats" data-my-stats>${myStats}</a>`);
+  }
   document.addEventListener("click", (e) => {
-    if (e.target.closest("[data-my-stats]")) { openMine(); return; }
+    const mine = e.target.closest("[data-my-stats]");
+    if (mine) {
+      // A link to it (/stats) still opens in a new tab with Ctrl/Cmd or Shift
+      if (mine.tagName === "A" && (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey)) return;
+      e.preventDefault();
+      openMine();
+      return;
+    }
     // The address changes as the page scrolls, so where to come back to is worked out on the click
     const a = e.target.closest("a[data-login-for]");
     if (a) a.href = loginFor(a.dataset.loginFor);

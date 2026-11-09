@@ -462,5 +462,6 @@
   "vid.fail": "Non è stato possibile caricare i commenti. Riprova più tardi.",
   "vid.all": "Vedi tutti i {count} commenti su YouTube",
   "vid.likes": "Mi piace: {count}",
-  "vid.replies": "Risposte: {count}"
+  "vid.replies": "Risposte: {count}",
+  "dc.how": "Per ottenere il ruolo Top % e le statistiche sul profilo, accedi con Discord in Il mio profilo. Il ruolo arriva con la tua prima run inviata, e lì puoi anche attivare le statistiche."
 }

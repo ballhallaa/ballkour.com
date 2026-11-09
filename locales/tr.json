@@ -462,5 +462,6 @@
   "vid.fail": "Yorumlar yüklenemedi. Daha sonra tekrar dene.",
   "vid.all": "YouTube’da {count} yorumun tümünü gör",
   "vid.likes": "Beğeni: {count}",
-  "vid.replies": "Yanıt: {count}"
+  "vid.replies": "Yanıt: {count}",
+  "dc.how": "İlk % rolünü ve profil istatistiklerini almak için Profilim’de Discord ile giriş yap. Rol, gönderdiğin ilk koşuyla gelir; istatistikleri de oradan açabilirsin."
 }

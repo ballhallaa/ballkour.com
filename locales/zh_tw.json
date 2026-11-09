@@ -462,5 +462,6 @@
   "vid.fail": "無法載入留言。請稍後再試。",
   "vid.all": "在 YouTube 上查看全部 {count} 則留言",
   "vid.likes": "喜歡：{count}",
-  "vid.replies": "回覆：{count}"
+  "vid.replies": "回覆：{count}",
+  "dc.how": "要獲得前 % 身分組和個人檔案上的數據，請在「我的個人檔案」中使用 Discord 登入。提交第一個成績後就會獲得身分組，也可以在那裡開啟數據展示。"
 }
