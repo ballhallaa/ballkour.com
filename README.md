@@ -35,7 +35,7 @@ A link to a run, a board, or a player shows its own preview when it's pasted on 
 
 ## Reduce motion
 
-The pause button at the top, by the language button, turns Reduce motion on or off. It's lit up green while it's on. With it on, the background stops moving, the hamster doesn't throw balls, and the page doesn't animate or scroll smoothly. It starts out the way the device's own Reduce motion setting is, and the browser keeps what it's set to (`ballkour-motion` in localStorage), so it stays that way on every page, the 404 page too. Setting it back to match the device forgets it, so the site then follows the device again.
+The pause button at the top, by the language button, turns Reduce motion on or off. It's lit up green while it's on. With it on, the background and the logo stop where they are, the hamster doesn't roll or throw balls, and the page doesn't animate or scroll smoothly. It starts out the way the device's own Reduce motion setting is, and the browser keeps what it's set to (`ballkour-motion` in localStorage), so it stays that way on every page, the 404 page too. Setting it back to match the device forgets it, so the site then follows the device again.
 
 ## Previewing
 
