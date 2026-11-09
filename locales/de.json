@@ -453,5 +453,14 @@
   "pic.remaker": "Remake",
   "pic.noVideos": "Videos waren nicht erforderlich",
   "pic.beFirst": "Stell die erste Zeit auf",
-  "pic.asOf": "Stand {date}"
+  "pic.asOf": "Stand {date}",
+  "rt.coursePointsGain": "{points} Punkte Streckenwertung, davon {change} durch diesen Lauf",
+  "vid.comments": "Kommentare auf YouTube",
+  "vid.loading": "Kommentare werden geladen…",
+  "vid.none": "Noch keine Kommentare.",
+  "vid.off": "Kommentare sind bei diesem Video deaktiviert.",
+  "vid.fail": "Die Kommentare konnten nicht geladen werden. Versuch es später noch mal.",
+  "vid.all": "Alle {count} Kommentare auf YouTube ansehen",
+  "vid.likes": "Likes: {count}",
+  "vid.replies": "Antworten: {count}"
 }

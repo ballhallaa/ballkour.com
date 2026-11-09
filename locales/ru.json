@@ -453,5 +453,14 @@
   "pic.remaker": "Ремейк",
   "pic.noVideos": "Видео не требовалось",
   "pic.beFirst": "Установите первый результат",
-  "pic.asOf": "На {date}"
+  "pic.asOf": "На {date}",
+  "rt.coursePointsGain": "Очки рейтинга трассы: {points}, из них {change} за этот забег",
+  "vid.comments": "Комментарии на YouTube",
+  "vid.loading": "Загружаем комментарии…",
+  "vid.none": "Комментариев пока нет.",
+  "vid.off": "Комментарии к этому видео отключены.",
+  "vid.fail": "Не удалось загрузить комментарии. Попробуйте ещё раз позже.",
+  "vid.all": "Все комментарии на YouTube ({count})",
+  "vid.likes": "Лайки: {count}",
+  "vid.replies": "Ответы: {count}"
 }
