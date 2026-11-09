@@ -4,7 +4,9 @@
 Run from the website folder after changing any English text:
     python3 tools/extract-en.py              # reads index.html and 404.html
     python3 tools/extract-en.py page.html    # or other files
+    python3 tools/extract-en.py --check      # only says whether locales/en.json is up to date (for the checks)
 """
+import difflib
 import html
 import json
 import pathlib
@@ -12,7 +14,8 @@ import re
 import sys
 
 root = pathlib.Path(__file__).resolve().parent.parent
-sources = [pathlib.Path(a) for a in sys.argv[1:]] or [root / "index.html", root / "404.html"]
+check = "--check" in sys.argv[1:]
+sources = [pathlib.Path(a) for a in sys.argv[1:] if a != "--check"] or [root / "index.html", root / "404.html"]
 strings = {}
 
 
@@ -48,6 +51,15 @@ for src in sources:
             add(k, v)
 
 out = root / "locales" / "en.json"
+text = json.dumps(strings, ensure_ascii=False, indent=2) + "\n"
+if check:
+    now = out.read_text(encoding="utf-8") if out.exists() else ""
+    if now != text:
+        print("locales/en.json is out of date. Run 'python3 tools/extract-en.py' and commit it. What changes:")
+        sys.stdout.writelines(difflib.unified_diff(now.splitlines(True), text.splitlines(True), "locales/en.json", "from the pages"))
+        sys.exit(1)
+    print(f"locales/en.json is up to date ({len(strings)} strings)")
+    sys.exit(0)
 out.parent.mkdir(exist_ok=True)
-out.write_text(json.dumps(strings, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+out.write_text(text, encoding="utf-8")
 print(f"Wrote {len(strings)} strings to {out}")

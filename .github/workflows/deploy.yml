@@ -22,14 +22,12 @@ jobs:
       # Actions are pinned to an exact commit (their version in the comment), since this job holds the Cloudflare token
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
+      # The same checks every pull request gets (.github/workflows/check.yml), in case something reached main without one
       - name: Check that locales/en.json matches index.html
-        run: |
-          python3 tools/extract-en.py
-          if ! git diff --quiet -- locales/en.json; then
-            echo "::error::locales/en.json is out of date. Run 'python3 tools/extract-en.py' and commit it."
-            git diff -- locales/en.json
-            exit 1
-          fi
+        run: python3 tools/extract-en.py --check
+
+      - name: Check the scripts, settings, and translations
+        run: python3 tools/check.py
 
       # Publishes the site's files and cloudflare/worker.js together (see cloudflare/wrangler.toml)
       - name: Deploy to Cloudflare
