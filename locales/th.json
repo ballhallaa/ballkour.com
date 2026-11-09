@@ -433,6 +433,7 @@
   "stats.title": "สถิติ",
   "stats.weekTo": "7 วันถึง {date}",
   "stats.monthTo": "30 วันถึง {date}",
+  "stats.fromTo": "{from} ถึง {to}",
   "stats.prevDay": "วันก่อนหน้า",
   "stats.nextDay": "วันถัดไป",
   "stats.views": "เข้าชม",

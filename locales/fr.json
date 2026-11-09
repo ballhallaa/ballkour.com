@@ -433,6 +433,7 @@
   "stats.title": "Statistiques",
   "stats.weekTo": "7 jours jusqu’au {date}",
   "stats.monthTo": "30 jours jusqu’au {date}",
+  "stats.fromTo": "Du {from} au {to}",
   "stats.prevDay": "Jour précédent",
   "stats.nextDay": "Jour suivant",
   "stats.views": "Vues",

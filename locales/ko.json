@@ -433,6 +433,7 @@
   "stats.title": "통계",
   "stats.weekTo": "{date}까지 7일",
   "stats.monthTo": "{date}까지 30일",
+  "stats.fromTo": "{from}부터 {to}까지",
   "stats.prevDay": "전날",
   "stats.nextDay": "다음 날",
   "stats.views": "조회수",

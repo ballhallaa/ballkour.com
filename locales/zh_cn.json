@@ -433,6 +433,7 @@
   "stats.title": "统计",
   "stats.weekTo": "截至 {date} 的 7 天",
   "stats.monthTo": "截至 {date} 的 30 天",
+  "stats.fromTo": "{from} 至 {to}",
   "stats.prevDay": "前一天",
   "stats.nextDay": "后一天",
   "stats.views": "浏览量",

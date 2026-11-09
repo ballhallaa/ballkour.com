@@ -433,6 +433,7 @@
   "stats.title": "İstatistikler",
   "stats.weekTo": "{date} tarihine kadar 7 gün",
   "stats.monthTo": "{date} tarihine kadar 30 gün",
+  "stats.fromTo": "{from} ile {to} arası",
   "stats.prevDay": "Önceki gün",
   "stats.nextDay": "Sonraki gün",
   "stats.views": "Görüntüleme",
