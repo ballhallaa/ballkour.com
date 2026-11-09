@@ -2090,8 +2090,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "visits.players": "Players",
   "visits.other": "Other",
   "visits.note": "Counted by the site itself each time someone opens it in a browser. Most bots don’t count. Each person counts once a day, without the site keeping who they are.",
-  "stats.weekTo": "7 days to {date}",
-  "stats.monthTo": "30 days to {date}",
+  "stats.fromTo": "{from} to {to}",
   "stats.prevDay": "Day before",
   "stats.nextDay": "Day after",
   "stats.views": "Views",
@@ -5903,10 +5902,12 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // Each section's name, from the words the site already uses for it where it has them
   const STAT_NAMES = { home: "visits.home", courses: "courses.title", leaderboards: "nav.leaderboards", submit: "nav.submit", runs: "pl.runs",
     players: "visits.players", stats: "stats.title", "my-stats": "me.button", features: "run.title", faq: "faq.title", "source-code": "src.title", translations: "tr.title" };
-  // Which days a button covers: "Today", "Last 7 days", … for today, and "2026-11-05", "7 days to 2026-11-05", … before
-  function statLabel(range, day, today) {
+  // Which days a button covers: "Today", "Last 7 days", … for today, and "2026-11-05", "2026-10-30 to 2026-11-05", …
+  // before, from the first day it covers (fewer than 7 or 30 at the very start of the history) to the day picked
+  function statLabel(range, days, pick, today) {
     if (today) return t(range === "day" ? "visits.today" : range === "week" ? "visits.week" : "visits.month");
-    return range === "day" ? day : t(range === "week" ? "stats.weekTo" : "stats.monthTo", { date: day });
+    const from = days[Math.max(0, pick - STAT_RANGES[range] + 1)], to = days[pick];
+    return from === to ? to : t("stats.fromTo", { from, to });
   }
   function renderStats() {
     const box = $("#stats-body");
@@ -5934,7 +5935,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         `<div class="stats-axis"><span>${esc(days[from])}</span><span>${esc(end === last ? t("visits.today") : days[end])}</span></div>`;
     };
     let html = `<div class="stats-range" role="group" aria-label="${esc(t("stats.title"))}">` +
-      Object.keys(STAT_RANGES).map((k) => `<button class="lb-tab" type="button" data-stat-range="${k}" aria-pressed="${statRange === k}">${esc(statLabel(k, day, today))}</button>`).join("") +
+      Object.keys(STAT_RANGES).map((k) => `<button class="lb-tab" type="button" data-stat-range="${k}" aria-pressed="${statRange === k}">${esc(statLabel(k, days, pick, today))}</button>`).join("") +
       `</div>`;
     // Runs first, then Page views
     if (rs) {
@@ -6016,7 +6017,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   function statsPicked() {
     renderStats();
     const { days, last, pick } = statPick();
-    announce.textContent = statLabel(statRange, days[pick], pick === last);
+    announce.textContent = statLabel(statRange, days, pick, pick === last);
     showLink("stats", subPath("stats"));
   }
   $("#stats-body").addEventListener("click", (e) => {

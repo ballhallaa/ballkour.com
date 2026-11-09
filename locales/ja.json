@@ -433,6 +433,7 @@
   "stats.title": "統計",
   "stats.weekTo": "{date}までの7日間",
   "stats.monthTo": "{date}までの30日間",
+  "stats.fromTo": "{from}から{to}まで",
   "stats.prevDay": "前の日",
   "stats.nextDay": "次の日",
   "stats.views": "ビュー",

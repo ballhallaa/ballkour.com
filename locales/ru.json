@@ -433,6 +433,7 @@
   "stats.title": "Статистика",
   "stats.weekTo": "7 дней по {date}",
   "stats.monthTo": "30 дней по {date}",
+  "stats.fromTo": "С {from} по {to}",
   "stats.prevDay": "Предыдущий день",
   "stats.nextDay": "Следующий день",
   "stats.views": "Просмотры",
