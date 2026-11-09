@@ -2106,9 +2106,11 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "stats.rated": "Rated players",
   "stats.totalGlobal": "Total global rating",
   "stats.totalCourse": "Total course rating",
+  "stats.changeGlobal": "Change in global rating",
+  "stats.changeCourse": "Change in course rating",
   "stats.busiest": "Most runs",
   "stats.since": "They’re counted from {date} on.",
-  "stats.runsNote": "Days go from midnight to midnight UTC. Rating gained adds up what each run added to its player’s rating, like the number in parentheses beside a run on the boards.",
+  "stats.runsNote": "Days go from midnight to midnight UTC. Rating gained adds up what each run added to its player’s rating, like the number in parentheses beside a run on the boards. The two changes are how much the totals went up or down over the days picked, so they also count what other players lose when someone beats a record.",
   "runs.ratingGain": "{player}’s rating over every course: {rating}, with {change} from this run",
   "rev.ratingGain": "{player}’s rating over every course if it’s approved: {rating}, with {change} from this run",
   "rev.declinedBy": "Turned down by {name}",
@@ -5775,7 +5777,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      - players: the players whose first run was that day
      - courses: how many runs were sent that day on each course
      → { per: Map(day → those), first: the first day with any }, or null until the files are in
-     Rated players and the two totals are as the Player ratings were at the end of the day picked (see standingAt). */
+     Rated players and the two totals are as the Player ratings were at the end of the day picked (see standingAt), and
+     the two changes are how far the totals moved from the end of the day before the days picked. Unlike gained, they
+     count everyone, so they also take off what other players lose when a record gets faster. */
   let runStats = null;
   const standingOn = new Map(); // day → the Player ratings at the end of it, added up (see standingAt)
   function statsChanged() {
@@ -5910,6 +5914,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (!visits && !rs) { box.innerHTML = ""; return; }
     const { days, last, pick, end, from } = statPick();
     const n = (v) => Math.round(Number(v) || 0).toLocaleString(htmlLang());
+    // "+12" or "−3", rounded first so a tiny drop shows as +0, not −0
+    const change = (v) => { const r = Math.round(Number(v) || 0); return `${r < 0 ? "−" : "+"}${n(Math.abs(r))}`; };
     const day = days[pick];
     const today = pick === last;
     const span = days.slice(Math.max(0, pick - STAT_RANGES[statRange] + 1), pick + 1);
@@ -5942,15 +5948,17 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       const bc = busiest && course(busiest);
       const row = (key, html) => `<tr><th scope="row">${esc(t(key))}</th><td class="num">${html}</td></tr>`;
       const standing = standingAt(day, today);
+      const before = standingAt(dayAfter(span[0], -1), false); // the totals the day before the days picked
       html += `<h3 class="by src-group">${esc(t("pl.runs"))}</h3><div class="stats-part">` +
-        `<div class="stats-tiles" style="--n: 4">${tile("runs.title", n(sent), "upload")}${tile("stats.gained", `${add("gained") < 0 ? "−" : "+"}${n(Math.abs(add("gained")))}`, "star")}` +
+        `<div class="stats-tiles" style="--n: 4">${tile("runs.title", n(sent), "upload")}${tile("stats.gained", change(add("gained")), "star")}` +
         `${tile("res.top10s", n(add("top10s")), "bolt")}${tile("res.records", n(add("records")), "trophy")}</div>` +
         chart("runs", "stats.runsChart", (d) => of(d).sent || 0, (d) => t("stats.runsDay", { date: d, count: n(of(d).sent) })) +
         `<table class="stats-table"><tbody>` +
           row("stats.straight", esc(n(sent - approved - declined - pending))) + row("stats.approved", esc(n(approved))) +
           row("run.declined", esc(n(declined))) + row("run.pending", esc(n(pending))) + row("res.podiums", esc(n(add("podiums")))) +
           row("stats.newPlayers", esc(n(add("players")))) + row("stats.rated", esc(n(standing.rated))) +
-          row("stats.totalGlobal", esc(n(standing.global))) + row("stats.totalCourse", esc(n(standing.course))) +
+          row("stats.totalGlobal", esc(n(standing.global))) + row("stats.changeGlobal", esc(change(standing.global - before.global))) +
+          row("stats.totalCourse", esc(n(standing.course))) + row("stats.changeCourse", esc(change(standing.course - before.course))) +
           (bc ? row("stats.busiest", `<span class="course-cell">${esc(String(bc.n))} ${flagName(bc)} · ${esc(n(most))}</span>`) : "") +
         `</tbody></table><p class="rev-note">${esc(t("stats.runsNote"))}</p></div>`;
     }
