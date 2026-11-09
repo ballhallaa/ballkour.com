@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>if (/^\/[a-z-]+(\/[\w%.~-]+){0,2}\/$/i.test(location.pathname)) history.replaceState(null, "", location.pathname.slice(0, -1) + location.search + location.hash);</script>
+<!-- Reduce motion picked with the button at the top, before anything draws (see "Reduce motion") -->
+<script>try { const m = localStorage.getItem("ballkour-motion"); if (m === "reduce" || m === "full") document.documentElement.dataset.motion = m; } catch (e) { /* private mode */ }</script>
 <title>Ballkour · Wrecking Ball parkour courses for Overwatch</title>
 <meta name="description" content="Wrecking Ball parkour courses for Overwatch. Grab a course code, run through every checkpoint, and get your time on the leaderboard!">
 <link rel="canonical" href="https://ballkour.com/">
@@ -132,17 +134,18 @@ main:focus { outline: none; }
 #balls { z-index: 20; }
 .page { position: relative; z-index: 1; }
 
-/* ---------- Find a player, My profile and the language picker ---------- */
-/* Three square buttons: Find a player, My profile and the language. Icons only, so no language's longer words get cut
-   off; their names are in aria-label and in the tooltip on hover. At the right, lined up with the panels. Spaced with
-   margins rather than a gap, so there's no extra space where My profile is when signing in isn't set up. The language
-   menu drops down over the page from their right edge, so nothing below moves when it opens (on a phone, it opens in
-   the page instead: see the language menu). */
-.topbar { position: relative; max-width: var(--col); margin: 0 auto; padding-block: 14px 0; display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; align-items: start; }
+/* ---------- Find a player, My profile, Reduce motion and the language picker ---------- */
+/* Four square buttons: Find a player, My profile, Reduce motion and the language. Icons only, so no language's longer
+   words get cut off; their names are in aria-label and in the tooltip on hover. At the right, lined up with the panels.
+   Spaced with margins rather than a gap, so there's no extra space where My profile is when signing in isn't set up.
+   The language menu drops down over the page from their right edge, so nothing below moves when it opens (on a phone,
+   it opens in the page instead: see the language menu). */
+.topbar { position: relative; max-width: var(--col); margin: 0 auto; padding-block: 14px 0; display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto auto; align-items: start; }
 .lang-wrap { display: contents; }
 .top-find { grid-column: 2; }
 .me-wrap { grid-column: 3; margin-inline-start: 8px; }
-.lang-pick { grid-column: 4; margin-inline-start: 8px; }
+.motion-btn { grid-column: 4; margin-inline-start: 8px; }
+.lang-pick { grid-column: 5; margin-inline-start: 8px; }
 .top-btn {
   width: 38px;
   height: 38px;
@@ -161,6 +164,9 @@ main:focus { outline: none; }
 .top-btn:hover, .top-btn[aria-expanded="true"] { border-color: var(--volt); }
 .top-find .icon { color: var(--volt); }
 .me-btn .icon { color: #b9befc; }
+/* Reduce motion is on: lit up in green, over the button's own glass */
+.motion-btn[aria-pressed="true"] { border-color: var(--volt); background-image: linear-gradient(rgba(0, 230, 151, .14), rgba(0, 230, 151, .14)); }
+.motion-btn[aria-pressed="true"] .icon { color: var(--volt); }
 /* Until the page knows whether they're signed in, My profile holds its place unseen, so the others don't move */
 .me-wrap.waiting { visibility: hidden; }
 .me-wrap:not(.waiting) { animation: fade-in .2s ease-out; }
@@ -1395,10 +1401,13 @@ a.link-copy { text-decoration: none; }
   .sections { --bar: #090f0d; background: #090f0d; }
   .btn:not(.btn-primary):not(.btn-discord):not(.btn-warn) { background-color: var(--glass-solid); }
 }
+/* Reduce motion: the device's setting, unless the button at the top picked the other one (data-motion on <html>) */
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  *, *::before, *::after { animation: none !important; transition: none !important; }
+  html:not([data-motion="full"]) { scroll-behavior: auto; }
+  html:not([data-motion="full"]) *, html:not([data-motion="full"]) *::before, html:not([data-motion="full"]) *::after { animation: none !important; transition: none !important; }
 }
+html[data-motion="reduce"] { scroll-behavior: auto; }
+html[data-motion="reduce"] *, html[data-motion="reduce"] *::before, html[data-motion="reduce"] *::after { animation: none !important; transition: none !important; }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
@@ -1431,6 +1440,7 @@ a.link-copy { text-decoration: none; }
     <symbol id="i-x" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M18 6 6 18M6 6l12 12"/></symbol>
     <symbol id="i-stats" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M8 17v-4"/><path d="M13 17V6"/><path d="M18 17v-7"/></g></symbol>
     <symbol id="i-calendar" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></g></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M10 15V9"/><path d="M14 15V9"/></g></symbol>
     <symbol id="i-search" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4.2-4.2"/></g></symbol>
     <symbol id="i-star" viewBox="0 0 24 24"><path fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" d="M11.53 2.3a.53.53 0 0 1 .94 0l2.31 4.68a2.12 2.12 0 0 0 1.6 1.16l5.16.75a.53.53 0 0 1 .3.91l-3.74 3.64a2.12 2.12 0 0 0-.61 1.88l.88 5.14a.53.53 0 0 1-.77.56l-4.62-2.43a2.12 2.12 0 0 0-1.97 0L6.4 21.01a.53.53 0 0 1-.77-.56l.88-5.14a2.12 2.12 0 0 0-.61-1.88L2.16 9.8a.53.53 0 0 1 .3-.91l5.16-.75a2.12 2.12 0 0 0 1.6-1.16z"/></symbol>
     <symbol id="i-mail" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></g></symbol>
@@ -1458,6 +1468,8 @@ a.link-copy { text-decoration: none; }
     <!-- Find a player, at the top too (see "Finding a player") -->
     <button class="top-btn top-find" type="button" data-find data-i18n-aria="find.open" aria-label="Find a player"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg></button>
     <div class="me-wrap" id="me-wrap" hidden></div>
+    <!-- Reduce motion (see "Reduce motion") -->
+    <button class="top-btn motion-btn" id="motion-btn" type="button" aria-pressed="false" data-i18n-aria="motion.label" aria-label="Reduce motion"><svg class="icon" aria-hidden="true"><use href="#i-pause"/></svg></button>
     <div class="lang-wrap" id="lang-wrap">
       <button class="top-btn lang-pick" id="lang-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="lang-menu">
         <svg class="icon" aria-hidden="true"><use href="#i-langs"/></svg>
@@ -2159,8 +2171,15 @@ a.link-copy { text-decoration: none; }
   });
 
   const REPO = "ballhallaa/ballkour";
+  /* ---------- Reduce motion ----------
+     The device's setting, unless the button at the top has picked the other one, which this device then keeps
+     ("ballkour-motion" in localStorage). <head> puts the pick on <html> as data-motion before the page draws, and the
+     CSS follows that too. Picking what the device says anyway forgets the pick, so it follows the device again. */
   const motionQuery = matchMedia("(prefers-reduced-motion: reduce)");
-  let reduced = motionQuery.matches;
+  const motionPick = () => document.documentElement.dataset.motion;
+  const wantsStill = () => (motionPick() ? motionPick() === "reduce" : motionQuery.matches);
+  let reduced = wantsStill();
+  $("#motion-btn").setAttribute("aria-pressed", String(reduced));
 
   /* ---------- Courses (one list drives the codes, the numbers and the leaderboards) ----------
      Runs: { name, discord, time, miss, date, video }. The remakes (file set) re-read their leaderboards/<n>-<slug>.opy
@@ -2404,6 +2423,7 @@ a.link-copy { text-decoration: none; }
     $("#lang-current").setAttribute("lang", cur[2]);
     // The top bar's buttons are icons only, so hovering one says what it is
     $(".top-find").title = `${t("find.open")} (/)`;
+    $("#motion-btn").title = t("motion.label");
     $("#lang-btn").title = `${t("lang.label")}: ${cur[1]}`;
     langMenu.setAttribute("aria-label", t("lang.label"));
     langPicker.select(lang);
@@ -5038,8 +5058,24 @@ a.link-copy { text-decoration: none; }
   }, { passive: true });
   window.addEventListener("pointermove", (e) => { if (W && H) { px = e.clientX / W; py = e.clientY / H; } }, { passive: true });
   document.addEventListener("visibilitychange", () => (document.hidden ? stop() : start()));
-  const onMotionChange = (e) => { reduced = e.matches; if (reduced) { stop(); draw(0); } else { start(); } };
+  // Reduce motion (see "Reduce motion"): stilled, the background stays as it is, and the hamster's balls go away
+  function onMotionChange() {
+    reduced = wantsStill();
+    $("#motion-btn").setAttribute("aria-pressed", String(reduced));
+    if (reduced) { stop(); draw(0); balls.length = 0; } else { start(); }
+  }
   if (motionQuery.addEventListener) motionQuery.addEventListener("change", onMotionChange);
+  $("#motion-btn").addEventListener("click", () => {
+    const still = !reduced;
+    const root = document.documentElement;
+    if (still === motionQuery.matches) delete root.dataset.motion;
+    else root.dataset.motion = still ? "reduce" : "full";
+    try {
+      if (motionPick()) localStorage.setItem("ballkour-motion", motionPick());
+      else localStorage.removeItem("ballkour-motion");
+    } catch (e) { /* private mode */ }
+    onMotionChange();
+  });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (!running) draw(0); });
   window.addEventListener("load", () => { if (!running) draw(0); });
 

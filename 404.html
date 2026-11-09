@@ -87,7 +87,9 @@ p { margin: 0; color: var(--ink-2); text-wrap: balance; }
 .lr-sub { display: block; margin-top: 3px; overflow-wrap: anywhere; font: 400 12.5px/1.4 var(--mono); color: var(--ink-2); }
 .lr-arrow { width: 18px; height: 18px; flex: none; color: var(--ink-3); transition: transform .15s, color .15s; }
 .link-row:hover .lr-arrow { color: var(--volt); transform: translate(2px, -2px); }
-@media (prefers-reduced-motion: reduce) { .link-row, .lr-arrow { transition: none; } }
+/* Reduce motion: the device's setting, or the pick from the button on the home page (data-motion on <html>) */
+@media (prefers-reduced-motion: reduce) { html:not([data-motion="full"]) :is(.link-row, .lr-arrow) { transition: none; } }
+html[data-motion="reduce"] :is(.link-row, .lr-arrow) { transition: none; }
 a:focus-visible { outline: 2px solid var(--volt); outline-offset: 3px; }
 </style>
 </head>
@@ -163,7 +165,11 @@ a:focus-visible { outline: 2px solid var(--volt); outline-offset: 3px; }
   const canvas = document.getElementById("warp");
   const ctx = canvas.getContext("2d");
   const logo = document.getElementById("logo");
-  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // Reduce motion: the device's setting, unless the button on the home page picked the other one ("ballkour-motion")
+  let pick = null;
+  try { pick = localStorage.getItem("ballkour-motion"); } catch (e) { /* private mode */ }
+  if (pick === "reduce" || pick === "full") document.documentElement.dataset.motion = pick;
+  const reduced = pick === "reduce" || (pick !== "full" && matchMedia("(prefers-reduced-motion: reduce)").matches);
   const PALETTE = [[0, 230, 151], [0, 230, 151], [0, 230, 151], [0, 230, 151], [110, 255, 205], [255, 154, 46], [51, 198, 255]];
   const rand = (a, b) => a + Math.random() * (b - a);
   let W = 0, H = 0, dpr = 1, maxD = 0, streaks = [], last = 0;
