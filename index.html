@@ -637,6 +637,10 @@ a.stat:hover .play { color: var(--volt); }
 .run-line .run-name { min-width: 0; }
 .tag-new { flex: none; height: 17px; padding: 0 5px; font-size: 9.5px; color: var(--volt); background: rgba(0, 230, 151, .1); border: 1px solid rgba(0, 230, 151, .32); }
 .run.fresh { box-shadow: inset 2px 0 0 var(--volt); }
+/* The run "See it on the board" opened its board for (from its page), on every board of the history it's on */
+.run.mark { background: rgba(0, 230, 151, .08); box-shadow: inset 0 0 0 1px rgba(0, 230, 151, .45); }
+.run.mark.fresh { box-shadow: inset 2px 0 0 var(--volt), inset 0 0 0 1px rgba(0, 230, 151, .45); }
+.tag-this { flex: none; height: 17px; padding: 0 5px; font-size: 9.5px; color: var(--on-volt); background: var(--volt); border: 1px solid var(--volt); }
 .stat .na { color: var(--ink-3); }
 .lb-foot { margin: 0; display: grid; gap: 3px; padding: 9px 12px 11px; border-top: 1px solid var(--line); font: 400 12.5px/1.45 var(--body); word-spacing: .12em; color: var(--ink-3); }
 /* Sort by time or by mistakes, above a board */
@@ -730,13 +734,20 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-me .pl-dc { margin-top: 0; }
 .pl-close { flex: none; width: 36px; height: 36px; display: grid; place-items: center; padding: 0; border: 1px solid var(--line-hi); border-radius: 10px; background: rgba(255, 255, 255, .03); color: var(--ink-2); cursor: pointer; transition: border-color .15s, color .15s; }
 .pl-close:hover { border-color: var(--volt); color: var(--ink); }
-.pl-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding: 14px 18px 16px; }
+/* Rating, Place and Top % on top, Courses and Runs under them (two by two on a phone, Runs across the bottom) */
+.pl-stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; padding: 14px 18px 16px; }
+.pl-stats > .pl-stat { grid-column: span 2; }
+.pl-stats > .pl-stat:nth-child(n + 4) { grid-column: span 3; }
 .pl-stat { min-width: 0; padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255, 255, 255, .025); }
 .pl-stat-label { display: block; font: 600 10.5px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
 .pl-stat-value { margin-top: 6px; display: flex; align-items: center; gap: 5px; min-height: 19px; font: 600 15px/1.2 var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink); }
 .pl-stat-value .icon { width: 14px; height: 14px; color: var(--gold); }
 .pl-stat-value .icon[aria-hidden] + * { min-width: 0; }
-@media (max-width: 480px) { .pl-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) {
+  .pl-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pl-stats > .pl-stat, .pl-stats > .pl-stat:nth-child(n + 4) { grid-column: auto; }
+  .pl-stats > .pl-stat:last-child { grid-column: 1 / -1; }
+}
 .pl-courses { list-style: none; margin: 0; padding: 0; }
 .pl-course { border-top: 1px solid var(--line); }
 /* The course's name, and under it their place, best time and course rating there */
@@ -756,6 +767,8 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .tag-legacy { height: 17px; padding: 0 5px; font-size: 9.5px; color: var(--ink-2); border: 1px solid var(--line-hi); }
 .pl-runs { padding: 0 18px 14px 50px; }
 .pl-run-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.pl-runs-count { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; margin: 0 0 6px; padding: 0 10px; font: 600 10.5px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.pl-runs-count b { font: 600 13px/1 var(--mono); letter-spacing: 0; font-variant-numeric: tabular-nums; color: var(--ink); }
 .pl-run { display: grid; grid-template-columns: auto 48px minmax(0, 1fr); grid-template-areas: "time miss tags" "meta meta meta"; align-items: center; gap: 3px 12px; padding: 7px 10px; border-radius: 8px; font-variant-numeric: tabular-nums; }
 .pl-run .stat { font: 600 14px/1 var(--mono); color: var(--ink-2); }
 .pl-run .stat.time { grid-area: time; }
@@ -1025,6 +1038,8 @@ a.rev-run:hover { border-color: var(--line-hi); background: var(--glass-hi); }
 .run-facts .stat .icon { width: 16px; height: 16px; }
 .run-when { font: 400 12.5px/1.3 var(--mono); color: var(--ink-3); }
 .run-video { margin: 14px 18px 0; }
+.run-counts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 14px 18px 0; }
+.run-counts:empty { display: none; }
 .run-frame { position: relative; aspect-ratio: 16 / 9; border: 1px solid var(--line-hi); border-radius: 12px; overflow: hidden; background: #000; }
 .run-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 /* Nothing loads from the video's site until Play is pressed, so it's a plain box until then */
@@ -1665,6 +1680,7 @@ a.link-copy { text-decoration: none; }
   "lb.next": "Next board",
   "lb.newRecord": "New record",
   "lb.new": "New",
+  "lb.thisRun": "This run",
   "lb.congrats.one": "Congrats {names} for the new top-10 time!",
   "lb.congrats.other": "Congrats {names} for the new top-10 times!",
   "lb.datesFormat": "Dates: YYYY-MM-DD (UTC)",
@@ -1745,6 +1761,9 @@ a.link-copy { text-decoration: none; }
   "pl.place": "Place",
   "pl.tier": "Top %",
   "pl.courses": "Courses",
+  "pl.runs": "Runs",
+  "pl.courseRuns": "Runs on this course",
+  "pl.allRuns": "Runs on all courses",
   "pl.notRated": "Not yet",
   "pl.notRun": "Not run yet",
   "pl.noRuns": "No runs on this course yet.",
@@ -1829,6 +1848,8 @@ a.link-copy { text-decoration: none; }
   "rev.fail": "That didn’t go through. Try again in a moment.",
   "runs.title": "Submitted runs",
   "run.all": "All runs",
+  "run.onBoard": "See it on the board",
+  "run.today": "See today’s board",
   "rev.view": "View run",
   "rev.more": "Show {count} more",
   "rev.approvedBy": "Approved by {name}",
@@ -2173,6 +2194,14 @@ a.link-copy { text-decoration: none; }
       (broken ? `<s class="code-val">${esc(code)}</s>` : `<span class="code-val">${esc(code)}</span>`) + COPY_ICONS + `</button>`;
   }
   let openCourse = 0;
+  // The run that "See it on the board" on a run's page opened its course's board for ({ n, run }). Its row stands out
+  // on every board of that course's history it's on, until a board is opened some other way.
+  let boardMark = null;
+  // The same run on two boards: its player, time and mistakes (or its video, for a run whose time was fixed later)
+  function sameEntry(a, b) {
+    return samePlayer(a, b) && ((a.time === b.time && a.miss === b.miss) || (!!a.video && a.video === b.video));
+  }
+  const isMarked = (c, r) => !!boardMark && boardMark.n === c.n && sameEntry(boardMark.run, r);
   function recordButton(c) {
     const r = standingsOf(c).top[0];
     const label = esc(t("lb.toggle", { course: `${c.n} ${c.name}` }));
@@ -2218,8 +2247,9 @@ a.link-copy { text-decoration: none; }
   const nameButton = (key, name) => `<button class="run-name" type="button" data-player="${esc(key)}" title="${esc(t("lb.playerOpen", { player: name }))}">${esc(caps(name))}</button>`;
   // A run on a board. ratingOf: each player's rating over every course (see ratingsBy), beside the date like on the
   // board pictures (none on legacy boards). podium: the run's place on the board by time when it's sorted by
-  // mistakes, so the fastest three keep their gold, silver and bronze wherever they are
-  function runRow(r, i, fresh, legacy, ratingOf, podium) {
+  // mistakes, so the fastest three keep their gold, silver and bronze wherever they are. mark: it's the run "See it on
+  // the board" opened the board for
+  function runRow(r, i, fresh, legacy, ratingOf, podium, mark) {
     const place = podium === undefined ? i : podium;
     const isNew = !!fresh && fresh.has(r);
     const rating = ratingOf ? ratingOf.get(playerKey(r)) : undefined;
@@ -2229,9 +2259,10 @@ a.link-copy { text-decoration: none; }
     const timeCell = r.video
       ? `<a class="stat time" href="${esc(r.video)}" target="_blank" rel="noopener" title="${esc(t("lb.watch", { time: r.time, player: r.name }))}">${time}${icon("play", "play")}</a>`
       : `<span class="stat time">${time}</span>`;
-    return `<li class="run${place >= 0 && place < 3 ? " p" + (place + 1) : ""}${isNew ? " fresh" : ""}" data-k="${esc(r.name)}">` +
+    return `<li class="run${place >= 0 && place < 3 ? " p" + (place + 1) : ""}${isNew ? " fresh" : ""}${mark ? " mark" : ""}" data-k="${esc(r.name)}">` +
       `<span class="run-rank">${i + 1}</span>` +
-      `<span class="run-who"><span class="run-line">${nameButton(playerKey(r), r.name)}${isNew ? `<span class="tag tag-new">${esc(t("lb.new"))}</span>` : ""}</span></span>` +
+      `<span class="run-who"><span class="run-line">${nameButton(playerKey(r), r.name)}${isNew ? `<span class="tag tag-new">${esc(t("lb.new"))}</span>` : ""}` +
+        `${mark ? `<span class="tag tag-this">${esc(t("lb.thisRun"))}</span>` : ""}</span></span>` +
       timeCell +
       `<span class="stat miss" title="${esc(t("unit.mistakes", { count: r.miss }))}">${icon("skull")}${esc(r.miss)}<span class="sr-only"> ${esc(t("unit.mistakes", { count: r.miss }))}</span></span>` +
       (r.date || rating !== undefined ? `<span class="run-date">` +
@@ -2315,7 +2346,7 @@ a.link-copy { text-decoration: none; }
     if (shown.some((r) => r.video)) notes.push(t("lb.videoHint"));
     if (shown.some((r) => r.date)) notes.push(t("lb.datesFormat"));
     if (shown.some((r) => ratingOf.has(playerKey(r)))) notes.push(day ? t("lb.ratingThen", { date: day }) : t("lb.ratingNote"));
-    return sortHtml(c) + rowsHtml(c, top, rest, (r, i) => runRow(r, i, i < top.length ? fresh : null, false, ratingOf, podium(r))) +
+    return sortHtml(c) + rowsHtml(c, top, rest, (r, i) => runRow(r, i, i < top.length ? fresh : null, false, ratingOf, podium(r), isMarked(c, r))) +
       (notes.length ? `<p class="lb-foot">${notes.map((s) => `<span>${esc(s)}</span>`).join("")}</p>` : "");
   }
   // Boards are sorted by time (the leaderboard itself) or by mistakes, fewest first and then fastest. The choice holds
@@ -2443,6 +2474,7 @@ a.link-copy { text-decoration: none; }
         const open = typeof openCourse === "number" ? course(openCourse) : null;
         if (open && !drawn.has(open)) drawRow(open);
         renderPlayer();
+        renderRunBoards();
         if (pf.open) renderFinder();
       });
     }
@@ -2560,6 +2592,7 @@ a.link-copy { text-decoration: none; }
     const n = row.n;
     const before = openCourse;
     openCourse = openCourse === n ? 0 : n;
+    boardMark = null;
     if (before && before !== n) refreshCourse(rowOf(before));
     refreshCourse(row);
     document.querySelector(`#course-${n} .rec`).focus();
@@ -2976,6 +3009,20 @@ a.link-copy { text-decoration: none; }
         (date ? `<span title="${esc(t("lb.submittedOn", { date }))}">${esc(date)}</span>` : "") +
       `</span></li>`;
   }
+  // A stat in a box, like a player's Rating or a run's runs on its course
+  const statTile = (label, value) => `<div class="pl-stat"><span class="pl-stat-label">${esc(label)}</span><span class="pl-stat-value">${value}</span></div>`;
+  const localNum = (n) => n.toLocaleString(htmlLang());
+  // "Runs on this course: 3", over a course's runs in a player's panel
+  const runsCountHtml = (n) => `<p class="pl-runs-count"><span>${esc(t("pl.courseRuns"))}</span><b>${esc(localNum(n))}</b></p>`;
+  // How many runs a player has on the boards: on one course (n), or with no n, on every course. The runs their panel
+  // lists (approved ones, from today's boards and their history, and their legacy runs from before May 2026).
+  function runCount(key, n) {
+    return COURSES.filter((c) => !n || c.n === n).reduce((sum, c) => {
+      const all = (({ top, rest }) => top.concat(rest))(standingsOf(c));
+      const { runs, legacy } = runsOf(key, c, all.find((x) => playerKey(x) === key) || null);
+      return sum + runs.length + legacy.length;
+    }, 0);
+  }
   function playerHtml() {
     const key = plKey;
     const r = ratings();
@@ -2993,7 +3040,7 @@ a.link-copy { text-decoration: none; }
     // Their own panel (My stats) opens before their first run too: it's named after their Discord, with a way to send one
     const mine = !!me && key === "d:" + me.id;
     const ranNone = !rows.some((x) => x.best || x.runs.length || x.legacy.length);
-    const stat = (label, value) => `<div class="pl-stat"><span class="pl-stat-label">${esc(label)}</span><span class="pl-stat-value">${value}</span></div>`;
+    const stat = statTile;
     const tier = p ? `<span class="tag tag-tier${p.tier !== null && p.tier <= 5 ? " elite" : ""}">${esc(p.tier === null ? t("rt.rated") : t("rt.tier", { pct: p.tier.toLocaleString(htmlLang()) }))}</span>` : "—";
     const dcLine = dc && named.name ? `<span class="pl-dc">${/^https:\/\/cdn\.discordapp\.com\//.test(dc.avatar) ? `<img class="run-pfp" src="${esc(dc.avatar)}" alt="" width="18" height="18">` : ""}<span>${esc(dc.name)}</span></span>` : "";
     let html = `<div class="pl-head"><div class="pl-who"><h2 class="pl-name is-name" id="pl-name">${esc(caps(named.name || (dc ? dc.name : "")))}</h2>` +
@@ -3004,6 +3051,7 @@ a.link-copy { text-decoration: none; }
         stat(t("pl.place"), p ? esc(t("res.of", { rank: p.rank, total: r.players.length })) : "—") +
         stat(t("pl.tier"), tier) +
         stat(t("pl.courses"), `${icon("map")}${p ? p.courses : 0}/${r.counted.length}`) +
+        stat(t("pl.runs"), `${icon("notes")}${esc(localNum(rows.reduce((sum, x) => sum + x.runs.length + x.legacy.length, 0)))}`) +
       `</div>` +
       (mine && ranNone ? `<p class="pl-mine-empty"><span>${esc(t("pl.mineEmpty"))}</span>` +
         `<a class="btn btn-sm btn-primary" href="/submit" data-route="submit">${icon("upload")}<span>${esc(t("nav.submit"))}</span></a></p>` : "") +
@@ -3024,7 +3072,7 @@ a.link-copy { text-decoration: none; }
         `</button>` +
         `<div class="pl-runs" id="pl-runs-${c.n}"${open ? "" : " hidden"}>` +
           (runs.length || legacy.length
-            ? `<ol class="pl-run-list">${runs.map((x) => plRunHtml(x, record, x === best, false)).join("")}${legacy.map((x) => plRunHtml(x, null, false, true)).join("")}</ol>`
+            ? runsCountHtml(runs.length + legacy.length) + `<ol class="pl-run-list">${runs.map((x) => plRunHtml(x, record, x === best, false)).join("")}${legacy.map((x) => plRunHtml(x, null, false, true)).join("")}</ol>`
             : `<p class="pl-empty">${esc(t("pl.noRuns"))}</p>`) +
           `<a class="pl-board" href="/leaderboards/${c.n}" data-board="${c.n}">${esc(t("pl.board"))}${icon("chev", "icon chev")}</a>` +
         `</div></li>`;
@@ -3349,8 +3397,24 @@ a.link-copy { text-decoration: none; }
     const box = pf.getBoundingClientRect();
     if (e.target === pf && (e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom)) pf.close();
   });
-  // A board link (in a player's panel or a run's result) opens the board right here
-  function openBoard(n) {
+  /* Where a run sent for a course is on its boards, for "See it on the board" on its page: the first board in the
+     course's history it's on (at: its index in boardsOf, or -1 for the newest), or behind Show all on today's board
+     (all) when it never made a top 10. null when it was never on a board (waiting for a check, or turned down). */
+  function boardSpot(x) {
+    const c = x && course(x.n);
+    const run = c && cleanRun(x.run);
+    if (!run || x.status === "pending" || x.status === "declined") return null;
+    const on = (b) => b.some((r) => sameEntry(r, run));
+    const list = boardsOf(c);
+    const at = list ? list.findIndex(on) : -1;
+    if (at >= 0) return { run, at: at === list.length - 1 ? -1 : at, all: false };
+    const { top, rest } = standingsOf(c);
+    if (on(top)) return { run, at: -1, all: false };
+    return on(rest) ? { run, at: -1, all: true } : null;
+  }
+  // A board link (in a player's panel or a run's result) opens the board right here. spot (from boardSpot): at the
+  // board a run went on, with its row marked, and in view
+  function openBoard(n, spot) {
     const c = course(n);
     if (!c) return;
     // The address goes back before the board's link goes in (the panel's close event comes later)
@@ -3359,17 +3423,25 @@ a.link-copy { text-decoration: none; }
     if (pl.open) pl.close();
     const before = openCourse;
     openCourse = c.n;
-    viewOf(c).at = -1;
+    boardMark = spot ? { n: c.n, run: spot.run } : null;
+    viewOf(c).at = spot ? spot.at : -1;
+    if (spot && spot.all) viewOf(c).all = true;
     if (before && before !== c.n) refreshCourse(rowOf(before));
     refreshCourse(c);
-    document.getElementById(`course-${c.n}`).scrollIntoView({ block: "start", behavior: reduced ? "auto" : "smooth" });
+    // The board from its top, unless the run's row would be below the screen: then the row, in the middle
+    const el = document.getElementById(`course-${c.n}`);
+    const row = spot && el.querySelector(".run.mark");
+    const low = row && row.getBoundingClientRect().bottom - el.getBoundingClientRect().top > innerHeight * 0.85;
+    (low ? row : el).scrollIntoView({ block: low ? "center" : "start", behavior: reduced ? "auto" : "smooth" });
     showLink("leaderboards", subPath("leaderboards"));
   }
   document.addEventListener("click", (e) => {
     const a = e.target.closest("a[data-board]");
     if (!a || e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
     e.preventDefault();
-    openBoard(Number(a.dataset.board));
+    // "See it on the board" on a run's page (before opening the board closes it)
+    const spot = a.hasAttribute("data-board-run") && runId ? boardSpot(sentRun(runId)) : null;
+    openBoard(Number(a.dataset.board), spot);
   });
 
   /* ---------- Board pictures ----------
@@ -5160,12 +5232,30 @@ a.link-copy { text-decoration: none; }
         `<span class="stat miss">${icon("skull")}<span>${esc(run.miss)}</span></span>` +
         (run.date ? `<span class="run-when">${withDate("lb.submittedOn", { date: formatDate(run.date) })}</span>` : "") + `</div>` +
       videoHtml(run.video) +
+      `<div class="run-counts" id="run-counts"></div>` +
       `<div id="run-check"></div><div class="run-stats" id="run-stats" hidden></div>` +
-      `<div class="run-foot"><a class="btn btn-sm" href="/leaderboards/${c.n}" data-board="${c.n}">${esc(t("res.board"))}</a>` +
-        `<a class="btn btn-sm" href="/runs" data-route="runs">${icon("notes")}<span>${esc(t("run.all"))}</span></a></div>`;
+      `<div class="run-foot" id="run-foot"></div>`;
     renderRunTags();
+    renderRunBoards();
     renderRunCheck();
     renderRunStats();
+  }
+  // How many runs its player has on its course and on every course, and its buttons to the board ("See it on the
+  // board" once it's been on one). They follow the boards, so they're drawn again when the boards change, but only
+  // when something in them did, so a button in focus keeps it.
+  const runDrawn = new WeakMap();
+  function renderRunBoards() {
+    const counts = runId && pl.open ? $("#run-counts", pl) : null;
+    const x = counts && sentRun(runId);
+    if (!x) return;
+    const c = course(x.n);
+    const key = playerKey(cleanRun(x.run));
+    const put = (el, html) => { if (runDrawn.get(el) !== html) { runDrawn.set(el, html); el.innerHTML = html; } };
+    put(counts, statTile(t("pl.courseRuns"), `${icon("notes")}${esc(localNum(runCount(key, c.n)))}`) +
+      statTile(t("pl.allRuns"), `${icon("notes")}${esc(localNum(runCount(key)))}`));
+    put($("#run-foot", pl), (boardSpot(x) ? `<a class="btn btn-sm" href="/leaderboards/${c.n}" data-board="${c.n}" data-board-run>${icon("eye")}<span>${esc(t("run.onBoard"))}</span></a>` : "") +
+      `<a class="btn btn-sm" href="/leaderboards/${c.n}" data-board="${c.n}">${icon("trophy")}<span>${esc(t("run.today"))}</span></a>` +
+      `<a class="btn btn-sm" href="/runs" data-route="runs">${icon("notes")}<span>${esc(t("run.all"))}</span></a>`);
   }
   // Their Discord name and picture, and where the run is now
   function renderRunTags() {
