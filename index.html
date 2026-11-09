@@ -1923,6 +1923,8 @@ a.link-copy { text-decoration: none; }
   "rev.view": "View run",
   "rev.more": "Show {count} more",
   "rev.approvedBy": "Approved by {name}",
+  "runs.ratingGain": "{player}’s rating over every course: {rating}, with {change} from this run",
+  "rev.ratingGain": "{player}’s rating over every course if it’s approved: {rating}, with {change} from this run",
   "rev.declinedBy": "Turned down by {name}",
   "claim.title": "Is this you?",
   "claim.what": "Link these runs from before May 2026 to your Discord, so they show in My stats, with your Discord name and picture by them on the boards. A moderator checks that they’re yours first, and may message you on Discord to ask for proof, like an old screenshot or clip.",
@@ -3048,6 +3050,15 @@ a.link-copy { text-decoration: none; }
   // Each player's rating over every course, by player (see playerKey): today's, or then's (see ratings)
   const ratingsBy = (then) => new Map(ratings(then).players.map((p) => [p.key, p.rating]));
   const points = (n) => Math.round(n).toLocaleString(htmlLang());
+  // A run's player's rating over every course with it, and what it added (s: what it did, from statsFrom or the
+  // Worker): "⭐ 855 (+98)", the way the run lists show it. Nothing when it doesn't count for the ratings.
+  const signed = (n) => `${n < 0 ? "−" : "+"}${points(Math.abs(n))}`;
+  function ratingAdded(s) {
+    if (!s || !s.rating) return null;
+    const rating = Math.round(s.rating[1]);
+    return { rating, gain: rating - Math.round(s.rating[0] ?? 0) };
+  }
+  const ratingAddedHtml = (x) => `${icon("star")}${esc(points(x.rating))} (${esc(signed(x.gain))})`;
   function ratingsRow() {
     const r = ratings();
     const top = r.players[0];
@@ -4873,13 +4884,13 @@ a.link-copy { text-decoration: none; }
       const s = run && runNow({ run: r, n: c.n, group: "pending", status: "pending" });
       return s && isTheirBest(s, run) ? s : null;
     };
-    // "Would be #1 of 12 · Global #1 of 16 · ★ 1,818": its place on the course, and its player's place and rating in
-    // the player ratings (the same rating as by the run under Submitted runs). On a phone, it only breaks between them.
-    // Until the boards are in, it's just "Would be #1".
+    // "Would be #1 of 12 · Global #1 of 16 · ★ 1,818 (+909)": its place on the course, and its player's place and rating
+    // in the player ratings, with what it adds to it (the same as by the run under Submitted runs). On a phone, it only
+    // breaks between them. Until the boards are in, it's just "Would be #1".
     const wouldTag = (r, s) => [
       `<span class="nowrap">${esc(s && s.place ? t("rev.wouldOf", { rank: s.place, total: s.players }) : t("rev.would", { rank: r.rank }))}</span>`,
       s && s.rank && `<span class="nowrap">${esc(t("rev.global", { rank: s.rank[1], total: s.of }))}</span>`,
-      s && s.rating && `<span class="nowrap" title="${esc(t("lb.rating", { points: points(s.rating[1]) }))}">${icon("star")}${esc(points(s.rating[1]))}</span>`,
+      ratingAdded(s) && `<span class="nowrap" title="${esc(t("rev.ratingGain", { rating: points(ratingAdded(s).rating), change: signed(ratingAdded(s).gain), player: r.name }))}">${ratingAddedHtml(ratingAdded(s))}</span>`,
     ].filter(Boolean).join(" · ");
     const row = (r) => {
       const c = course(r.course);
@@ -4912,11 +4923,12 @@ a.link-copy { text-decoration: none; }
     if (box.hidden) return;
     const reviewer = !!(me && me.reviewer);
     const left = Math.max(0, all.length - runsShown);
-    // The rating over every course it gives its player, as on its page today (if it's approved, for one waiting for a
-    // check). One that isn't their best, or isn't on the board, gives them nothing, so it has none.
-    const ratingOf = (x) => {
+    // Its player's rating over every course with it, and what it added, as on its page today (if it's approved, for
+    // one waiting for a check): "⭐ 855 (+98)". One that isn't their best, or isn't on the board, adds nothing, so it
+    // has no star.
+    const gainOf = (x) => {
       const s = (x.status === "pending" || x.status === "up") && runNow(x);
-      return s && s.rating && isTheirBest(s, cleanRun(x.run)) ? s.rating[1] : null;
+      return s && isTheirBest(s, cleanRun(x.run)) ? ratingAdded(s) : null;
     };
     const row = (x) => {
       const r = x.run;
@@ -4924,11 +4936,11 @@ a.link-copy { text-decoration: none; }
       const who = r.discord && PLAYERS.get(r.discord);
       const checker = reviewer && checkerOf(r);
       const checked = checker ? t(x.group === "declined" ? "rev.declinedBy" : "rev.approvedBy", { name: checker.name }) : "";
-      const rating = ratingOf(x);
+      const gain = gainOf(x);
       return `<li><a class="rev-run" href="/runs/${esc(r.id)}" data-run-open="${esc(r.id)}">` +
         `<span class="rev-course">${esc(`${x.n} `)}${flagName(c)}</span>` +
         `<b class="rev-name">${esc(r.name)}</b><span class="rev-line"><span class="stat time">${icon("bolt")}${esc(r.time)}</span><span class="stat miss">${icon("skull")}${esc(r.mistakes)}</span>` +
-        (rating !== null ? `<span class="stat pts" title="${esc(t("lb.rating", { points: points(rating) }))}">${icon("star")}${esc(points(rating))}</span>` : "") +
+        (gain ? `<span class="stat pts" title="${esc(t(x.status === "pending" ? "rev.ratingGain" : "runs.ratingGain", { rating: points(gain.rating), change: signed(gain.gain), player: r.name }))}">${ratingAddedHtml(gain)}</span>` : "") +
         `${statusTag(x)}</span>` +
         [sentBy(r.date, who && who.name), checked && esc(checked)].filter(Boolean).map((h) => `<span class="rev-meta">${h}</span>`).join("") + `</a></li>`;
     };
