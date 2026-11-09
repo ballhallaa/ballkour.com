@@ -25,8 +25,8 @@ Links can go deeper, and the address shows them while a board or answer is open:
 - **The player ratings:** `ballkour.com/leaderboards/ratings`.
 - **An FAQ answer:** `ballkour.com/faq/pausing`. The link names are in `FAQ_LINKS`, and older links that used the translation keys (`/faq/pause`) still work.
 - **A run sent from the website:** `ballkour.com/runs/<id>`. Ballkyrie's post for it in the run submissions channel links here (see [Runs sent from the website](#runs-sent-from-the-website)), and `ballkour.com/runs` goes to the list of every one. The Worker serves the page at these addresses.
-- **Your own stats:** `ballkour.com/stats` opens **My stats** for whoever opens it (signing them in with Discord first). The Worker serves the page here too.
-- **A player's stats:** `ballkour.com/players/<Discord ID>` opens that player's panel, and `/players/<in-game name>` does for a name with no Discord ID (like a legacy one). The address shows it while their panel is open, and **Copy link** beside Close copies it, so anyone can share their stats (their own panel from My stats keeps `/stats`). The Worker serves the page here too.
+- **Your own stats:** `ballkour.com/stats` opens **My stats** for whoever opens it (signing them in with Discord first), and the address then shows their own player link (below). The Worker serves the page here too.
+- **A player's stats:** `ballkour.com/players/<Discord ID>` opens that player's panel, and `/players/<in-game name>` does for a name with no Discord ID (like a legacy one). `/players/<…>/runs` opens it on **Runs**. The address shows it while their panel is open (your own too, from My stats or your name on a board), and **Copy link** beside Close copies it, so anyone can share their stats. The Worker serves the page here too.
 
 The older `#6-dorado` and `#pause` forms still work too.
 
@@ -115,7 +115,7 @@ Players sign in with Discord (one click, no new account) and send their run from
 
 **After sending**, the form shows what the run did: their place on the course and who they passed, their course rating, rating, place, and Top %, and any new top 10, podium, or record (the numbers on their Discord profile). A top 10 run that's waiting for a check shows the same, as what they'll get once it's approved.
 
-**My stats** opens a signed-in player's own panel, the same one a click on their name on a board opens: their rating, place, Top % and every course, with Sign out in it too. In every player's panel, **Rating**, **Place**, and **Top %** open the Player ratings with their row marked (with Show all open when they're past the top 10), and **Runs** lists every run of theirs on one list, newest first, with **Back** to the rest. It sorts by time, mistakes, course rating, or date, like a board does. It's by the language picker, next to Sign out, and under a run's result. Signed out, the one by the language picker signs them in with Discord first and comes back to the same page with `?me=1`, which opens it. It finds their runs by Discord ID, so runs saved under just an in-game name (the legacy runs from before May 2026) don't show there until they claim them (see [Claiming legacy runs](#claiming-legacy-runs)). `ballkour.com/stats` opens it too, and the address shows `/stats` while it's open, so it's easy to copy and share; closing it puts the address back.
+**My stats** opens a signed-in player's own panel, the same one a click on their name on a board opens: their rating, place, Top % and every course, with Sign out in it too. In every player's panel, **Rating**, **Place**, and **Top %** open the Player ratings with their row marked (with Show all open when they're past the top 10), and **Runs** lists every run of theirs on one list, newest first, with **Back** to the rest. It sorts by time, mistakes, course rating, or date, like a board does. It's by the language picker, next to Sign out, and under a run's result. Signed out, the one by the language picker signs them in with Discord first and comes back to the same page with `?me=1`, which opens it. It finds their runs by Discord ID, so runs saved under just an in-game name (the legacy runs from before May 2026) don't show there until they claim them (see [Claiming legacy runs](#claiming-legacy-runs)). `ballkour.com/stats` opens it too. While it's open, the address shows their own player link (`/players/<Discord ID>`, or `/players/<Discord ID>/runs` on Runs), so what's in the address works for anyone it's sent to. Signed out, the panel that signs them in shows `/stats`. Closing either puts the address back.
 
 **Every run gets its own page** at `ballkour.com/runs/<id>`, and Ballkyrie posts every run in the run submissions channel (`RUNS_CHANNEL` in `cloudflare/wrangler.toml`) with the player, time, mistakes, who sent it, where it would place or placed (its place on its course, and the player's place and rating in the player ratings, with what the run adds to it: `Course: #1 of 12 • Global: #1 of 16 • ⭐ 1,818 (+909)`), the video, and a **View run** button to its page. Ballkyrie needs to be able to see that channel, send messages, and embed links there. The post stays as it was sent, even after a run is checked.
 
@@ -207,6 +207,14 @@ To turn it on:
 2. In Discord's Developer Portal, open Ballkyrie's application → General Information, and set **Linked Roles Verification URL** to `https://ballkour.com/api/profile`. Discord opens that when someone connects Ballkyrie from a server's Linked Roles.
 
 It uses the sign-in's secrets and `DISCORD_BOT_TOKEN`, which tells Discord the numbers' names; no new secrets. Until the namespace is there, the button doesn't show.
+
+### Page views
+
+Moderators see **Page views** at the very bottom of the page: how many times the site was opened today, in the last 7 days, and in the last 30 days, a bar for each day, and the most viewed sections (the top of the page, the boards, runs, players, and so on, never which player or run).
+
+They're counted by the site itself, so they're closer to the truth than Cloudflare's Web Analytics, which samples and which ad blockers stop. Each time someone opens the site, the page asks the Worker who's signed in (`/api/me`), and the Worker counts that. Bots that only fetch the page never ask, so they don't count. People are counted once a day each: a visitor is a code made from their IP address, their browser, and a random key that's made new every day and deleted after it, so the site never keeps who anyone is, and only today's codes are kept at all.
+
+The counts are kept in a Durable Object (`PageViews` in `cloudflare/worker.js`, a small database the Worker owns, `PAGE_VIEWS` in `cloudflare/wrangler.toml`), which a deploy sets up on its own. The free plan allows 100,000 writes a day there, and each page view takes about three, so it's good for over 30,000 page views a day. The test copy doesn't count anything.
 
 ## Fonts
 

@@ -1078,6 +1078,18 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .sub-runs { margin: 0 18px 16px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255, 255, 255, .02); }
 .sub-runs .rev-title .icon { color: var(--volt); }
 .sub-runs .rev-count { background: rgba(0, 230, 151, .12); color: var(--volt); }
+.visits-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.visits-tiles .pl-stat-value .icon { color: var(--volt); }
+.visits-people { display: block; margin-top: 4px; font: 400 12.5px/1.3 var(--body); color: var(--ink-3); }
+.visits-bars { display: flex; align-items: flex-end; gap: 3px; height: 64px; margin-top: 14px; }
+.visits-bar { flex: 1; min-width: 0; border-radius: 3px 3px 0 0; background: rgba(0, 230, 151, .35); }
+.visits-bar.today { background: var(--volt); }
+.visits-axis { display: flex; justify-content: space-between; margin-top: 6px; font: 500 11px/1.2 var(--mono); color: var(--ink-3); }
+.visits-top-title { margin: 14px 0 6px; font: 600 10.5px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.visits-top { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.visits-top li { display: flex; justify-content: space-between; gap: 12px; font: 500 14px/1.35 var(--body); color: var(--ink-2); }
+.visits-top b { font: 600 13px/1.35 var(--mono); color: var(--ink); }
+@media (max-width: 600px) { .visits-tiles { grid-template-columns: 1fr; } }
 a.rev-run { color: inherit; text-decoration: none; transition: border-color .15s, background-color .15s; }
 a.rev-run:hover { border-color: var(--line-hi); background: var(--glass-hi); }
 .rev-more { margin-top: 8px; }
@@ -1693,6 +1705,14 @@ a.link-copy { text-decoration: none; }
         <svg class="lr-arrow" aria-hidden="true"><use href="#i-out"/></svg>
       </a>
     </section>
+
+    <!-- Page views, at the very bottom, for moderators only (see "Page views") -->
+    <section class="panel" id="page-views" aria-labelledby="visits-title" hidden>
+      <div class="panel-head">
+        <h2 class="panel-title" id="visits-title"><svg class="icon" aria-hidden="true"><use href="#i-stats"/></svg><span data-i18n="visits.title">Page views</span></h2>
+      </div>
+      <div class="panel-body" id="visits"></div>
+    </section>
   </main>
 
   <footer class="foot">
@@ -1934,6 +1954,19 @@ a.link-copy { text-decoration: none; }
   "rev.view": "View run",
   "rev.more": "Show {count} more",
   "rev.approvedBy": "Approved by {name}",
+  "visits.today": "Today",
+  "visits.week": "Last 7 days",
+  "visits.month": "Last 30 days",
+  "visits.views": "{count} views",
+  "visits.people": "{count} people",
+  "visits.perDay": "{count} people a day",
+  "visits.day": "{date}: {views} views, {people} people",
+  "visits.chart": "Page views each day over the last 30 days",
+  "visits.top": "Most viewed",
+  "visits.home": "Top of the page",
+  "visits.players": "Players",
+  "visits.other": "Other",
+  "visits.note": "Counted by the site itself each time someone opens it in a browser, so ad blockers don’t hide anyone and bots don’t count. Each person counts once a day, without the site keeping who they are.",
   "runs.ratingGain": "{player}’s rating over every course: {rating}, with {change} from this run",
   "rev.ratingGain": "{player}’s rating over every course if it’s approved: {rating}, with {change} from this run",
   "rev.declinedBy": "Turned down by {name}",
@@ -3227,7 +3260,7 @@ a.link-copy { text-decoration: none; }
     const runTotal = rows.reduce((sum, x) => sum + x.runs.length + x.legacy.length, 0);
     let html = `<div class="pl-head"><div class="pl-who"><h2 class="pl-name is-name" id="pl-name">${esc(caps(named.name || (dc ? dc.name : "")))}</h2>` +
       (mine ? `<div class="pl-me">${dcLine}<button class="pl-signout" type="button" data-sign-out>${esc(t("sub.signout"))}</button></div>` : dcLine) +
-      `</div><div class="pl-tools">${copyLinkHtml(key, named.name || (dc ? dc.name : ""))}` +
+      `</div><div class="pl-tools">${copyLinkHtml(key, named.name || (dc ? dc.name : ""), plView === "runs" && runTotal > 0)}` +
       `<button class="pl-close" type="button" data-pl-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button></div></div>`;
     if (plView === "runs" && runTotal) return html + allRunsHtml(rows);
     // Rating, Place and Top % open the Player ratings with their row marked (see openBoard), and Runs lists every run
@@ -3271,9 +3304,9 @@ a.link-copy { text-decoration: none; }
     });
     return html + `</ul>`;
   }
-  // Copy link, which copies their link (see playerPath) the way the site's other copy buttons do
-  function copyLinkHtml(key, name) {
-    const link = "https://ballkour.com" + playerPath(key);
+  // Copy link, which copies their link (see playerPath, with /runs on Runs) the way the site's other copy buttons do
+  function copyLinkHtml(key, name, runs) {
+    const link = "https://ballkour.com" + playerPath(key, runs);
     const label = esc(t("pl.copyLink", { player: caps(name) }));
     return `<button class="pl-close pl-copy" type="button" data-copy="${esc(link)}" aria-label="${label}" title="${label}">` +
       `<span class="copy-val sr-only">${esc(link)}</span>${icon("link", "icon i-copy")}${icon("check", "icon i-check")}</button>`;
@@ -3455,43 +3488,49 @@ a.link-copy { text-decoration: none; }
     if (back) back.focus({ preventScroll: true });
   }
   /* A player's own link, ballkour.com/players/<Discord ID> (or /players/<in-game name> for a name with no Discord ID,
-     like a legacy one), opens their panel, so their stats can be shared. The address shows it while their panel is
-     open, and Copy link in the panel copies it. Their own panel opened from My stats keeps /stats instead. */
-  const playerPath = (key) => `/players/${encodeURIComponent(key.slice(2))}`;
+     like a legacy one), opens their panel, so their stats can be shared, and /players/<…>/runs opens it on Runs. The
+     address shows it while their panel is open (their own too, from My stats or their name on a board), and Copy link
+     in the panel copies it. */
+  const playerPath = (key, runs) => `/players/${encodeURIComponent(key.slice(2))}${runs ? "/runs" : ""}`;
   const playerOfPath = (seg) => { const v = decodeURIComponent(seg); return /^\d{17,20}$/.test(v) ? "d:" + v : "n:" + v.toUpperCase(); };
   let playerBack = null; // while a player's panel is open, the address from before, to go back to
+  // The address to go back to. A player's link someone opened (or ballkour.com/stats) goes back to the top of the page.
+  const beforePlayer = () => playerBack.replace(/^\/(?:players\/[^/?#]+(?:\/runs)?|stats)\/?(?=[?#]|$)/i, "/");
+  // Once their panel is drawn, so /runs is only in the address while Runs is what it shows
   function showPlayerLink(key) {
     if (playerBack === null) playerBack = location.pathname + location.search + location.hash;
     const l = new URLSearchParams(location.search).get("lang");
-    try { history.replaceState(history.state, "", playerPath(key) + (l ? `?lang=${encodeURIComponent(l)}` : "")); } catch (e) { /* address stays as it is */ }
+    const runs = plView === "runs" && !!pl.querySelector("[data-pl-back]");
+    try { history.replaceState(history.state, "", playerPath(key, runs) + (l ? `?lang=${encodeURIComponent(l)}` : "")); } catch (e) { /* address stays as it is */ }
   }
-  // A player's link someone opened: their panel. A name that nobody without a Discord ID goes by (/players/COLDSKIN,
-  // typed by hand, say) opens the one player who goes by it, or Find a player with it typed in when several do.
-  function openPlayerLink(key) {
+  // A player's link someone opened: their panel (on Runs, for runs). A name that nobody without a Discord ID goes by
+  // (/players/COLDSKIN, typed by hand, say) opens the one player who goes by it, or Find a player with it typed in
+  // when several do.
+  function openPlayerLink(key, runs) {
     const { all } = everyone();
-    if (key.startsWith("d:") || all.some((x) => x.key === key)) { openPlayer(key, 0); return; }
+    const view = runs ? "runs" : "courses";
+    if (key.startsWith("d:") || all.some((x) => x.key === key)) { openPlayer(key, 0, view); return; }
     const name = key.slice(2);
     const them = all.filter((x) => sameName(x.name, name));
-    if (them.length === 1) { openPlayer(them[0].key, 0); return; }
+    if (them.length === 1) { openPlayer(them[0].key, 0, view); return; }
     putAddressBack("/" + location.search); // the link names nobody's panel, so it doesn't stay in the address
     openFinder();
     pfInput().value = name;
     renderFinder();
   }
-  // Leaving it (closing the panel, or something else opening in its place) puts the address back. A player's link
-  // someone opened goes back to the top of the page.
+  // Leaving it (closing the panel, or something else opening in its place) puts the address back
   function leavePlayer() {
     if (playerBack === null) return;
-    const back = playerBack.replace(/^\/players\/[^/?#]+\/?/i, "/");
+    const back = beforePlayer();
     playerBack = null;
     putAddressBack(back);
   }
-  function openPlayer(key, n) {
+  // view: "courses" (the default) or "runs"
+  function openPlayer(key, n, view) {
     leaveRun();
-    // Their own panel keeps /stats in the address (back from Show on my Discord profile's Not now, say)
-    if (!me || key !== "d:" + me.id) { leaveStats(); showPlayerLink(key); } else leavePlayer();
+    leaveStats();
     plKey = key;
-    plView = "courses";
+    plView = view === "runs" ? "runs" : "courses";
     plOpen.clear();
     if (n) plOpen.add(n);
     if (!pl.open) pl.showModal();
@@ -3502,6 +3541,7 @@ a.link-copy { text-decoration: none; }
       const ran = [...pl.querySelectorAll(".pl-course:not(.none) [data-pl-course]")];
       if (ran.length === 1) { plOpen.add(Number(ran[0].dataset.plCourse)); renderPlayer(); }
     }
+    showPlayerLink(key);
     const opened = n && pl.querySelector(`[data-pl-course="${n}"]`);
     if (opened) { opened.focus({ preventScroll: true }); opened.scrollIntoView({ block: "nearest" }); }
     else { const close = pl.querySelector("[data-pl-close]"); if (close) close.focus(); }
@@ -3523,6 +3563,7 @@ a.link-copy { text-decoration: none; }
       plView = view.hasAttribute("data-pl-runs") ? "runs" : "courses";
       renderPlayer(plView === "runs" ? "[data-pl-back]" : "[data-pl-runs]");
       pl.scrollTop = 0;
+      showPlayerLink(plKey);
       return;
     }
     // Runs' sort: the list is drawn again, with the same button in focus
@@ -4322,6 +4363,7 @@ a.link-copy { text-decoration: none; }
     renderCourses();
     renderSubmit();
     renderSentRuns();
+    renderVisits();
     renderRun();
     renderPlayer(); // a player's panel that opened before its language did (a link to it, say)
     renderDiscord();
@@ -4656,6 +4698,7 @@ a.link-copy { text-decoration: none; }
     renderSubmit();
     fillName();
     loadReview();
+    loadVisits();
     // A run's page that's open gets Approve and Turn down once a reviewer is known to be signed in
     renderRunCheck();
     renderSentRuns(); // reviewers see who checked each run
@@ -4671,8 +4714,9 @@ a.link-copy { text-decoration: none; }
      asked about Ballkyrie there, doesn't come out of nowhere). Continue with Discord there signs them in, and comes
      back with ?me=1 to open their panel. Sign in with Discord above the form opens the same panel, and comes back to
      the form.
-     ballkour.com/stats is the link to it: it opens My stats the same way, and the address shows /stats while My stats
-     is open (their panel, or the panel that signs them in for it). Closing it puts the address back. */
+     ballkour.com/stats is the link to it: it opens My stats the same way. Their panel shows their own link in the
+     address (/players/<Discord ID>, see playerPath), like anyone's, so what's in the address works for anyone it's sent
+     to. The panel that signs them in for it shows /stats. Closing either puts the address back. */
   const meWrap = $("#me-wrap");
   let meKnown = false; // whether /api/me has answered, so the chip doesn't flip from signed out to signed in
   const startStats = /^\/stats\/?$/i.test(location.pathname);
@@ -4685,11 +4729,11 @@ a.link-copy { text-decoration: none; }
       return true;
     } catch (e) { return startStats; }
   })();
-  let statsBack = null; // while My stats is open, the address from before it opened, to go back to
+  let statsBack = null; // while the panel that signs them in for My stats is open, the address from before, to go back to
   function openMine() {
-    if (me) openPlayer("d:" + me.id, 0);
-    else if (loginOn) openSignIn("mine");
-    else return;
+    if (me) { openPlayer("d:" + me.id, 0); return; }
+    if (!loginOn) return;
+    openSignIn("mine");
     // Opened from ballkour.com/stats, it goes back to the top of the page
     if (statsBack === null) statsBack = /^\/stats\/?$/i.test(location.pathname) ? "/" + location.search : location.pathname + location.search + location.hash;
     const l = new URLSearchParams(location.search).get("lang");
@@ -4762,8 +4806,8 @@ a.link-copy { text-decoration: none; }
     let path = "/submit";
     if (kind === "mine" || kind === "profile") {
       back.set("me", "1");
-      // While the address shows /stats, back to where the page was before My stats opened
-      const here = statsBack !== null ? statsBack.split(/[?#]/)[0] : location.pathname;
+      // Back to where the page was before My stats (or their panel, for Show on my Discord profile) opened
+      const here = (statsBack !== null ? statsBack : playerBack !== null ? beforePlayer() : location.pathname).split(/[?#]/)[0];
       path = /^\/[\w/-]*$/.test(here) ? here : "/";
     } else if (kind === "run" && /^[\w-]+$/.test(runId)) path = `/runs/${runId}`;
     else if (kind === "claim" && claimName) {
@@ -4870,6 +4914,47 @@ a.link-copy { text-decoration: none; }
   let reviewRuns = [];
   let reviewAsk = null; // { id, approve, at }: the run whose buttons are asking, and when they started asking
   const checkParam = (() => { try { return new URLSearchParams(location.search).get("check") || ""; } catch (e) { return ""; } })();
+  /* ---------- Page views (moderators) ----------
+     At the very bottom of the page, for moderators only: how many times the site was opened in a browser, and by how many people, over the last 30 days. The page asks the
+     Worker who's signed in (/api/me) once each time someone opens it, and the Worker counts those (see "Page views" in
+     cloudflare/worker.js), so ad blockers don't hide anyone and bots that only fetch the page don't count.
+       GET /api/visits (moderators) → { days: [{ day: "YYYY-MM-DD", views, people }, …] (oldest first),
+                                        sections: [{ section, views }, …] (most viewed first) } */
+  let visits = null;
+  async function loadVisits() {
+    visits = null;
+    if (me && me.reviewer) {
+      try { visits = await fetch("/api/visits", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)); } catch (e) { visits = null; }
+    }
+    renderVisits();
+  }
+  // Each section's name, from the words the site already uses for it where it has them
+  const VISIT_SECTIONS = { home: "visits.home", courses: "courses.title", leaderboards: "nav.leaderboards", submit: "nav.submit", runs: "pl.runs",
+    players: "visits.players", stats: "me.button", features: "run.title", faq: "faq.title", "source-code": "src.title", translations: "tr.title" };
+  function renderVisits() {
+    const panel = $("#page-views"), box = $("#visits");
+    const days = visits && Array.isArray(visits.days) && visits.days.length ? visits.days : null;
+    const shown = !!(me && me.reviewer && days);
+    panel.hidden = !shown;
+    if (!shown) return;
+    const n = (v) => Number(v || 0).toLocaleString(htmlLang());
+    const sum = (list, k) => list.reduce((a, d) => a + (Number(d[k]) || 0), 0);
+    // Today's people, and over a week or a month, people a day on average (someone back the next day counts again)
+    const tile = (label, list) => `<div class="pl-stat"><span class="pl-stat-label">${esc(t(label))}</span>` +
+      `<span class="pl-stat-value">${icon("eye")}<span>${esc(t("visits.views", { count: n(sum(list, "views")) }))}</span></span>` +
+      `<span class="visits-people">${esc(list.length === 1 ? t("visits.people", { count: n(sum(list, "people")) })
+        : t("visits.perDay", { count: n(Math.round(sum(list, "people") / list.length)) }))}</span></div>`;
+    const most = Math.max(1, ...days.map((d) => Number(d.views) || 0));
+    const bars = days.map((d, i) => `<span class="visits-bar${i === days.length - 1 ? " today" : ""}" style="height:${Math.max(3, Math.round((Number(d.views) || 0) / most * 100))}%" ` +
+      `title="${esc(t("visits.day", { date: d.day, views: n(d.views), people: n(d.people) }))}"></span>`).join("");
+    const top = (Array.isArray(visits.sections) ? visits.sections : []).slice(0, 6)
+      .map((x) => `<li><span>${esc(t(VISIT_SECTIONS[x.section] || "visits.other"))}</span><b>${esc(n(x.views))}</b></li>`).join("");
+    box.innerHTML = `<div class="visits-tiles">${tile("visits.today", days.slice(-1))}${tile("visits.week", days.slice(-7))}${tile("visits.month", days.slice(-30))}</div>` +
+      `<div class="visits-bars" role="img" aria-label="${esc(t("visits.chart"))}">${bars}</div>` +
+      `<div class="visits-axis"><span>${esc(days[0].day)}</span><span>${esc(t("visits.today"))}</span></div>` +
+      (top ? `<p class="visits-top-title">${esc(t("visits.top"))}</p><ul class="visits-top">${top}</ul>` : "") +
+      `<p class="rev-note">${esc(t("visits.note"))}</p>`;
+  }
   async function loadReview() {
     if (!me || !me.reviewer) { renderReview(); return; }
     try {
@@ -5532,8 +5617,10 @@ a.link-copy { text-decoration: none; }
   const RUN_GROUPS = ["pending", "runs", "declined", "removed"];
   // The page of a run whose link someone opened (/runs/<id>, or an old /submit?check=<id>)
   const startRun = (/^\/runs\/([\w-]{1,16})\/?$/i.exec(location.pathname) || [])[1] || (/^[\w-]{1,16}$/.test(checkParam) ? checkParam : "");
-  // The player whose link someone opened (/players/<id or name>, see playerPath)
-  const startPlayer = (() => { try { const m = /^\/players\/([^/]+)\/?$/i.exec(location.pathname); return m ? playerOfPath(m[1]) : ""; } catch (e) { return ""; } })();
+  // The player whose link someone opened (/players/<id or name>, or /players/<id or name>/runs, see playerPath)
+  const startPlayer = (() => {
+    try { const m = /^\/players\/([^/]+)(\/runs)?\/?$/i.exec(location.pathname); return m ? { key: playerOfPath(m[1]), runs: !!m[2] } : null; } catch (e) { return null; }
+  })();
   let runId = ""; // the run whose page is open
   let runBack = null; // the address from before it opened, to go back to
   let runTab = "then"; // "then" (When sent) or "now" (Today)
@@ -5940,7 +6027,7 @@ a.link-copy { text-decoration: none; }
     renderSentRuns();
     if (reviewRuns.length) renderReview(); // with what each would do, now that the boards are in
     if (startRun) openRun(startRun);
-    else if (startPlayer) openPlayerLink(startPlayer);
+    else if (startPlayer) openPlayerLink(startPlayer.key, startPlayer.runs);
   });
 
   /* ---------- Clean section links: ballkour.com/features, /leaderboards, … ----------

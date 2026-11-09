@@ -414,5 +414,19 @@
   "claim.own": "To twoja prośba, więc musi ją sprawdzić inny moderator.",
   "f.site.group": "Na ballkour.com",
   "f.stats.text": "Zaloguj się przez Discorda, aby zobaczyć swój ranking, miejsce i Top %, każdą przebytą trasę i wszystkie swoje przejścia. Udostępnij je linkiem albo pokaż na swoim profilu Discord.",
-  "f.ratings.text": "Każda trasa jest warta do 10 000 punktów, a twój ranking to średnia ze wszystkich. Top % pokazuje twoje miejsce wśród wszystkich graczy z rankingiem, a na naszym Discordzie automatycznie dostajesz odpowiednią rolę."
+  "f.ratings.text": "Każda trasa jest warta do 10 000 punktów, a twój ranking to średnia ze wszystkich. Top % pokazuje twoje miejsce wśród wszystkich graczy z rankingiem, a na naszym Discordzie automatycznie dostajesz odpowiednią rolę.",
+  "visits.title": "Wyświetlenia",
+  "visits.today": "Dzisiaj",
+  "visits.week": "Ostatnie 7 dni",
+  "visits.month": "Ostatnie 30 dni",
+  "visits.views": "Wyświetlenia: {count}",
+  "visits.people": "Osoby: {count}",
+  "visits.perDay": "Osoby dziennie: {count}",
+  "visits.day": "{date}: wyświetlenia {views}, osoby {people}",
+  "visits.chart": "Wyświetlenia każdego dnia w ostatnich 30 dniach",
+  "visits.top": "Najczęściej oglądane",
+  "visits.home": "Początek strony",
+  "visits.players": "Gracze",
+  "visits.other": "Inne",
+  "visits.note": "Liczone przez samą stronę za każdym razem, gdy ktoś otworzy ją w przeglądarce, więc blokery reklam nikogo nie ukrywają, a boty się nie liczą. Każda osoba liczy się raz dziennie, a strona nie zapisuje, kim jest."
 }

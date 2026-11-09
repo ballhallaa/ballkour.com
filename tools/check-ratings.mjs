@@ -76,12 +76,15 @@ async function bot() {
 }
 
 // ---------- The page's: its script, in a stand-in for the browser ----------
-// Anything the script reaches for on the page is a stand-in that takes any call and holds nothing, except the few
-// things it reads: its English text, and the game data the Worker bakes in.
+// Anything the script reaches for on the page is a stand-in that takes any call, and remembers what's set on it (so
+// el.hidden = true reads back true), except the few things it reads: its English text, and the game data the
+// Worker bakes in.
 function standIn() {
   const fn = function () {};
+  const props = {};
   return new Proxy(fn, {
     get(_, prop) {
+      if (prop in props) return props[prop];
       if (prop === Symbol.toPrimitive) return () => "";
       if (prop === Symbol.iterator) return function* () {};
       if (prop === "then") return undefined;
@@ -92,7 +95,7 @@ function standIn() {
       if (prop === "children" || prop === "length") return 0;
       return standIn();
     },
-    set: () => true,
+    set: (_, prop, value) => { props[prop] = value; return true; },
     apply: () => standIn(),
     construct: () => standIn(),
   });
