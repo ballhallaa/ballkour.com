@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
+# Signing in and sending runs: nothing for search engines there (the sign-in link only leads to Discord)
+Disallow: /api/
 
 Sitemap: https://ballkour.com/sitemap.xml
