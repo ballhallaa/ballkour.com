@@ -414,5 +414,19 @@
   "claim.own": "Das ist deine eigene Anfrage, also muss sie ein anderer Moderator prüfen.",
   "f.site.group": "Auf ballkour.com",
   "f.stats.text": "Melde dich mit Discord an, um deine Wertung, deinen Platz und dein Top % zu sehen, jede Strecke, die du gelaufen bist, und alle deine Läufe. Teile sie per Link, oder zeig sie auf deinem Discord-Profil.",
-  "f.ratings.text": "Jede Strecke ist bis zu 10.000 Punkte wert, und deine Wertung ist dein Durchschnitt über alle. Dein Top % zeigt, wo du unter allen gewerteten Spielern stehst, und du bekommst die Rolle auf unserem Discord automatisch."
+  "f.ratings.text": "Jede Strecke ist bis zu 10.000 Punkte wert, und deine Wertung ist dein Durchschnitt über alle. Dein Top % zeigt, wo du unter allen gewerteten Spielern stehst, und du bekommst die Rolle auf unserem Discord automatisch.",
+  "visits.title": "Seitenaufrufe",
+  "visits.today": "Heute",
+  "visits.week": "Letzte 7 Tage",
+  "visits.month": "Letzte 30 Tage",
+  "visits.views": "{count} Aufrufe",
+  "visits.people": "{count} Personen",
+  "visits.perDay": "{count} Personen pro Tag",
+  "visits.day": "{date}: {views} Aufrufe, {people} Personen",
+  "visits.chart": "Seitenaufrufe pro Tag in den letzten 30 Tagen",
+  "visits.top": "Am häufigsten angesehen",
+  "visits.home": "Seitenanfang",
+  "visits.players": "Spieler",
+  "visits.other": "Sonstiges",
+  "visits.note": "Von der Seite selbst gezählt, jedes Mal, wenn jemand sie im Browser öffnet, also verstecken Werbeblocker niemanden und Bots zählen nicht. Jede Person zählt einmal pro Tag, ohne dass die Seite speichert, wer sie ist."
 }

@@ -414,5 +414,19 @@
   "claim.own": "這是你自己的認領，所以需要由其他管理員審核。",
   "f.site.group": "在 ballkour.com 上",
   "f.stats.text": "用 Discord 登入，查看你的積分、排名和前 %，你跑過的每個關卡，以及你的所有成績。可以用連結分享，也可以顯示在你的 Discord 個人檔案上。",
-  "f.ratings.text": "每個關卡最多值 10,000 分，你的積分是所有關卡的平均分。前 % 表示你在所有有積分的玩家中的位置，你會在我們的 Discord 上自動獲得這個身分組。"
+  "f.ratings.text": "每個關卡最多值 10,000 分，你的積分是所有關卡的平均分。前 % 表示你在所有有積分的玩家中的位置，你會在我們的 Discord 上自動獲得這個身分組。",
+  "visits.title": "頁面瀏覽量",
+  "visits.today": "今天",
+  "visits.week": "最近 7 天",
+  "visits.month": "最近 30 天",
+  "visits.views": "{count} 次瀏覽",
+  "visits.people": "{count} 人",
+  "visits.perDay": "每天 {count} 人",
+  "visits.day": "{date}：{views} 次瀏覽，{people} 人",
+  "visits.chart": "最近 30 天每天的頁面瀏覽量",
+  "visits.top": "瀏覽最多",
+  "visits.home": "頁面頂端",
+  "visits.players": "玩家",
+  "visits.other": "其他",
+  "visits.note": "每當有人在瀏覽器中開啟網站，都由網站自己計數，所以廣告封鎖工具不會漏掉任何人，機器人也不計入。每個人每天只算一次，網站不會保存是誰。"
 }

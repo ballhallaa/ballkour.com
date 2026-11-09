@@ -414,5 +414,19 @@
   "claim.own": "Este pedido é seu, então outro moderador precisa verificá-lo.",
   "f.site.group": "No ballkour.com",
   "f.stats.text": "Entre com o Discord para ver a sua pontuação, a sua posição e o seu Top %, cada percurso que você correu e todas as suas corridas. Compartilhe com um link, ou mostre no seu perfil do Discord.",
-  "f.ratings.text": "Cada percurso vale até 10.000 pontos, e a sua pontuação é a sua média em todos eles. O seu Top % é a sua posição entre todos os jogadores com pontuação, e você recebe o cargo automaticamente no nosso Discord."
+  "f.ratings.text": "Cada percurso vale até 10.000 pontos, e a sua pontuação é a sua média em todos eles. O seu Top % é a sua posição entre todos os jogadores com pontuação, e você recebe o cargo automaticamente no nosso Discord.",
+  "visits.title": "Visualizações",
+  "visits.today": "Hoje",
+  "visits.week": "Últimos 7 dias",
+  "visits.month": "Últimos 30 dias",
+  "visits.views": "{count} visualizações",
+  "visits.people": "{count} pessoas",
+  "visits.perDay": "{count} pessoas por dia",
+  "visits.day": "{date}: {views} visualizações, {people} pessoas",
+  "visits.chart": "Visualizações por dia nos últimos 30 dias",
+  "visits.top": "Mais vistos",
+  "visits.home": "Topo da página",
+  "visits.players": "Jogadores",
+  "visits.other": "Outros",
+  "visits.note": "Contadas pelo próprio site toda vez que alguém o abre em um navegador, então bloqueadores de anúncios não escondem ninguém e bots não contam. Cada pessoa conta uma vez por dia, sem que o site guarde quem ela é."
 }

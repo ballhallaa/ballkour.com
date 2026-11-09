@@ -19,6 +19,7 @@
    /runs/<id>          A run sent from the website: the home page, which opens the run's page. Ballkyrie's post for
                        it in the run submissions channel links here. See "Each run's page".
    /stats              The home page, which opens My stats: the visitor's own player panel (signing them in first).
+   /api/visits         How many times the site was opened, and by how many people, for moderators. See "Page views".
 
    Each page also gets the latest copy of all three in <head> as <script type="application/json"> blocks, and its
    "• N members" pills already filled in, so nothing pops in after the page loads. If GitHub or Discord can't be
@@ -42,6 +43,7 @@
    /releases and /releases/site (also /releases/website) to their release notes. Anything after them carries over,
    so /code/game/issues goes to the game's issues. Everything else is the site's own files, which Cloudflare serves from its copy of this repo. */
 
+import { DurableObject } from "cloudflare:workers";
 import { loadCourses, rate, standings, playerKey } from "./ratings.js";
 
 const GUILD_ID = "1212553452283101245";
@@ -528,6 +530,10 @@ async function loginCallback(request, env, ctx) {
 // Both come from one look at their roles on our server (see memberOf), at most a minute old, or ten seconds when the
 // page asks again after they've been off getting the Discord Profile App role (?fresh=1).
 async function whoAmI(request, env, ctx) {
+  // Each time someone opens the site, the page asks this once: a page view (not ?fresh=1, the page asking again)
+  if (env.PAGE_VIEWS && !new URL(request.url).searchParams.has("fresh")) {
+    ctx.waitUntil(countView(request, env).catch((e) => console.error(`page views: ${(e && e.message) || e}`)));
+  }
   const user = await readSession(request, env);
   const profile = user && profileOn(env) ? !!(await env.PROFILES.get(profileKey(user.id)).catch(() => null)) : null;
   const maxAge = new URL(request.url).searchParams.has("fresh") ? 10 : 60;
@@ -1513,6 +1519,80 @@ async function profileOff(request, env) {
   return answer(200, { ok: true });
 }
 
+/* ---------- Page views ----------
+   How many times the site was opened in a browser, and by how many people, for the moderators' Page views at the
+   bottom of the page. The page asks /api/me once each time someone opens it, so each of those is a page view. It's
+   the site's own request, which ad blockers don't stop, and bots that only fetch the page never make it. Views are
+   kept by section (the page's address up to its first /: /leaderboards, /runs, …), never by player or run.
+   People: each visitor is a code made from their IP address, their browser, and a random key that's made new each day
+   and deleted at the end of it, so a code only says "the same visitor as earlier today", never who. Only today's
+   codes are kept, and past days keep just their counts (for a little over a year).
+   They're kept in a Durable Object: PageViews below, a small SQLite database the Worker owns (PAGE_VIEWS in
+   wrangler.toml), which a deploy sets up on its own. Without it, nothing is counted.
+     GET /api/visits   (moderators) → { days: [{ day, views, people }] (the last 30, oldest first, 0 for a day
+                       nobody came), sections: [{ section, views }] (over those days, most viewed first) } */
+const VIEW_SECTIONS = ["courses", "leaderboards", "submit", "runs", "players", "stats", "features", "faq", "source-code", "translations"];
+const today = () => new Date().toISOString().slice(0, 10);
+export class PageViews extends DurableObject {
+  constructor(ctx, env) {
+    super(ctx, env);
+    const sql = ctx.storage.sql;
+    sql.exec("CREATE TABLE IF NOT EXISTS days (day TEXT PRIMARY KEY, views INTEGER NOT NULL, people INTEGER NOT NULL)");
+    sql.exec("CREATE TABLE IF NOT EXISTS sections (day TEXT NOT NULL, section TEXT NOT NULL, views INTEGER NOT NULL, PRIMARY KEY (day, section))");
+    sql.exec("CREATE TABLE IF NOT EXISTS seen (who TEXT PRIMARY KEY)"); // today's visitors' codes
+    sql.exec("CREATE TABLE IF NOT EXISTS daykey (day TEXT PRIMARY KEY, key TEXT NOT NULL)"); // today's key
+  }
+  // A page view in a section, by a visitor (their IP address and browser, which aren't kept)
+  async add(section, visitor) {
+    const sql = this.ctx.storage.sql;
+    const day = today();
+    let key = (sql.exec("SELECT key FROM daykey WHERE day = ?", day).toArray()[0] || {}).key;
+    if (!key) {
+      // A new day: yesterday's key and codes go, so nobody can be matched across days, and so do counts over a year old
+      key = crypto.randomUUID();
+      sql.exec("DELETE FROM daykey");
+      sql.exec("DELETE FROM seen");
+      sql.exec("INSERT INTO daykey (day, key) VALUES (?, ?)", day, key);
+      const old = new Date(Date.now() - 400 * 864e5).toISOString().slice(0, 10);
+      sql.exec("DELETE FROM days WHERE day < ?", old);
+      sql.exec("DELETE FROM sections WHERE day < ?", old);
+    }
+    const who = b64url(new Uint8Array(await crypto.subtle.digest("SHA-256", utf8.encode(`${key}|${visitor}`))));
+    const fresh = sql.exec("INSERT OR IGNORE INTO seen (who) VALUES (?)", who).rowsWritten > 0 ? 1 : 0;
+    sql.exec("INSERT INTO days (day, views, people) VALUES (?, 1, ?) ON CONFLICT (day) DO UPDATE SET views = views + 1, people = people + ?", day, fresh, fresh);
+    sql.exec("INSERT INTO sections (day, section, views) VALUES (?, ?, 1) ON CONFLICT (day, section) DO UPDATE SET views = views + 1", day, section);
+  }
+  // The last n days, oldest first (a day nobody came is 0), and the sections over them, most viewed first
+  recent(n = 30) {
+    const sql = this.ctx.storage.sql;
+    const days = [];
+    for (let i = n - 1; i >= 0; i--) days.push(new Date(Date.now() - i * 864e5).toISOString().slice(0, 10));
+    const got = new Map(sql.exec("SELECT day, views, people FROM days WHERE day >= ?", days[0]).toArray().map((r) => [r.day, r]));
+    return {
+      days: days.map((day) => ({ day, views: (got.get(day) || {}).views || 0, people: (got.get(day) || {}).people || 0 })),
+      sections: sql.exec("SELECT section, SUM(views) AS views FROM sections WHERE day >= ? GROUP BY section ORDER BY views DESC", days[0]).toArray(),
+    };
+  }
+}
+const pageViewsDb = (env) => env.PAGE_VIEWS.get(env.PAGE_VIEWS.idFromName("ballkour.com"));
+// The section a page view is in, from the page's own address (the Referer of its /api/me)
+function viewSection(request) {
+  try {
+    const page = new URL(request.headers.get("Referer") || "");
+    if (page.host !== new URL(request.url).host) return "other";
+    const first = page.pathname.split("/")[1].toLowerCase();
+    return !first ? "home" : VIEW_SECTIONS.includes(first) ? first : "other";
+  } catch (e) { return "other"; }
+}
+async function countView(request, env) {
+  await pageViewsDb(env).add(viewSection(request), `${request.headers.get("CF-Connecting-IP") || ""}|${request.headers.get("User-Agent") || ""}`);
+}
+async function pageViews(request, env) {
+  const user = await readSession(request, env);
+  if (!env.PAGE_VIEWS || !(await isReviewer(env, user, 60))) return answer(403, { error: "bad" });
+  return answer(200, await pageViewsDb(env).recent(30));
+}
+
 /* ---------- Short links ---------- */
 // ballkour.com/code/game → the game repo, /code/site (or /code/website) → this repo.
 // ballkour.com/releases (or /releases/game) → the game's release notes, /releases/site (or /releases/website) → this
@@ -1728,8 +1808,8 @@ function previewOf(pathname, data, players) {
       description: board.length ? top3(board) : c.broken && !c.remake ? "No times yet: this course doesn’t work since Overwatch’s August 2026 map updates" : "No times yet. Be the first to set one!",
     };
   }
-  // A player: their place, rating, and Top %
-  if ((m = /^\/players\/([^/]{1,300})\/?$/i.exec(pathname))) {
+  // A player (or their Runs): their place, rating, and Top %
+  if ((m = /^\/players\/([^/]{1,300})(?:\/runs)?\/?$/i.exec(pathname))) {
     let seg;
     try { seg = decodeURIComponent(m[1]); } catch (e) { return null; }
     const { players: rated, counted } = rate(courses());
@@ -1758,10 +1838,10 @@ function previewOf(pathname, data, players) {
 /* ---------- Pages ---------- */
 // The sections (/submit, /faq, …) and the links into them (/leaderboards/6, /leaderboards/3/legacy, /leaderboards/3/12
 // for one of its older boards, /faq/pausing), and every run sent from the website (/runs, the list under the form)
-// and each one's page (/runs/<id>), /stats (My stats), and each player's panel (/players/<Discord ID or name>), are
-// the home page. On ballkour.com a Cloudflare rule
+// and each one's page (/runs/<id>), /stats (My stats), and each player's panel (/players/<Discord ID or name>, and
+// /players/<…>/runs for their Runs), are the home page. On ballkour.com a Cloudflare rule
 // already serves the sections that way, but the test copy on workers.dev has no such rule, so the Worker does it too.
-const DEEP_LINK = /^\/(?:(?:courses|leaderboards|submit|features|faq|source-code|translations|runs|stats)\/?|leaderboards\/[\w-]+(?:\/legacy|\/\d+)?\/?|faq\/[\w-]+\/?|runs\/[\w-]+\/?|players\/[^/]{1,300}\/?)$/i;
+const DEEP_LINK = /^\/(?:(?:courses|leaderboards|submit|features|faq|source-code|translations|runs|stats)\/?|leaderboards\/[\w-]+(?:\/legacy|\/\d+)?\/?|faq\/[\w-]+\/?|runs\/[\w-]+\/?|players\/[^/]{1,300}(?:\/runs)?\/?)$/i;
 async function page(request, env, ctx) {
   // Ask for the full page every time (no 304 Not Modified), so a browser never reuses old data from its cache
   const headers = new Headers(request.headers);
@@ -1849,6 +1929,7 @@ async function handle(request, env, ctx) {
       if (path === "/api/claim") return await claim(request, env, ctx);
       if (path === "/api/claim/review") return await reviewClaim(request, env, ctx);
       if (path === "/api/run" && request.method === "GET") return await runInfo(request, env);
+      if (path === "/api/visits" && request.method === "GET") return await pageViews(request, env);
       return answer(404, { error: "bad" });
     } catch (e) {
       console.error(`${path}: ${(e && e.message) || e}`);

@@ -52,6 +52,17 @@ simple = { limit = 5, period = 60 }
 binding = "PROFILES"
 id = "ba04c07666a6439b91466ab161b84e00"
 
+# Page views (see "Page views" in worker.js): how many times the site is opened in a browser, and by how many people,
+# for the moderators' Page views at the bottom of the page. A Durable Object, a small SQLite database the Worker owns,
+# which a deploy sets up on its own. The test copy doesn't get it (environments don't inherit it), so it counts nothing.
+[[durable_objects.bindings]]
+name = "PAGE_VIEWS"
+class_name = "PageViews"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["PageViews"]
+
 # Every 30 minutes, the stats on players' Discord profiles catch up with the boards
 [triggers]
 crons = ["*/30 * * * *"]

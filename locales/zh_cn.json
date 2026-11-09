@@ -414,5 +414,19 @@
   "claim.own": "这是你自己的认领，所以需要由其他管理员审核。",
   "f.site.group": "在 ballkour.com 上",
   "f.stats.text": "用 Discord 登录，查看你的积分、排名和前 %，你跑过的每个关卡，以及你的所有成绩。可以用链接分享，也可以显示在你的 Discord 个人资料上。",
-  "f.ratings.text": "每个关卡最多值 10,000 分，你的积分是所有关卡的平均分。前 % 表示你在所有有积分的玩家中的位置，你会在我们的 Discord 上自动获得这个身份组。"
+  "f.ratings.text": "每个关卡最多值 10,000 分，你的积分是所有关卡的平均分。前 % 表示你在所有有积分的玩家中的位置，你会在我们的 Discord 上自动获得这个身份组。",
+  "visits.title": "页面浏览量",
+  "visits.today": "今天",
+  "visits.week": "最近 7 天",
+  "visits.month": "最近 30 天",
+  "visits.views": "{count} 次浏览",
+  "visits.people": "{count} 人",
+  "visits.perDay": "每天 {count} 人",
+  "visits.day": "{date}：{views} 次浏览，{people} 人",
+  "visits.chart": "最近 30 天每天的页面浏览量",
+  "visits.top": "浏览最多",
+  "visits.home": "页面顶部",
+  "visits.players": "玩家",
+  "visits.other": "其他",
+  "visits.note": "每当有人在浏览器中打开网站，都由网站自己计数，所以广告拦截器不会漏掉任何人，机器人也不计入。每个人每天只算一次，网站不会保存是谁。"
 }

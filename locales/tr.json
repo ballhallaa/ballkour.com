@@ -414,5 +414,19 @@
   "claim.own": "Bu senin kendi talebin, bu yüzden başka bir moderatörün kontrol etmesi gerekiyor.",
   "f.site.group": "ballkour.com’da",
   "f.stats.text": "Puanını, sıranı, İlk % değerini, koştuğun her parkuru ve tüm koşularını görmek için Discord ile giriş yap. Bunları bir bağlantıyla paylaşabilir ya da Discord profilinde gösterebilirsin.",
-  "f.ratings.text": "Her parkur 10.000 puana kadar değerlidir ve puanın hepsinin ortalamasıdır. İlk %, puanı olan tüm oyuncular arasındaki yerini gösterir ve bu rolü Discord sunucumuzda otomatik olarak alırsın."
+  "f.ratings.text": "Her parkur 10.000 puana kadar değerlidir ve puanın hepsinin ortalamasıdır. İlk %, puanı olan tüm oyuncular arasındaki yerini gösterir ve bu rolü Discord sunucumuzda otomatik olarak alırsın.",
+  "visits.title": "Sayfa görüntülemeleri",
+  "visits.today": "Bugün",
+  "visits.week": "Son 7 gün",
+  "visits.month": "Son 30 gün",
+  "visits.views": "{count} görüntüleme",
+  "visits.people": "{count} kişi",
+  "visits.perDay": "Günde {count} kişi",
+  "visits.day": "{date}: {views} görüntüleme, {people} kişi",
+  "visits.chart": "Son 30 günde günlük sayfa görüntülemeleri",
+  "visits.top": "En çok görüntülenen",
+  "visits.home": "Sayfanın başı",
+  "visits.players": "Oyuncular",
+  "visits.other": "Diğer",
+  "visits.note": "Biri siteyi bir tarayıcıda her açtığında site kendisi sayar; bu yüzden reklam engelleyiciler kimseyi gizlemez ve botlar sayılmaz. Her kişi günde bir kez sayılır ve site kim olduğunu saklamaz."
 }

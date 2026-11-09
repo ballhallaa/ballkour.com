@@ -414,5 +414,19 @@
   "claim.own": "これは自分の申請なので、ほかのモデレーターが確認する必要があります。",
   "f.site.group": "ballkour.comで",
   "f.stats.text": "Discordでログインすると、レーティング、順位、上位%、走ったすべてのコース、すべての記録を確認できます。リンクで共有したり、Discordのプロフィールに表示したりもできます。",
-  "f.ratings.text": "各コースの価値は最大10,000ポイントで、レーティングは全コースの平均です。上位%はレーティングのある全プレイヤーの中での順位で、Discordでそのロールが自動で付きます。"
+  "f.ratings.text": "各コースの価値は最大10,000ポイントで、レーティングは全コースの平均です。上位%はレーティングのある全プレイヤーの中での順位で、Discordでそのロールが自動で付きます。",
+  "visits.title": "ページビュー",
+  "visits.today": "今日",
+  "visits.week": "過去7日間",
+  "visits.month": "過去30日間",
+  "visits.views": "{count}ビュー",
+  "visits.people": "{count}人",
+  "visits.perDay": "1日あたり{count}人",
+  "visits.day": "{date}：{views}ビュー、{people}人",
+  "visits.chart": "過去30日間の1日ごとのページビュー",
+  "visits.top": "よく見られている場所",
+  "visits.home": "ページの先頭",
+  "visits.players": "プレイヤー",
+  "visits.other": "その他",
+  "visits.note": "ブラウザでサイトが開かれるたびにサイト自身が数えるので、広告ブロッカーで見えなくなる人はおらず、ボットは数えません。同じ人は1日1回だけ数え、誰なのかは保存しません。"
 }
