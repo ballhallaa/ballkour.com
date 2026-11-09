@@ -1464,18 +1464,47 @@ function shortLink(path) {
 }
 
 /* ---------- Files and headers ---------- */
-// The security headers Caddy used to add, on every response. frame-src is for the video players on a run's page,
-// which only load once someone presses Play there (embedOf() in index.html).
+// The security headers Caddy used to add, on every response (the ones in /_headers too: keep them in step)
 const SECURITY_HEADERS = {
   "Strict-Transport-Security": "max-age=31536000",
-  "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://cdn.discordapp.com; connect-src 'self' https://cloudflareinsights.com; frame-src https://www.youtube-nocookie.com https://clips.twitch.tv https://player.twitch.tv https://streamable.com; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'",
   "X-Content-Type-Options": "nosniff",
   "Referrer-Policy": "strict-origin-when-cross-origin",
   "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
 };
-function secure(res) {
+/* The Content-Security-Policy. A page only runs the scripts that carry its nonce, a new one for every response (see
+   withNonce), plus the site's own files and Cloudflare's Web Analytics. So even if a player's name or anything else
+   ever got onto the page as HTML, a script in it wouldn't run. Cloudflare's own bot check, which it adds to pages,
+   copies the nonce from this header. Browsers that know nonces ignore 'unsafe-inline' when there's one: it's only for
+   browsers too old for them. frame-src is for the video players on a run's page, which only load once someone presses
+   Play there (embedOf() in index.html). If you add an outside service to the page, add its address here. */
+const csp = (nonce) => [
+  "default-src 'self'",
+  `script-src 'self'${nonce ? ` 'nonce-${nonce}'` : ""} 'unsafe-inline' https://static.cloudflareinsights.com`,
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self'",
+  "img-src 'self' data: https://cdn.discordapp.com",
+  "connect-src 'self' https://cloudflareinsights.com",
+  "frame-src https://www.youtube-nocookie.com https://clips.twitch.tv https://player.twitch.tv https://streamable.com",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'none'",
+  "frame-ancestors 'none'",
+].join("; ");
+// A page with its own inline scripts stamped with a new nonce, which the CSP then lets run. JSON blocks (the baked-in
+// data) don't run, so they go without. → { res, nonce } (nonce null for anything that isn't a page)
+function withNonce(res) {
+  if (!(res.headers.get("Content-Type") || "").includes("text/html")) return { res, nonce: null };
+  const nonce = b64url(crypto.getRandomValues(new Uint8Array(18)));
+  const out = new HTMLRewriter().on("script", { element(el) {
+    if (!el.hasAttribute("src") && !/json/i.test(el.getAttribute("type") || "")) el.setAttribute("nonce", nonce);
+  } }).transform(new Response(res.body, res));
+  return { res: out, nonce };
+}
+function secure(page) {
+  const { res, nonce } = withNonce(page);
   const out = new Response(res.body, res);
   for (const [name, value] of Object.entries(SECURITY_HEADERS)) out.headers.set(name, value);
+  out.headers.set("Content-Security-Policy", csp(nonce));
   return out;
 }
 // One of the site's files, with the page and the rest checked for a newer copy on every visit. The files in assets/ and
