@@ -5,7 +5,7 @@
     python3 tools/serve.py 8080       # another port
 
 It serves your copy of the site at the same addresses as ballkour.com (/leaderboards/6, /faq/pausing, /runs/<id>,
-/stats, /players/<id>, …) and gets /data/*.json (the boards, Discord names, member count) and /api/run (a run's numbers from when it
+/stats, /players/<number or name>, …) and gets /data/*.json (the boards, Discord names, member count) and /api/run (a run's numbers from when it
 was sent) from ballkour.com, so you see your changes with real data.
 Signing in and sending runs only work on the real site, so the form shows the Discord ticket instead.
 """

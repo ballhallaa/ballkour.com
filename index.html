@@ -826,6 +826,16 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-claim-text b { color: var(--ink); }
 .pl-claim .btn { text-decoration: none; }
 .pl-claim-note { flex-basis: 100%; margin: 0; color: var(--coral); }
+/* Your link, in their own panel (see "Players' own links"), like the boxes above. Pick a name or Change turns it into
+   the form: ballkour.com/players/ in front of the box for the name, like it'll read in the address. */
+.pl-url-text { color: var(--ink); font-weight: 500; overflow-wrap: anywhere; }
+.pl-url-form .pl-claim-text { flex-basis: 100%; }
+.pl-url-field { flex: 1 1 100%; min-width: 0; height: 40px; display: flex; align-items: center; border: 1px solid var(--line-hi); border-radius: 10px; background: rgba(0, 0, 0, .3); transition: border-color .15s; }
+.pl-url-field:hover { border-color: rgba(196, 255, 232, .42); }
+.pl-url-field:focus-within { outline: 2px solid var(--volt); outline-offset: 1px; border-color: var(--volt); }
+.pl-url-pre { flex: none; padding-left: 12px; font: 400 14.5px/1 var(--body); color: var(--ink-3); white-space: nowrap; }
+.pl-url-field input { flex: 1; min-width: 6ch; height: 100%; padding: 0 12px 0 1px; border: 0; background: none; color: var(--ink); font: 500 14.5px/1 var(--body); outline: none; }
+.pl-url-go { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
 /* Their own panel: their stats on their Discord profile, or the button that puts them there */
 .pl-dcp { margin: 0 18px 16px; padding: 12px 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; border: 1px solid rgba(88, 101, 242, .35); border-radius: 10px; background: rgba(88, 101, 242, .07); font: 400 14px/1.45 var(--body); color: var(--ink-2); }
 .pl-dcp-text { flex: 1 1 220px; }
@@ -1993,6 +2003,19 @@ a.link-copy { text-decoration: none; }
   "claim.gone": "Someone already checked {who}’s claim to the runs as {name}.",
   "claim.takenRev": "The runs as {name} are already linked to someone else, so turn this claim down.",
   "claim.own": "This is your own claim, so another moderator has to check it.",
+  "link.title": "Your link",
+  "link.pick": "Pick a name",
+  "link.change": "Change",
+  "link.rules": "Pick a name for it: up to 32 letters or numbers, with at least one letter. Use - or _ instead of spaces.",
+  "link.save": "Save",
+  "link.useNumber": "Use my number",
+  "link.bad": "That name won’t work. It can have up to 32 letters or numbers, needs at least one letter, and can’t have spaces.",
+  "link.taken": "That name is taken. Try another one.",
+  "link.rate": "That’s a lot of changes at once. Wait a minute and try again.",
+  "link.saved": "Your link is now {link}",
+  "link.their": "Their link: {link}",
+  "link.remove": "Remove the name",
+  "link.removed": "Their link is {link} again.",
   "run.up": "On the board",
   "run.slower": "Not their best",
   "run.pending": "Waiting for a check",
@@ -3171,6 +3194,32 @@ a.link-copy { text-decoration: none; }
   }
   LOADS.push(gameFile("leaderboards/runs.json").then(JSON.parse).then(applyRuns).catch(() => {}));
 
+  /* ---------- Players' own links ----------
+     Every player's panel has a short link: ballkour.com/players/<number>, or /players/<name> once they've picked a name
+     for it in their own panel (Your link). links.json on the game repo's leaderboard-data branch has both: the Worker
+     hands out the numbers and saves the names (see "Players' own links" in cloudflare/worker.js). A name from the
+     legacy boards with no Discord ID keeps /players/<in-game name>, and a player with no number yet (for up to half an
+     hour after their first run) has /players/<Discord ID>. Moderators can take the name off anyone else's link, from
+     their panel. */
+  const LINKS = new Map(); // Discord ID → { n, link } ("" for no name)
+  const LINK_OK = /^[\p{L}\p{N}][\p{L}\p{M}\p{N}_-]{0,31}$/u; // the same as the Worker's: keep the two in step
+  const linkOk = (s) => LINK_OK.test(s) && /\p{L}/u.test(s);
+  // What two names have to share to count as the same: ｗｉｄｅ letters are plain ones, and capitals don't matter
+  const linkFold = (s) => String(s).normalize("NFKC").toLowerCase();
+  let linkEditing = false; // whether Your link is the form
+  let linkDraft = null; // what's typed in it, kept when the panel is drawn again
+  let linkNote = ""; // why the last Save (or Remove the name) didn't go through, as a translation key
+  function applyLinks(data) {
+    LINKS.clear();
+    const players = data && data.players && typeof data.players === "object" ? data.players : {};
+    for (const [id, x] of Object.entries(players)) {
+      if (/^\d{17,20}$/.test(id) && x && Number.isInteger(x.n)) LINKS.set(id, { n: x.n, link: typeof x.link === "string" ? x.link : "" });
+    }
+    // A panel that opened before they loaded shows its link now
+    if (plKey && pl.open) { renderPlayer(); showPlayerLink(plKey); }
+  }
+  LOADS.push(gameFile("links.json").then(JSON.parse).then(applyLinks).catch(() => {}));
+
   /* ---------- A player's runs ----------
      Clicking a name on any board opens that player in a panel beside it: their rating, place and Top %, then every
      course with their place and best run there. The course they clicked from opens to show every run they've sent
@@ -3280,6 +3329,7 @@ a.link-copy { text-decoration: none; }
       // (See "Claiming legacy runs".)
       (key.startsWith("n:") && rows.some((x) => x.legacy.length) ? claimHtml(named.name) : "") +
       (mine ? maybeHtml(key) : "") +
+      (mine ? linkHtml() : modLinkHtml(key)) +
       // Everyone can put their stats on their profile, runs or not: before their first, it says they're unrated
       (mine ? profileHtml() : "") +
       `<ul class="pl-courses">`;
@@ -3487,12 +3537,29 @@ a.link-copy { text-decoration: none; }
     const back = spot && pl.querySelector(spot);
     if (back) back.focus({ preventScroll: true });
   }
-  /* A player's own link, ballkour.com/players/<Discord ID> (or /players/<in-game name> for a name with no Discord ID,
-     like a legacy one), opens their panel, so their stats can be shared, and /players/<…>/runs opens it on Runs. The
-     address shows it while their panel is open (their own too, from My stats or their name on a board), and Copy link
-     in the panel copies it. */
-  const playerPath = (key, runs) => `/players/${encodeURIComponent(key.slice(2))}${runs ? "/runs" : ""}`;
-  const playerOfPath = (seg) => { const v = decodeURIComponent(seg); return /^\d{17,20}$/.test(v) ? "d:" + v : "n:" + v.toUpperCase(); };
+  /* A player's own link, ballkour.com/players/<number or name> (see "Players' own links"), opens their panel, so their
+     stats can be shared, and /players/<…>/runs opens it on Runs. The address shows it while their panel is open (their
+     own too, from My stats or their name on a board), and Copy link in the panel copies it. */
+  // What comes after /players/: the name they picked, else their number, else (no number yet) their Discord ID. A name
+  // with no Discord ID is its own.
+  function linkOf(key) {
+    if (!key.startsWith("d:")) return key.slice(2);
+    const x = LINKS.get(key.slice(2));
+    return x ? x.link || String(x.n) : key.slice(2);
+  }
+  const playerPath = (key, runs) => `/players/${encodeURIComponent(linkOf(key))}${runs ? "/runs" : ""}`;
+  // The player a link is for, or null for a number nobody has. The same as keyOfLink() in cloudflare/worker.js: keep
+  // the two in step.
+  function keyOfLink(seg) {
+    if (/^\d{1,9}$/.test(seg)) {
+      for (const [id, x] of LINKS) if (x.n === Number(seg)) return "d:" + id;
+      return null;
+    }
+    if (/^\d{17,20}$/.test(seg)) return "d:" + seg;
+    const folded = linkFold(seg);
+    for (const [id, x] of LINKS) if (x.link && linkFold(x.link) === folded) return "d:" + id;
+    return "n:" + seg.toUpperCase();
+  }
   let playerBack = null; // while a player's panel is open, the address from before, to go back to
   // The address to go back to. A player's link someone opened (or ballkour.com/stats) goes back to the top of the page.
   const beforePlayer = () => playerBack.replace(/^\/(?:players\/[^/?#]+(?:\/runs)?|stats)\/?(?=[?#]|$)/i, "/");
@@ -3507,6 +3574,12 @@ a.link-copy { text-decoration: none; }
   // (/players/COLDSKIN, typed by hand, say) opens the one player who goes by it, or Find a player with it typed in
   // when several do.
   function openPlayerLink(key, runs) {
+    // A number nobody has: Find a player, to look for them
+    if (!key) {
+      putAddressBack("/" + location.search);
+      openFinder();
+      return;
+    }
     const { all } = everyone();
     const view = runs ? "runs" : "courses";
     if (key.startsWith("d:") || all.some((x) => x.key === key)) { openPlayer(key, 0, view); return; }
@@ -3531,6 +3604,9 @@ a.link-copy { text-decoration: none; }
     leaveStats();
     plKey = key;
     plView = view === "runs" ? "runs" : "courses";
+    linkEditing = false;
+    linkDraft = null;
+    linkNote = "";
     plOpen.clear();
     if (n) plOpen.add(n);
     if (!pl.open) pl.showModal();
@@ -4702,6 +4778,9 @@ a.link-copy { text-decoration: none; }
     // A run's page that's open gets Approve and Turn down once a reviewer is known to be signed in
     renderRunCheck();
     renderSentRuns(); // reviewers see who checked each run
+    // A panel that opened before /api/me answered (from a player's link, say) gets what's only for them: their own
+    // things in their own panel (Your link, Sign out), and Remove the name for moderators
+    if (me && plKey && pl.open) renderPlayer();
     // Back from signing in through My stats: their panel opens. Back without signing in (they cancelled on Discord):
     // the panel that explains it opens again, where they left off.
     if (wantMine) { wantMine = false; openMine(); }
@@ -4715,7 +4794,7 @@ a.link-copy { text-decoration: none; }
      back with ?me=1 to open their panel. Sign in with Discord above the form opens the same panel, and comes back to
      the form.
      ballkour.com/stats is the link to it: it opens My stats the same way. Their panel shows their own link in the
-     address (/players/<Discord ID>, see playerPath), like anyone's, so what's in the address works for anyone it's sent
+     address (/players/<number or name>, see playerPath), like anyone's, so what's in the address works for anyone it's sent
      to. The panel that signs them in for it shows /stats. Closing either puts the address back. */
   const meWrap = $("#me-wrap");
   let meKnown = false; // whether /api/me has answered, so the chip doesn't flip from signed out to signed in
@@ -4903,6 +4982,105 @@ a.link-copy { text-decoration: none; }
     else claimNote = out.error === "name" ? "claim.taken" : out.error === "rate" ? "claim.rate" : "rev.fail";
     renderPlayer("[data-claim]");
     claimNote = "";
+  });
+
+  /* Your link, in their own panel (see "Players' own links"): ballkour.com/players/<number or name>, with Pick a name
+     (Change, once they have one). That turns the box into the form: Save, Use my number (once they have a name), and
+     Cancel. Moderators get Remove the name in anyone else's panel whose link has one. */
+  const shownLink = (key) => "ballkour.com/players/" + linkOf(key);
+  function linkHtml() {
+    if (!loginOn) return "";
+    const x = LINKS.get(me.id);
+    const named = !!(x && x.link);
+    if (!linkEditing) {
+      return `<div class="pl-claim pl-url"><p class="pl-claim-text"><b>${esc(t("link.title"))}</b> <span class="pl-url-text" dir="ltr">${esc(shownLink("d:" + me.id))}</span></p>` +
+        `<button class="btn btn-sm" type="button" data-link-edit>${icon("link")}<span>${esc(t(named ? "link.change" : "link.pick"))}</span></button></div>`;
+    }
+    const value = linkDraft !== null ? linkDraft : named ? x.link : "";
+    return `<form class="pl-claim pl-url pl-url-form" data-link-form novalidate>` +
+      `<label class="pl-claim-text" for="pl-link-input"><b>${esc(t("link.title"))}</b> ${esc(t("link.rules"))}</label>` +
+      `<div class="pl-url-field" dir="ltr"><span class="pl-url-pre" aria-hidden="true">ballkour.com/players/</span>` +
+        `<input id="pl-link-input" name="link" value="${esc(value)}" maxlength="32" autocomplete="off" autocapitalize="off" spellcheck="false" dir="auto"` +
+        `${linkNote ? ` aria-invalid="true" aria-describedby="pl-link-note"` : ""}></div>` +
+      (linkNote ? `<p class="pl-claim-note" id="pl-link-note" role="alert">${esc(t(linkNote))}</p>` : "") +
+      `<div class="pl-url-go"><button class="btn btn-sm btn-primary" type="submit">${icon("check")}<span>${esc(t("link.save"))}</span></button>` +
+        (named ? `<button class="btn btn-sm" type="button" data-link-clear>${esc(t("link.useNumber"))}</button>` : "") +
+        `<button class="pl-signout" type="button" data-link-cancel>${esc(t("rev.cancel"))}</button></div></form>`;
+  }
+  function modLinkHtml(key) {
+    if (!me || !me.reviewer || !key.startsWith("d:")) return "";
+    const x = LINKS.get(key.slice(2));
+    if (!x || !x.link) return "";
+    return `<div class="pl-claim"><p class="pl-claim-text">${esc(t("link.their", { link: shownLink(key) }))}</p>` +
+      `<button class="btn btn-sm" type="button" data-link-remove="${esc(key.slice(2))}">${icon("x")}<span>${esc(t("link.remove"))}</span></button>` +
+      (linkNote ? `<p class="pl-claim-note" role="alert">${esc(t(linkNote))}</p>` : "") + `</div>`;
+  }
+  async function sendLink(body) {
+    try {
+      const res = await fetch("/api/link", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      return await res.json().catch(() => ({}));
+    } catch (e) { return {}; }
+  }
+  const LINK_NOTES = { link: "link.bad", taken: "link.taken", rate: "link.rate" };
+  async function saveLink(value) {
+    const link = value.trim().normalize("NFC");
+    const x = LINKS.get(me.id);
+    linkNote = link && !linkOk(link) ? "link.bad" : "";
+    if (linkNote) { renderPlayer("#pl-link-input"); return; }
+    // The same as now: nothing to save
+    if (link === (x ? x.link : "")) { linkEditing = false; linkDraft = null; renderPlayer("[data-link-edit]"); return; }
+    $$("[data-link-form] button", pl).forEach((b) => { b.disabled = true; });
+    const out = await sendLink({ link });
+    // Signed out since (their session ran out): sign in again, back to their panel
+    if (out.error === "login") { openSignIn("mine"); return; }
+    if (!out.ok) {
+      linkNote = LINK_NOTES[out.error] || "rev.fail";
+      renderPlayer("#pl-link-input");
+      return;
+    }
+    if (Number.isInteger(out.n)) LINKS.set(me.id, { n: out.n, link: out.link || "" });
+    linkEditing = false;
+    linkDraft = null;
+    renderPlayer("[data-link-edit]");
+    showPlayerLink(plKey);
+    announce.textContent = t("link.saved", { link: shownLink("d:" + me.id) });
+  }
+  pl.addEventListener("submit", (e) => {
+    const form = e.target.closest("[data-link-form]");
+    if (!form || !me) return;
+    e.preventDefault();
+    saveLink(form.elements.link.value);
+  });
+  pl.addEventListener("input", (e) => { if (e.target.id === "pl-link-input") linkDraft = e.target.value; });
+  pl.addEventListener("click", async (e) => {
+    if (e.target.closest("[data-link-edit]")) {
+      linkEditing = true;
+      renderPlayer("#pl-link-input");
+      const input = pl.querySelector("#pl-link-input");
+      if (input) input.select();
+      return;
+    }
+    if (e.target.closest("[data-link-cancel]")) {
+      linkEditing = false;
+      linkDraft = null;
+      linkNote = "";
+      renderPlayer("[data-link-edit]");
+      return;
+    }
+    if (e.target.closest("[data-link-clear]") && me) { saveLink(""); return; }
+    const rm = e.target.closest("[data-link-remove]");
+    if (!rm || !me) return;
+    rm.disabled = true;
+    const id = rm.dataset.linkRemove;
+    const out = await sendLink({ discord: id, link: "" });
+    linkNote = out.ok ? "" : "rev.fail";
+    if (out.ok && Number.isInteger(out.n)) LINKS.set(id, { n: out.n, link: "" });
+    renderPlayer(out.ok ? "[data-pl-close]" : "[data-link-remove]");
+    linkNote = "";
+    if (out.ok) {
+      showPlayerLink(plKey);
+      announce.textContent = t("link.removed", { link: shownLink("d:" + id) });
+    }
   });
 
   /* Reviewers (REVIEWER_ROLES in cloudflare/wrangler.toml) see the top 10 runs waiting for a check under the form,
@@ -5617,9 +5795,10 @@ a.link-copy { text-decoration: none; }
   const RUN_GROUPS = ["pending", "runs", "declined", "removed"];
   // The page of a run whose link someone opened (/runs/<id>, or an old /submit?check=<id>)
   const startRun = (/^\/runs\/([\w-]{1,16})\/?$/i.exec(location.pathname) || [])[1] || (/^[\w-]{1,16}$/.test(checkParam) ? checkParam : "");
-  // The player whose link someone opened (/players/<id or name>, or /players/<id or name>/runs, see playerPath)
+  // The player whose link someone opened (/players/<number or name>, or /players/<…>/runs, see playerPath). Who that
+  // is waits for links.json (see "Players' own links").
   const startPlayer = (() => {
-    try { const m = /^\/players\/([^/]+)(\/runs)?\/?$/i.exec(location.pathname); return m ? { key: playerOfPath(m[1]), runs: !!m[2] } : null; } catch (e) { return null; }
+    try { const m = /^\/players\/([^/]+)(\/runs)?\/?$/i.exec(location.pathname); return m ? { seg: decodeURIComponent(m[1]), runs: !!m[2] } : null; } catch (e) { return null; }
   })();
   let runId = ""; // the run whose page is open
   let runBack = null; // the address from before it opened, to go back to
@@ -6027,7 +6206,7 @@ a.link-copy { text-decoration: none; }
     renderSentRuns();
     if (reviewRuns.length) renderReview(); // with what each would do, now that the boards are in
     if (startRun) openRun(startRun);
-    else if (startPlayer) openPlayerLink(startPlayer.key, startPlayer.runs);
+    else if (startPlayer) openPlayerLink(keyOfLink(startPlayer.seg), startPlayer.runs);
   });
 
   /* ---------- Clean section links: ballkour.com/features, /leaderboards, … ----------
