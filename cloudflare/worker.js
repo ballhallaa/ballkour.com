@@ -382,8 +382,9 @@ async function buildPlayers(env, ctx, previous) {
                          the error saying what to fix: login (not signed in), course, name, time, miss, video, rate
                          (too many), off (not set up, or GitHub didn't take it) or bad
    GET /api/pending and POST /api/review are for checking top 10 runs (see below), GET /api/run is a run's numbers
-   from when it was sent (see "Each run's page"), POST /api/claim and /api/claim/review are for claiming legacy runs
-   (see "Claiming legacy runs"), and POST /api/link is for the name on a player's own link (see "Players' own links").
+   from when it was sent (see "Each run's page"), GET /api/comments is the comments on a run's YouTube video (see
+   "YouTube comments"), POST /api/claim and /api/claim/review are for claiming legacy runs (see "Claiming legacy
+   runs"), and POST /api/link is for the name on a player's own link (see "Players' own links").
    The session is a cookie signed with SESSION_SECRET that lasts 30 days. Nothing about it is stored here.
    Secrets: DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET (Ballkyrie's app in Discord's Developer Portal, OAuth2 page,
    with https://ballkour.com/api/login/callback added as a redirect), SESSION_SECRET (any long random string) and
@@ -1885,6 +1886,94 @@ function notFound(res, block) {
   return new HTMLRewriter().on("head", { element(el) { el.append(block, { html: true }); } }).transform(new Response(res.body, res));
 }
 
+/* ---------- YouTube comments ----------
+   The window a run's time opens on the page (see "Watching a run's video" in index.html) lists the comments on a
+   YouTube video under it:
+     GET /api/comments?v=<video id>   { comments: [{ name, channel, text, likes, replies, date }], count, off }
+   The first 20, the ones YouTube shows first. count is how many the video has on YouTube (replies too), and off is
+   true when its comments are turned off. They come from YouTube's Data API through here, so a visitor's browser never
+   talks to YouTube for them (only to play the video, once its time is clicked). Each video's are kept for
+   COMMENTS_TTL, and the last good copy is served while YouTube can't be reached. Only the videos of runs the site has
+   (on a course's board, in runs.json, or on an old board) get theirs, so nobody can spend the API's daily allowance
+   on other videos: it's 10,000 units, and each video takes 2.
+   Secret: YOUTUBE_KEY, an API key from Google Cloud with the YouTube Data API v3 turned on (see the README). Without
+   it, the window has no comments. */
+const COMMENTS_TTL = 6 * 60 * 60;
+// A YouTube video's id from its link, or "": the same links as embedOf() in index.html (keep the two in step)
+function youtubeId(link) {
+  let u;
+  try { u = new URL(link); } catch (e) { return ""; }
+  const host = u.hostname.toLowerCase().replace(/^(?:www|m)\./, "");
+  const path = (re) => (re.exec(u.pathname) || [])[1] || "";
+  const id = host === "youtu.be" ? path(/^\/([\w-]{11})\/?$/)
+    : host === "youtube.com" || host === "music.youtube.com" ? (u.pathname === "/watch" ? u.searchParams.get("v") || "" : path(/^\/(?:shorts|live|embed)\/([\w-]{11})\/?$/))
+    : "";
+  return /^[\w-]{11}$/.test(id) ? id : "";
+}
+// Every YouTube video of a run the site has, from the game data
+function runVideos(data) {
+  const ids = new Set();
+  const add = (r) => {
+    const id = r && typeof r.video === "string" ? youtubeId(r.video) : "";
+    if (id) ids.add(id);
+  };
+  const files = (data && data.files) || {};
+  ((data && data.courses) || []).forEach((c) => {
+    fileRuns(c.file, files[c.file]).forEach(add);
+    historyRuns(files, c.n).forEach(add);
+  });
+  try {
+    const sent = JSON.parse(files[RUNS_FILE]) || {};
+    RUN_GROUPS.forEach((g) => Object.values(sent[g] && typeof sent[g] === "object" ? sent[g] : {}).forEach((list) => {
+      if (Array.isArray(list)) list.forEach(add);
+    }));
+  } catch (e) { /* none from there */ }
+  return ids;
+}
+// A video's comments from YouTube, as /api/comments answers with them
+async function youtubeComments(env, id) {
+  const api = (what, params) => fetch(`https://www.googleapis.com/youtube/v3/${what}?${new URLSearchParams({ ...params, key: env.YOUTUBE_KEY })}`);
+  const [threads, video] = await Promise.all([
+    api("commentThreads", { part: "snippet", videoId: id, maxResults: "20", order: "relevance", textFormat: "plainText" }),
+    api("videos", { part: "statistics", id }),
+  ]);
+  if (!threads.ok) {
+    const err = await threads.json().catch(() => null);
+    const why = (err && err.error && Array.isArray(err.error.errors) && err.error.errors[0] && err.error.errors[0].reason) || "";
+    // Turned off on the video, or the video's gone (made private or deleted)
+    if (why === "commentsDisabled") return JSON.stringify({ comments: [], count: 0, off: true });
+    if (threads.status === 404) return JSON.stringify({ comments: [], count: 0, off: false });
+    throw new Error(`YouTube said ${threads.status}${why ? ` (${why})` : ""}`);
+  }
+  const items = ((await threads.json()) || {}).items;
+  const comments = (Array.isArray(items) ? items : []).map((x) => {
+    const top = (x && x.snippet) || {};
+    const s = (top.topLevelComment && top.topLevelComment.snippet) || {};
+    // Their channel, as an https:// link on youtube.com (YouTube sometimes hands out http://)
+    const channel = String(s.authorChannelUrl || "").replace(/^http:/, "https:");
+    return {
+      name: String(s.authorDisplayName || "").slice(0, 100),
+      channel: /^https:\/\/www\.youtube\.com\/[\w@%./-]+$/.test(channel) ? channel : "",
+      text: String(s.textOriginal || s.textDisplay || "").slice(0, 2000),
+      likes: Number(s.likeCount) || 0,
+      replies: Number(top.totalReplyCount) || 0,
+      date: /^\d{4}-\d{2}-\d{2}/.test(s.publishedAt || "") ? s.publishedAt.slice(0, 10) : "",
+    };
+  }).filter((c) => c.text.trim());
+  const stats = video.ok ? await video.json().catch(() => null) : null;
+  const count = Number(stats && Array.isArray(stats.items) && stats.items[0] && stats.items[0].statistics && stats.items[0].statistics.commentCount);
+  return JSON.stringify({ comments, count: Number.isFinite(count) ? count : comments.length, off: false });
+}
+async function comments(request, env, ctx) {
+  const id = new URL(request.url).searchParams.get("v") || "";
+  if (!/^[\w-]{11}$/.test(id)) return answer(400, { error: "bad" });
+  if (!env.YOUTUBE_KEY) return answer(503, { error: "off" });
+  const name = `comments/${id}`;
+  // A video with comments kept here is a run's: any other is looked for in the game data first
+  if (!(await caches.default.match(cacheKey(name, true))) && !runVideos(await gameData(env, ctx)).has(id)) return answer(404, { error: "bad" });
+  return json(await cached(name, COMMENTS_TTL, ctx, () => youtubeComments(env, id)), 600);
+}
+
 /* ---------- Link previews ----------
    A link to a run, a board, or a player, pasted on Discord (or anywhere else that reads a page's og: tags), shows its
    own title and a line about it instead of the site's: "COLDSKIN · 4:05.81 on Watchpoint: Gibraltar" and "#2 of 12 on
@@ -2110,6 +2199,7 @@ async function handle(request, env, ctx) {
       if (path === "/api/claim/review") return await reviewClaim(request, env, ctx);
       if (path === "/api/link") return await setLink(request, env, ctx);
       if (path === "/api/run" && request.method === "GET") return await runInfo(request, env);
+      if (path === "/api/comments" && request.method === "GET") return await comments(request, env, ctx);
       if (path === "/api/visits" && request.method === "GET") return await pageViews(request, env);
       return answer(404, { error: "bad" });
     } catch (e) {

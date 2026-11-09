@@ -5,8 +5,8 @@
     python3 tools/serve.py 8080       # another port
 
 It serves your copy of the site at the same addresses as ballkour.com (/leaderboards/6, /faq/pausing, /runs/<id>,
-/stats, /players/<number or name>, …) and gets /data/*.json (the boards, Discord names, member count) and /api/run (a run's numbers from when it
-was sent) from ballkour.com, so you see your changes with real data.
+/stats, /players/<number or name>, …) and gets /data/*.json (the boards, Discord names, member count), /api/run (a run's numbers from when it
+was sent), and /api/comments (a run's YouTube comments) from ballkour.com, so you see your changes with real data.
 Signing in and sending runs only work on the real site, so the form shows the Discord ticket instead.
 """
 import http.server
@@ -27,9 +27,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         path = self.path.split("?", 1)[0]
-        if path.startswith("/data/") or path == "/api/run":
+        if path.startswith("/data/") or path in ("/api/run", "/api/comments"):
             try:
-                live = self.path if path == "/api/run" else path  # /api/run?id=…
+                live = path if path.startswith("/data/") else self.path  # /api/run?id=…, /api/comments?v=…
                 req = urllib.request.Request("https://ballkour.com" + live, headers={"User-Agent": "ballkour.com preview"})
                 with urllib.request.urlopen(req, timeout=10) as r:
                     body = r.read()
