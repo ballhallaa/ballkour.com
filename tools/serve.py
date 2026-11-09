@@ -5,8 +5,9 @@
     python3 tools/serve.py 8080       # another port
 
 It serves your copy of the site at the same addresses as ballkour.com (/leaderboards/6, /faq/pausing, /runs/<id>,
-/stats, /players/<number or name>, …) and gets /data/*.json (the boards, Discord names, member count), /api/run (a run's numbers from when it
-was sent), and /api/comments (a run's YouTube comments) from ballkour.com, so you see your changes with real data.
+/stats/2026-11-05, /my-stats, /players/<number or name>, …) and gets /data/*.json (the boards, Discord names, member
+count), /api/run (a run's numbers from when it was sent), /api/comments (a run's YouTube comments), and /api/visits
+(the page views in Stats) from ballkour.com, so you see your changes with real data.
 Signing in and sending runs only work on the real site, so the form shows the Discord ticket instead.
 """
 import http.server
@@ -18,7 +19,8 @@ import urllib.request
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
 # The addresses that are the home page, like the Worker and Cloudflare's rules serve them
-PAGES = re.compile(r"^/(courses|leaderboards|submit|features|faq|source-code|translations|runs|stats|players)(/[^/]+(/legacy|/\d+|/runs)?)?/?$", re.I)
+PAGES = re.compile(r"^/(?:(courses|leaderboards|submit|features|faq|source-code|translations|runs|my-stats|players)(/[^/]+(/legacy|/\d+|/runs)?)?"
+                   r"|stats(/\d{4}-\d{2}-\d{2})?(/day|/week)?)/?$", re.I)
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -27,7 +29,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         path = self.path.split("?", 1)[0]
-        if path.startswith("/data/") or path in ("/api/run", "/api/comments"):
+        if path.startswith("/data/") or path in ("/api/run", "/api/comments", "/api/visits"):
             try:
                 live = path if path.startswith("/data/") else self.path  # /api/run?id=…, /api/comments?v=…
                 req = urllib.request.Request("https://ballkour.com" + live, headers={"User-Agent": "ballkour.com preview"})
