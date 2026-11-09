@@ -1401,13 +1401,17 @@ a.link-copy { text-decoration: none; }
   .sections { --bar: #090f0d; background: #090f0d; }
   .btn:not(.btn-primary):not(.btn-discord):not(.btn-warn) { background-color: var(--glass-solid); }
 }
-/* Reduce motion: the device's setting, unless the button at the top picked the other one (data-motion on <html>) */
+/* Reduce motion: the device's setting, unless the button at the top picked the other one (data-motion on <html>).
+   Nothing animates then, except the logo: its bob and its glow's turn pause where they are, so turning it on doesn't
+   make the logo jump back, and turning it off carries on from there. */
 @media (prefers-reduced-motion: reduce) {
   html:not([data-motion="full"]) { scroll-behavior: auto; }
-  html:not([data-motion="full"]) *, html:not([data-motion="full"]) *::before, html:not([data-motion="full"]) *::after { animation: none !important; transition: none !important; }
+  html:not([data-motion="full"]) :not(.badge img), html:not([data-motion="full"]) :not(.badge)::before, html:not([data-motion="full"]) ::after { animation: none !important; transition: none !important; }
+  html:not([data-motion="full"]) .badge img, html:not([data-motion="full"]) .badge::before { animation-play-state: paused !important; }
 }
 html[data-motion="reduce"] { scroll-behavior: auto; }
-html[data-motion="reduce"] *, html[data-motion="reduce"] *::before, html[data-motion="reduce"] *::after { animation: none !important; transition: none !important; }
+html[data-motion="reduce"] :not(.badge img), html[data-motion="reduce"] :not(.badge)::before, html[data-motion="reduce"] ::after { animation: none !important; transition: none !important; }
+html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before { animation-play-state: paused !important; }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
@@ -5032,6 +5036,8 @@ html[data-motion="reduce"] *, html[data-motion="reduce"] *::before, html[data-mo
     }
   }
   badge.addEventListener("click", () => {
+    // With Reduce motion on, the logo stays paused where it is (see "Reduce motion")
+    if (reduced) return;
     kick(3.2);
     badge.classList.remove("spin");
     void badge.offsetWidth;
