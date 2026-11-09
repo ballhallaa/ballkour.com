@@ -64,7 +64,7 @@ The test copy doesn't have the Worker's secrets, so player names and pictures ar
 
 `cloudflare/worker.js` is a Cloudflare Worker on `ballkour.com/*` that serves the whole site: every request runs it first, and it hands out the site's own files along with the data below. Visitors' browsers only ever talk to ballkour.com: the Worker fetches what the page needs from GitHub and Discord, caches it at Cloudflare and serves it from here. That keeps the site fast, keeps visitors' IPs away from GitHub and Discord, avoids GitHub's limits on anonymous requests, and works where GitHub and Discord are blocked.
 
-- `/data/game.json`: the game repo's leaderboard files, leaderboard history and in-game FAQ from `develop`, plus the latest releases. Refreshed at most once a minute.
+- `/data/game.json`: the game repo's leaderboard files and in-game FAQ from `develop`, its runs and leaderboard history from `leaderboard-data`, plus the latest releases. Refreshed at most once a minute.
 - `/data/widget.json`: the Discord server's member count and voice channels. Refreshed at most once a minute.
 - `/code/game`, `/code/site` (or `/code/website`): redirect to the game's and this website's GitHub repos.
 - `/releases`, `/releases/site` (or `/releases/website`): redirect to the game's and this website's release notes.
@@ -89,7 +89,7 @@ Resetting Ballkyrie's token in the Discord Developer Portal breaks the copy here
 
 ### Runs sent from the website
 
-Players sign in with Discord (one click, no new account) and send their run from the form under Submit a run. It goes on the board straight away: the Worker saves it under their Discord ID in `leaderboards/runs.json` on the game repo's `develop` branch, one commit per run. The site shows it at once, and the leaderboard bot posts the board on Discord and updates roles. A run is always the sender's own, whatever in-game name they type, so nobody can send one as someone else. Each Discord account can send 5 runs a minute (`SUBMIT_LIMIT` in `wrangler.toml`) and 20 a day.
+Players sign in with Discord (one click, no new account) and send their run from the form under Submit a run. It goes on the board straight away: the Worker saves it under their Discord ID in `leaderboards/runs.json` on the game repo's `leaderboard-data` branch, one commit per run (on its own branch, so these commits stay off `develop`). The site shows it at once, and the leaderboard bot posts the board on Discord and updates roles. A run is always the sender's own, whatever in-game name they type, so nobody can send one as someone else. Each Discord account can send 5 runs a minute (`SUBMIT_LIMIT` in `wrangler.toml`) and 20 a day.
 
 **After sending**, the form shows what the run did: their place on the course and who they passed, their course rating, rating, place, and Top %, and any new top 10, podium, or record (the numbers on their Discord profile). A top 10 run that's waiting for a check shows the same, as what they'll get once it's approved.
 
@@ -107,7 +107,7 @@ Moderators also get **Runs to check** under the form at ballkour.com/submit: eve
 
 The runs from before the form (sent in a Discord ticket) are listed there too: every run on a board now, and on every board in `history.json`, once each. Legacy runs (no date or video) aren't. They have pages too, at `ballkour.com/runs/<course>-<code>`, where the code comes from the run's video, so the link stays the same. Since nothing was worked out when they were sent, their page only has **Today**.
 
-To take a run off, move it from `"runs"` to `"removed"` in `runs.json` (see [Courses and leaderboards](#courses-and-leaderboards)).
+To take a run off, move it from `"runs"` to `"removed"` in `runs.json` on `leaderboard-data` (see [Courses and leaderboards](#courses-and-leaderboards)).
 
 To turn it on:
 
@@ -119,8 +119,7 @@ To turn it on:
    - **Where can this GitHub App be installed?** Only on this account.
 
    Then, on the app's page: copy its **App ID**, **Generate a private key** (it downloads a `.pem` file), and under **Install App**, install it on just `ballhallaa/ballkour`.
-3. Let the app past `develop`'s rules: in the game repo's Settings → Rules → **Protect Main & Develop** → Bypass list, **Add bypass** → the app → **Always allow**.
-4. From the `cloudflare/` folder, save the secrets:
+3. From the `cloudflare/` folder, save the secrets:
 
    ```
    npx wrangler secret put DISCORD_CLIENT_ID                  # the Client ID
@@ -130,7 +129,7 @@ To turn it on:
    npx wrangler secret put GITHUB_APP_PRIVATE_KEY < key.pem   # the .pem file (then delete it, or keep it somewhere safe)
    ```
 
-Until those are set, the form stays hidden and the Discord ticket is the only way. (A `GITHUB_TOKEN` that can write the game repo works instead of the app, but then runs are committed as its owner, who has to be allowed past the rules.) The test copy needs its own secrets, and its `…workers.dev/api/login/callback` address added as a redirect too.
+Until those are set, the form stays hidden and the Discord ticket is the only way. (A `GITHUB_TOKEN` that can write the game repo works instead of the app, but then runs are committed as its owner.) The test copy needs its own secrets, and its `…workers.dev/api/login/callback` address added as a redirect too.
 
 The remakes' in-game top 10s are part of the game, so they only change with a release. Before one, run `node tools/leaderboard-bot/game-boards.mjs` in the game repo: it prints the `lb[…]` and `lbRunInfo(…)` lines for every `.opy` file that's behind its board.
 
@@ -184,7 +183,7 @@ Leaderboards load live from the game repo's `develop` branch (through the Worker
 
 The runs written into `COURSES` are only a fallback for when GitHub can't be reached.
 
-Each course's board ranks every run in its file and in `"runs"` in `leaderboards/runs.json` (runs sent from the website, and runs that never made a top 10), once each per player with their best run. A player is their Discord ID, or their in-game name on a run without one. The board shows the top 10, and **Show all** lists everyone else, including players who dropped out of the top 10, from the boards in `leaderboards/history.json`. To take a run off for good, delete it where it is (or move it, from `"runs"`) and add it to `"removed"`, so it doesn't come back from an old board:
+Each course's board ranks every run in its file and in `"runs"` in `leaderboards/runs.json` on the `leaderboard-data` branch (runs sent from the website, and runs that never made a top 10), once each per player with their best run. A player is their Discord ID, or their in-game name on a run without one. The board shows the top 10, and **Show all** lists everyone else, including players who dropped out of the top 10, from the boards in `leaderboards/history.json` (on `leaderboard-data` too). To take a run off for good, delete it where it is (or move it, from `"runs"`) and add it to `"removed"`, so it doesn't come back from an old board:
 
 ```json
 {

@@ -3,8 +3,8 @@
    That keeps the site fast, keeps visitors' IPs away from GitHub and Discord, avoids GitHub's limits on
    anonymous requests, and works where GitHub and Discord are blocked (mainland China, some schools).
 
-   /data/game.json     The game repo's leaderboard files, leaderboard history and in-game FAQ (develop branch),
-                       plus the latest releases of the game and of this website:
+   /data/game.json     The game repo's leaderboard files and in-game FAQ (develop branch), its runs and leaderboard
+                       history (leaderboard-data branch), plus the latest releases of the game and of this website:
                          { files: { "<path>": "<text>" | null }, releases: [...], siteReleases: [...] }.
                        Refreshed at most once a minute.
    /data/widget.json   The Discord server's member count (from its invite), plus the widget's voice channels and
@@ -47,7 +47,7 @@ const GUILD_ID = "1212553452283101245";
 const INVITE = "Skz6cg9rbR";
 const REPO = "ballhallaa/ballkour";
 const SITE_REPO = "ballhallaa/ballkour.com";
-const GAME = `https://raw.githubusercontent.com/${REPO}/develop`;
+const GAME = `https://raw.githubusercontent.com/${REPO}`; // + /<branch>/<path>
 const DISCORD_API = "https://discord.com/api/v10";
 const STALE_FOR = 7 * 24 * 60 * 60; // seconds: how long the last good copy is kept for when a source is down
 
@@ -124,7 +124,7 @@ const githubHeaders = (env) => ({
 });
 
 /* The GitHub App that saves runs sent from the website to the game repo, as itself (ballkour.com's bot, not a person).
-   It's the one thing besides deploy keys allowed past develop's pull request rule. Secrets: GITHUB_APP_ID and
+   It only saves to the leaderboard-data branch (see dataBranch), which has no pull request rule. Secrets: GITHUB_APP_ID and
    GITHUB_APP_PRIVATE_KEY (the .pem GitHub hands out, as it is). The app needs Contents: Read and write, and to be
    installed on the game repo. A token is made each time one's needed (each lasts an hour), so none is kept. */
 const appOn = (env) => !!(env.GITHUB_APP_ID && env.GITHUB_APP_PRIVATE_KEY);
@@ -159,7 +159,8 @@ async function buildGame(env, previous) {
     // (with GITHUB_TOKEN if it's set, or else as the GitHub App)
     const viaApi = path === RUNS_FILE && (env.GITHUB_TOKEN || appOn(env));
     const auth = viaApi && !env.GITHUB_TOKEN ? { Authorization: `Bearer ${await appToken(env)}` } : {};
-    const r = await fetch(viaApi ? `https://api.github.com/repos/${REPO}/contents/${encodeURI(path)}?ref=${runsBranch(env)}` : `${GAME}/${encodeURI(path)}`, {
+    const branch = DATA_FILES.includes(path) ? dataBranch(env) : "develop";
+    const r = await fetch(viaApi ? `https://api.github.com/repos/${REPO}/contents/${encodeURI(path)}?ref=${branch}` : `${GAME}/${branch}/${encodeURI(path)}`, {
       headers: viaApi ? { ...headers, ...auth, Accept: "application/vnd.github.raw+json" } : headers,
       signal: AbortSignal.timeout(5000),
     });
@@ -176,7 +177,7 @@ async function buildGame(env, previous) {
   let list = (previous && previous.courses) || null;
   try {
     const courses = JSON.parse(await get("tools/leaderboard-bot/courses.json")).courses;
-    paths = ["leaderboards/history.json", RUNS_FILE, "src/engine/faq.opy", ...courses.map((c) => c.file)];
+    paths = [...DATA_FILES, "src/engine/faq.opy", ...courses.map((c) => c.file)];
     names = Object.fromEntries(courses.map((c) => [c.n, c.name]));
     flags = Object.fromEntries(courses.filter((c) => c.flag).map((c) => [c.n, c.flag]));
     list = courses.map(({ n, file, broken }) => ({ n, file, broken: !!broken }));
@@ -329,7 +330,7 @@ async function buildPlayers(env, ctx, previous) {
 /* ---------- Signing in with Discord, and runs sent from the website ----------
    Players sign in with Discord (OAuth2 with the "identify" scope: their ID, name and picture, nothing else) to send a
    run from the form under Submit a run. The run goes on the boards straight away: it's saved under their Discord ID
-   in leaderboards/runs.json on the game repo's develop branch (one commit per run), and the leaderboard bot picks that
+   in leaderboards/runs.json on the game repo's leaderboard-data branch (one commit per run), and the leaderboard bot picks that
    up to post the board and give out roles. Nobody can send a run as someone else: it's always the sender's, whatever
    in-game name they type (in-game names aren't unique, so they're never checked against other players').
      GET  /api/login     Discord's sign-in page, then /api/login/callback, then back to /submit
@@ -354,9 +355,11 @@ async function buildPlayers(env, ctx, previous) {
    with a View run button to its page (see "Each run's page"). Without it (or DISCORD_BOT_TOKEN), nothing is posted.
    SUBMIT_LIMIT (wrangler.toml) allows 5 sends a minute from one Discord account, and runs.json at most 20 a day. */
 const RUNS_FILE = "leaderboards/runs.json";
-// The game repo's branch runs.json is read from and saved to: develop, or RUNS_BRANCH (the test copy's own
-// test-runs, so trying it out never touches the real boards)
-const runsBranch = (env) => env.RUNS_BRANCH || "develop";
+// The files on the game repo's data branch: runs.json, and every board the leaderboard bot has posted
+const DATA_FILES = [RUNS_FILE, "leaderboards/history.json"];
+// The game repo's branch with DATA_FILES, kept apart so the commits for every run stay off develop: leaderboard-data,
+// or DATA_BRANCH (the test copy's own test-runs, so trying it out never touches the real boards)
+const dataBranch = (env) => env.DATA_BRANCH || "leaderboard-data";
 const SESSION_DAYS = 30;
 // Ballkyrie's own Discord ID, which is the same as its app's ID
 const botId = (env) => (/^\d{17,20}$/.test(env.DISCORD_CLIENT_ID || "") ? env.DISCORD_CLIENT_ID : "");
@@ -594,9 +597,9 @@ function dumpRuns(data) {
 async function runsApi(env) {
   return { ...githubHeaders(env), ...(appOn(env) ? { Authorization: `Bearer ${await appToken(env)}` } : {}), Accept: "application/vnd.github+json" };
 }
-// runs.json as it is on develop, with every group in RUN_GROUPS always there, and its sha (null if there's none)
+// runs.json as it is on the data branch, with every group in RUN_GROUPS always there, and its sha (null if there's none)
 async function readRuns(env, headers) {
-  const got = await fetch(`https://api.github.com/repos/${REPO}/contents/${RUNS_FILE}?ref=${runsBranch(env)}`, { headers, signal: AbortSignal.timeout(5000) });
+  const got = await fetch(`https://api.github.com/repos/${REPO}/contents/${RUNS_FILE}?ref=${dataBranch(env)}`, { headers, signal: AbortSignal.timeout(5000) });
   if (!got.ok && got.status !== 404) throw new Error(`reading it: ${got.status} ${(await got.text()).slice(0, 200)}`);
   const meta = got.ok ? await got.json() : null;
   let data;
@@ -606,7 +609,7 @@ async function readRuns(env, headers) {
   return { data, sha: meta && meta.sha };
 }
 const listIn = (group, n) => (Array.isArray(group[n]) ? group[n] : (group[n] = []));
-// Changes runs.json on develop through GitHub's API: edit(data) changes it and says what to commit ({ message }), or
+// Changes runs.json on the data branch through GitHub's API: edit(data) changes it and says what to commit ({ message }), or
 // that nothing needs saving ({ skip: true }), or what went wrong ({ error, status }). It's read again and redone if
 // someone else saved in between. → what edit said, and the new runs.json as { text } (null when nothing was saved)
 async function editRuns(env, edit) {
@@ -621,7 +624,7 @@ async function editRuns(env, edit) {
     const put = await fetch(`https://api.github.com/repos/${REPO}/contents/${RUNS_FILE}`, {
       method: "PUT",
       headers: { ...headers, "Content-Type": "application/json" },
-      body: JSON.stringify({ message: out.message, content: base64(utf8.encode(next)), branch: runsBranch(env), ...(sha ? { sha } : {}) }),
+      body: JSON.stringify({ message: out.message, content: base64(utf8.encode(next)), branch: dataBranch(env), ...(sha ? { sha } : {}) }),
       signal: AbortSignal.timeout(8000),
     });
     if (put.ok) return { ...out, text: next };
