@@ -2074,7 +2074,8 @@ async function page(request, env, ctx) {
   if (preview) {
     const link = `https://ballkour.com${new URL(request.url).pathname.replace(/\/$/, "")}`;
     rw = rw
-      .on("title", { element(el) { el.setInnerContent(`${preview.title} · Ballkour`); } })
+      // data-own tells the page to keep this title when it switches languages, instead of putting the site's back
+      .on("title", { element(el) { el.setInnerContent(`${preview.title} · Ballkour`); el.setAttribute("data-own", ""); } })
       .on('meta[property="og:title"]', { element(el) { el.setAttribute("content", preview.title); } })
       .on('meta[name="description"], meta[property="og:description"]', { element(el) { el.setAttribute("content", preview.description); } })
       .on('meta[property="og:url"]', { element(el) { el.setAttribute("content", link); } });
