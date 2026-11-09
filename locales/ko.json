@@ -307,6 +307,8 @@
   "rev.title": "확인할 기록",
   "rev.none": "지금은 확인할 기록이 없습니다.",
   "rev.would": "#{rank} 예정",
+  "rev.wouldOf": "{total}명 중 #{rank} 예정",
+  "rev.global": "전체 {total}명 중 #{rank}",
   "rev.watch": "보기",
   "rev.approve": "승인",
   "rev.decline": "거절",

@@ -307,6 +307,8 @@
   "rev.title": "Corridas para verificar",
   "rev.none": "Não há corridas para verificar agora.",
   "rev.would": "Seria #{rank}",
+  "rev.wouldOf": "Seria #{rank} de {total}",
+  "rev.global": "Geral #{rank} de {total}",
   "rev.watch": "Assistir",
   "rev.approve": "Aprovar",
   "rev.decline": "Recusar",

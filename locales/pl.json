@@ -307,6 +307,8 @@
   "rev.title": "Przejścia do sprawdzenia",
   "rev.none": "Obecnie nie ma przejść do sprawdzenia.",
   "rev.would": "Byłoby #{rank}",
+  "rev.wouldOf": "Byłoby #{rank} z {total}",
+  "rev.global": "Ogólnie #{rank} z {total}",
   "rev.watch": "Obejrzyj",
   "rev.approve": "Zatwierdź",
   "rev.decline": "Odrzuć",

@@ -307,6 +307,8 @@
   "rev.title": "การวิ่งที่ต้องตรวจสอบ",
   "rev.none": "ตอนนี้ไม่มีการวิ่งที่ต้องตรวจสอบ",
   "rev.would": "จะได้ #{rank}",
+  "rev.wouldOf": "จะได้ #{rank} จาก {total}",
+  "rev.global": "รวม #{rank} จาก {total}",
   "rev.watch": "ดู",
   "rev.approve": "อนุมัติ",
   "rev.decline": "ปฏิเสธ",

@@ -307,6 +307,8 @@
   "rev.title": "待審核的成績",
   "rev.none": "目前沒有待審核的成績。",
   "rev.would": "將排第 {rank} 名",
+  "rev.wouldOf": "將排第 {rank} / {total} 名",
+  "rev.global": "總排名第 {rank} / {total} 名",
   "rev.watch": "觀看",
   "rev.approve": "通過",
   "rev.decline": "拒絕",

@@ -307,6 +307,8 @@
   "rev.title": "Carreras por revisar",
   "rev.none": "No hay carreras por revisar ahora mismo.",
   "rev.would": "Sería #{rank}",
+  "rev.wouldOf": "Sería #{rank} de {total}",
+  "rev.global": "Global #{rank} de {total}",
   "rev.watch": "Ver",
   "rev.approve": "Aprobar",
   "rev.decline": "Rechazar",

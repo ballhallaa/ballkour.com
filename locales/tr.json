@@ -307,6 +307,8 @@
   "rev.title": "Kontrol edilecek koşular",
   "rev.none": "Şu anda kontrol edilecek koşu yok.",
   "rev.would": "#{rank} olur",
+  "rev.wouldOf": "#{rank} / {total} olur",
+  "rev.global": "Genel #{rank} / {total}",
   "rev.watch": "İzle",
   "rev.approve": "Onayla",
   "rev.decline": "Reddet",

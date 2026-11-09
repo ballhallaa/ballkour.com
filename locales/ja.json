@@ -307,6 +307,8 @@
   "rev.title": "確認待ちの記録",
   "rev.none": "今は確認待ちの記録はありません。",
   "rev.would": "#{rank}になる",
+  "rev.wouldOf": "{total}人中#{rank}になる",
+  "rev.global": "全体 {total}人中#{rank}",
   "rev.watch": "見る",
   "rev.approve": "承認",
   "rev.decline": "却下",

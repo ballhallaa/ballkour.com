@@ -307,6 +307,8 @@
   "rev.title": "Parties à vérifier",
   "rev.none": "Aucune partie à vérifier pour le moment.",
   "rev.would": "Serait #{rank}",
+  "rev.wouldOf": "Serait #{rank} sur {total}",
+  "rev.global": "Général #{rank} sur {total}",
   "rev.watch": "Regarder",
   "rev.approve": "Approuver",
   "rev.decline": "Refuser",

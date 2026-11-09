@@ -959,6 +959,10 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .sub-pick .chev { width: 16px; height: 16px; flex: none; color: var(--ink-3); transition: transform .2s ease; }
 .sub-pick[aria-expanded="true"] .chev { transform: rotate(180deg); }
 .sub-course-menu { left: 0; right: 0; top: calc(100% + 6px); max-height: 340px; overflow-y: auto; overscroll-behavior: contain; transform-origin: top center; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; }
+/* A broken course: dimmed, and struck through like its code in the course list. It can't be picked. */
+.opt.broken { cursor: default; color: var(--ink-3); }
+.opt.broken .opt-label { text-decoration-line: line-through; text-decoration-color: var(--coral); text-decoration-thickness: 2px; }
+.opt.broken .opt-flag { opacity: .45; }
 @media (max-width: 600px) {
   .sub-course-menu { position: static; max-height: none; margin-top: 6px; grid-template-columns: minmax(0, 1fr); }
 }
@@ -968,8 +972,8 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .sub-form [aria-invalid="true"] { border-color: var(--coral); }
 #sub-time, #sub-miss { font-family: var(--mono); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
 .sub-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px 14px; }
-/* Runs to check, for reviewers: one card per run, the one an old ?check= link picked out in gold. All runs, its other
-   tab, lists every run sent from the website the same way. */
+/* Runs to check, for reviewers, under the form: one card per run, the one an old ?check= link picked out in gold.
+   All runs, its other tab, lists every run sent from the website the same way. */
 .sub-review { margin: 0 18px 16px; padding: 12px 14px; border: 1px solid rgba(255, 213, 79, .28); border-radius: 12px; background: rgba(255, 213, 79, .045); }
 .rev-title { margin: 0; display: flex; align-items: center; gap: 8px; font: 600 12px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink); }
 .rev-title .icon { width: 15px; height: 15px; color: var(--gold); }
@@ -986,6 +990,9 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 /* Its time, mistakes, and rating, then where it is (on a phone, that goes under them) */
 .rev-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
 .rev-line .stat { font: 600 14px/1 var(--mono); }
+/* Would be #1 of 12 · Global #1 of 16 · ★ 1,818, which can wrap onto two lines on a phone */
+.rev-would { display: inline-block; height: auto; padding: 1px 7px; line-height: 14px; }
+.rev-would .icon { width: 10px; height: 10px; margin-right: 3px; vertical-align: -1px; }
 .rev-meta { font: 400 12.5px/1.3 var(--mono); color: var(--ink-3); }
 .rev-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 3px; }
 .rev-actions .icon { width: 15px; height: 15px; }
@@ -1400,7 +1407,6 @@ a.link-copy { text-decoration: none; }
             <span class="lr-sub" id="sub-intro" data-i18n="lb.submit.web">Send it here and it goes straight on the board, with your video for everyone to watch.</span>
           </span>
         </div>
-        <div class="sub-review" id="sub-review" hidden></div>
         <div class="sub-signin" id="sub-signin" hidden>
           <a class="btn btn-sm btn-discord" id="sub-login" href="/api/login?to=/submit"><svg class="icon" aria-hidden="true"><use href="#i-discord"/></svg><span data-i18n="sub.signin">Sign in with Discord</span></a>
           <span class="field-hint" data-i18n="sub.signinWhy">No new account needed. It puts the run under your Discord, so nobody else can send one as you.</span>
@@ -1448,6 +1454,7 @@ a.link-copy { text-decoration: none; }
           </div>
           <p class="sub-status field-wide" id="sub-status" role="status"></p>
         </form>
+        <div class="sub-review" id="sub-review" hidden></div>
         <div class="sub-runs" id="sub-runs" hidden></div>
         <div class="submit-alt">
           <span class="lr-sub" id="sub-alt" data-i18n="lb.submit.how">Open a ticket on our Discord and share your video. Not in our server yet? Join us first!</span>
@@ -1805,6 +1812,8 @@ a.link-copy { text-decoration: none; }
   "rev.title": "Runs to check",
   "rev.none": "No runs to check right now.",
   "rev.would": "Would be #{rank}",
+  "rev.wouldOf": "Would be #{rank} of {total}",
+  "rev.global": "Global #{rank} of {total}",
   "rev.watch": "Watch",
   "rev.approve": "Approve",
   "rev.decline": "Turn down",
@@ -2073,13 +2082,19 @@ a.link-copy { text-decoration: none; }
   }
 
   /* A button that opens a listbox menu: mouse, touch and keyboard (arrows, Home/End, Enter, Escape). cols is how many
-     columns it has, or a function that says, for a menu whose columns change with the screen's width. */
+     columns it has, or a function that says, for a menu whose columns change with the screen's width. An option with
+     aria-disabled="true" (a broken course in the course picker) shows, but can't be picked: the arrows go on past it,
+     the way they were going. */
   function makeMenu(wrap, btn, menu, cols, onChoose) {
     let opts = [];
     let active = 0;
-    function setActive(i, scroll) {
+    const off = (o) => o.getAttribute("aria-disabled") === "true";
+    function setActive(i, scroll, step = 1) {
       if (!opts.length) return;
-      active = (i + opts.length) % opts.length;
+      const at = (j) => ((j % opts.length) + opts.length) % opts.length;
+      for (let tries = 0; tries < opts.length && off(opts[at(i)]); tries++) i += step;
+      if (off(opts[at(i)])) return;
+      active = at(i);
       opts.forEach((o, j) => o.classList.toggle("active", j === active));
       menu.setAttribute("aria-activedescendant", opts[active].id);
       if (scroll) opts[active].scrollIntoView({ block: "nearest" });
@@ -2102,15 +2117,15 @@ a.link-copy { text-decoration: none; }
     btn.addEventListener("keydown", (e) => {
       if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); open(); }
     });
-    menu.addEventListener("click", (e) => { const o = e.target.closest('[role="option"]'); if (o) choose(o.dataset.value); });
-    menu.addEventListener("pointermove", (e) => { const o = e.target.closest('[role="option"]'); if (o) setActive(opts.indexOf(o), false); });
+    menu.addEventListener("click", (e) => { const o = e.target.closest('[role="option"]'); if (o && !off(o)) choose(o.dataset.value); });
+    menu.addEventListener("pointermove", (e) => { const o = e.target.closest('[role="option"]'); if (o && !off(o)) setActive(opts.indexOf(o), false); });
     menu.addEventListener("keydown", (e) => {
       const n = typeof cols === "function" ? cols() : cols;
       const step = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: n, ArrowUp: -n }[e.key];
-      if (step) { e.preventDefault(); setActive(active + step, true); }
+      if (step) { e.preventDefault(); setActive(active + step, true, step); }
       else if (e.key === "Home") { e.preventDefault(); setActive(0, true); }
-      else if (e.key === "End") { e.preventDefault(); setActive(opts.length - 1, true); }
-      else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); if (opts[active]) choose(opts[active].dataset.value); }
+      else if (e.key === "End") { e.preventDefault(); setActive(opts.length - 1, true, -1); }
+      else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); if (opts[active] && !off(opts[active])) choose(opts[active].dataset.value); }
       else if (e.key === "Escape") { e.preventDefault(); close(true); }
       else if (e.key === "Tab") close(false);
     });
@@ -4244,7 +4259,10 @@ a.link-copy { text-decoration: none; }
   }
   // Signed out: the sign-in button. Signed in: who they are, and the form.
   function renderSubmit() {
-    subCoursePicker.fill(COURSES.filter((c) => !c.broken).map((c) => `<li class="opt" role="option" id="sub-course-opt-${c.n}" data-value="${c.n}" aria-selected="false">` +
+    // Every course, the broken ones struck through like in the course list: they show, but can't be picked, since
+    // nobody can run them right now
+    subCoursePicker.fill(COURSES.map((c) => `<li class="opt${c.broken ? " broken" : ""}" role="option" id="sub-course-opt-${c.n}" data-value="${c.n}" aria-selected="false"` +
+      `${c.broken ? ` aria-disabled="true" title="${esc(t("courses.note"))}"` : ""}>` +
       `<span class="opt-num">${c.n}</span><span class="opt-flag" aria-hidden="true">${c.flag}</span><span class="opt-label">${esc(c.name)}</span>${CHECK}</li>`).join(""));
     setSubCourse(subCourse);
     $("#sub-login").href = loginFor("submit");
@@ -4394,8 +4412,9 @@ a.link-copy { text-decoration: none; }
     const a = e.target.closest("a[data-login-for]");
     if (a) a.href = loginFor(a.dataset.loginFor);
   });
-  /* Reviewers (REVIEWER_ROLES in cloudflare/wrangler.toml) see the top 10 runs waiting for a check above the form,
-     Runs to check: each with View run (its page, with its video and what it would do), Approve (onto the board), and
+  /* Reviewers (REVIEWER_ROLES in cloudflare/wrangler.toml) see the top 10 runs waiting for a check under the form,
+     Runs to check: each with what approving it would do (its place on the course, and its player's place and rating
+     in the player ratings), View run (its page, with its video and the rest of that), Approve (onto the board), and
      Turn down. Approve and Turn down ask first, in the run's row or on its page (reviewAsk): Yes sends it, and Cancel
      or Esc puts the buttons back. Old ?check=<id> links (the Verify buttons from before runs had pages) pick that run
      out here and open its page. Everyone, reviewers too, sees every run under the form (Submitted runs). */
@@ -4418,13 +4437,27 @@ a.link-copy { text-decoration: none; }
     const box = $("#sub-review");
     box.hidden = !(me && me.reviewer);
     if (box.hidden) return;
+    // What approving it would do, as on its page (If approved now), once the boards are in
+    const wouldDo = (r, c) => {
+      const run = runsReady && c && cleanRun(r);
+      const s = run && runNow({ run: r, n: c.n, group: "pending", status: "pending" });
+      return s && isTheirBest(s, run) ? s : null;
+    };
+    // "Would be #1 of 12 · Global #1 of 16 · ★ 1,818": its place on the course, and its player's place and rating in
+    // the player ratings (the same rating as by the run under Submitted runs). On a phone, it only breaks between them.
+    // Until the boards are in, it's just "Would be #1".
+    const wouldTag = (r, s) => [
+      `<span class="nowrap">${esc(s && s.place ? t("rev.wouldOf", { rank: s.place, total: s.players }) : t("rev.would", { rank: r.rank }))}</span>`,
+      s && s.rank && `<span class="nowrap">${esc(t("rev.global", { rank: s.rank[1], total: s.of }))}</span>`,
+      s && s.rating && `<span class="nowrap" title="${esc(t("lb.rating", { points: points(s.rating[1]) }))}">${icon("star")}${esc(points(s.rating[1]))}</span>`,
+    ].filter(Boolean).join(" · ");
     const row = (r) => {
       const c = course(r.course);
       const who = r.discord && PLAYERS.get(r.discord);
       return `<li class="rev-run${r.id === checkParam ? " picked" : ""}" id="rev-${esc(r.id)}">` +
         `<span class="rev-course">${esc(`${r.course} `)}${c ? flagName(c) : esc(r.courseName)}</span>` +
         `<b class="rev-name">${esc(r.name)}</b><span class="rev-line"><span class="stat time">${icon("bolt")}${esc(r.time)}</span><span class="stat miss">${icon("skull")}${esc(r.mistakes)}</span>` +
-        `<span class="tag tag-wr">${esc(t("rev.would", { rank: r.rank }))}</span></span>` +
+        `<span class="tag tag-wr rev-would">${wouldTag(r, wouldDo(r, c))}</span></span>` +
         `<span class="rev-meta">${sentBy(r.date, who && who.name)}</span>` +
         `<span class="rev-actions" data-id="${esc(r.id)}">${reviewActions(r)}</span></li>`;
     };
@@ -4675,9 +4708,10 @@ a.link-copy { text-decoration: none; }
     }
   }
   /* What a run did, from where its player stood before it and after it (see standing):
-       { place, was, best, bestMiss, old, record, passed, points, rating, rank, of, tier, courses, counted, top10s,
-         podiums, records }
-     place and was are their place on the course after and before (was is null on their first run there), best and old
+       { place, was, players, best, bestMiss, old, record, passed, points, rating, rank, of, tier, courses, counted,
+         top10s, podiums, records }
+     place and was are their place on the course after and before (was is null on their first run there), players how
+     many players are on the course's board after (what the Worker kept before there was players has none), best and old
      their best time there after and before, and bestMiss the mistakes on that best (see isTheirBest), passed the names of
      the players it put them ahead of. points (the course rating), rating, rank (their place in the ratings) and tier
      are [before, after] (before null when they weren't rated yet, the pair null when the course isn't rated), of is how
@@ -4695,6 +4729,7 @@ a.link-copy { text-decoration: none; }
     return {
       place: after.at >= 0 ? after.at + 1 : null,
       was: before.at >= 0 ? before.at + 1 : null,
+      players: after.board.length,
       best: after.best ? after.best.time : null,
       bestMiss: after.best ? after.best.miss : null,
       old: before.best ? before.best.time : null,
@@ -5319,6 +5354,7 @@ a.link-copy { text-decoration: none; }
   Promise.allSettled(LOADS).then(() => {
     runsReady = true;
     renderSentRuns();
+    if (reviewRuns.length) renderReview(); // with what each would do, now that the boards are in
     if (startRun) openRun(startRun);
   });
 
