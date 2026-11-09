@@ -1352,7 +1352,7 @@ a.rev-run:hover { border-color: var(--line-hi); background: var(--glass-hi); }
 .contact-q { flex-basis: 100%; margin-bottom: 2px; font: 500 14.5px/1.3 var(--body); color: var(--ink-2); }
 a.link-copy { text-decoration: none; }
 .link-copy .ext { transition: color .15s, transform .15s; }
-/* The email: a link to write and a joined copy button */
+/* The Discord name and the email: a copy button, joined to a link that opens it */
 .split { display: inline-flex; }
 .split > .link-copy { position: relative; }
 .split > .link-copy:hover, .split > .link-copy.copied { z-index: 1; }
@@ -1718,7 +1718,10 @@ a.link-copy { text-decoration: none; }
   <footer class="foot">
     <div class="contact">
       <span class="contact-q" data-i18n="foot.contact">Questions or feedback?</span>
-      <button class="link-copy" type="button" data-copy="ballhallaa"><span class="sr-only" data-i18n="foot.copyDiscord">Copy Discord username</span><svg class="icon" aria-hidden="true"><use href="#i-discord"/></svg><span class="copy-val">ballhallaa</span><svg class="icon i-copy" aria-hidden="true"><use href="#i-copy"/></svg><svg class="icon i-check" aria-hidden="true"><use href="#i-check"/></svg></button>
+      <span class="split">
+        <button class="link-copy" type="button" data-copy="ballhallaa"><span class="sr-only" data-i18n="foot.copyDiscord">Copy Discord username</span><svg class="icon" aria-hidden="true"><use href="#i-discord"/></svg><span class="copy-val">ballhallaa</span><svg class="icon i-copy" aria-hidden="true"><use href="#i-copy"/></svg><svg class="icon i-check" aria-hidden="true"><use href="#i-check"/></svg></button>
+        <a class="link-copy" href="https://discord.com/users/175372497720573953" target="_blank" rel="noopener"><span class="sr-only" data-i18n="foot.openDiscord">Open on Discord</span><svg class="icon ext" aria-hidden="true"><use href="#i-out"/></svg></a>
+      </span>
       <span class="split">
         <button class="link-copy" type="button" data-copy-mailto><span class="sr-only" data-i18n="foot.copyEmail">Copy email address</span><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg><span class="copy-val">hi@ballhal.la</span><svg class="icon i-copy" aria-hidden="true"><use href="#i-copy"/></svg><svg class="icon i-check" aria-hidden="true"><use href="#i-check"/></svg></button>
         <a class="link-copy" href="mailto:hi@ballhal.la"><span class="sr-only" data-i18n="foot.writeEmail">Write an email</span><svg class="icon ext" aria-hidden="true"><use href="#i-out"/></svg></a>
