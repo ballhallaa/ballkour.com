@@ -554,8 +554,8 @@ main:focus { outline: none; }
 .course-board .board-empty { padding: 12px; font-size: 14.5px; }
 .board-meta { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 12px; padding: 14px 18px 6px; font: 500 11.5px/1.3 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
 .board { list-style: none; margin: 0; padding: 2px 0 10px; }
-/* Under the name: the player's Discord name and picture. Under the time and mistakes: the date, flush right.
-   Rows with neither stay a single line. */
+/* Under the name: the player's Discord name and picture. Under the time and mistakes: the rating and the date, flush
+   right (on a phone, the date under the rating). Rows with neither stay a single line. */
 .run { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto 50px; grid-template-areas: "rank who time miss" "rank dc date date"; align-items: center; gap: 0 12px; padding: 8px 18px; font-variant-numeric: tabular-nums; }
 .run-rank { grid-area: rank; font: 700 15px/1 var(--mono); color: var(--ink-3); }
 .run-who { grid-area: who; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
@@ -1042,6 +1042,10 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 @media (max-width: 480px) {
   .run, .course-board .run { grid-template-columns: 22px minmax(0, 1fr) auto 40px; gap: 0 8px; padding: 8px 12px; }
   .rt-board .run { grid-template-columns: 22px minmax(0, 1fr) 66px 50px; }
+  /* The date goes on its own line under the rating, so the rating and what the run adds to it fit under the time and
+     mistakes, and the names keep their room */
+  .run-date { flex-direction: column; align-items: flex-end; gap: 3px; }
+  .run-dc, .run-date { align-self: start; }
   /* The tier moves under the name when they don't fit side by side */
   .rt-board .run-line { flex-wrap: wrap; gap: 3px 7px; }
   .rt-board .run-line .run-name { flex: 0 1 auto; max-width: 100%; }
@@ -2009,6 +2013,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "signin.continue": "Continue with Discord",
   "signin.notNow": "Not now",
   "rt.coursePoints": "{points} course rating points",
+  "rt.coursePointsGain": "{points} course rating points, with {change} from this run",
   "lb.rating": "Rating over every course: {points}",
   "lb.ratingNote": "Ratings: each player’s rating over every course",
   "lb.ratingThen": "Ratings: each player’s rating over every course, as it was on {date}",
@@ -2544,14 +2549,16 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   }
   // A name on a board: opens the player's runs (see "A player's runs")
   const nameButton = (key, name) => `<button class="run-name" type="button" data-player="${esc(key)}" title="${esc(t("lb.playerOpen", { player: name }))}">${esc(caps(name))}</button>`;
-  // A run on a board. ratingOf: each player's rating over every course (see ratingsBy), beside the date like on the
-  // board pictures (none on legacy boards). podium: the run's place on the board by time when it's sorted by
-  // mistakes, so the fastest three keep their gold, silver and bronze wherever they are. mark: it's the run "See it on
-  // the board" opened the board for
+  // A run on a board. ratingOf: each player's rating over every course and what the run adds to it (see
+  // boardRatings), beside the date like on the board pictures (none on legacy boards). podium: the run's place on the
+  // board by time when it's sorted by mistakes, so the fastest three keep their gold, silver and bronze wherever they
+  // are. mark: it's the run "See it on the board" opened the board for
   function runRow(r, i, fresh, legacy, ratingOf, podium, mark) {
     const place = podium === undefined ? i : podium;
     const isNew = !!fresh && fresh.has(r);
     const rating = ratingOf ? ratingOf.get(playerKey(r)) : undefined;
+    const ratingTitle = !rating ? "" : rating.gain === null ? t("lb.rating", { points: points(rating.rating) })
+      : t("runs.ratingGain", { rating: points(rating.rating), change: signed(rating.gain), player: r.name });
     const split = legacy ? /^(.*?)(\.--)?$/.exec(r.time) : null;
     const shown = split ? esc(split[1]) + (split[2] ? `<span class="na">.--</span>` : "") : esc(r.time);
     const time = `${icon("bolt")}<span class="v">${shown}</span>`;
@@ -2562,7 +2569,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       timeLink(r, time) +
       `<span class="stat miss" title="${esc(t("unit.mistakes", { count: r.miss }))}">${icon("skull")}${esc(r.miss)}<span class="sr-only"> ${esc(t("unit.mistakes", { count: r.miss }))}</span></span>` +
       (r.date || rating !== undefined ? `<span class="run-date">` +
-        (rating !== undefined ? `<span class="run-pts" title="${esc(t("lb.rating", { points: points(rating) }))}">${icon("star")}${esc(points(rating))}</span>` : "") +
+        (rating !== undefined ? `<span class="run-pts" title="${esc(ratingTitle)}">${icon("star")}${esc(points(rating.rating) + gainText(rating.gain))}</span>` : "") +
         `${r.date ? `<span title="${esc(t("lb.submittedOn", { date: formatDate(r.date) }))}">${esc(formatDate(r.date))}</span>` : ""}</span>` : "") +
       dcHtml(r) +
       `</li>`;
@@ -2635,7 +2642,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     rest = rest || [];
     if (!runs.length && !rest.length) return `<p class="board-empty">${esc(t(c.broken ? "lb.emptyBroken" : "lb.empty"))}</p>`;
     const day = old ? boardDate(runs) : "";
-    const ratingOf = ratingsBy(old ? { day, c, runs } : null);
+    const ratingOf = boardRatings(c, old ? { day, c, runs } : null);
     let top = runs.slice(0, 10);
     // Sorted by mistakes, everyone on it is ranked again (the newest board's top 10 can then take players from past it)
     const byMiss = boardSort === "miss";
@@ -3230,12 +3237,56 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     });
     return { counted, players: list };
   }
-  // Each player's rating over every course, by player (see playerKey): today's, or then's (see ratings)
-  const ratingsBy = (then) => new Map(ratings(then).players.map((p) => [p.key, p.rating]));
+  /* What a player's best run on a course adds to its course rating, the way a run's page works it out (statsFrom): its
+     course rating, and what they'd have without it, when their next-fastest run there counts instead, against the
+     record without it. all: the course's board, fastest first, as the ratings count it. at: their place on it.
+     theirs: their runs on the course that count (see countedRuns). → [without, with] (without is 0 with no other run) */
+  function pointsWithout(all, at, theirs) {
+    const run = all[at];
+    const next = theirs.filter((x) => !(x.time === run.time && x.miss === run.miss) && byTime(x, run) >= 0).sort(byTime)[0];
+    const record = [all[at === 0 ? 1 : 0], next].filter(Boolean).sort(byTime)[0];
+    return [next ? coursePoints(record, next) : 0, coursePoints(all[0], run)];
+  }
+  // A course's runs that count (none taken off for good): its file's, runs.json's, and the old boards'. day: only the
+  // ones sent by then (see standingsOn)
+  function countedRuns(c, day) {
+    const gone = REMOVED[c.n] || [];
+    return [...c.runs, ...(MORE[c.n] || []), ...(HISTORY[c.n] ? HISTORY[c.n].boards.flat() : [])].filter((r) => {
+      if (gone.some((x) => sameRun(x, r))) return false;
+      const d = day ? formatDate(r.date) : "";
+      return !day || (/^\d{4}-\d{2}-\d{2}$/.test(d) && d <= day);
+    });
+  }
+  /* Each player's rating over every course, and what their run on c's board adds to it (gain): their rating with it,
+     less their rating without it (see pointsWithout), like a run's page and the run lists show it ("⭐ 855 (+98)").
+     Only c's course rating changes without it, so that's all that's worked out again. A run on a course that isn't
+     rated adds nothing, so it has no gain (null). then: an older board's day, as for ratings, or none for today's.
+     → Map: player (see playerKey) → { rating, gain } */
+  function boardRatings(c, then) {
+    const r = ratings(then);
+    const out = new Map(r.players.map((p) => [p.key, { rating: p.rating, gain: null }]));
+    if (!r.counted.includes(c)) return out;
+    const all = then ? standingsOn(c, then.day, then.runs) : (({ top, rest }) => top.concat(rest))(standingsOf(c));
+    const theirs = new Map();
+    countedRuns(c, then && then.day).forEach((x) => {
+      const key = playerKey(x);
+      if (!theirs.has(key)) theirs.set(key, []);
+      theirs.get(key).push(x);
+    });
+    all.forEach((run, at) => {
+      const p = out.get(playerKey(run));
+      if (!p) return;
+      const [without, withIt] = pointsWithout(all, at, theirs.get(playerKey(run)) || []);
+      p.gain = Math.round(p.rating) - Math.round(p.rating - (withIt - without) / r.counted.length);
+    });
+    return out;
+  }
   const points = (n) => Math.round(n).toLocaleString(htmlLang());
   // A run's player's rating over every course with it, and what it added (s: what it did, from statsFrom or the
   // Worker): "⭐ 855 (+98)", the way the run lists show it. Nothing when it doesn't count for the ratings.
   const signed = (n) => `${n < 0 ? "−" : "+"}${points(Math.abs(n))}`;
+  // " (+98)" after a rating, or nothing when there's no gain to show (null)
+  const gainText = (gain) => (gain === null || gain === undefined ? "" : ` (${signed(gain)})`);
   function ratingAdded(s) {
     if (!s || !s.rating) return null;
     const rating = Math.round(s.rating[1]);
@@ -3367,8 +3418,14 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     (HISTORY[c.n] ? HISTORY[c.n].boards.flat() : []).forEach((r) => add(r, true));
     return { runs: runs.sort(byTime), legacy: (HISTORY[c.n] ? HISTORY[c.n].legacy : []).filter((r) => playerKey(r) === key) };
   }
-  // c: the course, named over the run (on the list of every run, where runs from every course are together)
-  function plRunHtml(r, record, isBest, legacy, c) {
+  // A course rating in a player's panel, and what their run adds to it (gain: for their best run there, see plRows)
+  const coursePtsHtml = (pts, gain) => {
+    const title = gain === null || gain === undefined ? t("rt.coursePoints", { points: points(pts) }) : t("rt.coursePointsGain", { points: points(pts), change: signed(gain) });
+    return `<span class="run-pts" title="${esc(title)}">${icon("star")}${esc(points(pts) + gainText(gain))}</span>`;
+  };
+  // c: the course, named over the run (on the list of every run, where runs from every course are together). gain:
+  // what their best run there adds to its course rating (see plRows)
+  function plRunHtml(r, record, isBest, legacy, c, gain) {
     const time = `${icon("bolt")}<span class="v">${esc(r.time)}</span>`;
     const pts = record && !legacy ? coursePoints(record, r) : null;
     const date = r.date ? formatDate(r.date) : "";
@@ -3378,7 +3435,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       `<span class="stat miss" title="${esc(t("unit.mistakes", { count: r.miss }))}">${icon("skull")}${esc(r.miss)}</span>` +
       `<span class="pl-run-tags">${isBest ? `<span class="tag tag-latest">${esc(t("pl.best"))}</span>` : ""}${legacy ? `<span class="tag tag-legacy">${esc(t("pl.legacy"))}</span>` : ""}</span>` +
       `<span class="pl-run-meta">` +
-        (pts !== null ? `<span class="run-pts" title="${esc(t("rt.coursePoints", { points: points(pts) }))}">${icon("star")}${esc(points(pts))}</span>` : "") +
+        (pts !== null ? coursePtsHtml(pts, isBest ? gain : null) : "") +
         (date ? `<span title="${esc(t("lb.submittedOn", { date }))}">${esc(date)}</span>` : "") +
       `</span></li>`;
   }
@@ -3402,15 +3459,19 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       return sum + runs.length + legacy.length;
     }, 0);
   }
-  // Every course in a player's panel (and its picture): their place and best run there, and every run they've sent for
-  // it. Broken courses only when they've run them.
+  // Every course in a player's panel (and its picture): their place and best run there, what that run adds to their
+  // course rating there (gain, like a run's page: see pointsWithout), and every run they've sent for it. Broken
+  // courses only when they've run them.
   function plRows(key) {
     return COURSES.map((c) => {
       const { top, rest } = standingsOf(c);
       const all = top.concat(rest);
       const at = all.findIndex((x) => playerKey(x) === key);
       const best = at >= 0 ? all[at] : null;
-      return { c, at, best, total: all.length, record: c.broken || c.latestBroken ? null : all[0], ...runsOf(key, c, best) };
+      const record = c.broken || c.latestBroken ? null : all[0];
+      const theirs = runsOf(key, c, best);
+      const pts = record && best ? pointsWithout(all, at, theirs.runs) : null;
+      return { c, at, best, total: all.length, record, gain: pts ? Math.round(pts[1]) - Math.round(pts[0]) : null, ...theirs };
     }).filter((x) => !x.c.broken || x.runs.length || x.legacy.length);
   }
   function playerHtml() {
@@ -3454,13 +3515,13 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       // Everyone can put their stats on their profile, runs or not: before their first, it says they're unrated
       (mine ? profileHtml() : "") +
       `<ul class="pl-courses">`;
-    rows.forEach(({ c, at, best, total, record, runs, legacy }) => {
+    rows.forEach(({ c, at, best, total, record, gain, runs, legacy }) => {
       const open = plOpen.has(c.n);
       const summary = best
         ? `<span class="pl-course-best"><span class="pl-place">${esc(t("res.of", { rank: at + 1, total }))}</span>` +
           `<span class="stat time">${icon("bolt")}<span class="v">${esc(best.time)}</span></span>` +
           `<span class="stat miss" title="${esc(t("unit.mistakes", { count: best.miss }))}">${icon("skull")}${esc(best.miss)}<span class="sr-only"> ${esc(t("unit.mistakes", { count: best.miss }))}</span></span>` +
-          (record ? `<span class="run-pts">${icon("star")}${esc(points(coursePoints(record, best)))}</span>` : "") +
+          (record ? coursePtsHtml(coursePoints(record, best), gain) : "") +
           (best.date ? `<span class="pl-course-date" title="${esc(t("lb.submittedOn", { date: formatDate(best.date) }))}">${esc(formatDate(best.date))}</span>` : "") + `</span>`
         : `<span class="pl-course-best">${esc(legacy.length ? t("pl.legacyBest", { time: legacy.slice().sort(byTime)[0].time }) : t("pl.notRun"))}</span>`;
       html += `<li class="pl-course${best ? "" : " none"}">` +
@@ -3471,7 +3532,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         `</button>` +
         `<div class="pl-runs" id="pl-runs-${c.n}"${open ? "" : " hidden"}>` +
           (runs.length || legacy.length
-            ? runsCountHtml(runs.length + legacy.length) + `<ol class="pl-run-list">${runs.map((x) => plRunHtml(x, record, x === best, false)).join("")}${legacy.map((x) => plRunHtml(x, null, false, true)).join("")}</ol>`
+            ? runsCountHtml(runs.length + legacy.length) + `<ol class="pl-run-list">${runs.map((x) => plRunHtml(x, record, x === best, false, null, gain)).join("")}${legacy.map((x) => plRunHtml(x, null, false, true)).join("")}</ol>`
             : `<p class="pl-empty">${esc(t("pl.noRuns"))}</p>`) +
           `<a class="pl-board" href="/leaderboards/${c.n}" data-board="${c.n}">${esc(t("pl.board"))}${icon("chev", "icon chev")}</a>` +
         `</div></li>`;
@@ -3498,8 +3559,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // runs and runs on broken courses, last).
   function allRunsHtml(rows) {
     const day = (r) => { const d = formatDate(r.date); return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : ""; };
-    const list = rows.flatMap(({ c, best, record, runs, legacy }) => [
-      ...runs.map((r) => ({ r, day: day(r), order: day(r) ? 0 : 1, pts: record ? coursePoints(record, r) : -1, html: plRunHtml(r, record, r === best, false, c) })),
+    const list = rows.flatMap(({ c, best, record, gain, runs, legacy }) => [
+      ...runs.map((r) => ({ r, day: day(r), order: day(r) ? 0 : 1, pts: record ? coursePoints(record, r) : -1, html: plRunHtml(r, record, r === best, false, c, gain) })),
       ...legacy.map((r) => ({ r, day: "", order: 2, pts: -1, html: plRunHtml(r, null, false, true, c) })),
     ]);
     list.sort((a, b) => a.order - b.order || b.day.localeCompare(a.day));
@@ -4189,8 +4250,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   }
   function paintPicture(c, d, logo, people, pfps) {
     const W = PIC.w, rowsTop = PIC.top + PIC.head + 22, footY = rowsTop + 5 * PIC.rowH + 4 * PIC.gap + 18, H = Math.round(footY + 17 + 26);
-    // Each player's rating over every course, beside the date like the bot's pictures (legacy boards don't count)
-    const ratingOf = d.legacy ? new Map() : ratingsBy(d.then);
+    // Each player's rating over every course and what their run adds to it, beside the date like the bot's pictures
+    // (legacy boards don't count)
+    const ratingOf = d.legacy ? new Map() : boardRatings(c, d.then);
     const { cv, ctx } = picCanvas(W, H, logo);
     // The title, with the site's orange and blue edges, and the two lines under it
     const textTop = PIC.top + (PIC.head - 99.6) / 2;
@@ -4275,7 +4337,16 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         ctx.fillStyle = "rgba(0,230,151,.12)"; ctx.fill(); ctx.strokeStyle = "rgba(0,230,151,.4)"; ctx.stroke();
         picText(ctx, tag, tx + 6, y1, "#00e697");
       }
-      // Under them: the Discord name and picture, and the date
+      // Under them: the date, and the rating with what the run adds to it, at the right, then the Discord name and
+      // picture, cut off before them
+      picFont(ctx, '400 13.5px "JetBrains Mono", monospace');
+      const dateW = date ? picText(ctx, date, right, y2, "#76867f", "right") + 14 : 0;
+      let endW = dateW;
+      if (rating !== undefined) {
+        const numW = picText(ctx, points(rating.rating) + gainText(rating.gain), right - dateW, y2, "#a7b6b0", "right");
+        picIcon(ctx, "star", right - dateW - numW - 5 - 15, y2, 15, "#ffd54f");
+        endW += numW + 5 + 15 + 14;
+      }
       if (who) {
         let dx = nameLeft;
         if (pfps[i]) {
@@ -4284,16 +4355,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
           dx += 29;
         }
         picFont(ctx, '600 16px Barlow, sans-serif');
-        ctx.save(); ctx.beginPath(); ctx.rect(dx, y2 - 12, right - 110 - dx, 24); ctx.clip();
+        ctx.save(); ctx.beginPath(); ctx.rect(dx, y2 - 12, Math.max(0, right - endW - dx), 24); ctx.clip();
         picText(ctx, who.name, dx, y2, "#b9befc");
         ctx.restore();
-      }
-      picFont(ctx, '400 13.5px "JetBrains Mono", monospace');
-      const dateW = date ? picText(ctx, date, right, y2, "#76867f", "right") + 14 : 0;
-      if (rating !== undefined) {
-        const num = points(rating);
-        const numW = picText(ctx, num, right - dateW, y2, "#a7b6b0", "right");
-        picIcon(ctx, "star", right - dateW - numW - 5 - 15, y2, 15, "#ffd54f");
       }
       ctx.restore();
     }
@@ -4475,7 +4539,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     // time and mistakes, the course rating it earns, and its date. Courses they haven't run are dimmed.
     const colW = (W - 2 * PIC.pad - PIC.colGap) / 2;
     const TIER = ["#ffd54f", "#d3dde2", "#e8a066"];
-    d.rows.forEach(({ c, at, best, total, record, legacy }, i) => {
+    d.rows.forEach(({ c, at, best, total, record, gain, legacy }, i) => {
       const old = !best && legacy.length ? legacy.slice().sort(byTime)[0] : null;
       const run = best || old;
       const x = PIC.pad + (i < perCol ? 0 : colW + PIC.colGap), y = rowsTop + (i % perCol) * (PIC.rowH + PIC.gap);
@@ -4522,8 +4586,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         ctx.fillStyle = "rgba(255,106,79,.12)"; ctx.fill(); ctx.strokeStyle = "rgba(255,106,79,.4)"; ctx.stroke();
         picText(ctx, broken, bx + 6, y1, "#ff6a4f");
       }
-      // Under it: their best time and its mistakes, then the course rating it earns and its date at the right (or
-      // that they haven't run it yet)
+      // Under it: their best time and its mistakes, then the course rating it earns (with what it adds to it, see
+      // plRows) and its date at the right, smaller when they'd run into the time and mistakes (or that they haven't
+      // run it yet)
+      let leftEnd = nameLeft;
       if (!run) {
         picFit(ctx, t("pl.notRun"), right - nameLeft, (size) => `600 ${size}px "JetBrains Mono", monospace`, 15, 10, 0.04);
         picText(ctx, t("pl.notRun"), nameLeft, y2, "#76867f");
@@ -4537,13 +4603,20 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         } else tx += picText(ctx, run.time, tx, y2, "#ecf6f2");
         picIcon(ctx, "skull", tx + 16, y2, 17, "#ff6a4f");
         picFont(ctx, '700 17px "JetBrains Mono", monospace');
-        picText(ctx, String(run.miss), tx + 16 + 17 + 5, y2, "#a7b6b0");
+        leftEnd = tx + 16 + 17 + 5 + picText(ctx, String(run.miss), tx + 16 + 17 + 5, y2, "#a7b6b0");
       }
-      picFont(ctx, '400 13.5px "JetBrains Mono", monospace');
       const date = best ? formatDate(best.date) : "";
+      const num = best && record ? points(coursePoints(record, best)) + gainText(gain) : "";
+      const endFont = (size) => `400 ${size}px "JetBrains Mono", monospace`;
+      let endSize = 13.5;
+      const endW = () => {
+        picFont(ctx, endFont(endSize));
+        return (date ? ctx.measureText(date).width + 14 : 0) + (num ? ctx.measureText(num).width + 5 + 15 : 0);
+      };
+      while (endSize > 10 && right - endW() < leftEnd + 14) endSize -= 0.5;
+      picFont(ctx, endFont(endSize));
       const dateW = date ? picText(ctx, date, right, y2, "#76867f", "right") + 14 : 0;
-      if (best && record) {
-        const num = points(coursePoints(record, best));
+      if (num) {
         const numW = picText(ctx, num, right - dateW, y2, "#a7b6b0", "right");
         picIcon(ctx, "star", right - dateW - numW - 5 - 15, y2, 15, "#ffd54f");
       }
