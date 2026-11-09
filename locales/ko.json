@@ -462,5 +462,6 @@
   "vid.fail": "댓글을 불러오지 못했습니다. 나중에 다시 시도하세요.",
   "vid.all": "YouTube에서 댓글 {count}개 모두 보기",
   "vid.likes": "좋아요: {count}",
-  "vid.replies": "답글: {count}"
+  "vid.replies": "답글: {count}",
+  "dc.how": "상위 % 역할과 프로필 기록을 받으려면 내 프로필에서 Discord로 로그인하세요. 역할은 첫 기록을 제출하면 받을 수 있고, 기록 표시도 거기서 켤 수 있습니다."
 }

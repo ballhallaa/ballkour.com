@@ -462,5 +462,6 @@
   "vid.fail": "无法加载评论。请稍后再试。",
   "vid.all": "在 YouTube 上查看全部 {count} 条评论",
   "vid.likes": "点赞：{count}",
-  "vid.replies": "回复：{count}"
+  "vid.replies": "回复：{count}",
+  "dc.how": "要获得前 % 身份组和个人资料上的数据，请在“我的主页”中使用 Discord 登录。提交第一个成绩后就会获得身份组，也可以在那里开启数据展示。"
 }
