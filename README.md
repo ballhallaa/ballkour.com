@@ -76,7 +76,7 @@ The test copy doesn't have the Worker's secrets, so player names and pictures ar
 - `/releases`, `/releases/site` (or `/releases/website`): redirect to the game's and this website's release notes.
 
   Anything after these carries over, e.g. `/code/game/issues`. A release's own page is `/releases/v2026.10.14-0` or `/releases/site/v2026.11.02.6`, which Cloudflare redirects before the Worker sees it.
-- `/data/players.json`: the Discord name and picture of every player whose run has a Discord ID, looked up with Ballkyrie's token. Refreshed at most once an hour.
+- `/data/players.json`: the Discord name and picture of every player whose run has a Discord ID, looked up with Ballkyrie's token. Each is looked up again about once an hour. A refresh only makes so many calls to Discord (Cloudflare's free plan allows 50 per request), so with lots of players it takes a few refreshes, minutes apart, players with no name yet first.
 - `/api/…`: signing in with Discord, and runs sent from the form under Submit a run. See [Runs sent from the website](#runs-sent-from-the-website). Also players' stats on their Discord profiles (see [Stats on Discord profiles](#stats-on-discord-profiles)), and players claiming their runs from before May 2026 (see [Claiming legacy runs](#claiming-legacy-runs)).
 
 Each page also gets the latest copy of all three as it's served, with the "• N members" counts already filled in, so nothing pops in after the page loads. If GitHub or Discord can't be reached, the last copy that worked is served for up to a week.
@@ -171,7 +171,7 @@ DUCKLING · #3
 
 The first line is their Top % (Rated for the bottom 10%), the second their in-game name and place in the player ratings. Discord allows only 5 numbers per app, whole numbers only, which is why Top % is in the text: 0.1 isn't a whole number. The numbers and their names are `PROFILE_FIELDS` in `cloudflare/worker.js`. Server owners can also use them for linked roles (Server Settings → Linked Roles), like a role for anyone with at least one top 10.
 
-Everyone's stats catch up with the boards every 30 minutes (the cron in `cloudflare/wrangler.toml`), and a player's own stats update as soon as their run goes on a board. **Take them off** in the same panel removes them. So does removing Ballkyrie under Authorized Apps in Discord's settings.
+Everyone's stats catch up with the boards every 30 minutes (the cron in `cloudflare/wrangler.toml`), and a player's own stats update as soon as their run goes on a board. Each update stays within Cloudflare's limit of 50 calls, so after a new record (which changes everyone's rating) it can take a few updates to reach everyone. **Take them off** in the same panel removes them. So does removing Ballkyrie under Authorized Apps in Discord's settings.
 
 **Show on my Discord profile** first opens a panel that explains it: a preview of the box with the player's own stats, what Discord's "Update your connection and metadata for this application" means, and what happens next. The box only shows on their profile once they also have the Discord Profile App linked role on our Discord server, so once their stats are on, their panel leads with how to get it. The Worker asks Discord whether they have the role (with Ballkyrie's bot token, looking the role up by that name once a day), and once they do, their panel just says their stats are on. It asks again when they come back to the site's tab, so finishing in Discord shows up without a reload. Discord can take a few minutes to show the box the first time.
 

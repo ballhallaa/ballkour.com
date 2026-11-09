@@ -3365,10 +3365,11 @@ a.link-copy { text-decoration: none; }
     renderPlayer(ok ? "[data-login-for=profile]" : "[data-dcp-off]");
     dcpNote = "";
   });
-  // Back on this tab from getting the role in Discord: their panel asks again, and says they're all set once they are
+  // Back on this tab from getting the role in Discord: their panel asks again (fresh: the Worker asks Discord again
+  // too, instead of answering from the last minute), and says they're all set once they are
   document.addEventListener("visibilitychange", async () => {
     if (document.hidden || !pl.open || !me || !me.profile || me.role || plKey !== "d:" + me.id) return;
-    const d = await fetch("/api/me", { cache: "no-store" }).then((r) => r.json()).catch(() => null);
+    const d = await fetch("/api/me?fresh=1", { cache: "no-store" }).then((r) => r.json()).catch(() => null);
     if (!(d && d.user && d.user.role && me && d.user.id === me.id)) return;
     me.role = true;
     renderPlayer();
