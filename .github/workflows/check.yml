@@ -3,9 +3,12 @@ name: Check
 # Every pull request, Weblate's too, gets the same checks as a deploy before it's merged: locales/en.json matches the
 # pages, the scripts parse, and the translations keep their {placeholders} (see tools/check.py). Run it by hand from the
 # Actions tab with "Run workflow".
+# The ratings check runs once a day too, since the leaderboard bot's copy lives in the game repo.
 on:
   pull_request:
   workflow_dispatch:
+  schedule:
+    - cron: "17 6 * * *"
 
 permissions:
   contents: read
@@ -22,3 +25,13 @@ jobs:
 
       - name: Check the scripts, settings, and translations
         run: python3 tools/check.py
+
+  # The page's, the Worker's, and the leaderboard bot's boards and ratings agree, on the real boards
+  # (tools/check-ratings.mjs)
+  ratings:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Check that the page, the Worker, and the bot agree
+        run: node tools/check-ratings.mjs
