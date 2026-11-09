@@ -181,6 +181,8 @@
   "lb.sortedMiss": "ミスの少ない順",
   "lb.sortedTimeSlow": "タイムの遅い順",
   "lb.sortedMissMost": "ミスの多い順",
+  "lb.sortedRating": "レーティングの高い順",
+  "lb.sortedRatingLow": "レーティングの低い順",
   "lb.fewer": "トップ10だけ表示",
   "lb.search": "プレイヤー名またはDiscord名",
   "lb.searchLabel": "このランキングのプレイヤーをゲーム内の名前またはDiscord名で探す",

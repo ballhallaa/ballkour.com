@@ -181,6 +181,8 @@
   "lb.sortedMiss": "Trié par erreurs, les moins nombreuses d’abord",
   "lb.sortedTimeSlow": "Trié par temps, les plus lents d’abord",
   "lb.sortedMissMost": "Trié par erreurs, les plus nombreuses d’abord",
+  "lb.sortedRating": "Trié par score, du plus haut au plus bas",
+  "lb.sortedRatingLow": "Trié par score, du plus bas au plus haut",
   "lb.fewer": "Afficher seulement le top 10",
   "lb.search": "Pseudo en jeu ou Discord",
   "lb.searchLabel": "Trouvez un joueur de ce classement par son pseudo en jeu ou sur Discord",

@@ -181,6 +181,8 @@
   "lb.sortedMiss": "按失误排序，最少的在前",
   "lb.sortedTimeSlow": "按时间排序，最慢的在前",
   "lb.sortedMissMost": "按失误排序，最多的在前",
+  "lb.sortedRating": "按积分排序，最高的在前",
+  "lb.sortedRatingLow": "按积分排序，最低的在前",
   "lb.fewer": "只显示前 10 名",
   "lb.search": "玩家或 Discord 名称",
   "lb.searchLabel": "按游戏内名称或 Discord 名称查找此榜上的玩家",

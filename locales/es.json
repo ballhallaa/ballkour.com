@@ -181,6 +181,8 @@
   "lb.sortedMiss": "Ordenado por errores, de menos a más",
   "lb.sortedTimeSlow": "Ordenado por tiempo, del más lento al más rápido",
   "lb.sortedMissMost": "Ordenado por errores, de más a menos",
+  "lb.sortedRating": "Ordenado por puntuación, de mayor a menor",
+  "lb.sortedRatingLow": "Ordenado por puntuación, de menor a mayor",
   "lb.fewer": "Mostrar solo el top 10",
   "lb.search": "Nombre del jugador o de Discord",
   "lb.searchLabel": "Busca a un jugador en esta clasificación por su nombre en el juego o en Discord",
