@@ -35,7 +35,8 @@ RUNS_CHANNEL = "1569040889756655658" # run-submissions
 CLAIMS_CHANNEL = "1569164212901773453" # legacy claims
 NOTIFY_PLAYERS = "on"
 
-# Runs sent from the website: at most 5 a minute from one Discord account (submit() in worker.js). The test copy below
+# Runs sent from the website: at most 5 a minute from one Discord account (submit() in worker.js), claims to legacy runs
+# included (claim()). Changes to the name on a player's link have their own 5 a minute (setLink()). The test copy below
 # doesn't get it, since environments don't inherit bindings, and goes without the limit.
 [[ratelimits]]
 name = "SUBMIT_LIMIT"
@@ -63,9 +64,11 @@ class_name = "PageViews"
 tag = "v1"
 new_sqlite_classes = ["PageViews"]
 
-# Every 30 minutes, the stats on players' Discord profiles catch up with the boards
+# On the hour and half past, the stats on players' Discord profiles catch up with the boards. At :15 and :45, players
+# with runs but no number for their link get one (see "Players' own links" in worker.js, whose NUMBERS_CRON has to be
+# the same as the second one here).
 [triggers]
-crons = ["*/30 * * * *"]
+crons = ["*/30 * * * *", "15,45 * * * *"]
 
 # A test copy on workers.dev, with no route: npx wrangler deploy --env test
 [env.test]

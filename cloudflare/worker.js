@@ -15,10 +15,13 @@
    /api/…              Signing in with Discord, and runs sent from the form under Submit a run, which go on the boards
                        straight away. See "Signing in with Discord, and runs sent from the website" below. Players'
                        stats on their Discord profiles too: see "Stats on Discord profiles". And players claiming their
-                       runs from before May 2026: see "Claiming legacy runs".
+                       runs from before May 2026: see "Claiming legacy runs". And the names players pick for their
+                       links: see "Players' own links".
    /runs/<id>          A run sent from the website: the home page, which opens the run's page. Ballkyrie's post for
                        it in the run submissions channel links here. See "Each run's page".
    /stats              The home page, which opens My stats: the visitor's own player panel (signing them in first).
+   /players/<…>        The home page, which opens a player's panel: by their number, or the name they picked for their
+                       link. See "Players' own links".
    /api/visits         How many times the site was opened, and by how many people, for moderators. See "Page views".
 
    Each page also gets the latest copy of all three in <head> as <script type="application/json"> blocks, and its
@@ -379,8 +382,8 @@ async function buildPlayers(env, ctx, previous) {
                          the error saying what to fix: login (not signed in), course, name, time, miss, video, rate
                          (too many), off (not set up, or GitHub didn't take it) or bad
    GET /api/pending and POST /api/review are for checking top 10 runs (see below), GET /api/run is a run's numbers
-   from when it was sent (see "Each run's page"), and POST /api/claim and /api/claim/review are for claiming legacy
-   runs (see "Claiming legacy runs").
+   from when it was sent (see "Each run's page"), POST /api/claim and /api/claim/review are for claiming legacy runs
+   (see "Claiming legacy runs"), and POST /api/link is for the name on a player's own link (see "Players' own links").
    The session is a cookie signed with SESSION_SECRET that lasts 30 days. Nothing about it is stored here.
    Secrets: DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET (Ballkyrie's app in Discord's Developer Portal, OAuth2 page,
    with https://ballkour.com/api/login/callback added as a redirect), SESSION_SECRET (any long random string) and
@@ -391,8 +394,10 @@ async function buildPlayers(env, ctx, previous) {
    SUBMIT_LIMIT (wrangler.toml) allows 5 sends a minute from one Discord account, and runs.json at most 20 a day. */
 const RUNS_FILE = "leaderboards/runs.json";
 const HISTORY_FILE = "leaderboards/history.json";
-// The files on the game repo's data branch: runs.json, and every board the leaderboard bot has posted
-const DATA_FILES = [RUNS_FILE, HISTORY_FILE];
+// Players' numbers and the names they picked for their links (see "Players' own links")
+const LINKS_FILE = "links.json";
+// The files on the game repo's data branch: runs.json, every board the leaderboard bot has posted, and players' links
+const DATA_FILES = [RUNS_FILE, HISTORY_FILE, LINKS_FILE];
 // The game repo's branch with DATA_FILES, kept apart so the commits for every run stay off develop: leaderboard-data,
 // or DATA_BRANCH (the test copy's own test-runs, so trying it out never touches the real boards)
 const dataBranch = (env) => env.DATA_BRANCH || "leaderboard-data";
@@ -1247,6 +1252,177 @@ async function reviewClaim(request, env, ctx) {
   return answer(200, { ok: true, claim: checked });
 }
 
+/* ---------- Players' own links ----------
+   Every player's panel has a short link, ballkour.com/players/<number> (and /players/<number>/runs for their Runs), and
+   each player can pick a name for theirs in their own panel, for ballkour.com/players/<name>. Numbers go from 1 in the
+   order players first ran a course: runs with no date (the legacy ones, from before May 2026) first, then by date, and
+   players who started the same day by how old their Discord account is. New players get the next number. A number is
+   never given to anyone else, even when a player's line is deleted by hand ("last" counts them, like runs.json's
+   "lastId").
+   They're kept in links.json on the game repo's leaderboard-data branch, one player per line. It's outside leaderboards/
+   so that saving it doesn't start the leaderboard bot, whose workflow there runs on every change to leaderboards/**:
+     { "last": 16, "players": { "<discord id>": { "n": 1, "link": "ball" }, … } }   (link only once they've picked one)
+   Every half hour (at :15 and :45, the second cron in wrangler.toml), players who have runs but no number get one, and
+   a player who picks a name gets one then too. Until then, their link is /players/<Discord ID>, which opens their panel
+   as well. A name from the legacy boards with no Discord ID keeps /players/<in-game name>.
+   A link name is up to 32 letters or numbers in any language, plus - and _, with at least one letter, so it's never
+   taken for a number or a Discord ID. No two players can have the same one (capitals and wide letters don't make it
+   different, see linkFold), and nobody can pick another player's in-game name or Discord name, or one of NOT_LINKS.
+     POST /api/link   { link } → { ok: true, n, link } or { error }: login (not signed in), link (not a name like
+                      that), taken (someone else's), rate (too many), off or bad. An empty link goes back to their number.
+                      Moderators can send { discord, link: "" } to take the name off someone else's link.
+   SUBMIT_LIMIT (wrangler.toml) allows 5 changes a minute from one Discord account. */
+const LINK_OK = /^[\p{L}\p{N}][\p{L}\p{M}\p{N}_-]{0,31}$/u; // the same as the page's: keep the two in step
+const linkOk = (s) => LINK_OK.test(s) && /\p{L}/u.test(s);
+// What two names have to share to count as the same: ｗｉｄｅ letters are plain ones, and capitals don't matter
+const linkFold = (s) => String(s).normalize("NFKC").toLowerCase();
+// Names that would look like they're the site's own
+const NOT_LINKS = new Set(["admin", "ballkour", "ballkyrie", "help", "me", "mod", "moderator", "mods", "official", "runs", "staff", "stats", "support"]);
+// links.json's text → its data, with "players" and "last" always there
+function loadLinks(raw) {
+  let data;
+  try { data = raw === null || raw === undefined ? {} : JSON.parse(raw); } catch (e) { throw new Error("it isn't valid JSON"); }
+  if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("it isn't a JSON object");
+  if (!data.players || typeof data.players !== "object" || Array.isArray(data.players)) data.players = {};
+  if (!Number.isInteger(data.last)) data.last = 0;
+  // Never below a number that's out already, in case "last" was edited by hand
+  for (const p of Object.values(data.players)) if (p && Number.isInteger(p.n)) data.last = Math.max(data.last, p.n);
+  return data;
+}
+// One player per line, by number, so it stays easy to read and edit by hand
+function dumpLinks(data) {
+  const line = (p) => "{" + Object.entries(p).map(([k, v]) => `${JSON.stringify(k)}: ${JSON.stringify(v)}`).join(", ") + "}";
+  const players = Object.entries(data.players).filter(([, p]) => p && typeof p === "object").sort(([, a], [, b]) => (a.n || 0) - (b.n || 0));
+  return `{\n  "last": ${data.last},\n  "players": {` +
+    (players.length ? "\n" + players.map(([id, p]) => `    ${JSON.stringify(id)}: ${line(p)}`).join(",\n") + "\n  " : "") + "}\n}\n";
+}
+// The cron that hands out the numbers (wrangler.toml): keep the two the same
+const NUMBERS_CRON = "15,45 * * * *";
+const editLinks = (env, edit) => editData(env, LINKS_FILE, loadLinks, dumpLinks, edit);
+// The players in links.json, from the game data (none when it can't be read)
+function linksIn(files) {
+  try { return loadLinks(files && files[LINKS_FILE]).players; } catch (e) { return {}; }
+}
+// The player a /players/<…> link is for: a number, a picked name, a Discord ID, or else an in-game name ("n:<NAME>").
+// null for a number nobody has. The same as the page's keyOfLink(): keep the two in step.
+function keyOfLink(seg, links) {
+  if (/^\d{1,9}$/.test(seg)) {
+    const id = Object.keys(links).find((k) => links[k] && links[k].n === Number(seg));
+    return id ? "d:" + id : null;
+  }
+  if (/^\d{17,20}$/.test(seg)) return "d:" + seg;
+  const folded = linkFold(seg);
+  const id = Object.keys(links).find((k) => links[k] && typeof links[k].link === "string" && linkFold(links[k].link) === folded);
+  return id ? "d:" + id : "n:" + seg.toUpperCase();
+}
+// Every run on the site, on today's boards or before, waiting or turned down, as the files have them
+function everyRun(files) {
+  const out = [];
+  for (const [path, body] of Object.entries(files || {})) {
+    if (/^leaderboards\/\d+-[^/]+\.(opy|json)$/.test(path)) out.push(...fileRuns(path, body));
+  }
+  try {
+    const data = loadRuns(files[RUNS_FILE] ?? null);
+    for (const k of RUN_GROUPS) for (const list of Object.values(data[k])) if (Array.isArray(list)) out.push(...list);
+  } catch (e) { /* the rest still count */ }
+  try {
+    for (const e of Object.values(loadHistory(files[HISTORY_FILE]))) {
+      if (e && Array.isArray(e.boards)) out.push(...e.boards.flat());
+      if (e && Array.isArray(e.legacy)) out.push(...e.legacy);
+    }
+  } catch (e) { /* the rest still count */ }
+  return out.filter((r) => r && typeof r.name === "string");
+}
+// The day a run was set, or "" when it has none (like the legacy runs), which counts as before every other
+const runDay = (r) => (typeof r.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(r.date) ? r.date
+  : typeof r.sentAt === "string" && /^\d{4}-\d{2}-\d{2}/.test(r.sentAt) ? r.sentAt.slice(0, 10) : "");
+// Older Discord accounts have smaller IDs
+const byAge = (a, b) => a.length - b.length || (a < b ? -1 : a > b ? 1 : 0);
+// Every half hour: a number for each player who has runs but none yet, in the order they first ran a course
+async function numberPlayers(env, ctx) {
+  if (!appOn(env) && !env.GITHUB_TOKEN) return;
+  const { files } = JSON.parse(await game(env, ctx));
+  const first = new Map(); // Discord ID → the day of their first run
+  for (const r of everyRun(files)) {
+    if (typeof r.discord !== "string" || !/^\d{17,20}$/.test(r.discord)) continue;
+    const day = runDay(r);
+    if (!first.has(r.discord) || day < first.get(r.discord)) first.set(r.discord, day);
+  }
+  const had = linksIn(files);
+  const ids = [...first.keys()].filter((id) => !had[id]).sort((a, b) => first.get(a).localeCompare(first.get(b)) || byAge(a, b));
+  if (!ids.length) return;
+  // links.json as it is on GitHub decides: the cached copy can be a minute behind
+  const saved = await editLinks(env, (data) => {
+    const fresh = ids.filter((id) => !data.players[id]);
+    if (!fresh.length) return { skip: true };
+    for (const id of fresh) data.players[id] = { n: ++data.last };
+    return { message: `chore(links): number ${fresh.length === 1 ? "a new player" : `${fresh.length} new players`}` };
+  });
+  if (saved.error) throw new Error("couldn't save links.json");
+  if (saved.text) await showFile(LINKS_FILE, saved.text);
+}
+// The site shows a saved file straight away, like a run (see showSaved)
+async function showFile(path, body) {
+  const copy = await stored("game");
+  if (!copy) return;
+  const d = JSON.parse(copy);
+  d.files[path] = body;
+  await putCached("game", 60, JSON.stringify(d));
+}
+async function setLink(request, env, ctx) {
+  if (request.method !== "POST") return answer(405, { error: "bad" });
+  if (request.headers.get("Origin") !== new URL(request.url).origin) return answer(403, { error: "bad" });
+  if (!loginOn(env)) return answer(503, { error: "off" });
+  const user = await readSession(request, env);
+  if (!user) return answer(401, { error: "login" });
+  if (env.SUBMIT_LIMIT && !(await env.SUBMIT_LIMIT.limit({ key: `link:${user.id}` })).success) return answer(429, { error: "rate" });
+  let body;
+  try {
+    const raw = await request.text();
+    body = raw.length <= 1024 ? JSON.parse(raw) : null;
+  } catch (e) { body = null; }
+  if (!body || typeof body.link !== "string") return answer(400, { error: "bad" });
+  // A moderator taking the name off someone else's link (Discord is asked right then, like before a run is checked)
+  const other = body.discord !== undefined && String(body.discord) !== user.id;
+  if (other && (body.link !== "" || !/^\d{17,20}$/.test(String(body.discord)) || !(await isReviewer(env, user)))) return answer(403, { error: "bad" });
+  const id = other ? String(body.discord) : user.id;
+  const link = body.link.trim().normalize("NFC");
+  if (link) {
+    if (!linkOk(link)) return answer(400, { error: "link" });
+    if (NOT_LINKS.has(linkFold(link))) return answer(409, { error: "taken" });
+    // Another player's in-game name (on any run, legacy ones too) or Discord name
+    const { files } = await gameInfo(env, ctx);
+    const players = JSON.parse((await stored("players").catch(() => null)) || "{}");
+    const folded = linkFold(link);
+    const theirs = everyRun(files).some((r) => r.discord !== id && linkFold(r.name) === folded) ||
+      Object.entries(players).some(([k, p]) => k !== id && p && typeof p.name === "string" && linkFold(p.name) === folded);
+    if (theirs) return answer(409, { error: "taken" });
+  }
+  const saved = await editLinks(env, (data) => {
+    const had = data.players[id];
+    if (!link && !(had && had.link)) return { skip: true, entry: had || null };
+    const folded = linkFold(link);
+    if (link && Object.entries(data.players).some(([k, p]) => k !== id && p && typeof p.link === "string" && linkFold(p.link) === folded)) {
+      return { error: "taken", status: 409 };
+    }
+    const entry = { ...had, n: had && Number.isInteger(had.n) ? had.n : ++data.last };
+    if (link) entry.link = link;
+    else delete entry.link;
+    if (had && had.n === entry.n && had.link === entry.link) return { skip: true, entry };
+    data.players[id] = entry;
+    return {
+      entry,
+      message: other ? `chore(links): take the name ${had.link} off player ${entry.n}'s link, by ${user.name}`
+        : link ? `chore(links): player ${entry.n} (${user.name}) picks the name ${link}`
+        : `chore(links): player ${entry.n} (${user.name}) goes back to their number`,
+    };
+  });
+  if (saved.error) return answer(saved.status, { error: saved.error });
+  if (saved.text) await showFile(LINKS_FILE, saved.text).catch((e) => console.error(`link: couldn't update the cached copy: ${(e && e.message) || e}`));
+  const entry = saved.entry || {};
+  return answer(200, { ok: true, n: Number.isInteger(entry.n) ? entry.n : null, link: entry.link || "" });
+}
+
 /* ---------- Stats on Discord profiles ----------
    Players can put their stats on their Discord profile, under Apps, like a linked game account. It's Discord's
    "role connection", which shows as:
@@ -1813,7 +1989,8 @@ function previewOf(pathname, data, players) {
     let seg;
     try { seg = decodeURIComponent(m[1]); } catch (e) { return null; }
     const { players: rated, counted } = rate(courses());
-    let key = /^\d{17,20}$/.test(seg) ? "d:" + seg : "n:" + seg.toUpperCase();
+    let key = keyOfLink(seg, linksIn(data.files));
+    if (!key) return null;
     const all = courses().flatMap((c) => boardOf(c.n));
     // A name only a Discord player goes by, the way the page opens it
     if (key.startsWith("n:") && !all.some((r) => playerKey(r) === key)) {
@@ -1838,8 +2015,8 @@ function previewOf(pathname, data, players) {
 /* ---------- Pages ---------- */
 // The sections (/submit, /faq, …) and the links into them (/leaderboards/6, /leaderboards/3/legacy, /leaderboards/3/12
 // for one of its older boards, /faq/pausing), and every run sent from the website (/runs, the list under the form)
-// and each one's page (/runs/<id>), /stats (My stats), and each player's panel (/players/<Discord ID or name>, and
-// /players/<…>/runs for their Runs), are the home page. On ballkour.com a Cloudflare rule
+// and each one's page (/runs/<id>), /stats (My stats), and each player's panel (/players/<number or name>, see
+// "Players' own links", and /players/<…>/runs for their Runs), are the home page. On ballkour.com a Cloudflare rule
 // already serves the sections that way, but the test copy on workers.dev has no such rule, so the Worker does it too.
 const DEEP_LINK = /^\/(?:(?:courses|leaderboards|submit|features|faq|source-code|translations|runs|stats)\/?|leaderboards\/[\w-]+(?:\/legacy|\/\d+)?\/?|faq\/[\w-]+\/?|runs\/[\w-]+\/?|players\/[^/]{1,300}(?:\/runs)?\/?)$/i;
 async function page(request, env, ctx) {
@@ -1928,6 +2105,7 @@ async function handle(request, env, ctx) {
       if (path === "/api/review") return await review(request, env, ctx);
       if (path === "/api/claim") return await claim(request, env, ctx);
       if (path === "/api/claim/review") return await reviewClaim(request, env, ctx);
+      if (path === "/api/link") return await setLink(request, env, ctx);
       if (path === "/api/run" && request.method === "GET") return await runInfo(request, env);
       if (path === "/api/visits" && request.method === "GET") return await pageViews(request, env);
       return answer(404, { error: "bad" });
@@ -1962,8 +2140,14 @@ export default {
       return secure(await file(request, env));
     }
   },
-  // Every 30 minutes (the cron in wrangler.toml): the stats on players' Discord profiles catch up with the boards
+  // The crons in wrangler.toml. On the hour and half past: the stats on players' Discord profiles catch up with the
+  // boards. At :15 and :45: new players get their numbers (see "Players' own links"). Apart, so each has Cloudflare's
+  // limit on calls to itself.
   async scheduled(controller, env, ctx) {
+    if (controller.cron === NUMBERS_CRON) {
+      await numberPlayers(env, ctx).catch((e) => console.error(`numbers: ${(e && e.message) || e}`));
+      return;
+    }
     await updateProfiles(env, ctx).catch((e) => console.error(`profiles: ${(e && e.message) || e}`));
   },
 };
