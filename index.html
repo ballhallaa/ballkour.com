@@ -1179,6 +1179,12 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .stats-table thead .num { font: 600 10.5px/1.2 var(--mono); color: var(--ink-3); }
 .stats-table .num.soft { font-weight: 500; color: var(--ink-2); }
 .stats-table .course-cell { display: inline-flex; align-items: baseline; gap: 6px; }
+/* Most runs, on its own line under the list, looking like one of its rows. In the list, its course ("1 🇬🇮 Watchpoint:
+   Gibraltar · 1") made the numbers' column that wide for every row, which on a phone squeezed every name above it onto
+   two or three lines. Here, when the name and the course don't fit on one line, the course goes on the next, on the
+   right like the numbers. */
+.stats-busiest { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 16px; margin: 0; padding: 2px 0; font: 500 14px/1.35 var(--body); color: var(--ink-2); }
+.stats-busiest .course-cell { display: inline-flex; align-items: baseline; gap: 6px; margin-inline-start: auto; font: 600 13px/1.35 var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); text-align: right; }
 .stats-link { padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-decoration-color: var(--line-hi); text-underline-offset: 3px; transition: color .15s, text-decoration-color .15s; }
 .stats-link:hover { color: var(--volt); text-decoration-color: currentColor; }
 @media (max-width: 600px) { .stats-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -6006,8 +6012,11 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
           row("stats.newPlayers", esc(n(add("players")))) + row("stats.rated", esc(n(standing.rated))) +
           row("stats.totalGlobal", esc(n(standing.global))) + row("stats.changeGlobal", esc(change(standing.global - before.global))) +
           row("stats.totalCourse", esc(n(standing.course))) + row("stats.changeCourse", esc(change(standing.course - before.course))) +
-          (bc ? row("stats.busiest", `<span class="course-cell">${esc(String(bc.n))} ${flagName(bc)} · ${esc(n(most))}</span>`) : "") +
-        `</tbody></table><p class="rev-note">${esc(t("stats.runsNote"))}</p></div>`;
+        `</tbody></table>` +
+        // Most runs goes under the list instead of in it, so its course can't widen the numbers' column (see .stats-busiest)
+        (bc ? `<p class="stats-busiest"><span>${esc(t("stats.busiest"))}</span>` +
+          `<span class="course-cell">${esc(String(bc.n))} ${flagName(bc)} · ${esc(n(most))}</span></p>` : "") +
+        `<p class="rev-note">${esc(t("stats.runsNote"))}</p></div>`;
     }
     if (visits) {
       const byDay = new Map(visits.days.map((d) => [d.day, d]));
