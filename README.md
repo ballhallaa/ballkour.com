@@ -259,7 +259,7 @@ Leaderboards load live from the game repo's `develop` branch (through the Worker
 
 The runs written into `COURSES` are only a fallback for when GitHub can't be reached.
 
-Each course's board ranks every run in its file and in `"runs"` in `leaderboards/runs.json` on the `leaderboard-data` branch (runs sent from the website, and runs that never made a top 10), once each per player with their best run. A player is their Discord ID, or their in-game name on a run without one. The board shows the top 10, and **Show all** lists everyone else, including players who dropped out of the top 10, from the boards in `leaderboards/history.json` (on `leaderboard-data` too). To take a run off for good, delete it where it is (or move it, from `"runs"`) and add it to `"removed"`, so it doesn't come back from an old board:
+Each course's board ranks every run in its file and in `"runs"` in `leaderboards/runs.json` on the `leaderboard-data` branch (runs sent from the website, and runs that never made a top 10), once each per player with their best run. A player is their Discord ID, or their in-game name on a run without one. The board shows the top 10, and **Show all** lists everyone else, including players who dropped out of the top 10, from the boards in `leaderboards/history.json` (on `leaderboard-data` too). An older board from the history shows its top 10 as it was posted, and its **Show all** lists everyone else with a run sent by that board's day. To take a run off for good, delete it where it is (or move it, from `"runs"`) and add it to `"removed"`, so it doesn't come back from an old board:
 
 ```json
 {
