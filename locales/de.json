@@ -430,6 +430,7 @@
   "visits.note": "Von der Seite selbst gezählt, jedes Mal, wenn jemand sie im Browser öffnet, also verstecken Werbeblocker niemanden und Bots zählen nicht. Jede Person zählt einmal pro Tag, ohne dass die Seite speichert, wer sie ist.",
   "foot.openDiscord": "Auf Discord öffnen",
   "link.title": "Dein Link",
+  "link.yours": "<b>Dein Link:</b> {link}",
   "link.pick": "Namen wählen",
   "link.change": "Ändern",
   "link.rules": "Wähl einen Namen dafür: bis zu 32 Buchstaben oder Zahlen, mit mindestens einem Buchstaben. Verwende - oder _ statt Leerzeichen.",

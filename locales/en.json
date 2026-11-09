@@ -350,6 +350,7 @@
   "claim.takenRev": "The runs as {name} are already linked to someone else, so turn this claim down.",
   "claim.own": "This is your own claim, so another moderator has to check it.",
   "link.title": "Your link",
+  "link.yours": "<b>Your link:</b> {link}",
   "link.pick": "Pick a name",
   "link.change": "Change",
   "link.rules": "Pick a name for it: up to 32 letters or numbers, with at least one letter. Use - or _ instead of spaces.",

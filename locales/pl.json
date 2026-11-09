@@ -430,6 +430,7 @@
   "visits.note": "Liczone przez samą stronę za każdym razem, gdy ktoś otworzy ją w przeglądarce, więc blokery reklam nikogo nie ukrywają, a boty się nie liczą. Każda osoba liczy się raz dziennie, a strona nie zapisuje, kim jest.",
   "foot.openDiscord": "Otwórz na Discordzie",
   "link.title": "Twój link",
+  "link.yours": "<b>Twój link:</b> {link}",
   "link.pick": "Wybierz nazwę",
   "link.change": "Zmień",
   "link.rules": "Wybierz dla niego nazwę: do 32 liter lub cyfr, w tym co najmniej jedna litera. Zamiast spacji użyj - lub _.",
