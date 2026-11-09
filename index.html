@@ -3993,7 +3993,7 @@ a.link-copy { text-decoration: none; }
     };
     const field = (label, value) => (value ? [[label, "#76867f"], [value, "#a7b6b0"]] : null);
     const sorted = d.byMiss ? "Fewest mistakes" : "";
-    line(d.legacy ? [sorted ? "Legacy" : "Legacy top 10", sorted, "Before May 2026"] : [sorted || "Top 10", d.date, d.board ? `Board ${d.board}` : ""], textTop + 48.6 + 12 + 7.5);
+    line(d.legacy ? [sorted ? "Legacy" : "Legacy Top 10", sorted, "Before May 2026"] : [sorted || "Top 10", d.date, d.board ? `Board ${d.board}` : ""], textTop + 48.6 + 12 + 7.5);
     line([field("Code", d.legacy ? c.legacyCode : c.remaker ? c.latest : c.code), field("Creator", c.by), d.legacy ? null : field("Remaker", c.remaker)], textTop + 48.6 + 12 + 15 + 9 + 7.5);
     // The runs, in two columns of five
     const colW = (W - 2 * PIC.pad - PIC.colGap) / 2;
