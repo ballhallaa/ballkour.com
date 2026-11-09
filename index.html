@@ -1874,7 +1874,6 @@ a.link-copy { text-decoration: none; }
   "pl.runs": "Runs",
   "pl.courseRuns": "Runs on this course",
   "pl.allRuns": "Runs on all courses",
-  "pl.notRated": "Not yet",
   "pl.notRun": "Not run yet",
   "pl.noRuns": "No runs on this course yet.",
   "pl.best": "Best",
@@ -3325,7 +3324,7 @@ a.link-copy { text-decoration: none; }
     const toRatings = p ? { href: `/leaderboards/${RATINGS.n}`, attrs: `data-board="${RATINGS.n}" data-board-player="${esc(key)}" title="${esc(t("pl.seeRatings", { player: named.name }))}"` } : null;
     const toRuns = runTotal ? { attrs: `data-pl-runs title="${esc(t("lb.playerOpen", { player: named.name || (dc ? dc.name : "") }))}"` } : null;
     html += `<div class="pl-stats">` +
-        stat(t("pl.rating"), p ? `${icon("star")}${esc(points(p.rating))}` : esc(t("pl.notRated")), toRatings) +
+        stat(t("pl.rating"), p ? `${icon("star")}${esc(points(p.rating))}` : "—", toRatings) +
         stat(t("pl.place"), p ? esc(t("res.of", { rank: p.rank, total: r.players.length })) : "—", toRatings) +
         stat(t("pl.tier"), tier, toRatings) +
         stat(t("pl.courses"), `${icon("map")}${p ? p.courses : 0}/${r.counted.length}`) +
