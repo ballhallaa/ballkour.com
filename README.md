@@ -25,8 +25,8 @@ Links can go deeper, and the address shows them while a board or answer is open:
 - **The player ratings:** `ballkour.com/leaderboards/ratings`.
 - **An FAQ answer:** `ballkour.com/faq/pausing`. The link names are in `FAQ_LINKS`, and older links that used the translation keys (`/faq/pause`) still work.
 - **A run sent from the website:** `ballkour.com/runs/<id>`. Ballkyrie's post for it in the run submissions channel links here (see [Runs sent from the website](#runs-sent-from-the-website)), and `ballkour.com/runs` goes to the list of every one. The Worker serves the page at these addresses.
-- **Your own stats:** `ballkour.com/stats` opens **My stats** for whoever opens it (signing them in with Discord first), and the address then shows their own player link (below). The Worker serves the page here too.
-- **A player's stats:** `ballkour.com/players/<number>` opens that player's panel, or `/players/<name>` once they've picked a name for their link (see [Players' own links](#players-own-links)). A name from the legacy boards with no Discord ID has `/players/<in-game name>`. `/players/<…>/runs` opens it on **Runs**. The address shows it while their panel is open (your own too, from My stats or your name on a board), and **Copy link** beside Close copies it, so anyone can share their stats. The Worker serves the page here too.
+- **Your own stats:** `ballkour.com/stats` opens **My profile** for whoever opens it (signing them in with Discord first), and the address then shows their own player link (below). The Worker serves the page here too.
+- **A player's stats:** `ballkour.com/players/<number>` opens that player's panel, or `/players/<name>` once they've picked a name for their link (see [Players' own links](#players-own-links)). A name from the legacy boards with no Discord ID has `/players/<in-game name>`. `/players/<…>/runs` opens it on **Runs**. The address shows it while their panel is open (your own too, from My profile or your name on a board), and **Copy link** beside Close copies it, so anyone can share their stats. The Worker serves the page here too.
 
 The older `#6-dorado` and `#pause` forms still work too.
 
@@ -39,7 +39,7 @@ A link to a run, a board, or a player shows its own preview when it's pasted on 
 python3 tools/serve.py
 ```
 
-then open http://localhost:8000. It serves this folder at the site's own addresses (`/leaderboards/6`, `/faq/pausing`, `/runs/<id>`, …) with the live leaderboards from ballkour.com, so you see your changes with real data. Signing in and sending runs only work on the real site (or the test copy below), so the Submit section shows the Discord ticket and **My stats** is hidden.
+then open http://localhost:8000. It serves this folder at the site's own addresses (`/leaderboards/6`, `/faq/pausing`, `/runs/<id>`, …) with the live leaderboards from ballkour.com, so you see your changes with real data. Signing in and sending runs only work on the real site (or the test copy below), so the Submit section shows the Discord ticket and **My profile** is hidden.
 
 ## Deploying
 
@@ -115,7 +115,7 @@ Players sign in with Discord (one click, no new account) and send their run from
 
 **After sending**, the form shows what the run did: their place on the course and who they passed, their course rating, rating, place, and Top %, and any new top 10, podium, or record (the numbers on their Discord profile). A top 10 run that's waiting for a check shows the same, as what they'll get once it's approved.
 
-**My stats** opens a signed-in player's own panel, the same one a click on their name on a board opens: their rating, place, Top % and every course, with Sign out in it too. In every player's panel, **Rating**, **Place**, and **Top %** open the Player ratings with their row marked (with Show all open when they're past the top 10), and **Runs** lists every run of theirs on one list, newest first, with **Back** to the rest. It sorts by time, mistakes, course rating, or date, like a board does. It's by the language picker, next to Sign out, and under a run's result. Signed out, the one by the language picker signs them in with Discord first and comes back to the same page with `?me=1`, which opens it. It finds their runs by Discord ID, so runs saved under just an in-game name (the legacy runs from before May 2026) don't show there until they claim them (see [Claiming legacy runs](#claiming-legacy-runs)). `ballkour.com/stats` opens it too. While it's open, the address shows their own player link (`/players/<number or name>`, or `/players/<…>/runs` on Runs), so what's in the address works for anyone it's sent to. Signed out, the panel that signs them in shows `/stats`. Closing either puts the address back.
+**My profile** opens a signed-in player's own panel, the same one a click on their name on a board opens: their rating, place, Top % and every course, with Sign out in it too. In every player's panel, **Rating**, **Place**, and **Top %** open the Player ratings with their row marked (with Show all open when they're past the top 10), and **Runs** lists every run of theirs on one list, newest first, with **Back** to the rest. It sorts by time, mistakes, course rating, or date, like a board does. It's by the language picker, next to Sign out, and under a run's result. Signed out, the one by the language picker signs them in with Discord first and comes back to the same page with `?me=1`, which opens it. It finds their runs by Discord ID, so runs saved under just an in-game name (the legacy runs from before May 2026) don't show there until they claim them (see [Claiming legacy runs](#claiming-legacy-runs)). `ballkour.com/stats` opens it too. While it's open, the address shows their own player link (`/players/<number or name>`, or `/players/<…>/runs` on Runs), so what's in the address works for anyone it's sent to. Signed out, the panel that signs them in shows `/stats`. Closing either puts the address back.
 
 **Every run gets its own page** at `ballkour.com/runs/<id>`, and Ballkyrie posts every run in the run submissions channel (`RUNS_CHANNEL` in `cloudflare/wrangler.toml`) with the player, time, mistakes, who sent it, where it would place or placed (its place on its course, and the player's place and rating in the player ratings, with what the run adds to it: `Course: #1 of 12 • Global: #1 of 16 • ⭐ 1,818 (+909)`), the video, and a **View run** button to its page. Ballkyrie needs to be able to see that channel, send messages, and embed links there. The post stays as it was sent, even after a run is checked.
 
@@ -157,9 +157,9 @@ The remakes' in-game top 10s are part of the game, so they only change with a re
 
 ### Claiming legacy runs
 
-The legacy boards (before May 2026) have runs under just an in-game name, with no Discord ID. On the site, each of those names is its own player: no Discord name or picture by it, nothing in anyone's My stats, and someone who still plays can show up twice in Find a player (rated, and again as Legacy).
+The legacy boards (before May 2026) have runs under just an in-game name, with no Discord ID. On the site, each of those names is its own player: no Discord name or picture by it, nothing in anyone's My profile, and someone who still plays can show up twice in Find a player (rated, and again as Legacy).
 
-Players can claim them. A legacy name's panel (click it on a legacy board) asks **Is this you?**, and **This is me** sends a claim to the moderators. Signed out, it signs them in with Discord first and comes back to the same page with that panel open again (`?claim=`, the name in URL-safe base64), so they can tap it there. After that, the panel says the claim is waiting for a moderator, or that it was turned down. A player's own panel (My stats) also points out legacy names that match a name they go by now: "Were you DVD before May 2026?"
+Players can claim them. A legacy name's panel (click it on a legacy board) asks **Is this you?**, and **This is me** sends a claim to the moderators. Signed out, it signs them in with Discord first and comes back to the same page with that panel open again (`?claim=`, the name in URL-safe base64), so they can tap it there. After that, the panel says the claim is waiting for a moderator, or that it was turned down. A player's own panel (My profile) also points out legacy names that match a name they go by now: "Were you DVD before May 2026?"
 
 Each claim waits in `"claims"` in `runs.json` on `leaderboard-data`, one per line:
 
@@ -179,7 +179,7 @@ A player can have at most 5 claims waiting at once. A name with no unlinked lega
 
 Every player's panel has a short link, `ballkour.com/players/<number>`. Numbers start at 1, in the order players first ran a course: runs with no date (the legacy ones, from before May 2026) count first, then by date, and players who started on the same day go by how old their Discord account is. New players get the next number.
 
-In their own panel (My stats), **Your link** shows theirs, and **Pick a name** lets them choose one instead: `ballkour.com/players/<name>`. **Change** picks another, and **Use my number** goes back to the number. A name is up to 32 letters or numbers in any language (the same as an in-game name on the run form), plus `-` and `_`, with at least one letter, so a name can never be confused with a number. Nobody else can have the same name (capitals and wide letters like `ｂａｌｌ` count as the same), or pick another player's in-game name or Discord name, or a name that looks official (`NOT_LINKS` in `worker.js`). Each Discord account can change it 5 times a minute (`SUBMIT_LIMIT`). Moderators see **Remove the name** in anyone else's panel whose link has one, which puts that player back on their number.
+In their own panel (My profile), **Your link** shows theirs, and **Pick a name** lets them choose one instead: `ballkour.com/players/<name>`. **Change** picks another, and **Use my number** goes back to the number. A name is up to 32 letters or numbers in any language (the same as an in-game name on the run form), plus `-` and `_`, with at least one letter, so a name can never be confused with a number. Nobody else can have the same name (capitals and wide letters like `ｂａｌｌ` count as the same), or pick another player's in-game name or Discord name, or a name that looks official (`NOT_LINKS` in `worker.js`). Each Discord account can change it 5 times a minute (`SUBMIT_LIMIT`). Moderators see **Remove the name** in anyone else's panel whose link has one, which puts that player back on their number.
 
 Both are kept in `links.json` on the game repo's `leaderboard-data` branch, one player per line:
 
@@ -199,7 +199,7 @@ Old links keep working: `/players/<Discord ID>` and `/players/<in-game name>` st
 
 ### Stats on Discord profiles
 
-Players can show their Ballkour stats on their Discord profile, under **Apps**, the same way a linked game account shows there. **Show on my Discord profile** in their own panel (My stats) sends them to Discord, which asks if Ballkyrie can update their connection, and brings them back. It shows:
+Players can show their Ballkour stats on their Discord profile, under **Apps**, the same way a linked game account shows there. **Show on my Discord profile** in their own panel (My profile) sends them to Discord, which asks if Ballkyrie can update their connection, and brings them back. It shows:
 
 ```
 ballkour.com · Top 0.1%

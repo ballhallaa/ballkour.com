@@ -132,10 +132,10 @@ main:focus { outline: none; }
 #balls { z-index: 20; }
 .page { position: relative; z-index: 1; }
 
-/* ---------- Find a player, My stats and the language picker ---------- */
-/* Three square buttons: Find a player, My stats and the language. Icons only, so no language's longer words get cut
+/* ---------- Find a player, My profile and the language picker ---------- */
+/* Three square buttons: Find a player, My profile and the language. Icons only, so no language's longer words get cut
    off; their names are in aria-label and in the tooltip on hover. At the right, lined up with the panels. Spaced with
-   margins rather than a gap, so there's no extra space where My stats is when signing in isn't set up. The language
+   margins rather than a gap, so there's no extra space where My profile is when signing in isn't set up. The language
    menu drops down over the page from their right edge, so nothing below moves when it opens (on a phone, it opens in
    the page instead: see the language menu). */
 .topbar { position: relative; max-width: var(--col); margin: 0 auto; padding-block: 14px 0; display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; align-items: start; }
@@ -161,7 +161,7 @@ main:focus { outline: none; }
 .top-btn:hover, .top-btn[aria-expanded="true"] { border-color: var(--volt); }
 .top-find .icon { color: var(--volt); }
 .me-btn .icon { color: #b9befc; }
-/* Until the page knows whether they're signed in, My stats holds its place unseen, so the others don't move */
+/* Until the page knows whether they're signed in, My profile holds its place unseen, so the others don't move */
 .me-wrap.waiting { visibility: hidden; }
 .me-wrap:not(.waiting) { animation: fade-in .2s ease-out; }
 @keyframes fade-in { from { opacity: 0; } }
@@ -886,7 +886,7 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .dcp-next-steps li::before { content: counter(step); flex: none; width: 20px; height: 20px; display: grid; place-items: center; border-radius: 6px; background: #5865f2; color: #fff; font: 700 11px/1 var(--mono); }
 .dcp-foot { margin: 0; padding-top: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; border-top: 1px solid rgba(88, 101, 242, .25); font: 400 13.5px/1.45 var(--body); color: var(--ink-3); }
 .dcp-foot .pl-dcp-text { flex: 1 1 200px; }
-/* Signing in with Discord, from My stats or the form's Sign in with Discord: what it's for, what it shares, and what
+/* Signing in with Discord, from My profile or the form's Sign in with Discord: what it's for, what it shares, and what
    happens, before going there. Continue with Discord stays in view at the bottom while the rest scrolls. */
 .pl:has(.pl-signin) { padding-bottom: 0; }
 .pl-eyebrow { margin: 0 0 7px; display: flex; align-items: center; gap: 6px; font: 600 11px/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--volt); }
@@ -1160,14 +1160,14 @@ a.rev-run:hover { border-color: var(--line-hi); background: var(--glass-hi); }
 .btn-discord { background: #5865f2; border-color: #5865f2; color: #fff; box-shadow: 0 10px 30px -10px rgba(88, 101, 242, .7); }
 .btn-discord:hover { background-color: #6d78f5; border-color: #6d78f5; }
 .sub-me { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; font: 500 14.5px/1.3 var(--body); color: var(--ink-2); }
-/* Their name takes the line; on a narrow screen My stats and Sign out move under it, together */
+/* Their name takes the line; on a narrow screen My profile and Sign out move under it, together */
 .sub-me #sub-me-name { flex: 1 1 150px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sub-me b { color: #b9befc; font-weight: 600; }
 .sub-me .run-pfp { width: 22px; height: 22px; }
 .sub-me-actions { margin-inline-start: auto; flex: none; display: inline-flex; align-items: center; gap: 10px; }
 .sub-mine { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 9px; border: 1px solid var(--line-hi); border-radius: 8px; background: rgba(255, 255, 255, .03); font: 600 13px/1 var(--mono); color: var(--ink); cursor: pointer; transition: border-color .15s; }
 .sub-mine:hover { border-color: var(--volt); }
-.sub-mine .icon { width: 14px; height: 14px; color: var(--gold); }
+.sub-mine .icon { width: 14px; height: 14px; color: #b9befc; }
 .sub-logout, .pl-signout { flex: none; padding: 4px 2px; border: 0; background: none; font: 500 13px/1 var(--mono); color: var(--ink-3); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .sub-logout:hover, .pl-signout:hover { color: var(--ink); }
 .sub-send[disabled] { opacity: .6; cursor: progress; transform: none; }
@@ -1203,7 +1203,7 @@ a.rev-run:hover { border-color: var(--line-hi); background: var(--glass-hi); }
 .res-foot { margin: 6px 0 0; padding-top: 10px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; border-top: 1px solid var(--line); font: 400 13px/1.4 var(--body); color: var(--ink-2); }
 .res-foot .btn { color: var(--ink); font-weight: 600; text-decoration: none; }
 .res-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-inline-start: auto; }
-.res-actions .btn .icon-star { width: 14px; height: 14px; margin-top: 0; color: var(--gold); }
+.res-actions .btn .icon-me { width: 14px; height: 14px; margin-top: 0; color: #b9befc; }
 @media (max-width: 420px) {
   .res-row { grid-template-columns: minmax(0, 1fr) auto; }
   .res-row .res-delta { grid-column: 2; }
@@ -1426,6 +1426,7 @@ a.link-copy { text-decoration: none; }
     <symbol id="i-github" viewBox="0 0 24 24"><path fill="currentColor" d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></symbol>
     <symbol id="i-discord" viewBox="0 0 24 24"><path fill="currentColor" d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></symbol>
     <symbol id="i-link" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></g></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></g></symbol>
     <symbol id="i-pencil" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.17 6.81a2.82 2.82 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"/><path d="m15 5 4 4"/></g></symbol>
   </defs>
 </svg>
@@ -1519,7 +1520,7 @@ a.link-copy { text-decoration: none; }
             <img class="run-pfp" id="sub-pfp" src="data:," alt="" width="22" height="22">
             <span id="sub-me-name"></span>
             <span class="sub-me-actions">
-              <button class="sub-mine" type="button" data-my-stats><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg><span data-i18n="me.button">My stats</span></button>
+              <button class="sub-mine" type="button" data-my-stats><svg class="icon" aria-hidden="true"><use href="#i-user"/></svg><span data-i18n="me.button">My profile</span></button>
               <button class="sub-logout" type="button" id="sub-logout" data-i18n="sub.signout">Sign out</button>
             </span>
           </div>
@@ -1621,8 +1622,8 @@ a.link-copy { text-decoration: none; }
       <div class="f-group"><span data-i18n="f.site.group">On ballkour.com</span></div>
       <ul class="features">
         <li class="feature">
-          <span class="f-icon" style="--c: var(--arc)"><svg class="icon" aria-hidden="true"><use href="#i-stats"/></svg></span>
-          <div><p class="f-title"><span data-i18n="me.button">My stats</span></p><p class="f-text" data-i18n="f.stats.text">Sign in with Discord to see your rating, place, and Top %, every course you’ve run, and all your runs. Share them with a link, or show them on your Discord profile.</p></div>
+          <span class="f-icon" style="--c: var(--arc)"><svg class="icon" aria-hidden="true"><use href="#i-user"/></svg></span>
+          <div><p class="f-title"><span data-i18n="me.button">My profile</span></p><p class="f-text" data-i18n="f.stats.text">Sign in with Discord to see your rating, place, and Top %, every course you’ve run, and all your runs. Share them with a link, or show them on your Discord profile.</p></div>
         </li>
         <li class="feature">
           <span class="f-icon" style="--c: var(--gold)"><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg></span>
@@ -1922,7 +1923,7 @@ a.link-copy { text-decoration: none; }
   "signin.perks": "If you’re on our Discord server, you also get:",
   "signin.perkRole": "A role for your rating",
   "signin.perkPing": "A ping in the course’s leaderboard channel when you make its top 10",
-  "signin.perkProfile": "Your Top %, rating, and top 10s on your Discord profile. Turn it on in My stats.",
+  "signin.perkProfile": "Your Top %, rating, and top 10s on your Discord profile. Turn it on in My profile.",
   "signin.sharesTitle": "What it shares",
   "signin.shares": "Discord asks if Ballkyrie, our Discord bot, can see who you are. That gives the site:",
   "signin.sharesYes": "Your Discord ID, name, and picture",
@@ -1988,7 +1989,7 @@ a.link-copy { text-decoration: none; }
   "rev.ratingGain": "{player}’s rating over every course if it’s approved: {rating}, with {change} from this run",
   "rev.declinedBy": "Turned down by {name}",
   "claim.title": "Is this you?",
-  "claim.what": "Link these runs from before May 2026 to your Discord, so they show in My stats, with your Discord name and picture by them on the boards. A moderator checks that they’re yours first, and may message you on Discord to ask for proof, like an old screenshot or clip.",
+  "claim.what": "Link these runs from before May 2026 to your Discord, so they show in My profile, with your Discord name and picture by them on the boards. A moderator checks that they’re yours first, and may message you on Discord to ask for proof, like an old screenshot or clip.",
   "claim.button": "This is me",
   "claim.waiting": "Waiting for a moderator to check that these runs are yours.",
   "claim.declined": "A moderator turned down your claim to these runs. If you think that’s a mistake, open a ticket on our Discord.",
@@ -3307,7 +3308,7 @@ a.link-copy { text-decoration: none; }
     const named = p || rows.map((x) => x.best || x.runs[0] || x.legacy[0]).find(Boolean) || { name: "" };
     const discord = key.startsWith("d:") ? key.slice(2) : "";
     const dc = discord && PLAYERS.get(discord);
-    // Their own panel (My stats) opens before their first run too: it's named after their Discord, with a way to send one
+    // Their own panel (My profile) opens before their first run too: it's named after their Discord, with a way to send one
     const mine = !!me && key === "d:" + me.id;
     const ranNone = !rows.some((x) => x.best || x.runs.length || x.legacy.length);
     const stat = statTile;
@@ -3486,7 +3487,7 @@ a.link-copy { text-decoration: none; }
     const part = (title, body) => `<section class="pl-why"><h3>${esc(t(title))}</h3>${body}</section>`;
     const share = (cls, ico, key) => `<li class="${cls}"><span class="mark">${icon(ico)}</span><span>${esc(t(key))}</span></li>`;
     pl.innerHTML = `<div class="pl-head"><div class="pl-who">` +
-        `<p class="pl-eyebrow">${icon("stats")}<span>${esc(t("me.button"))}</span></p>` +
+        `<p class="pl-eyebrow">${icon("user")}<span>${esc(t("me.button"))}</span></p>` +
         `<h2 class="pl-name" id="pl-name">${esc(t("dcpi.title"))}</h2>` +
         `<p class="pl-lead">${esc(t("dcpi.lead"))}</p></div>` +
         `<button class="pl-close" type="button" data-pl-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button></div>` +
@@ -3549,7 +3550,7 @@ a.link-copy { text-decoration: none; }
   }
   /* A player's own link, ballkour.com/players/<number or name> (see "Players' own links"), opens their panel, so their
      stats can be shared, and /players/<…>/runs opens it on Runs. The address shows it while their panel is open (their
-     own too, from My stats or their name on a board), and Copy link in the panel copies it. */
+     own too, from My profile or their name on a board), and Copy link in the panel copies it. */
   // What comes after /players/: the name they picked, else their number, else (no number yet) their Discord ID. A name
   // with no Discord ID is its own.
   function linkOf(key) {
@@ -4791,19 +4792,19 @@ a.link-copy { text-decoration: none; }
     // A panel that opened before /api/me answered (from a player's link, say) gets what's only for them: their own
     // things in their own panel (Your link, Sign out), and Remove the name for moderators
     if (me && plKey && pl.open) renderPlayer();
-    // Back from signing in through My stats: their panel opens. Back without signing in (they cancelled on Discord):
+    // Back from signing in through My profile: their panel opens. Back without signing in (they cancelled on Discord):
     // the panel that explains it opens again, where they left off.
     if (wantMine) { wantMine = false; openMine(); }
     // Back from signing in for This is me (or not: they cancelled on Discord): the runs it was for, to tap it there
     if (wantClaim) { const name = wantClaim; wantClaim = ""; openClaim(name); }
   }
-  /* My stats: their own player panel, the one a click on their name on any board opens, with Sign out in it too. It's
+  /* My profile: their own player panel, the one a click on their name on any board opens, with Sign out in it too. It's
      by the language picker, next to Sign out and under a run's result. Signed out, the one by the language picker
      first opens a panel saying what signing in with Discord is for and what it shares (so being sent to Discord, and
      asked about Ballkyrie there, doesn't come out of nowhere). Continue with Discord there signs them in, and comes
      back with ?me=1 to open their panel. Sign in with Discord above the form opens the same panel, and comes back to
      the form.
-     ballkour.com/stats is the link to it: it opens My stats the same way. Their panel shows their own link in the
+     ballkour.com/stats is the link to it: it opens My profile the same way. Their panel shows their own link in the
      address (/players/<number or name>, see playerPath), like anyone's, so what's in the address works for anyone it's sent
      to. The panel that signs them in for it shows /stats. Closing either puts the address back. */
   const meWrap = $("#me-wrap");
@@ -4818,7 +4819,7 @@ a.link-copy { text-decoration: none; }
       return true;
     } catch (e) { return startStats; }
   })();
-  let statsBack = null; // while the panel that signs them in for My stats is open, the address from before, to go back to
+  let statsBack = null; // while the panel that signs them in for My profile is open, the address from before, to go back to
   function openMine() {
     if (me) { openPlayer("d:" + me.id, 0); return; }
     if (!loginOn) return;
@@ -4843,7 +4844,7 @@ a.link-copy { text-decoration: none; }
     openSignIn("submit");
   });
   // In the player panel's place. It's drawn once: nothing on the page can change while it's open.
-  // kind: "mine" (from My stats), "submit" (from the form) or "claim" (from This is me, for claimName's legacy runs)
+  // kind: "mine" (from My profile), "submit" (from the form) or "claim" (from This is me, for claimName's legacy runs)
   function openSignIn(kind) {
     leaveRun();
     leaveStats();
@@ -4854,13 +4855,13 @@ a.link-copy { text-decoration: none; }
     const named = { name: claimName };
     const part = (title, body) => `<section class="pl-why"><h3>${esc(t(title))}</h3>${body}</section>`;
     const perk = (ico, color, key, html) => `<li><span class="f-icon" style="--c: var(--${color})">${icon(ico)}</span><span>${html || esc(t(key))}</span></li>`;
-    // "Turn it on in My stats": My stats (the button's own name, in every language) signs them in and opens it
+    // "Turn it on in My profile": My profile (the button's own name, in every language) signs them in and opens it
     const myStats = esc(t("me.button"));
     const profilePerk = esc(t("signin.perkProfile")).replace(myStats, `<a class="pl-perk-link" href="${esc(loginFor("mine"))}" data-login-for="mine">${myStats}</a>`);
     const share = (cls, ico, key) => `<li class="${cls}"><span class="mark">${icon(ico)}</span><span>${esc(t(key))}</span></li>`;
     const steps = ["signin.step1", "signin.step2", mine ? "signin.step3Mine" : claiming ? "signin.step3Claim" : "signin.step3Submit"];
     pl.innerHTML = `<div class="pl-head"><div class="pl-who">` +
-        `<p class="pl-eyebrow">${icon(mine ? "stats" : claiming ? "link" : "upload")}<span>${esc(t(mine ? "me.button" : claiming ? "claim.title" : "nav.submit"))}</span></p>` +
+        `<p class="pl-eyebrow">${icon(mine ? "user" : claiming ? "link" : "upload")}<span>${esc(t(mine ? "me.button" : claiming ? "claim.title" : "nav.submit"))}</span></p>` +
         `<h2 class="pl-name" id="pl-name">${esc(t("sub.signin"))}</h2>` +
         `<p class="pl-lead">${esc(t(mine ? "signin.forMine" : claiming ? "signin.forClaim" : "signin.forSubmit", named))}</p></div>` +
         `<button class="pl-close" type="button" data-pl-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button></div>` +
@@ -4885,9 +4886,9 @@ a.link-copy { text-decoration: none; }
     pl.scrollTop = 0;
     pl.querySelector(".pl-signin-go a[data-login-for]").focus();
   }
-  // Signing in comes back in the same language: from My stats to the same page with their panel open (?me=1), from
+  // Signing in comes back in the same language: from My profile to the same page with their panel open (?me=1), from
   // the form to the form (with ?check= kept, for reviewers), and from a run's page ("run") to that run. Show on my
-  // Discord profile ("profile") comes back to their panel like My stats, and This is me ("claim") to the same page with
+  // Discord profile ("profile") comes back to their panel like My profile, and This is me ("claim") to the same page with
   // the legacy name's panel open again (?claim=, the name in URL-safe base64, which the Worker lets through).
   function loginFor(kind) {
     const back = new URLSearchParams();
@@ -4895,7 +4896,7 @@ a.link-copy { text-decoration: none; }
     let path = "/submit";
     if (kind === "mine" || kind === "profile") {
       back.set("me", "1");
-      // Back to where the page was before My stats (or their panel, for Show on my Discord profile) opened
+      // Back to where the page was before My profile (or their panel, for Show on my Discord profile) opened
       const here = (statsBack !== null ? statsBack : playerBack !== null ? beforePlayer() : location.pathname).split(/[?#]/)[0];
       path = /^\/[\w/-]*$/.test(here) ? here : "/";
     } else if (kind === "run" && /^[\w-]+$/.test(runId)) path = `/runs/${runId}`;
@@ -4909,9 +4910,9 @@ a.link-copy { text-decoration: none; }
     meWrap.hidden = !loginOn;
     if (meWrap.hidden) return;
     meWrap.classList.toggle("waiting", !meKnown);
-    // Just the bars, signed in or not: its name is in aria-label, and hovering says it (or that it signs them in)
+    // Just the profile icon, signed in or not: its name is in aria-label, and hovering says it (or that it signs them in)
     meWrap.innerHTML = `<button class="top-btn me-btn" type="button" data-my-stats aria-label="${esc(t("me.button"))}" ` +
-      `title="${esc(t(me ? "me.button" : "me.signin"))}">${icon("stats")}</button>`;
+      `title="${esc(t(me ? "me.button" : "me.signin"))}">${icon("user")}</button>`;
   }
   document.addEventListener("click", (e) => {
     if (e.target.closest("[data-my-stats]")) { openMine(); return; }
@@ -5684,11 +5685,11 @@ a.link-copy { text-decoration: none; }
     const withCourse = (key, vars) => esc(t(key, { ...vars, course: "\u0000" })).replace("\u0000", where);
     const title = (cls, ico, html) => `<p class="res-title${cls}">${icon(ico)}<span>${html}</span></p>`;
     const plain = (html) => title("", "check", html);
-    // Its page, My stats, and the board (note: what goes on the left)
+    // Its page, My profile, and the board (note: what goes on the left)
     const id = run.id || (earlier && earlier.run.id) || "";
     const foot = (note = "") => `<p class="res-foot"><span>${note}</span><span class="res-actions">` +
       (id ? `<button class="btn btn-sm" type="button" data-run-open="${esc(id)}">${icon("play")}<span>${esc(t("rev.view"))}</span></button>` : "") +
-      `<button class="btn btn-sm" type="button" data-my-stats>${icon("star", "icon icon-star")}<span>${esc(t("me.button"))}</span></button>` +
+      `<button class="btn btn-sm" type="button" data-my-stats>${icon("user", "icon icon-me")}<span>${esc(t("me.button"))}</span></button>` +
       `<a class="btn btn-sm" href="/leaderboards/${c.n}" data-board="${c.n}">${esc(t("res.board"))}</a></span></p>`;
     const slower = (key) => {
       const alone = aloneOf(c.n, cleanRun({ ...run, discord: me.id }));
@@ -6129,7 +6130,7 @@ a.link-copy { text-decoration: none; }
   // Opens a run's page, and puts its link in the address while it's open
   async function openRun(id) {
     if (!/^[\w-]{1,16}$/.test(id)) return;
-    leaveStats(); // a run opened from their own panel goes back to where the page was before My stats
+    leaveStats(); // a run opened from their own panel goes back to where the page was before My profile
     leavePlayer(); // and one from someone's panel, to where it was before that
     if (runBack === null) runBack = location.pathname + location.search + location.hash;
     plKey = "";
@@ -6162,7 +6163,7 @@ a.link-copy { text-decoration: none; }
     runBack = null;
     putAddressBack(back);
   }
-  // After a run's page or My stats closes. Back at the list, /runs stays until they scroll (it isn't in the section
+  // After a run's page or My profile closes. Back at the list, /runs stays until they scroll (it isn't in the section
   // bar); anywhere else follows the page.
   function putAddressBack(back) {
     try { history.replaceState(history.state, "", back); } catch (e) { /* address stays as it is */ }
@@ -6317,7 +6318,7 @@ a.link-copy { text-decoration: none; }
   // The address follows the section on screen (/faq, /features, …), and is / at the very top. It replaces the
   // current entry rather than adding one, so Back still leaves the page instead of stepping through sections.
   // A link someone opened (ballkour.com/faq) keeps its address until they scroll or click themselves.
-  // ballkour.com/stats stays too, until My stats opens (once the page knows whether they're signed in)
+  // ballkour.com/stats stays too, until My profile opens (once the page knows whether they're signed in)
   let addressHeld = !!startRoute || !!startRun || !!startPlayer || (startStats && loginOn);
   ["wheel", "touchstart", "keydown", "mousedown"].forEach((ev) => addEventListener(ev, () => { addressHeld = false; }, { passive: true }));
   // Opening a board or an answer puts its link in the address straight away, wherever the page is scrolled to, and
@@ -6344,7 +6345,7 @@ a.link-copy { text-decoration: none; }
     return "";
   }
   function followAddress(i) {
-    if (addressHeld || runId || statsBack !== null || playerBack !== null) return; // a run's page, My stats, and a player's panel keep their own links
+    if (addressHeld || runId || statsBack !== null || playerBack !== null) return; // a run's page, My profile, and a player's panel keep their own links
     const route = i >= 0 && (scrollY >= 2 || clicked >= 0) ? sectionLinks[i].dataset.route : null;
     let [pathname, hash = ""] = (route ? pathFor(route) : "/").split("#");
     const sub = route ? subPath(route) : "";
