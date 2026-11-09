@@ -29,6 +29,8 @@ Links can go deeper, and the address shows them while a board or answer is open:
 - **A player's stats:** `ballkour.com/players/<Discord ID>` opens that player's panel, and `/players/<in-game name>` does for a name with no Discord ID (like a legacy one). The address shows it while their panel is open, and **Copy link** beside Close copies it, so anyone can share their stats (their own panel from My stats keeps `/stats`). The Worker serves the page here too.
 
 The older `#6-dorado` and `#pause` forms still work too.
+
+A link to a run, a board, or a player shows its own preview when it's pasted on Discord (or anywhere else that reads a page's `og:` tags), instead of the site's: the run's player, time, course, and where it is now ("COLDSKIN · 4:05.81 on 🇬🇮 Watchpoint: Gibraltar", "#2 of 15 on the board · 2 mistakes · 2026-08-26"), a board's top 3, or a player's place, rating, and Top %. The Worker works them out as it serves the page (`previewOf()` in `cloudflare/worker.js`), in English like Ballkyrie's posts.
 - **A language:** `ballkour.com/?lang=ja` opens the page in Japanese; it works with any of the links above. Picking a language puts it in the address.
 
 ## Previewing

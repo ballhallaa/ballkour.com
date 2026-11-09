@@ -590,12 +590,19 @@ const runByTime = (a, b) => toSeconds(a.time) - toSeconds(b.time) || a.mistakes 
 function fileRuns(file, body) {
   if (!file || typeof body !== "string") return [];
   if (file.endsWith(".opy")) {
-    const out = [];
-    for (const m of body.matchAll(/lb\[\d+\]\s*=\s*"([^"]*)"(?:[ \t]*#[ \t]*discord:[ \t]*(\d{17,20}))?/g)) {
-      const [name, time, miss] = m[1].split(",").map((s) => s.trim());
-      if (name && /^(\d{1,2}:)?\d{1,2}:\d{2}\.\d{2}$/.test(time) && /^\d+$/.test(miss)) out.push({ name, discord: m[2] || "", time, mistakes: Number(miss) });
+    const rows = [];
+    for (const m of body.matchAll(/lb\[(\d+)\]\s*=\s*"([^"]*)"(?:[ \t]*#[ \t]*discord:[ \t]*(\d{17,20}))?/g)) {
+      const [name, time, miss] = m[2].split(",").map((s) => s.trim());
+      if (name && /^(\d{1,2}:)?\d{1,2}:\d{2}\.\d{2}$/.test(time) && /^\d+$/.test(miss)) rows[Number(m[1])] = { name, discord: m[3] || "", time, mistakes: Number(miss) };
     }
-    return out;
+    // lbRunInfo(rank, "YYYY-MM-DD", "host/path"): its date and video, the same way the page reads them (parseBoard())
+    for (const m of body.matchAll(/lbRunInfo\(\s*(\d+)\s*,\s*"([^"]*)"\s*,\s*"([^"]*)"\s*\)/g)) {
+      const r = rows[Number(m[1])];
+      if (!r) continue;
+      r.date = m[2];
+      if (/^[a-z0-9.-]+\.[a-z]{2,}(\/[^\s"'<>]*)?$/i.test(m[3])) r.video = "https://" + m[3];
+    }
+    return rows.filter(Boolean);
   }
   try {
     const runs = JSON.parse(body);
@@ -1563,6 +1570,133 @@ function notFound(res, block) {
   return new HTMLRewriter().on("head", { element(el) { el.append(block, { html: true }); } }).transform(new Response(res.body, res));
 }
 
+/* ---------- Link previews ----------
+   A link to a run, a board, or a player, pasted on Discord (or anywhere else that reads a page's og: tags), shows its
+   own title and a line about it instead of the site's: "COLDSKIN · 4:05.81 on Watchpoint: Gibraltar" and "#2 of 12 on
+   the board · 2 mistakes · 2026-08-26". They're worked out from the game data as the page is served, in English like
+   Ballkyrie's posts, and the page itself is the same as ever. */
+// A run from before the website's form has an id made from its course and video (or its player, time, and mistakes,
+// when it has none), the same as pastId() in index.html: keep the two in step
+function pastId(n, key) {
+  let h = 0x811c9dc5; // FNV-1a
+  for (const ch of key) h = Math.imul(h ^ ch.codePointAt(0), 0x01000193) >>> 0;
+  return `${n}-${h.toString(36)}`;
+}
+const mistakesText = (n) => `${n} mistake${n === 1 ? "" : "s"}`;
+const ratingText = (r) => `⭐ ${Math.round(r).toLocaleString("en-US")}`;
+// The addresses that have a preview of their own
+const PREVIEWED = /^\/(?:runs|leaderboards|players)\/./i;
+function previewOf(pathname, data, players) {
+  if (!PREVIEWED.test(pathname) || !data || !data.files || !Array.isArray(data.courses)) return null;
+  let loaded = null;
+  const courses = () => loaded || (loaded = loadCourses(data.files, data.courses));
+  const boardOf = (n) => { const c = courses().find((x) => x.n === n); if (!c) return []; const { top, rest } = standings(c); return [...top, ...rest]; };
+  const name = (n) => `${data.flags[n] ? `${data.flags[n]} ` : ""}${data.names[n] || `Course ${n}`}`;
+  const history = (() => { try { return JSON.parse(data.files[HISTORY_FILE]) || {}; } catch (e) { return {}; } })();
+  const top3 = (runs) => runs.slice(0, 3).map((r, i) => `${i + 1}. ${caps(r.name)} ${r.time}`).join(" · ");
+  let m;
+  // A run's page: one sent from the website by its id, or one from before by its course and video
+  if ((m = /^\/runs\/([\w-]{1,16})\/?$/i.exec(pathname))) {
+    const id = m[1];
+    let run = null, n = 0, group = "";
+    const sent = (() => { try { return JSON.parse(data.files[RUNS_FILE]) || {}; } catch (e) { return {}; } })();
+    for (const g of RUN_GROUPS) {
+      for (const [k, list] of Object.entries(sent[g] && typeof sent[g] === "object" ? sent[g] : {})) {
+        const r = Array.isArray(list) && list.find((x) => x && x.id === id);
+        if (r) { run = r; n = Number(k); group = g; }
+      }
+    }
+    if (!run && /^\d+-/.test(id)) {
+      n = Number(id.split("-")[0]);
+      const c = data.courses.find((x) => x.n === n);
+      const old = [...fileRuns(c && c.file, c && data.files[c.file]), ...((history[n] && history[n].boards) || []).flat()];
+      run = old.find((r) => {
+        if (!r || typeof r.name !== "string" || typeof r.time !== "string") return false;
+        const key = `${playerKey(r)} ${r.time} ${r.mistakes}`;
+        return pastId(n, r.video || key) === id || pastId(n, `${r.video} ${key}`) === id;
+      }) || null;
+      group = "runs";
+    }
+    if (!run) return null;
+    const board = boardOf(n);
+    const at = board.findIndex((r) => playerKey(r) === playerKey(run) && r.time === run.time && r.mistakes === run.mistakes);
+    const best = board.find((r) => playerKey(r) === playerKey(run));
+    const where = group === "pending" ? "Waiting for a moderator to check it"
+      : group === "declined" ? "Turned down"
+      : group === "removed" ? "Taken off the board"
+      : at >= 0 ? `#${at + 1} of ${board.length} on the board`
+      : best ? `Their best there is ${best.time}` : "Taken off the board";
+    return {
+      title: `${caps(run.name)} · ${run.time} on ${name(n)}`,
+      description: [where, mistakesText(run.mistakes), run.date || ""].filter(Boolean).join(" · "),
+    };
+  }
+  // A board: the top 3 on it (the newest board, an older one from its history, or the legacy one), or the ratings'
+  if ((m = /^\/leaderboards\/(ratings|\d+)(?:-[\w-]*)?(?:\/(legacy|\d+))?\/?$/i.exec(pathname))) {
+    if (m[1].toLowerCase() === "ratings") {
+      const { players: rated } = rate(courses());
+      return {
+        title: "Player ratings",
+        description: rated.length ? rated.slice(0, 3).map((p) => `${p.rank}. ${caps(p.name)} ${ratingText(p.rating)}`).join(" · ") : "No ratings yet",
+      };
+    }
+    const n = Number(m[1]);
+    const c = data.courses.find((x) => x.n === n);
+    if (!c) return null;
+    const boards = ((history[n] && history[n].boards) || []).filter((b) => Array.isArray(b) && b.length);
+    if (m[2] && m[2].toLowerCase() === "legacy") {
+      // Timed to the second ("4:30.--"), and a player could be on it twice: their fastest, like the page's legacyHtml()
+      const seen = new Set();
+      const legacy = ((history[n] && history[n].legacy) || []).filter((r) => r && typeof r.name === "string" && typeof r.time === "string")
+        .map((r) => ({ ...r, time: r.time.replace(".--", "") })).sort((a, b) => toSeconds(a.time) - toSeconds(b.time))
+        .filter((r) => !seen.has(playerKey(r)) && seen.add(playerKey(r)));
+      return { title: `${name(n)} · Legacy top 10`, description: legacy.length ? `Before May 2026: ${top3(legacy)}` : "Before May 2026" };
+    }
+    // The boards in its history, then today's when it's changed since the last one (boardsOf() in index.html), so an
+    // older board's number is the same as on the page
+    const board = boardOf(n);
+    const live = board.slice(0, 10);
+    const last = boards[boards.length - 1];
+    const sameAsLast = !!last && last.length === live.length && live.every((r) => last.some((x) => playerKey(x) === playerKey(r) && x.time === r.time && x.mistakes === r.mistakes));
+    const total = boards.length + (live.length && !sameAsLast ? 1 : 0);
+    const k = m[2] ? Number(m[2]) : 0;
+    if (k >= 1 && k < total) {
+      const b = boards[k - 1];
+      const day = b.map((r) => r.date || "").filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort().pop();
+      return { title: `${name(n)} · Board ${k} of ${total}`, description: `${top3(b)}${day ? ` · ${day}` : ""}` };
+    }
+    return {
+      title: `${name(n)} · Top 10`,
+      description: board.length ? top3(board) : c.broken && !c.remake ? "No times yet: this course doesn’t work since Overwatch’s August 2026 map updates" : "No times yet. Be the first to set one!",
+    };
+  }
+  // A player: their place, rating, and Top %
+  if ((m = /^\/players\/([^/]{1,300})\/?$/i.exec(pathname))) {
+    let seg;
+    try { seg = decodeURIComponent(m[1]); } catch (e) { return null; }
+    const { players: rated, counted } = rate(courses());
+    let key = /^\d{17,20}$/.test(seg) ? "d:" + seg : "n:" + seg.toUpperCase();
+    const all = courses().flatMap((c) => boardOf(c.n));
+    // A name only a Discord player goes by, the way the page opens it
+    if (key.startsWith("n:") && !all.some((r) => playerKey(r) === key)) {
+      const them = [...new Set(all.filter((r) => upper(r.name) === key.slice(2)).map(playerKey))];
+      if (them.length === 1) key = them[0];
+    }
+    const p = rated.find((x) => x.key === key);
+    const theirs = all.filter((r) => playerKey(r) === key);
+    const legacy = Object.values(history).flatMap((e) => (e && Array.isArray(e.legacy) ? e.legacy : [])).filter((r) => r && typeof r.name === "string" && playerKey(r) === key);
+    const shown = (p && p.name) || (theirs[0] && theirs[0].name) || (legacy[0] && legacy[0].name) || (key.startsWith("d:") && players && players[key.slice(2)] && players[key.slice(2)].name) || "";
+    if (!shown) return null;
+    return {
+      title: caps(shown),
+      description: p
+        ? [`#${p.rank} of ${rated.length} in the Player ratings`, ratingText(p.rating), p.tier === null ? "Rated" : `Top ${p.tier}%`, `${p.courses} of ${counted.length} courses run`].join(" · ")
+        : theirs.length ? "Not rated yet" : legacy.length ? "Runs from before May 2026" : "No runs yet",
+    };
+  }
+  return null;
+}
+
 /* ---------- Pages ---------- */
 // The sections (/submit, /faq, …) and the links into them (/leaderboards/6, /leaderboards/3/legacy, /leaderboards/3/12
 // for one of its older boards, /faq/pausing), and every run sent from the website (/runs, the list under the form)
@@ -1615,6 +1749,19 @@ async function page(request, env, ctx) {
       if (profiles) el.setAttribute("data-profiles", "on");
       if (botId(env)) el.setAttribute("data-bot", botId(env));
     } });
+  }
+  // Its link preview (see "Link previews"), for a run, a board, or a player
+  let preview = null;
+  const where = new URL(request.url).pathname;
+  try { preview = gameData && PREVIEWED.test(where) && previewOf(where, JSON.parse(gameData), players && JSON.parse(players)); }
+  catch (e) { console.error(`preview: ${(e && e.message) || e}`); }
+  if (preview) {
+    const link = `https://ballkour.com${new URL(request.url).pathname.replace(/\/$/, "")}`;
+    rw = rw
+      .on("title", { element(el) { el.setInnerContent(`${preview.title} · Ballkour`); } })
+      .on('meta[property="og:title"]', { element(el) { el.setAttribute("content", preview.title); } })
+      .on('meta[name="description"], meta[property="og:description"]', { element(el) { el.setAttribute("content", preview.description); } })
+      .on('meta[property="og:url"]', { element(el) { el.setAttribute("content", link); } });
   }
   const count = widget && JSON.parse(widget).member_count;
   if (typeof count === "number") {
