@@ -428,5 +428,19 @@
   "visits.home": "Początek strony",
   "visits.players": "Gracze",
   "visits.other": "Inne",
-  "visits.note": "Liczone przez samą stronę za każdym razem, gdy ktoś otworzy ją w przeglądarce, więc blokery reklam nikogo nie ukrywają, a boty się nie liczą. Każda osoba liczy się raz dziennie, a strona nie zapisuje, kim jest."
+  "visits.note": "Liczone przez samą stronę za każdym razem, gdy ktoś otworzy ją w przeglądarce, więc blokery reklam nikogo nie ukrywają, a boty się nie liczą. Każda osoba liczy się raz dziennie, a strona nie zapisuje, kim jest.",
+  "foot.openDiscord": "Otwórz na Discordzie",
+  "link.title": "Twój link",
+  "link.pick": "Wybierz nazwę",
+  "link.change": "Zmień",
+  "link.rules": "Wybierz dla niego nazwę: do 32 liter lub cyfr, w tym co najmniej jedna litera. Zamiast spacji użyj - lub _.",
+  "link.save": "Zapisz",
+  "link.useNumber": "Użyj mojego numeru",
+  "link.bad": "Ta nazwa się nie nada. Może mieć do 32 liter lub cyfr, musi mieć co najmniej jedną literę i nie może zawierać spacji.",
+  "link.taken": "Ta nazwa jest zajęta. Spróbuj innej.",
+  "link.rate": "To dużo zmian naraz. Poczekaj minutę i spróbuj ponownie.",
+  "link.saved": "Twój link to teraz {link}",
+  "link.their": "Link gracza: {link}",
+  "link.remove": "Usuń nazwę",
+  "link.removed": "Link gracza to znowu {link}."
 }

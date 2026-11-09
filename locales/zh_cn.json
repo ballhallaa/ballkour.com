@@ -428,5 +428,19 @@
   "visits.home": "页面顶部",
   "visits.players": "玩家",
   "visits.other": "其他",
-  "visits.note": "每当有人在浏览器中打开网站，都由网站自己计数，所以广告拦截器不会漏掉任何人，机器人也不计入。每个人每天只算一次，网站不会保存是谁。"
+  "visits.note": "每当有人在浏览器中打开网站，都由网站自己计数，所以广告拦截器不会漏掉任何人，机器人也不计入。每个人每天只算一次，网站不会保存是谁。",
+  "foot.openDiscord": "在 Discord 上打开",
+  "link.title": "你的链接",
+  "link.pick": "起个名字",
+  "link.change": "更改",
+  "link.rules": "给它起个名字：最多 32 个字，可以是文字或数字，不能只有数字。用 - 或 _ 代替空格。",
+  "link.save": "保存",
+  "link.useNumber": "使用我的编号",
+  "link.bad": "这个名称不能用。名称最多 32 个字，可以是文字或数字，不能只有数字，也不能有空格。",
+  "link.taken": "这个名称已被使用。请换一个试试。",
+  "link.rate": "一次更改太多了。请等一分钟后再试。",
+  "link.saved": "你的链接现在是 {link}",
+  "link.their": "该玩家的链接：{link}",
+  "link.remove": "移除名称",
+  "link.removed": "该玩家的链接已改回 {link}。"
 }
