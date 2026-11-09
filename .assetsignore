@@ -5,3 +5,6 @@ cloudflare
 tools
 README.md
 LICENSE
+# Wrangler's and Claude Code's own folders, in case a deploy runs from a working folder that has them
+.wrangler
+.claude

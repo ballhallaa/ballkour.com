@@ -19,7 +19,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # Actions are pinned to an exact commit (their version in the comment), since this job holds the Cloudflare token
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Check that locales/en.json matches index.html
         run: |
@@ -32,7 +33,7 @@ jobs:
 
       # Publishes the site's files and cloudflare/worker.js together (see cloudflare/wrangler.toml)
       - name: Deploy to Cloudflare
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3.15.0
         with:
           wranglerVersion: "4.157.0"
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}

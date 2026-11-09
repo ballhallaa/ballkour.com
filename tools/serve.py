@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Preview the site from this folder, with the live leaderboards.
 
-    python3 tools/serve.py            # then open http://localhost:8000
+    python3 tools/serve.py            # then open http://localhost:8000 (only this computer can)
     python3 tools/serve.py 8080       # another port
 
 It serves your copy of the site at the same addresses as ballkour.com (/leaderboards/6, /faq/pausing, /runs/<id>,
@@ -51,4 +51,5 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
 
 print(f"Previewing {ROOT} at http://localhost:{PORT}  (Ctrl+C to stop)")
-http.server.ThreadingHTTPServer(("", PORT), Handler).serve_forever()
+# 127.0.0.1: only this computer, so nobody else on the same network can browse the folder
+http.server.ThreadingHTTPServer(("127.0.0.1", PORT), Handler).serve_forever()
