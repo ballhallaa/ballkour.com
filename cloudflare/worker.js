@@ -272,10 +272,17 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // Discord says 401 when the token is wrong or was reset in the Developer Portal. Then nobody can be looked up, so the
 // rebuild fails (and `npx wrangler tail` says why) instead of saving a list with nobody on it for an hour.
 class BadToken extends Error {}
+// The caller has used up the calls it may make (see "Cloudflare's limits" below), so the rest waits for next time
+class NoCallsLeft extends Error {}
 // What Discord answered, or null when it has nobody by that ID (or isn't letting Ballkyrie see them). Anything else
 // (rate limits, Discord being down, a timeout) throws and says why, so the player can be looked up again soon.
-async function discord(token, route) {
+// calls ({ left }) is how many calls the caller can still make, when it's counting: every try takes one.
+async function discord(token, route, calls = null) {
   for (let attempt = 0; ; attempt++) {
+    if (calls) {
+      if (calls.left <= 0) throw new NoCallsLeft("no calls left");
+      calls.left--;
+    }
     const r = await fetch(DISCORD_API + route, { headers: { Authorization: `Bot ${token}` }, signal: AbortSignal.timeout(5000) });
     if (r.ok) return r.json();
     if (r.status === 401) throw new BadToken("Discord turned down DISCORD_BOT_TOKEN (401): set it again to Ballkyrie's current token");
@@ -291,15 +298,22 @@ async function discord(token, route) {
 }
 // The name people see in the server (server nickname, then Discord display name, then username) and their picture.
 // Someone who left the server keeps their Discord name and picture.
-async function lookUp(token, id) {
-  const member = await discord(token, `/guilds/${GUILD_ID}/members/${id}`);
-  const user = member ? member.user : await discord(token, `/users/${id}`);
+async function lookUp(token, id, calls) {
+  const member = await discord(token, `/guilds/${GUILD_ID}/members/${id}`, calls);
+  const user = member ? member.user : await discord(token, `/users/${id}`, calls);
   if (!user) return null;
   const avatar = member && member.avatar ? `https://cdn.discordapp.com/guilds/${GUILD_ID}/users/${id}/avatars/${member.avatar}.png?size=64`
     : user.avatar ? `https://cdn.discordapp.com/avatars/${id}/${user.avatar}.png?size=64`
     : `https://cdn.discordapp.com/embed/avatars/${Number((BigInt(id) >> 22n) % 6n)}.png`;
   return { name: (member && member.nick) || user.global_name || user.username, avatar };
 }
+// How many calls to Discord one refresh of the names can make. A page load starts the refresh, and Cloudflare's free
+// plan lets it make 50 calls in all, a few of them its own (see "Cloudflare's limits" below), so with more players than
+// that, one refresh can't look everyone up. Each refresh takes whoever has gone longest without a look (players with no
+// name yet first), until it's out of calls, and the rest go in the next one, a few minutes later.
+const NAME_CALLS = 24;
+// How long a name and picture last before they're looked up again (a little under the hour the list is kept for)
+const NAME_AGE = 55 * 60 * 1000;
 async function buildPlayers(env, ctx, previous) {
   if (!env.DISCORD_BOT_TOKEN) throw new Error("no DISCORD_BOT_TOKEN secret");
   // Every Discord ID on any board: `# discord: ID` in the .opy files and "discord": "ID" in the .json files, plus the
@@ -310,22 +324,36 @@ async function buildPlayers(env, ctx, previous) {
   for (const text of Object.values(files)) if (text) for (const m of text.matchAll(/(?:discord|checkedBy)"?\s*:\s*"?(\d{17,20})\b/gi)) ids.add(m[1]);
   // Ballkyrie too (a bot's user ID is its app's ID), for its name and picture where the sign-in panel mentions it
   if (botId(env)) ids.add(botId(env));
+  // Everyone keeps what the last refresh had (at: when they were looked up; none for someone a run they just sent added,
+  // see showSaved), and whoever's due is looked up again, oldest first
+  const now = Date.now();
+  const at = (id) => (previous && previous[id] && previous[id].at) || 0;
+  const due = [...ids].filter((id) => now - at(id) >= NAME_AGE).sort((a, b) => at(a) - at(b));
   const found = {};
+  for (const id of ids) if (previous && previous[id]) found[id] = previous[id];
+  const calls = { left: NAME_CALLS };
   const failed = [];
-  const list = [...ids];
-  for (let i = 0; i < list.length; i += 5) { // 5 at a time, to stay well inside Discord's rate limits
-    const batch = list.slice(i, i + 5);
-    const people = await Promise.all(batch.map((id) => lookUp(env.DISCORD_BOT_TOKEN, id).catch((e) => {
+  let looked = 0;
+  for (let i = 0; i < due.length && calls.left > 0; i += 5) { // 5 at a time, to stay well inside Discord's rate limits
+    const batch = due.slice(i, i + 5);
+    const people = await Promise.all(batch.map((id) => lookUp(env.DISCORD_BOT_TOKEN, id, calls).catch((e) => {
       if (e instanceof BadToken) throw e;
-      failed.push((e && e.message) || String(e));
-      return null;
+      if (!(e instanceof NoCallsLeft)) failed.push((e && e.message) || String(e));
+      return undefined; // no answer: they keep what they had, and stay due
     })));
-    batch.forEach((id, j) => { const p = people[j] || (previous && previous[id]); if (p) found[id] = p; });
+    batch.forEach((id, j) => {
+      if (people[j] === undefined) return;
+      looked++;
+      // Discord has nobody by that ID any more: they keep their last name and picture, if they had one
+      found[id] = { ...(people[j] || found[id] || {}), at: now };
+    });
   }
-  if (!failed.length) return JSON.stringify(found);
-  // Whoever Discord didn't answer for keeps their last name, or goes without one for now. Kept for an hour, a list
-  // like that would hide them until the next hour, so it's tried again in a few minutes instead.
-  console.error(`players: Discord didn't answer for ${failed.length} of ${list.length} players, trying again in 5 minutes. First: ${failed[0]}`);
+  const left = due.length - looked;
+  if (!left) return JSON.stringify(found);
+  // Whoever's left keeps their last name, or goes without one for now. Kept for an hour, a list like that would hide
+  // them until the next hour, so the rest are looked up in a few minutes instead.
+  console.error(`players: looked up ${looked} of ${due.length} due, ${left} left for the next refresh in 5 minutes` +
+    (failed.length ? `; Discord didn't answer for ${failed.length}. First: ${failed[0]}` : " (out of calls)"));
   return { body: JSON.stringify(found), ttl: 5 * 60 };
 }
 
@@ -495,11 +523,34 @@ async function loginCallback(request, env, ctx) {
 }
 // profile: whether their stats are on their Discord profile, or null when that isn't set up. role: whether they have
 // the Discord Profile App role on our server, which Discord needs before it shows them (asked only when they're on).
+// Both come from one look at their roles on our server (see memberOf), at most a minute old, or ten seconds when the
+// page asks again after they've been off getting the Discord Profile App role (?fresh=1).
 async function whoAmI(request, env, ctx) {
   const user = await readSession(request, env);
   const profile = user && profileOn(env) ? !!(await env.PROFILES.get(profileKey(user.id)).catch(() => null)) : null;
-  const [role, reviewer] = await Promise.all([profile ? hasProfileRole(env, ctx, user.id) : false, isReviewer(env, user)]);
+  const maxAge = new URL(request.url).searchParams.has("fresh") ? 10 : 60;
+  const member = user && env.DISCORD_BOT_TOKEN ? await memberOf(env, user.id, maxAge).catch((e) => {
+    console.error(`me ${user.id}: couldn't see their roles: ${(e && e.message) || e}`);
+    return null;
+  }) : null;
+  const reviewer = isReviewerIn(env, member);
+  const role = profile ? await hasProfileRoleIn(env, ctx, member) : false;
   return answer(200, { on: loginOn(env), user: user && { id: user.id, name: user.name, avatar: user.avatar, reviewer, profile, role } });
+}
+// A member of our server as Discord has them ({ roles }), or null when they aren't on it, for the reviewer check and
+// the Discord Profile App role. Every page load asks (/api/me), so an answer is kept here for a minute, and reused
+// while it's at most maxAge seconds old (0: ask Discord again, as before a run or claim is checked).
+async function memberOf(env, id, maxAge) {
+  const key = cacheKey(`member/${id}`);
+  if (maxAge > 0) {
+    const hit = await caches.default.match(key).catch(() => null);
+    const kept = hit && (await hit.json().catch(() => null));
+    if (kept && Date.now() - kept.at < maxAge * 1000) return kept.member;
+  }
+  const member = await discord(env.DISCORD_BOT_TOKEN, `/guilds/${GUILD_ID}/members/${id}`);
+  const kept = { at: Date.now(), member: member ? { roles: Array.isArray(member.roles) ? member.roles : [] } : null };
+  await caches.default.put(key, new Response(JSON.stringify(kept), { headers: { "Cache-Control": "public, max-age=60" } })).catch(() => {});
+  return kept.member;
 }
 
 /* Saving a run, and checking top 10 runs
@@ -510,20 +561,21 @@ async function whoAmI(request, env, ctx) {
    ballkour.com/submit, then goes on the board (Approve, into "runs") or into "declined" (Turn down), either way with
    who checked it and when ("checkedBy" and "checkedAt"). Every other run goes on the board straight away. Turned-down
    runs are kept so their page can still say what happened, and reviewers can look back over every run. Reviewers are
-   everyone on the server with a role in REVIEWER_ROLES (wrangler.toml). Discord is asked each time, so taking someone's
-   role away takes their reviewing away too. The leaderboard bot and the website's boards only read "runs" and
+   everyone on the server with a role in REVIEWER_ROLES (wrangler.toml). Discord is asked right before every Approve or
+   Turn down, so taking someone's role away takes their reviewing away too (and the page catches up within a minute). The leaderboard bot and the website's boards only read "runs" and
    "removed", so a waiting or turned-down run is on no board.
      GET  /api/pending   the runs waiting for a check (reviewers only)
      POST /api/review    { course, id, approve } (reviewers only) */
 const idList = (s) => String(s || "").split(/[\s,]+/).filter(Boolean);
-// Discord not answering counts as no, so nobody gets in by a hiccup
-async function isReviewer(env, user) {
+// Whether a member (from memberOf) has a reviewer role
+const isReviewerIn = (env, member) => !!member && idList(env.REVIEWER_ROLES).some((r) => member.roles.includes(r));
+// Discord not answering counts as no, so nobody gets in by a hiccup. maxAge (see memberOf): a minute for the list of
+// runs waiting, and none (Discord is asked right then) before a run or claim is checked.
+async function isReviewer(env, user, maxAge = 0) {
   if (!user) return false;
-  const roles = idList(env.REVIEWER_ROLES);
-  if (!roles.length || !env.DISCORD_BOT_TOKEN) return false;
+  if (!idList(env.REVIEWER_ROLES).length || !env.DISCORD_BOT_TOKEN) return false;
   try {
-    const member = await discord(env.DISCORD_BOT_TOKEN, `/guilds/${GUILD_ID}/members/${user.id}`);
-    return !!member && (member.roles || []).some((r) => roles.includes(r));
+    return isReviewerIn(env, await memberOf(env, user.id, maxAge));
   } catch (e) {
     console.error(`reviewer ${user.id}: couldn't tell if they have a reviewer role: ${(e && e.message) || e}`);
     return false;
@@ -694,7 +746,7 @@ async function showSaved(runsText, user, historyText = null) {
   const playersCopy = user && (await stored("players"));
   if (playersCopy) {
     const d = JSON.parse(playersCopy);
-    if (!d[user.id]) { d[user.id] = { name: user.name, avatar: user.avatar }; await putCached("players", 5 * 60, JSON.stringify(d)); }
+    if (!(d[user.id] && d[user.id].name)) { d[user.id] = { name: user.name, avatar: user.avatar }; await putCached("players", 5 * 60, JSON.stringify(d)); }
   }
 }
 // The cached game data's course files and names (fetched if there's none yet)
@@ -877,10 +929,12 @@ async function submit(request, env, ctx) {
   if (!Number.isInteger(mistakes) || mistakes < 0 || mistakes > 9999) return answer(400, { error: "miss" });
   if (!video) return answer(400, { error: "video" });
 
-  // The course has to have a board
+  // The course has to have a board. Without the game data (GitHub down, and no copy kept here), there's no telling which
+  // courses there are, so nothing is saved: the form says to open a ticket instead.
   const { files, names, flags } = await gameInfo(env, ctx);
+  if (!files) return answer(503, { error: "off" });
   const file = courseFile(files, n);
-  if (files && !file) return answer(400, { error: "course" });
+  if (!file) return answer(400, { error: "course" });
   const board = fileRuns(file, file && files[file]);
   // Their runs from before the website's form are on the board, or on its old boards
   const mine = [...board, ...historyRuns(files, n)].filter((r) => r.discord === user.id);
@@ -923,7 +977,7 @@ async function submit(request, env, ctx) {
 // The runs waiting for a check, oldest first, each with where it would place now
 async function pending(request, env, ctx) {
   const user = await readSession(request, env);
-  if (!(await isReviewer(env, user))) return answer(403, { error: "bad" });
+  if (!(await isReviewer(env, user, 60))) return answer(403, { error: "bad" });
   let data;
   try { ({ data } = await readRuns(env, await runsApi(env))); } catch (e) { console.error(`pending: ${e.message}`); return answer(502, { error: "off" }); }
   const { files, names } = await gameInfo(env, ctx);
@@ -1137,13 +1191,26 @@ async function reviewClaim(request, env, ctx) {
    Discord only takes a player's stats with their own token, so their tokens (the access and refresh tokens, which
    allow nothing else) are kept in the PROFILES KV namespace under profile:<discord id>, with what was last sent
    (in the key's metadata). Every 30 minutes (the cron in wrangler.toml) everyone's stats are worked out again and
-   whoever's changed is sent, at most PROFILE_FETCHES fetches' worth at a time, which keeps the Worker under
-   Cloudflare's 50 fetches; anyone left over goes next time. A player's own stats are also sent as soon as their run
-   goes on a board. Someone who took the app off in Discord is dropped the next time there's something to send them.
-   The fields' names are sent to Discord by the Worker too (with Ballkyrie's bot token), the first time and again
-   whenever PROFILE_FIELDS changes. Needs everything for signing in, DISCORD_BOT_TOKEN, and PROFILES. */
+   whoever's changed is sent; anyone left over goes next time (see PROFILE_CALLS). A player's own stats are also sent
+   as soon as their run goes on a board. Someone who took the app off in Discord is dropped the next time there's
+   something to send them. The fields' names are sent to Discord by the Worker too (with Ballkyrie's bot token), the
+   first time and again whenever PROFILE_FIELDS changes. Needs everything for signing in, DISCORD_BOT_TOKEN, and
+   PROFILES.
+
+   Renewing a player's tokens is the one step that can't be redone: Discord takes each refresh token only once, so the
+   new ones have to be saved, or the next update finds dead tokens and drops the player. So a send only starts with
+   enough calls left to finish (SEND_CALLS), the new tokens are saved straight away (twice if need be), and a player
+   whose tokens look dead is only dropped if PROFILES still has the ones that failed, not ones another request (a run
+   they sent during the update) renewed in the meantime. */
 const PROFILE_SCOPE = "role_connections.write";
-const PROFILE_FETCHES = 24;
+// How many calls an update of everyone's profiles can make. Cloudflare's free plan lets a run make 50, and calls to
+// PROFILES count as well as ones to Discord, so this leaves room to spare. It's GAME_CALLS fewer when the game data had
+// to be fetched from GitHub first (this data center had no copy of it).
+const PROFILE_CALLS = 40;
+const GAME_CALLS = 25;
+// The most one send can take: reading their tokens, renewing them and saving them (twice, if the first save doesn't go
+// through), sending, and saving what was sent
+const SEND_CALLS = 7;
 // type 2: a whole number, which linked roles check with "at least". Keys can't change without everyone's profile
 // losing that number until they're sent again.
 const PROFILE_FIELDS = [
@@ -1164,23 +1231,27 @@ async function profileRoleId(env, ctx) {
     return JSON.stringify(role.id);
   }));
 }
-// Whether they have it. Not on the server, or Discord not answering, counts as no: their panel then shows how to get it.
-async function hasProfileRole(env, ctx, id) {
+// Whether a member (from memberOf) has it. Not on the server, or Discord not answering, counts as no: their panel then
+// shows how to get it.
+async function hasProfileRoleIn(env, ctx, member) {
+  if (!member) return false;
   try {
-    const member = await discord(env.DISCORD_BOT_TOKEN, `/guilds/${GUILD_ID}/members/${id}`);
-    return !!member && (member.roles || []).includes(await profileRoleId(env, ctx));
+    return member.roles.includes(await profileRoleId(env, ctx));
   } catch (e) {
-    console.error(`profile of ${id}: couldn't tell if they have the ${PROFILE_ROLE} role: ${(e && e.message) || e}`);
+    console.error(`profile: couldn't look up the ${PROFILE_ROLE} role: ${(e && e.message) || e}`);
     return false;
   }
 }
 const profileKey = (id) => `profile:${id}`;
 const tokensFrom = (t) => ({ access: t.access_token, refresh: t.refresh_token, expires: Date.now() + (Number(t.expires_in) || 0) * 1000 });
 
-// Tells Discord the fields' names, unless it has these already (what was sent is kept in PROFILES as "fields")
-async function registerFields(env) {
+// Tells Discord the fields' names, unless it has these already (what was sent is kept in PROFILES as "fields").
+// calls: { left }, the calls the caller can still make (see PROFILE_CALLS), which this takes 1 to 3 of.
+async function registerFields(env, calls) {
   const want = JSON.stringify(PROFILE_FIELDS);
+  calls.left--;
   if ((await env.PROFILES.get("fields")) === want) return;
+  calls.left -= 2;
   const r = await fetch(`${DISCORD_API}/applications/${env.DISCORD_CLIENT_ID}/role-connections/metadata`, {
     method: "PUT",
     headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`, "Content-Type": "application/json" },
@@ -1237,32 +1308,50 @@ async function refreshTokens(env, tokens) {
   throw new Error(`refreshing their tokens: ${r.status} ${why.slice(0, 200)}`);
 }
 // Sends a player's profile (body, from profilesFrom) to Discord with their tokens, which are renewed first when
-// they have less than a day left, and keeps both. spend() is called before each fetch.
-// → "sent", or "gone" when their tokens are dead (they're dropped)
-async function sendProfile(env, id, tokens, body, spend = () => {}) {
+// they have less than a day left, and keeps both. Every call comes out of calls.left (SEND_CALLS - 1 at most, after
+// whoever called it read their tokens). → "sent", or "gone" when their tokens are dead (they're dropped)
+async function sendProfile(env, id, tokens, body, calls) {
   const key = profileKey(id);
-  const keep = (t, sent) => env.PROFILES.put(key, JSON.stringify(t), { metadata: { sent } });
+  const keep = (t, sent) => { calls.left--; return env.PROFILES.put(key, JSON.stringify(t), { metadata: { sent } }); };
   let renewed = false;
   const renew = async () => {
-    spend();
+    const used = tokens.refresh;
+    calls.left--;
     tokens = await refreshTokens(env, tokens);
     renewed = true;
-    if (tokens) await keep(tokens, ""); // straight away: the old refresh token doesn't work any more
-    else await env.PROFILES.delete(key);
-    return !!tokens;
+    if (!tokens) {
+      // Dead: they took the app off in Discord, unless another request renewed them in the meantime (Discord takes
+      // each refresh token only once), and then PROFILES has the new ones
+      calls.left--;
+      const now = await env.PROFILES.get(key, "json");
+      if (now && now.refresh && now.refresh !== used) { tokens = now; return true; }
+      calls.left--;
+      await env.PROFILES.delete(key);
+      return false;
+    }
+    // Straight away, since the old refresh token doesn't work any more. If that doesn't go through, once more now,
+    // and they're saved again with what's sent below.
+    await keep(tokens, "").catch(() => keep(tokens, "")).catch((e) => console.error(`profile of ${id}: couldn't save their renewed tokens yet: ${(e && e.message) || e}`));
+    return true;
   };
   if (tokens.expires - Date.now() < 864e5 && !(await renew())) return "gone";
   for (;;) {
-    spend();
+    calls.left--;
     const r = await fetch(`${DISCORD_API}/users/@me/applications/${env.DISCORD_CLIENT_ID}/role-connection`, {
       method: "PUT",
       headers: { Authorization: `Bearer ${tokens.access}`, "Content-Type": "application/json" },
       body,
       signal: AbortSignal.timeout(5000),
     });
-    if (r.ok) { await keep(tokens, body); return "sent"; }
+    if (r.ok) {
+      await keep(tokens, body).catch((e) => {
+        if (renewed) console.error(`profile of ${id}: couldn't save their renewed tokens, so they'll need to turn it on again: ${(e && e.message) || e}`);
+        throw e;
+      });
+      return "sent";
+    }
     if (r.status === 401 && !renewed) { if (!(await renew())) return "gone"; continue; }
-    if (r.status === 401) { await env.PROFILES.delete(key); return "gone"; }
+    if (r.status === 401) { calls.left--; await env.PROFILES.delete(key); return "gone"; }
     throw new Error(`Discord said ${r.status} ${(await r.text()).slice(0, 200)}`);
   }
 }
@@ -1273,44 +1362,52 @@ async function gameData(env, ctx) {
 }
 // From the callback, once they've said yes: their stats go on their profile, and their tokens are kept
 async function connectProfile(env, ctx, id, tokens) {
-  await registerFields(env);
-  await sendProfile(env, id, tokens, profilesFrom(await gameData(env, ctx))(id));
+  const calls = { left: 12 };
+  await registerFields(env, calls);
+  await sendProfile(env, id, tokens, profilesFrom(await gameData(env, ctx))(id), calls);
 }
 // Sends whoever's stats have changed since they were last sent: everyone with their stats on, or only these IDs
 async function updateProfiles(env, ctx, only = null) {
   if (!profileOn(env)) return;
-  const profileOf = profilesFrom(await gameData(env, ctx));
-  await registerFields(env);
-  const due = [];
+  // The game data as it's cached here, or else from GitHub, which takes about GAME_CALLS of the run's calls first
+  const copy = await stored("game").catch(() => null);
+  const profileOf = profilesFrom(copy ? JSON.parse(copy) : await gameData(env, ctx));
+  // A run that just went on a board catches its player up in the request that saved it, which made calls of its own
+  const calls = { left: only ? 15 : copy ? PROFILE_CALLS : PROFILE_CALLS - GAME_CALLS };
+  await registerFields(env, calls);
+  const due = []; // { id, tokens }: tokens are read when it's their turn, unless they're read already
   if (only) {
     for (const id of only) {
-      const { metadata } = await env.PROFILES.getWithMetadata(profileKey(id));
-      if (metadata && metadata.sent !== profileOf(id)) due.push(id);
+      calls.left--;
+      const { value, metadata } = await env.PROFILES.getWithMetadata(profileKey(id), "json");
+      if (value && !(metadata && metadata.sent === profileOf(id))) due.push({ id, tokens: value });
     }
   } else {
     let cursor;
     do {
+      calls.left--;
       const page = await env.PROFILES.list({ prefix: "profile:", cursor });
       for (const k of page.keys) {
         const id = k.name.slice("profile:".length);
-        if (!(k.metadata && k.metadata.sent === profileOf(id))) due.push(id);
+        if (!(k.metadata && k.metadata.sent === profileOf(id))) due.push({ id, tokens: null });
       }
       cursor = page.list_complete ? null : page.cursor;
-    } while (cursor);
+    } while (cursor && calls.left >= SEND_CALLS);
   }
-  let spent = 0, sent = 0, gone = 0, failed = 0;
-  for (const id of due) {
-    if (spent + 3 > PROFILE_FETCHES) break; // a send takes 3 fetches at most
-    const tokens = await env.PROFILES.get(profileKey(id), "json");
-    if (!tokens) continue;
+  let sent = 0, gone = 0, failed = 0, left = 0;
+  for (const x of due) {
+    // Only with enough calls left to finish, so renewed tokens always get saved (see sendProfile)
+    if (calls.left < SEND_CALLS - (x.tokens ? 1 : 0)) { left++; continue; }
     try {
-      if ((await sendProfile(env, id, tokens, profileOf(id), () => spent++)) === "sent") sent++; else gone++;
+      if (!x.tokens) { calls.left--; x.tokens = await env.PROFILES.get(profileKey(x.id), "json"); }
+      if (!x.tokens) continue; // they took them off in the meantime
+      if ((await sendProfile(env, x.id, x.tokens, profileOf(x.id), calls)) === "sent") sent++; else gone++;
     } catch (e) {
       failed++;
-      console.error(`profile of ${id}: ${(e && e.message) || e}`);
+      console.error(`profile of ${x.id}: ${(e && e.message) || e}`);
     }
   }
-  if (due.length) console.log(`profiles: ${sent} sent, ${gone} dropped, ${failed} failed, ${due.length - sent - gone - failed} left for next time`);
+  if (due.length) console.log(`profiles: ${sent} sent, ${gone} dropped, ${failed} failed, ${left} left for next time`);
 }
 // Right after a run goes on a board: its player's profile catches up straight away (everyone else's with the cron)
 const profileAfterRun = (env, ctx, id) => updateProfiles(env, ctx, [id]).catch((e) => console.error(`profile of ${id}: ${(e && e.message) || e}`));
