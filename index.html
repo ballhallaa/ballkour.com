@@ -971,6 +971,22 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .vid-line .stat { font: 600 16px/1 var(--mono); }
 .vid .run-frame { margin: 0 16px; border-radius: 10px; }
 .vid .run-out { margin: 10px 16px 0; }
+/* Under a YouTube video: its comments there (see showComments). Scrolling down to them, Close stays at the top. */
+.vid .vid-head { position: sticky; top: 0; z-index: 1; background: #08100d; }
+.vid-comments { margin: 16px 16px 0; padding-top: 14px; border-top: 1px solid var(--line); }
+.vid-comments-title { margin: 0; display: flex; align-items: center; gap: 8px; font: 600 12px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink); }
+.vid-comments-title .rev-count { letter-spacing: 0; }
+.vid-note { margin: 10px 0 0; font: 400 14px/1.45 var(--body); color: var(--ink-2); }
+.vid-list { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 14px; }
+.vid-c-head { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+.vid-c-name { font: 600 14px/1.3 var(--body); color: var(--ink); text-decoration: none; overflow-wrap: anywhere; }
+a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
+.vid-c-date { font: 400 12px/1.2 var(--mono); color: var(--ink-3); }
+.vid-c-text { margin: 4px 0 0; font: 400 14.5px/1.5 var(--body); color: var(--ink-2); white-space: pre-line; overflow-wrap: anywhere; }
+.vid-c-meta { margin: 6px 0 0; display: flex; flex-wrap: wrap; gap: 4px 16px; font: 500 12px/1.2 var(--mono); color: var(--ink-3); }
+.vid-c-meta > span { display: inline-flex; align-items: center; gap: 5px; }
+.vid-c-meta .icon { width: 12px; height: 12px; color: var(--coral); }
+.vid-comments .run-out { margin: 12px 0 0; justify-content: flex-start; }
 /* Find a player: a search box over everyone, each row like the Player ratings' (place, name, Top %, Discord, rating,
    courses run). Near the top of the screen like a command palette; the whole screen on phones. */
 .pf { width: min(580px, calc(100vw - 32px)); max-width: none; max-height: min(680px, calc(100dvh - 80px)); margin: max(40px, 9vh) auto auto; padding: 0; border: 1px solid var(--line-hi); border-radius: var(--r); background: #08100d; color: var(--ink); overflow: hidden; box-shadow: 0 30px 80px rgba(0, 0, 0, .6); }
@@ -2088,6 +2104,14 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "run.play": "Play the video",
   "run.open": "Open on {site}",
   "run.watch": "Watch the video",
+  "vid.comments": "Comments on YouTube",
+  "vid.loading": "Loading the comments…",
+  "vid.none": "No comments yet.",
+  "vid.off": "Comments are turned off on this video.",
+  "vid.fail": "Couldn’t load the comments. Try again later.",
+  "vid.all": "See all {count} comments on YouTube",
+  "vid.likes": "Likes: {count}",
+  "vid.replies": "Replies: {count}",
   "run.check": "Check this run",
   "run.signin": "Moderator? Sign in to approve or turn down this run.",
   "run.approvedBy": "Approved by {name} on {date}",
@@ -6370,7 +6394,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       : "";
     if (/^[\w-]{11}$/.test(yt)) {
       const start = ytStart(u.searchParams.get("t") || u.searchParams.get("start"));
-      return { site: "YouTube", src: `https://www.youtube-nocookie.com/embed/${yt}?autoplay=1&rel=0${start ? `&start=${start}` : ""}` };
+      return { site: "YouTube", src: `https://www.youtube-nocookie.com/embed/${yt}?autoplay=1&rel=0${start ? `&start=${start}` : ""}`, yt };
     }
     // Twitch clips and videos, which only play on the site they name as their parent
     const parent = encodeURIComponent(location.hostname);
@@ -6410,7 +6434,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      Twitch, Streamable, or Medal video right here, in a window over the page, with its course, player, time, and
      mistakes over it and a link to it on its own site under it. Clicking the time is pressing Play, so the player loads
      then, and not before. Closing the window stops the video. Other links, and Ctrl/Cmd/Shift/middle clicks, open the
-     video in a new tab, as before. */
+     video in a new tab, as before. A YouTube video's comments are under it (see showComments). */
   const vid = $("#vid");
   // The window for a time's link (a), or false for a link that can't play here
   function openVideo(a) {
@@ -6431,10 +6455,55 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
             `<span class="sr-only"> ${esc(t("unit.mistakes", { count: Number(miss) }))}</span></span></span></div></div>` +
         `<button class="pl-close" type="button" data-vid-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button></div>` +
       `<div class="run-frame"></div>` +
-      `<p class="run-out"><a href="${esc(a.href)}" target="_blank" rel="noopener">${esc(t("run.open", { site: e.site }))}${icon("out")}</a></p>`;
+      `<p class="run-out"><a href="${esc(a.href)}" target="_blank" rel="noopener">${esc(t("run.open", { site: e.site }))}${icon("out")}</a></p>` +
+      (e.yt ? `<section class="vid-comments" aria-labelledby="vid-comments-title" aria-busy="true">` +
+        `<h3 class="vid-comments-title" id="vid-comments-title">${esc(t("vid.comments"))}</h3><p class="vid-note">${esc(t("vid.loading"))}</p></section>` : "");
     $(".run-frame", vid).append(videoFrame(e.src, label));
     vid.showModal();
+    if (e.yt) showComments(e.yt, a.href);
     return true;
+  }
+  /* The comments on a YouTube video (id), from the Worker (see "YouTube comments" in cloudflare/worker.js), so the
+     browser never asks YouTube for them: the first 20, the ones YouTube shows first, then a link to all of them there
+     (link: the video). They're left out when the Worker has none to give (it isn't set up, or the video is no run's),
+     and the window says so when they're turned off on the video, or when they can't be loaded. */
+  let vidJob = 0; // which window's comments are the latest, so an older answer that comes later is left alone
+  async function showComments(id, link) {
+    const job = ++vidJob;
+    let got = null;
+    let status = 0;
+    try {
+      const res = await fetch(`/api/comments?v=${encodeURIComponent(id)}`);
+      status = res.status;
+      if (res.ok) got = await res.json();
+    } catch (err) { /* they couldn't be loaded */ }
+    const box = job === vidJob && vid.open ? $(".vid-comments", vid) : null;
+    if (!box) return;
+    if (status === 400 || status === 404 || status === 503) { box.remove(); return; }
+    const list = got && Array.isArray(got.comments) ? got.comments : null;
+    const count = got && Number.isFinite(got.count) ? got.count : 0;
+    const note = (key) => `<p class="vid-note">${esc(t(key))}</p>`;
+    box.removeAttribute("aria-busy");
+    box.innerHTML = `<h3 class="vid-comments-title" id="vid-comments-title">${esc(t("vid.comments"))}` +
+        (list && !got.off && count ? `<span class="rev-count">${esc(localNum(count))}</span>` : "") + `</h3>` +
+      (!list ? note("vid.fail") : got.off ? note("vid.off") : !list.length ? note("vid.none")
+        : `<ol class="vid-list">${list.map(commentHtml).join("")}</ol>` +
+          (count > list.length ? `<p class="run-out"><a href="${esc(link)}" target="_blank" rel="noopener">${esc(t("vid.all", { count: localNum(count) }))}${icon("out")}</a></p>` : ""));
+  }
+  // One comment: who wrote it (a link to their channel), when, what they wrote, and its likes and replies
+  function commentHtml(x) {
+    const name = esc(String(x.name || ""));
+    const who = /^https:\/\/www\.youtube\.com\//.test(x.channel || "")
+      ? `<a class="vid-c-name" href="${esc(x.channel)}" target="_blank" rel="noopener">${name}</a>` : `<span class="vid-c-name">${name}</span>`;
+    const likes = Number(x.likes) || 0;
+    const replies = Number(x.replies) || 0;
+    const likesText = t("vid.likes", { count: localNum(likes) });
+    return `<li class="vid-c"><p class="vid-c-head">${who}${x.date ? `<span class="vid-c-date">${esc(formatDate(x.date))}</span>` : ""}</p>` +
+      `<p class="vid-c-text" dir="auto">${esc(String(x.text || ""))}</p>` +
+      (likes || replies ? `<p class="vid-c-meta">` +
+        (likes ? `<span title="${esc(likesText)}">${icon("heart")}<span aria-hidden="true">${esc(localNum(likes))}</span><span class="sr-only">${esc(likesText)}</span></span>` : "") +
+        (replies ? `<span>${esc(t("vid.replies", { count: localNum(replies) }))}</span>` : "") + `</p>` : "") +
+      `</li>`;
   }
   document.addEventListener("click", (e) => {
     const a = e.target.closest("a[data-watch]");

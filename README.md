@@ -97,18 +97,19 @@ Someone browsing never gets near 100 in 10 seconds (a first visit is about 13, f
 
   Anything after these carries over, e.g. `/code/game/issues`. A release's own page is `/releases/v2026.10.14-0` or `/releases/site/v2026.11.02.6`, which Cloudflare redirects before the Worker sees it.
 - `/data/players.json`: the Discord name and picture of every player whose run has a Discord ID, looked up with Ballkyrie's token. Each is looked up again about once an hour. A refresh only makes so many calls to Discord (Cloudflare's free plan allows 50 per request), so with lots of players it takes a few refreshes, minutes apart, players with no name yet first.
-- `/api/…`: signing in with Discord, and runs sent from the form under Submit a run. See [Runs sent from the website](#runs-sent-from-the-website). Also players' stats on their Discord profiles (see [Stats on Discord profiles](#stats-on-discord-profiles)), players claiming their runs from before May 2026 (see [Claiming legacy runs](#claiming-legacy-runs)), and the names players pick for their links (see [Players' own links](#players-own-links)).
+- `/api/…`: signing in with Discord, and runs sent from the form under Submit a run. See [Runs sent from the website](#runs-sent-from-the-website). Also players' stats on their Discord profiles (see [Stats on Discord profiles](#stats-on-discord-profiles)), players claiming their runs from before May 2026 (see [Claiming legacy runs](#claiming-legacy-runs)), the names players pick for their links (see [Players' own links](#players-own-links)), and the comments on runs' YouTube videos (see [YouTube comments](#youtube-comments)).
 
 Each page also gets the latest copy of all three as it's served, with the "• N members" counts already filled in, so nothing pops in after the page loads. If GitHub or Discord can't be reached, the last copy that worked is served for up to a week.
 
 It also sets the site's headers. The security headers are in `SECURITY_HEADERS`, and the Content-Security-Policy is `csp()`; if you add an outside service to the page, add its address to the CSP there. Every page gets a new nonce, which the Worker puts on the page's own inline scripts, and only scripts with it run, so even if a name or anything else ever got onto the page as HTML, a script in it wouldn't. Cloudflare's own bot check, which it adds to pages, copies the nonce from the header. Files in `assets/` are cached for a week, and everything else is checked for a newer copy on every visit. The files Cloudflare serves without the Worker get theirs from `_headers` instead: keep the two in step.
 
-It's deployed together with the site (see Deploying). It uses two secrets, which deploys keep. Set each once from the `cloudflare/` folder (it asks you to paste the value):
+It's deployed together with the site (see Deploying). It uses these secrets, which deploys keep. Set each once from the `cloudflare/` folder (it asks you to paste the value):
 
 ```
 npx wrangler login
 npx wrangler secret put DISCORD_BOT_TOKEN   # Ballkyrie's bot token, for the player names
 npx wrangler secret put GITHUB_TOKEN        # optional: any GitHub token, for GitHub's higher rate limits
+npx wrangler secret put YOUTUBE_KEY         # optional: a YouTube API key, for the comments under YouTube videos (see YouTube comments)
 ```
 
 Resetting Ballkyrie's token in the Discord Developer Portal breaks the copy here too: the boards lose everyone's Discord name (except people who just sent a run from the site), the run log stops posting, and `npx wrangler tail` shows `Discord turned down DISCORD_BOT_TOKEN (401)`. Put the new token here and in the game repo's `DISCORD_BOT_TOKEN` secret, which the leaderboard bot uses. Paste just the token, without `Bot ` in front.
@@ -242,6 +243,18 @@ They're counted by the site itself, so they're closer to the truth than Cloudfla
 
 The counts are kept in a Durable Object (`PageViews` in `cloudflare/worker.js`, a small database the Worker owns, `PAGE_VIEWS` in `cloudflare/wrangler.toml`), which a deploy sets up on its own. The free plan allows 100,000 writes a day there, and each page view takes about three, so it's good for over 30,000 page views a day. The test copy doesn't count anything.
 
+### YouTube comments
+
+The window a run's time opens (see [Courses and leaderboards](#courses-and-leaderboards)) lists the comments on a YouTube video under it: the first 20, the ones YouTube shows first, with who wrote each one (linked to their channel), when, its likes, and how many replies it has, then a link to all of them on YouTube. Comments can be turned off on a video, and the window says so. Twitch, Streamable, and Medal videos don't get any.
+
+The Worker gets them from YouTube's Data API (`/api/comments?v=<video id>`, see "YouTube comments" in `cloudflare/worker.js`), so visitors' browsers never talk to YouTube for them. It only does that for the videos of runs on the site, and keeps each video's comments for 6 hours, so the API's free daily allowance (10,000 units, 2 for each video) is plenty. If YouTube can't be reached, the last copy is shown for up to a week. They're shown as YouTube has them, without anyone checking them first, as text only (no profile pictures, and links in them aren't clickable).
+
+It needs an API key, set once as the Worker's `YOUTUBE_KEY` secret. Without it, the window has no comments.
+
+1. In the [Google Cloud console](https://console.cloud.google.com/), make a project (any name), then go to **APIs & Services → Library**, find **YouTube Data API v3**, and turn it on.
+2. Go to **APIs & Services → Credentials**, then **Create credentials → API key**. Edit the key: under **API restrictions**, pick **Restrict key** and tick only **YouTube Data API v3**. Leave **Application restrictions** at None, since the Worker calls YouTube from Cloudflare's servers, not from a website.
+3. From the `cloudflare/` folder: `npx wrangler secret put YOUTUBE_KEY`, and paste the key.
+
 ## Fonts
 
 The fonts in `assets/fonts` come from [Fontsource](https://fontsource.org) (the same files Google Fonts serves, split by script so a page only downloads what it uses): Barlow, Barlow Condensed, Exo 2 (only for the BALLKOUR wordmark, so just its Latin letters), JetBrains Mono, and a flags-only cut of Noto Color Emoji for Windows, whose own emoji have no flags. Apple devices use their own emoji, and Linux and Android use a local Noto Color Emoji when there is one.
@@ -276,7 +289,7 @@ Runs sent from the website also have an `id` (for their page: numbers in the ord
 
 Every board, and its picture, shows each player's rating beside their run's date. The newest board shows today's ratings. An older board from the history shows the ratings players had at the end of that board's day, worked out from the boards posted by then, so scrolling back shows how they stood at the time. A course's own rating, how close a run is to its record, is in the player's panel, by each course they've run.
 
-A run's time, on the boards and in a player's panel, links to its video. Clicking it plays a YouTube, Twitch, Streamable, or Medal video right on the site, in a window over the page, with a link to watch it on that site instead. Nothing loads from those sites until the time is clicked, and closing the window stops the video. Other links, and Ctrl/Cmd or middle clicks, open the video in a new tab.
+A run's time, on the boards and in a player's panel, links to its video. Clicking it plays a YouTube, Twitch, Streamable, or Medal video right on the site, in a window over the page, with a link to watch it on that site instead. Nothing loads from those sites until the time is clicked, and closing the window stops the video. Other links, and Ctrl/Cmd or middle clicks, open the video in a new tab. A YouTube video's comments are listed under it (see [YouTube comments](#youtube-comments)).
 
 A player's Discord name, under their in-game name on the boards, in their panel, and on a run's page, links to their profile on Discord (`discord.com/users/<id>`, which opens the Discord app where it's installed). In Find a player it doesn't, since each row there is what's clicked to pick the player.
 
