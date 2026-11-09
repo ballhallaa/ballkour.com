@@ -1435,14 +1435,16 @@ a.link-copy { text-decoration: none; }
 }
 /* Reduce motion: the device's setting, unless the button at the top picked the other one (data-motion on <html>).
    Nothing animates then, except the logo: its bob and its glow's turn pause where they are, so turning it on doesn't
-   make the logo jump back, and turning it off carries on from there. */
+   make the logo jump back, and turning it off carries on from there. Everything else's animations take no time, rather
+   than being taken off: taken off, they'd play again from the start when it's turned off, so an open board or the
+   profile button would vanish and pop back in. */
 @media (prefers-reduced-motion: reduce) {
   html:not([data-motion="full"]) { scroll-behavior: auto; }
-  html:not([data-motion="full"]) :not(.badge img), html:not([data-motion="full"]) :not(.badge)::before, html:not([data-motion="full"]) ::after { animation: none !important; transition: none !important; }
+  html:not([data-motion="full"]) :not(.badge img), html:not([data-motion="full"]) :not(.badge)::before, html:not([data-motion="full"]) ::after { animation-duration: 0s !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition: none !important; }
   html:not([data-motion="full"]) .badge img, html:not([data-motion="full"]) .badge::before { animation-play-state: paused !important; }
 }
 html[data-motion="reduce"] { scroll-behavior: auto; }
-html[data-motion="reduce"] :not(.badge img), html[data-motion="reduce"] :not(.badge)::before, html[data-motion="reduce"] ::after { animation: none !important; transition: none !important; }
+html[data-motion="reduce"] :not(.badge img), html[data-motion="reduce"] :not(.badge)::before, html[data-motion="reduce"] ::after { animation-duration: 0s !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition: none !important; }
 html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before { animation-play-state: paused !important; }
 </style>
 
