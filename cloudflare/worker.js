@@ -1905,7 +1905,8 @@ function previewOf(pathname, data, players) {
   let loaded = null;
   const courses = () => loaded || (loaded = loadCourses(data.files, data.courses));
   const boardOf = (n) => { const c = courses().find((x) => x.n === n); if (!c) return []; const { top, rest } = standings(c); return [...top, ...rest]; };
-  const name = (n) => `${data.flags[n] ? `${data.flags[n]} ` : ""}${data.names[n] || `Course ${n}`}`;
+  // Its number, flag, and name, like the page's ("1 🇬🇮 Watchpoint: Gibraltar")
+  const name = (n) => (data.names[n] ? `${n} ${data.flags[n] ? `${data.flags[n]} ` : ""}${data.names[n]}` : `Course ${n}`);
   const history = (() => { try { return JSON.parse(data.files[HISTORY_FILE]) || {}; } catch (e) { return {}; } })();
   const top3 = (runs) => runs.slice(0, 3).map((r, i) => `${i + 1}. ${caps(r.name)} ${r.time}`).join(" · ");
   let m;
