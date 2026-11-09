@@ -5011,9 +5011,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   const bctx = ballsCanvas.getContext("2d");
   const badge = $("#badge");
   const PALETTE = [[0, 230, 151], [0, 230, 151], [0, 230, 151], [0, 230, 151], [110, 255, 205], [255, 154, 46], [51, 198, 255]];
-  // How fast the field flies on its own: a quarter of the speed it was, so it's calm enough to read over. Clicking the
-  // hamster still adds its boost on top, so that burst is about as quick as ever.
-  const CRUISE = 0.25;
+  // How fast the field flies on its own: a sixth of the speed it first had, so it's calm enough to read over. Clicking
+  // the hamster still adds its boost on top, so that burst is about as quick as ever.
+  const CRUISE = 1 / 6;
   const rand = (a, b) => a + Math.random() * (b - a);
   let W = 0, H = 0, dprWarp = 1, dprBalls = 1, maxD = 0;
   let streaks = [], sparks = [];
