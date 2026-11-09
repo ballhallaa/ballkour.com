@@ -54,6 +54,7 @@ Every pull request, Weblate's too, gets checked first (`.github/workflows/check.
 - `locales/en.json` matches `index.html`. After changing English text in `index.html`, run `python3 tools/extract-en.py` and commit `locales/en.json` along with it.
 - The scripts in the pages and the Worker parse, so a typo can't take the page down (`python3 tools/check.py`, which also checks the rest).
 - Every translation keeps English's `{placeholders}` and only uses the tags the site allows. A mistake there shows on the pull request; fix it in Weblate.
+- The page, the Worker, and the leaderboard bot still work out the same boards, ratings, and Top % from the real boards (`node tools/check-ratings.mjs`). It also runs once a day, since the bot's copy lives in the game repo.
 
 Run both before pushing, if you like:
 
