@@ -55,7 +55,7 @@ const STALE_FOR = 7 * 24 * 60 * 60; // seconds: how long the last good copy is k
 /* ---------- Caching ---------- */
 // Bump the version whenever what a copy holds changes. The last good copy is reused for as long as its source can't be
 // reached, so under the same key a copy saved by an older Worker can outlive the change.
-const CACHE_VERSION = 5;
+const CACHE_VERSION = 6;
 const cacheKey = (name, stale) => new Request(`https://ballkour.com/__cache/v${CACHE_VERSION}/${name}${stale ? "?stale" : ""}`);
 
 // The cached copy of `name` if it's fresh, else rebuilt by build(previous) and cached for `ttl` seconds. When the
@@ -172,7 +172,9 @@ async function buildGame(env, previous) {
   // The leaderboard files are listed in the leaderboard bot's courses.json. runs.json has the runs that never made a
   // top 10 and the runs taken off the boards, for the boards' "Show all" and the player ratings.
   // Its course names and flags are kept too, for the log of runs sent from the website and Ballkyrie's posts about
-  // them, and each course's number, file and whether it's broken, for the stats on players' Discord profiles.
+  // them, and each course's number, file, whether it's broken, and whether it's a remake, for the stats on players'
+  // Discord profiles and for the page (which courses are struck through). A remake's broken is its latest code: its
+  // Beta code still works, so it can still be run.
   let paths = previous ? Object.keys(previous.files) : [];
   let names = (previous && previous.names) || {};
   let flags = (previous && previous.flags) || {};
@@ -182,7 +184,7 @@ async function buildGame(env, previous) {
     paths = [...DATA_FILES, "src/engine/faq.opy", ...courses.map((c) => c.file)];
     names = Object.fromEntries(courses.map((c) => [c.n, c.name]));
     flags = Object.fromEntries(courses.filter((c) => c.flag).map((c) => [c.n, c.flag]));
-    list = courses.map(({ n, file, broken }) => ({ n, file, broken: !!broken }));
+    list = courses.map(({ n, file, broken, remaker }) => ({ n, file, broken: !!broken, remake: !!remaker }));
   } catch (e) {
     if (!paths.length) throw e;
   }
@@ -749,12 +751,12 @@ async function showSaved(runsText, user, historyText = null) {
     if (!(d[user.id] && d[user.id].name)) { d[user.id] = { name: user.name, avatar: user.avatar }; await putCached("players", 5 * 60, JSON.stringify(d)); }
   }
 }
-// The cached game data's course files and names (fetched if there's none yet)
+// The cached game data's course files, names and list (fetched if there's none yet)
 async function gameInfo(env, ctx) {
   try {
-    const { files = null, names = {}, flags = {} } = JSON.parse((await stored("game")) ?? (await game(env, ctx)));
-    return { files, names, flags };
-  } catch (e) { return { files: null, names: {}, flags: {} }; }
+    const { files = null, names = {}, flags = {}, courses = [] } = JSON.parse((await stored("game")) ?? (await game(env, ctx)));
+    return { files, names, flags, courses };
+  } catch (e) { return { files: null, names: {}, flags: {}, courses: [] }; }
 }
 const courseFile = (files, n) => files && Object.keys(files).find((k) => k.startsWith(`leaderboards/${n}-`) && /\.(opy|json)$/.test(k));
 /* ---------- Each run's page ----------
@@ -931,10 +933,14 @@ async function submit(request, env, ctx) {
 
   // The course has to have a board. Without the game data (GitHub down, and no copy kept here), there's no telling which
   // courses there are, so nothing is saved: the form says to open a ticket instead.
-  const { files, names, flags } = await gameInfo(env, ctx);
+  const { files, names, flags, courses } = await gameInfo(env, ctx);
   if (!files) return answer(503, { error: "off" });
   const file = courseFile(files, n);
   if (!file) return answer(400, { error: "course" });
+  // Nor can anyone run a broken course (courses.json in the game repo), unless it's a remake, whose Beta code still
+  // works. The form doesn't offer them, the same way.
+  const info = courses.find((c) => c.n === n);
+  if (info && info.broken && !info.remake) return answer(400, { error: "course" });
   const board = fileRuns(file, file && files[file]);
   // Their runs from before the website's form are on the board, or on its old boards
   const mine = [...board, ...historyRuns(files, n)].filter((r) => r.discord === user.id);
