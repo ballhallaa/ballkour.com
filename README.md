@@ -93,7 +93,7 @@ Someone browsing never gets near 100 in 10 seconds (a first visit is about 13, f
 
 Each page also gets the latest copy of all three as it's served, with the "• N members" counts already filled in, so nothing pops in after the page loads. If GitHub or Discord can't be reached, the last copy that worked is served for up to a week.
 
-It also sets the site's headers. The security headers, including the Content-Security-Policy, are in `SECURITY_HEADERS`; if you add an outside service to the page, add its address to the CSP there. Files in `assets/` are cached for a week, and everything else is checked for a newer copy on every visit. The files Cloudflare serves without the Worker get theirs from `_headers` instead: keep the two in step.
+It also sets the site's headers. The security headers are in `SECURITY_HEADERS`, and the Content-Security-Policy is `csp()`; if you add an outside service to the page, add its address to the CSP there. Every page gets a new nonce, which the Worker puts on the page's own inline scripts, and only scripts with it run, so even if a name or anything else ever got onto the page as HTML, a script in it wouldn't. Cloudflare's own bot check, which it adds to pages, copies the nonce from the header. Files in `assets/` are cached for a week, and everything else is checked for a newer copy on every visit. The files Cloudflare serves without the Worker get theirs from `_headers` instead: keep the two in step.
 
 It's deployed together with the site (see Deploying). It uses two secrets, which deploys keep. Set each once from the `cloudflare/` folder (it asks you to paste the value):
 
