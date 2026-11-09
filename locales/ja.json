@@ -106,6 +106,7 @@
   "f.beta.tryList": "コース一覧のベータコードで試せます。",
   "faq.title": "FAQ",
   "faq.intro": "{beta}コードのゲーム内FAQと同じ内容です。マッチ中に<b><kbd>アルティメット</kbd> + <kbd>近接攻撃</kbd></b>で開けます。",
+  "motion.label": "動きを減らす",
   "faq.issues.title": "何か足りませんか？",
   "faq.issues.sub": "GitHubで提案する",
   "faq.valid.q": "有効なプレイの条件は？",

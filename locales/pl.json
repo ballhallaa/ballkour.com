@@ -106,6 +106,7 @@
   "f.beta.tryList": "Wypróbuj je z kodem Beta z listy tras.",
   "faq.title": "FAQ",
   "faq.intro": "Te same odpowiedzi co w FAQ w kodach {beta}, które otwierasz w meczu przez <b><kbd>Superumiejętność</kbd> + <kbd>Walka wręcz</kbd></b>.",
+  "motion.label": "Ogranicz ruch",
   "faq.issues.title": "Czegoś brakuje?",
   "faq.issues.sub": "Zaproponuj to na GitHubie",
   "faq.valid.q": "Co liczy się jako ważne podejście?",

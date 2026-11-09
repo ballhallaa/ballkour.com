@@ -106,6 +106,7 @@
   "f.beta.tryList": "Probier sie mit einem Beta-Code aus der Streckenliste aus.",
   "faq.title": "FAQ",
   "faq.intro": "Dieselben Antworten wie im FAQ in {beta}-Codes, das sich im Match mit <b><kbd>Ultimative Fähigkeit</kbd> + <kbd>Nahkampf</kbd></b> öffnet.",
+  "motion.label": "Bewegung reduzieren",
   "faq.issues.title": "Fehlt etwas?",
   "faq.issues.sub": "Schlag es auf GitHub vor",
   "faq.valid.q": "Was zählt als gültiger Lauf?",

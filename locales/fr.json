@@ -106,6 +106,7 @@
   "f.beta.tryList": "Essayez-les avec un code Bêta de la liste des parcours.",
   "faq.title": "FAQ",
   "faq.intro": "Les mêmes réponses que la FAQ du jeu dans les codes {beta}, qui s’ouvre en partie avec <b><kbd>Capacité ultime</kbd> + <kbd>Mêlée</kbd></b>.",
+  "motion.label": "Réduire les animations",
   "faq.issues.title": "Il manque quelque chose ?",
   "faq.issues.sub": "Proposez-le sur GitHub",
   "faq.valid.q": "Qu'est-ce qu'une partie valide ?",

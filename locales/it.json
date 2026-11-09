@@ -106,6 +106,7 @@
   "f.beta.tryList": "Provale con un codice Beta dall’elenco dei percorsi.",
   "faq.title": "FAQ",
   "faq.intro": "Le stesse risposte della FAQ dei codici {beta}, che si apre in partita con <b><kbd>Ultra</kbd> + <kbd>Corpo a corpo</kbd></b>.",
+  "motion.label": "Riduci movimento",
   "faq.issues.title": "Manca qualcosa?",
   "faq.issues.sub": "Suggeriscilo su GitHub",
   "faq.valid.q": "Cosa conta come partita valida?",
