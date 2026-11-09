@@ -411,5 +411,8 @@
   "claim.declinedNote": "Die Anfrage von {who} für die Läufe als {name} wurde abgelehnt.",
   "claim.gone": "Jemand hat die Anfrage von {who} für die Läufe als {name} schon geprüft.",
   "claim.takenRev": "Die Läufe als {name} sind schon mit jemand anderem verknüpft, also lehne diese Anfrage ab.",
-  "claim.own": "Das ist deine eigene Anfrage, also muss sie ein anderer Moderator prüfen."
+  "claim.own": "Das ist deine eigene Anfrage, also muss sie ein anderer Moderator prüfen.",
+  "f.site.group": "Auf ballkour.com",
+  "f.stats.text": "Melde dich mit Discord an, um deine Wertung, deinen Platz und dein Top % zu sehen, jede Strecke, die du gelaufen bist, und alle deine Läufe. Teile sie per Link, oder zeig sie auf deinem Discord-Profil.",
+  "f.ratings.text": "Jede Strecke ist bis zu 10.000 Punkte wert, und deine Wertung ist dein Durchschnitt über alle. Dein Top % zeigt, wo du unter allen gewerteten Spielern stehst, und du bekommst die Rolle auf unserem Discord automatisch."
 }

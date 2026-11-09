@@ -411,5 +411,8 @@
   "claim.declinedNote": "已拒绝 {who} 对名为 {name} 的成绩的认领。",
   "claim.gone": "已有人审核过 {who} 对名为 {name} 的成绩的认领。",
   "claim.takenRev": "名为 {name} 的成绩已经关联到其他人，所以请拒绝这个认领。",
-  "claim.own": "这是你自己的认领，所以需要由其他管理员审核。"
+  "claim.own": "这是你自己的认领，所以需要由其他管理员审核。",
+  "f.site.group": "在 ballkour.com 上",
+  "f.stats.text": "用 Discord 登录，查看你的积分、排名和前 %，你跑过的每个关卡，以及你的所有成绩。可以用链接分享，也可以显示在你的 Discord 个人资料上。",
+  "f.ratings.text": "每个关卡最多值 10,000 分，你的积分是所有关卡的平均分。前 % 表示你在所有有积分的玩家中的位置，你会在我们的 Discord 上自动获得这个身份组。"
 }

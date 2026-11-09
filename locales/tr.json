@@ -411,5 +411,8 @@
   "claim.declinedNote": "{who} adlı kişinin {name} adıyla yapılan koşular için talebi reddedildi.",
   "claim.gone": "{who} adlı kişinin {name} adıyla yapılan koşular için talebini biri zaten kontrol etti.",
   "claim.takenRev": "{name} adıyla yapılan koşular zaten başka birine bağlı, bu yüzden bu talebi reddet.",
-  "claim.own": "Bu senin kendi talebin, bu yüzden başka bir moderatörün kontrol etmesi gerekiyor."
+  "claim.own": "Bu senin kendi talebin, bu yüzden başka bir moderatörün kontrol etmesi gerekiyor.",
+  "f.site.group": "ballkour.com’da",
+  "f.stats.text": "Puanını, sıranı, İlk % değerini, koştuğun her parkuru ve tüm koşularını görmek için Discord ile giriş yap. Bunları bir bağlantıyla paylaşabilir ya da Discord profilinde gösterebilirsin.",
+  "f.ratings.text": "Her parkur 10.000 puana kadar değerlidir ve puanın hepsinin ortalamasıdır. İlk %, puanı olan tüm oyuncular arasındaki yerini gösterir ve bu rolü Discord sunucumuzda otomatik olarak alırsın."
 }
