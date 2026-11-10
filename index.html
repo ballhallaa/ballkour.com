@@ -299,7 +299,6 @@ main:focus { outline: none; }
   top: 8px;
   z-index: 10;
   max-width: var(--col);
-  --bar: #0a1210;
   margin: 0 auto;
   padding: 5px;
   border: 1px solid var(--line-hi);
@@ -311,6 +310,11 @@ main:focus { outline: none; }
 }
 .sections-track { position: relative; display: flex; overflow-x: auto; scrollbar-width: none; }
 .sections-track::-webkit-scrollbar { display: none; }
+/* The links fade out at an end that has more past it, into whatever's behind the bar (a solid strip there showed as a
+   dark box over the glass) */
+.sections.more-right .sections-track { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 88px), transparent calc(100% - 40px)); mask-image: linear-gradient(90deg, #000 calc(100% - 88px), transparent calc(100% - 40px)); }
+.sections.more-left .sections-track { -webkit-mask-image: linear-gradient(270deg, #000 calc(100% - 88px), transparent calc(100% - 40px)); mask-image: linear-gradient(270deg, #000 calc(100% - 88px), transparent calc(100% - 40px)); }
+.sections.more-left.more-right .sections-track { -webkit-mask-image: linear-gradient(90deg, transparent 40px, #000 88px, #000 calc(100% - 88px), transparent calc(100% - 40px)); mask-image: linear-gradient(90deg, transparent 40px, #000 88px, #000 calc(100% - 88px), transparent calc(100% - 40px)); }
 /* "…" at an end that has more links hidden past it; tapping it scrolls that way */
 .sections-more {
   position: absolute;
@@ -327,8 +331,9 @@ main:focus { outline: none; }
 }
 .sections-more:hover { color: var(--volt); }
 .sections-more .icon { width: 20px; height: 20px; }
-.sections-more.right { right: 0; justify-content: flex-end; background: linear-gradient(90deg, transparent, var(--bar) 50%); }
-.sections-more.left { left: 0; justify-content: flex-start; background: linear-gradient(270deg, transparent, var(--bar) 50%); }
+.sections-more { background: none; }
+.sections-more.right { right: 0; justify-content: flex-end; }
+.sections-more.left { left: 0; justify-content: flex-start; }
 .sections.more-right .sections-more.right, .sections.more-left .sections-more.left { display: flex; }
 .sections a {
   flex: 1 0 auto;
@@ -346,11 +351,62 @@ main:focus { outline: none; }
    longer words get cut off; their names are in aria-label and in the tooltip on hover. */
 .sections { display: flex; align-items: center; gap: 4px; }
 .sections-scroll { position: relative; flex: 1; min-width: 0; }
+/* A line between the links and the icons */
+.sections-scroll::after { content: ""; position: absolute; top: 7px; bottom: 7px; right: -3px; width: 1px; background: var(--line); }
 .sections-find, .sections-me, .sections-lang { flex: none; width: 38px; height: 33px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--ink-2); cursor: pointer; transition: color .15s, background-color .15s; }
 .sections-find:hover, .sections-me:hover, .sections-lang:hover, .sections-lang[aria-expanded="true"] { color: var(--volt); background: var(--glass-hi); }
 .sections-find:focus-visible, .sections-me:focus-visible, .sections-lang:focus-visible { outline-offset: -2px; }
 .lang-wrap { display: contents; }
 .sections a[aria-current="true"] { color: var(--ink); background: rgba(0, 230, 151, .12); box-shadow: inset 0 0 0 1px rgba(0, 230, 151, .35); }
+/* On a phone there's only room for a link or two beside the icons, so the links fold into a menu instead. Its button
+   says which section is on screen, and the menu drops down over the page from the bar's left end, like the
+   languages do from its right end. */
+.sections-pick { display: none; }
+@media (max-width: 640px) {
+  .sections-scroll { position: static; }
+  .sections-scroll::after { content: none; }
+  .sections-pick {
+    width: 100%;
+    height: 33px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 10px 0 12px;
+    border: 0;
+    border-radius: 8px;
+    background: rgba(0, 230, 151, .12);
+    box-shadow: inset 0 0 0 1px rgba(0, 230, 151, .35);
+    color: var(--ink);
+    font: 500 15px/1.1 var(--body);
+    cursor: pointer;
+    transition: background-color .15s;
+  }
+  .sections-pick:hover, .sections-pick[aria-expanded="true"] { background: rgba(0, 230, 151, .2); }
+  .sections-pick:focus-visible { outline-offset: -2px; }
+  .sections-pick-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+  .sections-pick .icon { width: 16px; height: 16px; color: var(--ink-2); transition: transform .15s; }
+  .sections-pick[aria-expanded="true"] .icon { transform: rotate(180deg); }
+  .sections-track {
+    position: absolute;
+    top: calc(100% + 9px);
+    left: -1px;
+    z-index: 30;
+    width: 244px;
+    max-width: calc(100% + 2px);
+    flex-direction: column;
+    gap: 2px;
+    overflow: visible;
+    padding: 6px;
+    border: 1px solid var(--line-hi);
+    border-radius: 14px;
+    background: var(--menu);
+    box-shadow: 0 22px 50px -14px rgba(0, 0, 0, .8);
+    transform-origin: top left;
+    animation: pop .16s ease-out;
+  }
+  .sections:not(.open) .sections-track { display: none; }
+  .sections-track a { flex: none; padding: 10px 12px; border-radius: 9px; text-align: left; }
+}
 
 /* ---------- Panels ---------- */
 .column { max-width: var(--col); margin: 0 auto; padding-block: 10px 30px; display: grid; gap: 14px; }
@@ -1493,7 +1549,7 @@ a.link-copy { text-decoration: none; }
 @media (max-width: 700px), (pointer: coarse) {
   .panel, .btn, .top-btn, .sections { -webkit-backdrop-filter: none; backdrop-filter: none; }
   .panel, .top-btn { background: var(--glass-solid); }
-  .sections { --bar: #090f0d; background: #090f0d; }
+  .sections { background: #090f0d; }
   .btn:not(.btn-primary):not(.btn-discord):not(.btn-warn) { background-color: var(--glass-solid); }
 }
 /* Reduce motion: the device's setting, unless the button at the top picked the other one (data-motion on <html>).
@@ -1588,7 +1644,11 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   </header>
 
   <nav class="sections" id="sections" data-i18n-aria="nav.label" aria-label="Sections">
-    <div class="sections-scroll">
+    <div class="sections-scroll" id="sections-scroll">
+    <button class="sections-pick" id="sections-pick" type="button" aria-expanded="false" aria-controls="sections-track">
+      <span class="sections-pick-label" id="sections-pick-label" data-i18n="courses.title">Courses</span>
+      <svg class="icon" aria-hidden="true"><use href="#i-chev"/></svg>
+    </button>
     <div class="sections-track" id="sections-track">
       <a href="/courses" data-route="courses" data-i18n="courses.title">Courses</a>
       <a href="/leaderboards" data-route="leaderboards" data-i18n="nav.leaderboards">Leaderboards</a>
@@ -7742,6 +7802,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   /* ---------- Section bar: highlights the section on screen ---------- */
   const sectionBar = $("#sections");
   const sectionLinks = $$("a", sectionBar);
+  const pickLabel = $("#sections-pick-label");
   const sectionTargets = sectionLinks.map((a) => document.getElementById(ROUTES[a.dataset.route]));
   let currentSection = -1, spyQueued = false, clicked = -1;
   function spy() {
@@ -7757,6 +7818,11 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (i === currentSection) return;
     currentSection = i;
     sectionLinks.forEach((a, j) => { if (j === i) a.setAttribute("aria-current", "true"); else a.removeAttribute("aria-current"); });
+    // On a phone, the menu's button says which section it is. It takes the link's data-i18n too, so a new language
+    // changes it along with the links.
+    const named = sectionLinks[Math.max(0, i)];
+    pickLabel.dataset.i18n = named.dataset.i18n;
+    pickLabel.textContent = named.textContent;
     // On narrow screens the bar scrolls sideways: keep the highlighted link in view
     const cur = sectionLinks[i];
     if (cur && sectionTrack.scrollWidth > sectionTrack.clientWidth) {
@@ -7825,11 +7891,46 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   window.addEventListener("scroll", queueSpy, { passive: true });
   window.addEventListener("resize", queueSpy);
   ["wheel", "touchstart", "keydown"].forEach((ev) => addEventListener(ev, () => { if (clicked >= 0) { clicked = -1; queueSpy(); } }, { passive: true }));
+  // On a phone, the links are in a menu that the button opens (they're the same links, so all of the above still
+  // works). It closes on a link, Escape, a tap or the focus anywhere else, and when the screen gets wide enough for
+  // the links to show in the bar.
+  const sectionScroll = $("#sections-scroll");
+  const sectionPick = $("#sections-pick");
+  function closePick(refocus) {
+    if (!sectionBar.classList.contains("open")) return;
+    sectionBar.classList.remove("open");
+    sectionPick.setAttribute("aria-expanded", "false");
+    if (refocus) sectionPick.focus({ preventScroll: true });
+  }
+  sectionPick.addEventListener("click", () => {
+    if (sectionBar.classList.contains("open")) { closePick(false); return; }
+    sectionBar.classList.add("open");
+    sectionPick.setAttribute("aria-expanded", "true");
+  });
+  sectionScroll.addEventListener("keydown", (e) => {
+    if (!sectionBar.classList.contains("open")) {
+      if (e.target === sectionPick && e.key === "ArrowDown") { e.preventDefault(); sectionPick.click(); sectionLinks[Math.max(0, currentSection)].focus(); }
+      return;
+    }
+    if (e.key === "Escape") { e.preventDefault(); closePick(true); return; }
+    // The arrows go up and down the menu, from the button too
+    const step = { ArrowDown: 1, ArrowUp: -1 }[e.key];
+    if (!step) return;
+    e.preventDefault();
+    const at = sectionLinks.indexOf(document.activeElement);
+    const next = at < 0 ? (step > 0 ? 0 : sectionLinks.length - 1) : (at + step + sectionLinks.length) % sectionLinks.length;
+    sectionLinks[next].focus();
+  });
+  document.addEventListener("pointerdown", (e) => { if (!sectionScroll.contains(e.target)) closePick(false); });
+  sectionScroll.addEventListener("focusout", (e) => { if (e.relatedTarget && !sectionScroll.contains(e.relatedTarget)) closePick(false); });
+  matchMedia("(max-width: 640px)").addEventListener("change", () => closePick(false));
   sectionBar.addEventListener("click", (e) => {
     const a = e.target.closest("a");
     if (!a) return;
     clicked = sectionLinks.indexOf(a);
     queueSpy();
+    // Back to the button, so the keyboard carries on from there
+    closePick(document.activeElement === a);
   });
 
   /* ---------- Start ---------- */
