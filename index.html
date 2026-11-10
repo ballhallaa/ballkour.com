@@ -1164,6 +1164,7 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .sub-runs { margin: 0 18px 16px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255, 255, 255, .02); }
 .sub-runs .rev-title .icon { color: var(--volt); }
 .sub-runs .rev-count { background: rgba(0, 230, 151, .12); color: var(--volt); }
+.sub-runs-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
 /* Stats, at the very bottom: which days (a day, or the 7 or 30 days or 3, 6, or 12 months up to it), then Runs and Page views, each with a
    bar for every day that picks it, and its numbers for those days */
 /* Runs' and Page views' headings, each with the month menu at its end, so it's there on a phone without going back up
@@ -6525,10 +6526,15 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (picked) { reviewScrolled = true; picked.scrollIntoView({ block: "center" }); }
   }
   /* Submitted runs, under the form for everyone (ballkour.com/runs goes here): every run sent from the website, and
-     every run from before it (see pastRuns), newest first, with where it is now, 5 at first and then 20 more at a
-     time. Each opens its page (a middle click, in a new tab). Reviewers also see who checked each one. It waits for
-     every board to load, so it doesn't fill in bit by bit, and it's hidden until there's a run to show. */
+     every run from before it (see pastRuns), with where it is now and its course rating, 5 at first and then 20 more
+     at a time. It sorts like a player's Runs (see sortRuns): newest first to start with, or by time (fastest first,
+     whatever the course), mistakes, or course rating, and pressing the sort that's on turns it around. The choice
+     holds until the page is left. Each opens its page (a middle click, in a new tab). Reviewers also see who checked
+     each one. It waits for every board to load, so it doesn't fill in bit by bit, and it's hidden until there's a run
+     to show. */
   let runsShown = 5;
+  let runsSort = "date";
+  let runsRev = false;
   let runsReady = false;
   // A run on a list (x: as sentRuns has it): its course, player, time and mistakes, extra (what the list says about
   // it), where it is now, who sent it, and for reviewers, who checked it. It opens its page, when it has one.
@@ -6551,20 +6557,25 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     box.hidden = !all.length;
     if (box.hidden) return;
     const left = Math.max(0, all.length - runsShown);
-    // Its player's rating over every course with it, and what it added, as on its page today (if it's approved, for
-    // one waiting for a check): "⭐ 86 (+10)". One that isn't their best, or isn't on the board, adds nothing, so it
-    // has no star.
-    const gainOf = (x) => {
-      const s = (x.status === "pending" || x.status === "up") && runNow(x);
-      return s && isTheirBest(s, cleanRun(x.run)) ? ratingAdded(s) : null;
+    // What its time is worth on its course, like a run in a player's Runs (see coursePoints): against the course's
+    // record today, so up to 1000, for one waiting for a check too (what it would be if it's approved). One that was
+    // turned down or taken off, or is on a broken course, doesn't count for the ratings, so it has none (-1).
+    const records = {};
+    const ptsOf = (x) => {
+      const c = course(x.n);
+      if (x.status === "declined" || x.status === "removed" || c.broken || c.latestBroken) return -1;
+      if (!(x.n in records)) records[x.n] = standingsOf(c).top[0] || null;
+      const record = records[x.n];
+      return record ? Math.min(1000, coursePoints(record, cleanRun(x.run))) : x.status === "pending" ? 1000 : -1;
     };
-    const row = (x) => {
-      const gain = gainOf(x);
-      return runItemHtml(x, gain ? `<span class="stat pts" title="${esc(t(x.status === "pending" ? "rev.ratingGain" : "runs.ratingGain", { rating: points(gain.rating), change: signed(gain.gain), player: x.run.name }))}">${ratingAddedHtml(gain)}</span>` : "");
-    };
-    box.innerHTML = `<p class="rev-title">${icon("notes")}<span>${esc(t("runs.title"))}</span><span class="rev-count">${all.length.toLocaleString(htmlLang())}</span></p>` +
-      `<ul class="rev-list">${all.slice(0, runsShown).map(row).join("")}</ul>` +
+    const list = sortRuns(all.map((x) => ({ x, r: cleanRun(x.run), day: sentWhen(x), order: sentWhen(x) ? 0 : 1, pts: ptsOf(x) })), runsSort, runsRev);
+    const row = ({ x, pts }) => runItemHtml(x, pts < 0 ? ""
+      : `<span class="stat pts" title="${esc(t("rt.coursePoints", { points: points(pts) }))}">${icon("star")}${esc(points(pts))}</span>`);
+    box.innerHTML = `<div class="sub-runs-head"><p class="rev-title">${icon("notes")}<span>${esc(t("runs.title"))}</span><span class="rev-count">${all.length.toLocaleString(htmlLang())}</span></p>` +
+      (all.length > 1 ? runSortHtml(runsSort, runsRev) : "") + `</div>` +
+      `<ul class="rev-list">${list.slice(0, runsShown).map(row).join("")}</ul>` +
       (left ? `<button class="btn btn-sm rev-more" type="button" data-runs-more>${esc(t("rev.more", { count: Math.min(left, 20).toLocaleString(htmlLang()) }))}</button>` : "");
+    fitSorts(box);
   }
   // Who checked a run: their Discord name, or null when it isn't known yet (the names are looked up once an hour)
   const checkerOf = (r) => (r.checkedBy ? PLAYERS.get(r.checkedBy) || (me && me.id === r.checkedBy ? me : null) : null);
@@ -6746,6 +6757,19 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     askClaim(null, claimAsk.key, claimAsk.approve ? "approve" : "decline");
   });
   $("#sub-runs").addEventListener("click", (e) => {
+    // Its sort: the one that's on turns around, and another starts its own way. The list is drawn again, with the same
+    // button in focus.
+    const sort = e.target.closest("[data-pl-sort]");
+    if (sort) {
+      if (!SORTED[sort.dataset.plSort]) return;
+      runsRev = runsSort === sort.dataset.plSort ? !runsRev : false;
+      runsSort = sort.dataset.plSort;
+      renderSentRuns();
+      const again = $(`#sub-runs [data-pl-sort="${runsSort}"]`);
+      if (again) again.focus();
+      announce.textContent = t(SORTED[runsSort][runsRev ? 1 : 0]);
+      return;
+    }
     if (!e.target.closest("[data-runs-more]")) return;
     // Focus goes to the first run that just showed up
     const first = runsShown;
@@ -7159,6 +7183,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     return boards[n].some((x) => playerKey(x) === playerKey(run) && x.time === run.time && x.miss === run.miss) ? "up" : "slower";
   }
   const statusTag = (x) => `<span class="tag tag-run ${x.status}">${esc(t(`run.${x.status}`))}</span>`;
+  // When a run on a list of them (as sentRuns has it) was sent: the time for one sent from the website, the day for
+  // one from before, so on the same day the runs sent from the website come first (ties keep their order). "" when it
+  // has no date.
+  const sentWhen = (x) => String(x.run.sentAt || formatDate(x.run.date) || "");
   // Every run with a page, as { run (as runs.json has it), n, group, status }, newest first: the runs sent from the
   // website, and the ones from before (see pastRuns)
   function sentRuns() {
@@ -7175,9 +7203,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       });
     });
     out.push(...pastRuns(boards));
-    // Ties keep their order: on the same day, the runs sent from the website come first
-    const when = (x) => String(x.run.sentAt || formatDate(x.run.date) || "");
-    return out.sort((a, b) => when(b).localeCompare(when(a)));
+    return out.sort((a, b) => sentWhen(b).localeCompare(sentWhen(a)));
   }
   function sentRun(id) {
     for (const group of RUN_GROUPS) {
