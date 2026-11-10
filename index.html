@@ -7238,8 +7238,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
 
   /* ---------- Watching a run's video ----------
      A run's time links to its video, on the boards and in a player's panel (timeLink). Clicking it plays a YouTube,
-     Twitch, Streamable, or Medal video right here, in a window over the page, with its course, player, time, and
-     mistakes over it and a link to it on its own site under it. Clicking the time is pressing Play, so the player loads
+     Twitch, Streamable, or Medal video right here, in a window over the page, with its course (which opens its board),
+     player, time, and mistakes over it and a link to it on its own site under it. Clicking the time is pressing Play, so the player loads
      then, and not before. Closing the window stops the video. Other links, and Ctrl/Cmd/Shift/middle clicks, open the
      video in a new tab, as before. A YouTube video's comments are under it (see showComments). */
   const vid = $("#vid");
@@ -7255,7 +7255,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const label = t("lb.watch", { time, player: name });
     vid.setAttribute("aria-label", label);
     vid.innerHTML = `<div class="vid-head"><div class="pl-who">` +
-        (c ? `<p class="pl-eyebrow">${icon("play")}<span class="nowrap">${esc(`${c.n} `)}${flagName(c)}</span></p>` : "") +
+        (c ? `<p class="pl-eyebrow">${icon("play")}<a class="nowrap" href="/leaderboards/${c.n}" data-board="${c.n}">${esc(`${c.n} `)}${flagName(c)}</a></p>` : "") +
         `<div class="vid-line"><h2 class="pl-name is-name">${esc(caps(name))}</h2>` +
           `<span class="vid-stats"><span class="stat time">${icon("bolt")}<span>${esc(time)}</span></span>` +
           `<span class="stat miss" title="${esc(t("unit.mistakes", { count: Number(miss) }))}">${icon("skull")}<span>${esc(miss)}</span>` +
@@ -7321,6 +7321,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (e.target.closest("[data-vid-close]")) { vid.close(); return; }
     // Watching it on its own site instead: the window closes once the new tab has opened, so it isn't playing twice
     if (e.target.closest(".run-out a")) { setTimeout(() => vid.close()); return; }
+    // Its course: the window closes, and the board opens (see openBoard), unless it's opening in a new tab
+    if (e.target.closest("a[data-board]")) { if (!(e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0)) vid.close(); return; }
     // A click on the dark around the window
     const box = vid.getBoundingClientRect();
     if (e.target === vid && (e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom)) vid.close();
