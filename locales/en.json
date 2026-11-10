@@ -343,8 +343,6 @@
   "stats.runsChart": "Runs sent each day",
   "stats.runsDay": "{date}: {count} runs sent",
   "stats.gained": "Rating gained",
-  "stats.straight": "Straight on the boards",
-  "stats.approved": "Approved by a moderator",
   "stats.newPlayers": "New players",
   "stats.rated": "Rated players",
   "stats.totalGlobal": "Total global rating",
