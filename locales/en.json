@@ -1,6 +1,5 @@
 {
   "a11y.skip": "Skip to content",
-  "lang.label": "Language",
   "hero.tagline": "Wrecking Ball parkour courses for Overwatch",
   "hero.codes": "Pick a course",
   "hero.discord": "Join our Discord",
@@ -14,6 +13,7 @@
   "src.title": "Source code",
   "tr.title": "Translations",
   "stats.title": "Stats",
+  "lang.label": "Language",
   "find.open": "Find a player",
   "steps.start": "Start the match.",
   "steps.luck": "Good luck!",
