@@ -56,6 +56,8 @@ import { DurableObject } from "cloudflare:workers";
 import { loadCourses, rate, standings, playerKey } from "./ratings.js";
 
 const GUILD_ID = "1212553452283101245";
+// Where players open a ticket on our Discord (the site's ticket button links to it too)
+const TICKETS_CHANNEL = "1498944426901508106";
 const INVITE = "Skz6cg9rbR";
 const REPO = "ballhallaa/ballkour";
 const SITE_REPO = "ballhallaa/ballkour.com";
@@ -789,12 +791,16 @@ const courseFile = (files, n) => files && Object.keys(files).find((k) => k.start
    "A run's page" in index.html): the run, its video, and what it did to the boards, both when it was sent and on
    today's boards. Reviewers get Approve and Turn down there too.
    Ballkyrie posts every run in the run submissions channel (RUNS_CHANNEL in wrangler.toml), with a View run button to
-   its page. The post stays as it was sent: approving or turning a run down doesn't change it. Ballkyrie needs to be
-   able to see the channel, send messages and embed links there.
+   its page (see runPost). The post stays as it was sent, except that a top 10 run's, which waits for a check, turns
+   green or red once a moderator approves it or turns it down, says who did and when, and gets the numbers as they are
+   then, the same as the DM to its player (afterCheck). For that, the post's message on Discord is kept in PROFILES as
+   post:<id> until then. Ballkyrie needs to be able to see the
+   channel, send messages and embed links there.
    What a run did when it was sent is worked out here as it's sent (runStats) and kept in PROFILES as run:<id>, so it
    doesn't change as other runs come in.
      GET /api/run?id=<id>   { stats } (null when there are none: PROFILES isn't set up, or it isn't saved yet) */
 const statsKey = (id) => `run:${id}`;
+const postKey = (id) => `post:${id}`;
 // What a course is worth, all of it for the record (see ratings.js). It was 10,000 until November 2026, and what was
 // kept for a run before then has no scale: it's served on today's, a tenth of it (onScale), so its page agrees with
 // the boards.
@@ -884,41 +890,264 @@ async function sentStats(env, ctx, { n, run, before }) {
   if (!game || !game.files || !Array.isArray(game.courses)) throw new Error("the game data has no course list yet");
   return runStats(game, before, run, n);
 }
-// Where a run would place (waiting for a check) or placed: "Course: #1 of 12 • Global: #1 of 16 • ⭐ 182 (+91)", its
-// place on the course, and its player's place and rating in the player ratings, with what the run adds to it (like
-// Runs to check on the site). stats (runStats) can be null, and then it's just "Course: #1".
-function placeText(run, rank, stats) {
-  const s = stats && stats.best === run.time && stats.bestMiss === run.mistakes ? stats : null;
-  const rating = s && s.rating ? Math.round(s.rating[1]) : null;
-  const gain = rating === null ? 0 : rating - Math.round(s.rating[0] ?? 0);
-  return [
-    s && s.place ? `Course: #${s.place} of ${s.players}` : `Course: #${rank}`,
-    s && s.rank && `Global: #${s.rank[1]} of ${s.of}`,
-    rating !== null && `⭐ ${rating} (${gain < 0 ? "−" : "+"}${Math.abs(gain)})`, // no separator: a rating only reaches 1000
-  ].filter(Boolean).join(" • ");
+// A gap between two times, the way the site writes one (gap() in index.html): "0.52s", or "1:05.30" from a minute up
+function gapText(sec) {
+  const cs = Math.round(Math.abs(sec) * 100);
+  const s = ((cs % 6000) / 100).toFixed(2);
+  const m = Math.floor(cs / 6000);
+  if (!m) return `${s}s`;
+  return m < 60 ? `${m}:${s.padStart(5, "0")}` : `${Math.floor(m / 60)}:${String(m % 60).padStart(2, "0")}:${s.padStart(5, "0")}`;
 }
-// The run's post in the run submissions channel: the run, where it would place (waiting for a check) or placed (on the
-// board, when it's the player's new best there), and View run, which opens its page
-async function postRun(env, { n, courseName, courseFlag, run, pending, rank, newBest, site, stats }) {
-  if (!env.RUNS_CHANNEL || !env.DISCORD_BOT_TOKEN) return;
-  const where = `Course ${n}${courseName ? ` · ${courseFlag ? `${courseFlag} ` : ""}${courseName}` : ""}`;
-  const page = `${site}/runs/${run.id}`;
-  const fields = [
-    { name: "Player", value: mdSafe(run.name), inline: true },
-    { name: "Time", value: run.time, inline: true },
-    { name: "Mistakes", value: String(run.mistakes), inline: true },
-    { name: "Sent by", value: `<@${run.discord}>`, inline: true },
-    ...(pending || newBest ? [{ name: pending ? "Would be" : "Place", value: placeText(run, rank, stats) }] : []),
-    { name: "Video", value: `<${run.video}>` },
-  ];
-  const message = {
-    allowed_mentions: { parse: [] }, // shows who sent it without pinging them
-    embeds: [{ title: `${pending ? "Run to check" : "New run"} on ${where}`, url: page, color: pending ? 0xffd54f : 0x00e697, fields, timestamp: new Date(run.sentAt).toISOString() }],
-    components: [{ type: 1, components: [{ type: 2, style: 5, label: "View run", url: page }] }],
+// How much a number changed: "+4", "−1", or "Same"
+const changeText = (v) => (v ? `${v < 0 ? "−" : "+"}${Math.abs(v)}` : "Same");
+// Where a place went: "#2 → #1", or "Same"
+const movedText = (from, to) => (from === to ? "Same" : `#${from} → #${to}`);
+// A player's name in an embed's title. Discord draws bold, italics, underline, strikethrough and spoilers there, but not
+// links, headings or quotes, so only the characters for those five are escaped (no stray backslashes before a dash).
+const titleSafe = (s) => String(s).replace(/([\\*_~|])/g, "\\$1");
+// A player's Top % (a tier from rate(), null past the last one), under "Global Top %" in a run's post: "10%", or
+// "Rated" for the bottom 10% (as their role on Discord), or "Unrated" when they have no rating
+const tierText = (tier, rated) => (typeof tier === "number" ? `${tier}%` : rated ? "Rated" : "Unrated");
+// What comes after /profile/ in a player's link: the name they picked, else their number, else (no number yet) their
+// Discord ID, the same as the page's linkOf(). links is links.json's players (linksIn).
+const linkOf = (links, id) => (links && links[id] ? links[id].link || String(links[id].n) : id);
+// When a run was sent, written by Discord in each reader's own language and time zone: "October 30, 2026 at 12:41 PM".
+// A run from before the website's form only has its day ("July 21, 2026"): noon UTC is that day almost everywhere.
+// "" when it has neither.
+function whenText(run) {
+  const at = Date.parse(run.sentAt || "");
+  if (!Number.isNaN(at)) return `<t:${Math.floor(at / 1000)}:f>`;
+  return /^\d{4}-\d{2}-\d{2}$/.test(run.date || "") ? `<t:${Date.parse(`${run.date}T12:00:00Z`) / 1000}:D>` : "";
+}
+// How long after one run another was sent, in its two biggest units: "3 months, 9 days", "2 days, 4 hours", "12
+// minutes". Months and years go by the calendar (UTC). When the earlier one only has its day, it's counted in whole
+// days. "" when either has no date, or they're the wrong way round.
+function spanText(from, to) {
+  const exact = !Number.isNaN(Date.parse(from.sentAt || ""));
+  const day = (r) => (/^\d{4}-\d{2}-\d{2}$/.test(r.date || "") ? Date.parse(`${r.date}T00:00:00Z`) : NaN);
+  const a = exact ? Date.parse(from.sentAt) : day(from), b = exact ? Date.parse(to.sentAt) : day(to);
+  if (!(b >= a)) return "";
+  // a, so many months on: the same day of the month, or the month's last when it has no such day (January 31 → February 28)
+  const later = (months) => {
+    const d = new Date(a);
+    d.setUTCDate(1);
+    d.setUTCMonth(d.getUTCMonth() + months);
+    d.setUTCDate(Math.min(new Date(a).getUTCDate(), new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate()));
+    return d.getTime();
   };
-  await postIn(env, env.RUNS_CHANNEL, message, `run ${run.id}`);
+  let months = (new Date(b).getUTCFullYear() - new Date(a).getUTCFullYear()) * 12 + new Date(b).getUTCMonth() - new Date(a).getUTCMonth();
+  if (later(months) > b) months--;
+  const rest = Math.floor((b - later(months)) / 1000);
+  const units = [
+    [Math.floor(months / 12), "year"], [months % 12, "month"], [Math.floor(rest / 86400), "day"],
+    [Math.floor(rest / 3600) % 24, "hour"], [Math.floor(rest / 60) % 60, "minute"], [rest % 60, "second"],
+  ];
+  const first = units.findIndex(([count]) => count);
+  if (first < 0) return exact ? "Less than a second" : "Less than a day";
+  return units.slice(first, first + 2).filter(([count]) => count).map(([count, unit]) => `${count} ${unit}${count === 1 ? "" : "s"}`).join(", ");
 }
-// Ballkyrie posts a message in a channel. what says what it's about, for the log if it can't.
+// The player's best run on the course just before this one (the run stats.old is the time of), with its mistakes and
+// when it was sent: from runs.json as it was (before), or from the course's file and old boards (mine), which only
+// have its day. null on their first run there, or without stats.
+function bestBefore({ n, run, before, mine }, stats) {
+  if (!stats || !stats.old) return null;
+  const sent = before && Array.isArray(before.runs[n]) ? before.runs[n] : [];
+  const same = [...sent, ...(mine || [])].filter((r) => r && r.discord === run.discord && r.time === stats.old && Number.isInteger(r.mistakes));
+  // A tie on time goes to fewer mistakes, as on the boards
+  return same.sort((a, b) => a.mistakes - b.mistakes)[0] || { time: stats.old };
+}
+/* The run's post in the run submissions channel. Its title says what the run is, and opens its page:
+     New record by NAME!               their best on the course, and #1 there
+     New podium submission by NAME!    their best, and #2 or #3
+     New top 10 submission by NAME!    their best, and #4 to #10
+     New personal best by NAME!        their best, past the top 10 (or their first run there)
+     New submission by NAME!           not their best
+   Under it: the course, who sent it, their in-game name and the video, then three blocks side by side. New personal
+   best is the run: its time, mistakes, course rating, the place it takes on the course, the player's rating, place and
+   Top % in the player ratings with it, and its date. Old personal best is the same for their best on the course
+   before it, with their place, rating, place and Top % in the ratings as they were. Comparison is what changed between
+   the two, and how long after the old one it came. On their first run on a course there's just the run, with what it
+   added to their rating, and where it moved them in the ratings, in the same rows. A run that isn't
+   their best is This run beside Personal best: its course rating and place are the ones it would get on its own, and
+   neither has anything from the player ratings, which it doesn't count toward.
+   A top 10 run, which waits for a check, is in yellow, with its numbers as they'd be once approved, and says so at the
+   bottom, until a moderator checks it (see checkedPost, which also has what changes then). Every other run is in green. Under it are View run (which
+   the title opens too), Board (the course's) and Profile (the player's panel). The DM to the player once a moderator
+   checks their run has the same blocks and buttons (checkedRunMessage).
+   Without stats (runStats), it has no ratings, and no best from before to compare with: just the run and its place. */
+// The three blocks side by side (see runPost), for the run's post and for the DM to its player once a moderator checks
+// it (checkedRunMessage), with whether it's its player's best on the course and the place it takes there. A run that's
+// been turned down (checked.approve false) is Turned-down run, beside Personal best: the best it would have replaced,
+// which still is, with what the run would have done.
+function runBlocks({ n, run, rank, newBest, stats, before, mine, checked }) {
+  const s = stats || {};
+  // Whether it's their best on the course: by its numbers, which read the boards the way the site does, or else by
+  // where it placed
+  const best = stats ? s.best === run.time && s.bestMiss === run.mistakes : !!newBest;
+  const place = (best && s.place) || rank;
+  const old = bestBefore({ n, run, before, mine }, stats);
+  const down = !!checked && !checked.approve;
+  const num = (v) => typeof v === "number";
+  const of = (pair, i) => (Array.isArray(pair) && num(pair[i]) ? pair[i] : null);
+  // The run's numbers (now), and those of their best before it (was): its course rating, its place on the course,
+  // and their rating, place and Top % in the player ratings
+  const alone = s.alone || {};
+  const ratedBefore = num(of(s.rating, 0));
+  const tiers = best && Array.isArray(s.tier) && num(of(s.rating, 1)) ? s.tier : null;
+  const now = best
+    ? { points: of(s.points, 1), place, rating: of(s.rating, 1), rank: of(s.rank, 1), tier: tiers && tierText(tiers[1], true) }
+    : { points: alone.points, place: alone.place || rank };
+  const was = best
+    ? { points: of(s.points, 0), place: s.was, rating: of(s.rating, 0), rank: of(s.rank, 0), tier: tiers && tierText(tiers[0], ratedBefore) }
+    : { points: of(s.points, 1), place: s.place };
+  const tierMoved = !!tiers && (tiers[0] !== tiers[1] || !ratedBefore);
+  // With no best from before (their first run on the course), there's no Comparison, so what the run changed goes in
+  // the same rows, the way Comparison writes it: "137 (+91)", "#10 → #2 of 16" and "75% → 25%". The player
+  // ratings are over every course, so a first run on one can still move a player who's run others.
+  const gain = !old && num(now.rating) ? now.rating - (of(s.rating, 0) ?? 0) : 0;
+  const climb = !old && num(now.rank) && num(of(s.rank, 0)) && of(s.rank, 0) !== now.rank;
+  const rose = !old && ratedBefore && tierMoved;
+  // The same rows in the same order in every block, so they line up side by side
+  const about = (r, d, first) => [
+    `Time: ${r.time}`,
+    Number.isInteger(r.mistakes) && `Mistakes: ${r.mistakes}`,
+    num(d.points) && `Course rating: ${d.points}`,
+    num(d.place) && `Course rank: #${d.place}${s.players ? ` of ${s.players}` : ""}`,
+    num(d.rating) && `Global rating: ${d.rating}${first && gain ? ` (${changeText(gain)})` : ""}`,
+    num(d.rank) && `Global rank: ${first && climb ? `#${of(s.rank, 0)} → ` : ""}#${d.rank} of ${s.of}`,
+    d.tier && `Global Top %: ${first && rose ? `${was.tier} → ` : ""}${d.tier}`,
+    whenText(r) && `Date: ${whenText(r)}`,
+  ].filter(Boolean).join("\n");
+  const both = (a, b) => num(a) && num(b);
+  const saved = old ? Math.round((toSeconds(old.time) - toSeconds(run.time)) * 100) / 100 : 0;
+  const span = old ? spanText(old, run) : "";
+  return {
+    best,
+    place,
+    fields: [
+      { name: down ? "Turned-down run" : best ? "New personal best" : "This run", value: about(run, now, true), inline: true },
+      ...(old ? [
+        { name: best && !down ? "Old personal best" : "Personal best", value: about(old, was), inline: true },
+        {
+          name: "Comparison",
+          value: [
+            saved ? `Time ${saved > 0 ? "saved" : "behind"}: ${gapText(saved)}` : "Time: Same",
+            Number.isInteger(old.mistakes) && `Mistakes: ${changeText(run.mistakes - old.mistakes)}`,
+            both(now.points, was.points) && `Course rating: ${changeText(now.points - was.points)}`,
+            both(now.place, was.place) && `Course rank: ${movedText(was.place, now.place)}`,
+            both(now.rating, was.rating) && `Global rating: ${changeText(now.rating - was.rating)}`,
+            both(now.rank, was.rank) && `Global rank: ${movedText(was.rank, now.rank)}`,
+            // "Global Top %: 50% → 25%" is a little wider than the column, so a change there may take two lines
+            tiers && `Global Top %: ${tierMoved ? `${was.tier} → ${now.tier}` : "Same"}`,
+            span && `${best && !down ? "Achieved" : "Sent"} after: ${span}`,
+          ].filter(Boolean).join("\n"),
+          inline: true,
+        },
+      ] : []),
+    ],
+  };
+}
+// The buttons under the run's post and the DM: View run, Board (the course's) and Profile (the player's panel, at their
+// own link)
+function runButtons({ n, run, site, links }) {
+  const button = (label, url) => ({ type: 2, style: 5, label, url });
+  return [{
+    type: 1,
+    components: [
+      button("View run", `${site}/runs/${run.id}`),
+      button("Board", `${site}/leaderboards/${n}`),
+      button("Profile", `${site}/profile/${encodeURIComponent(linkOf(links, run.discord))}`),
+    ],
+  }];
+}
+// Who checked a run and when, at the bottom of its post and the DM: "Approved by NAME • Today at 3:20 PM" (Discord
+// writes the time, from timestamp, in each reader's own time zone)
+function checkedFooter(run, { approve, by }) {
+  const at = Date.parse(run.checkedAt || "");
+  return {
+    footer: { text: `${approve ? "Approved" : "Turned down"} by ${by || "a moderator"}` },
+    ...(Number.isNaN(at) ? {} : { timestamp: new Date(at).toISOString() }),
+  };
+}
+// A course the way the site writes it, in a run's post and the DM: its number, flag and name ("1 🇬🇮 Watchpoint:
+// Gibraltar"), or "Course 1" without its name. safe escapes the name for where it goes (mdSafe, or titleSafe).
+const courseText = (n, name, flag, safe) => (name ? `${n} ${flag ? `${flag} ` : ""}${safe(name)}` : `Course ${n}`);
+// The colours: green for a run on the board, yellow while it waits for a check, red once it's turned down
+const GREEN = 0x00e697, YELLOW = 0xffd54f, RED = 0xff6a4f;
+function runPost(info) {
+  const { n, courseName, courseFlag, run, pending, site, checked } = info;
+  const { best, place, fields } = runBlocks(info);
+  const what = !best ? "New submission" : place === 1 ? "New record" : place <= 3 ? "New podium submission" : place <= 10 ? "New top 10 submission" : "New personal best";
+  const title = `${what} by ${titleSafe(run.name)}!`;
+  return {
+    allowed_mentions: { parse: [] }, // shows who sent it without pinging them
+    embeds: [{
+      // Struck through once it's turned down, so it's plain that it isn't one
+      title: checked && !checked.approve ? `~~${title}~~` : title,
+      url: `${site}/runs/${run.id}`,
+      description: `**${courseText(n, courseName, courseFlag, mdSafe)}**`,
+      color: checked ? (checked.approve ? GREEN : RED) : pending ? YELLOW : GREEN,
+      fields: [
+        { name: "Sent by", value: `<@${run.discord}>`, inline: true },
+        { name: "Player name", value: mdSafe(run.name), inline: true },
+        { name: "Video", value: `[Watch](${run.video})`, inline: true },
+        ...fields,
+      ],
+      // The embed's footer: small grey text under everything else
+      ...(checked ? checkedFooter(run, checked) : pending ? { footer: { text: "Waiting for a check from moderators" } } : {}),
+    }],
+    components: runButtons(info),
+  };
+}
+async function postRun(env, info) {
+  if (!env.RUNS_CHANNEL || !env.DISCORD_BOT_TOKEN) return;
+  const message = runPost(info);
+  const sent = await postIn(env, env.RUNS_CHANNEL, message, `run ${info.run.id}`);
+  // A top 10 run's post changes once a moderator checks it (checkedPost), so its message is kept until then
+  if (info.pending && sent && sent.id && env.PROFILES) {
+    await env.PROFILES.put(postKey(info.run.id), JSON.stringify({ channel: env.RUNS_CHANNEL, id: sent.id, message }))
+      .catch((e) => console.error(`run ${info.run.id}: couldn't keep its post for when it's checked: ${(e && e.message) || e}`));
+  }
+}
+// Once a moderator checks a top 10 run, its post is made again (runPost) with what it does to the boards then, the same
+// as the DM to its player (see afterCheck), in green (approved) or red (turned down, with its title struck through),
+// and says who checked it and when. Without those numbers (they couldn't be worked out), it keeps the ones from when
+// it was sent. A post that wasn't kept (from before posts were, or one PROFILES couldn't save) stays as it is.
+async function checkedPost(env, info) {
+  const { run, checked } = info;
+  if (!env.PROFILES || !env.DISCORD_BOT_TOKEN) return;
+  const kept = await env.PROFILES.get(postKey(run.id), "json").catch(() => null);
+  const sent = kept && kept.message;
+  if (!sent || !Array.isArray(sent.embeds) || !sent.embeds[0] || !kept.id) return;
+  let message = info.stats ? runPost(info) : null;
+  if (!message) {
+    const e = sent.embeds[0];
+    const down = !checked.approve;
+    const renamed = { "New personal best": "Turned-down run", "This run": "Turned-down run", "Old personal best": "Personal best" };
+    message = {
+      ...sent,
+      embeds: [{
+        ...e,
+        title: down ? `~~${e.title}~~` : e.title,
+        color: down ? RED : GREEN,
+        fields: (e.fields || []).map((f) => (!down ? f
+          : renamed[f.name] ? { ...f, name: renamed[f.name] }
+          : f.name === "Comparison" ? { ...f, value: f.value.replace("Achieved after:", "Sent after:") } : f)),
+        ...checkedFooter(run, checked),
+      }],
+    };
+  }
+  const res = await fetch(`${DISCORD_API}/channels/${kept.channel}/messages/${kept.id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
+    body: JSON.stringify({ embeds: message.embeds, components: message.components, allowed_mentions: { parse: [] } }),
+    signal: AbortSignal.timeout(5000),
+  }).catch((e) => ({ ok: false, status: String((e && e.message) || e), text: async () => "" }));
+  if (!res.ok) { console.error(`run ${run.id}: Ballkyrie couldn't change its post, Discord said ${res.status} ${(await res.text()).slice(0, 200)}`); return; }
+  await env.PROFILES.delete(postKey(run.id)).catch(() => {});
+}
+// Ballkyrie posts a message in a channel. what says what it's about, for the log if it can't. → the message Discord
+// made ({ id, … }), or null if it didn't
 async function postIn(env, channel, message, what) {
   const res = await fetch(`${DISCORD_API}/channels/${channel}/messages`, {
     method: "POST",
@@ -926,7 +1155,8 @@ async function postIn(env, channel, message, what) {
     body: JSON.stringify(message),
     signal: AbortSignal.timeout(5000),
   }).catch((e) => ({ ok: false, status: String((e && e.message) || e), text: async () => "" }));
-  if (!res.ok) console.error(`${what}: Ballkyrie couldn't post in channel ${channel}, Discord said ${res.status} ${(await res.text()).slice(0, 200)}`);
+  if (!res.ok) { console.error(`${what}: Ballkyrie couldn't post in channel ${channel}, Discord said ${res.status} ${(await res.text()).slice(0, 200)}`); return null; }
+  return res.json().catch(() => null);
 }
 /* Ballkyrie tells a player in a direct message when a moderator checks their top 10 run (approved, or turned down) or
    their claim to legacy runs (linked, or turned down), with a button to the run's page or their stats. Someone who
@@ -943,27 +1173,48 @@ async function tellPlayer(env, id, message, what) {
   if (!dm || !dm.id) { console.error(`${what}: Ballkyrie couldn't open a DM with ${id}`); return; }
   await postIn(env, dm.id, message, what);
 }
-// What it says about a run a moderator checked
-function checkedRunMessage({ run, n, courseName, courseFlag, approve, site }) {
-  const where = `${courseFlag ? `${courseFlag} ` : ""}${courseName || `Course ${n}`}`;
-  const page = `${site}/runs/${run.id}`;
+// What it says to a player about their run a moderator checked: the same blocks as its post (runBlocks), worked out
+// as it's checked (see afterCheck), then who checked it and when, as on the post, and the post's buttons. Without
+// stats, the blocks just have the run.
+function checkedRunMessage(info) {
+  const { run, n, courseName, courseFlag, site, checked } = info;
+  const where = courseText(n, courseName, courseFlag, titleSafe);
   return {
     allowed_mentions: { parse: [] },
     embeds: [{
-      title: approve ? `Your ${run.time} on ${where} is on the board!` : `Your ${run.time} on ${where} was turned down`,
-      url: page,
-      color: approve ? 0x00e697 : 0xff6a4f,
-      description: approve
+      title: checked.approve ? `Your ${run.time} on ${where} is on the board!` : `Your ${run.time} on ${where} was turned down`,
+      url: `${site}/runs/${run.id}`,
+      color: checked.approve ? GREEN : RED,
+      description: checked.approve
         ? "A moderator checked your video and approved your run. The new top 10 goes up on our Discord in a few minutes."
-        : "A moderator checked your video and turned your run down, so it won’t go on the board. You can send it again with another video, and if you think it’s a mistake, open a ticket on our Discord.",
-      fields: [
-        { name: "Player", value: mdSafe(run.name), inline: true },
-        { name: "Time", value: run.time, inline: true },
-        { name: "Mistakes", value: String(run.mistakes), inline: true },
-      ],
+        : `A moderator checked your video and turned your run down, so it won’t go on the board. You can send it again with another video, and if you think it’s a mistake, open a ticket on our Discord here: <#${TICKETS_CHANNEL}>`,
+      fields: runBlocks(info).fields,
+      ...checkedFooter(run, checked),
     }],
-    components: [{ type: 1, components: [{ type: 2, style: 5, label: "View run", url: page }] }],
+    components: runButtons(info),
   };
+}
+// Once a moderator checks a top 10 run: what it does to the boards now (or would have, for one turned down), worked out
+// once for both its post (checkedPost) and the DM to its player (checkedRunMessage), so the two always match. before
+// is runs.json just before it went onto the board or into "declined", and by the moderator's name.
+async function afterCheck(env, ctx, { run, n, approve, before, by, site }) {
+  const dm = env.NOTIFY_PLAYERS === "on" && !!env.DISCORD_BOT_TOKEN;
+  const post = !!env.PROFILES && !!env.DISCORD_BOT_TOKEN;
+  if (!dm && !post) return;
+  const { files, names, flags } = await gameInfo(env, ctx);
+  const file = courseFile(files, n);
+  const board = fileRuns(file, file && files[file]);
+  const mine = [...board, ...historyRuns(files, n)].filter((r) => r.discord === run.discord);
+  const { rank, newBest } = placeOf(run, [...board, ...listIn(before.runs, n)], Array.isArray(before.removed[n]) ? before.removed[n] : []);
+  const stats = await sentStats(env, ctx, { n, run, before }).catch((e) => {
+    console.error(`run ${run.id}: couldn't work out what it does now: ${(e && e.message) || e}`);
+    return null;
+  });
+  const info = { n, courseName: names[n], courseFlag: flags[n], run, before, mine, links: linksIn(files), rank, newBest, stats, site, checked: { approve, by } };
+  await Promise.all([
+    post && checkedPost(env, info),
+    dm && tellPlayer(env, run.discord, checkedRunMessage(info), `run ${run.id}`),
+  ]);
 }
 // And about a claim to legacy runs
 function checkedClaimMessage({ claim, approve, site }) {
@@ -973,10 +1224,10 @@ function checkedClaimMessage({ claim, approve, site }) {
     embeds: [{
       title: approve ? `Your legacy runs as ${claim.name} are linked to you` : `Your claim to the legacy runs as ${claim.name} was turned down`,
       url: approve ? `${site}/profile` : runs,
-      color: approve ? 0x00e697 : 0xff6a4f,
+      color: approve ? GREEN : RED,
       description: approve
         ? "A moderator checked that they’re yours. They’re in My profile now, with your Discord name and picture by them on the boards."
-        : "A moderator couldn’t confirm that they’re yours. If they are, open a ticket on our Discord with proof, like an old screenshot or clip.",
+        : `A moderator couldn’t confirm that they’re yours. If they are, open a ticket with proof, like an old screenshot or clip, on our Discord here: <#${TICKETS_CHANNEL}>`,
     }],
     components: [{ type: 1, components: [{ type: 2, style: 5, label: approve ? "My profile" : "See the runs", url: approve ? `${site}/profile` : runs }] }],
   };
@@ -1066,7 +1317,7 @@ async function submit(request, env, ctx) {
   });
   if (saved.error) return answer(saved.status, { error: saved.error });
   await showSaved(saved.text, user).catch((e) => console.error(`submit: couldn't update the cached copy: ${(e && e.message) || e}`));
-  if (saved.text) ctx.waitUntil(afterSend(env, ctx, { n, courseName: names[n], courseFlag: flags[n], run, before, pending: saved.pending, rank: saved.rank, newBest: saved.newBest, site: url.origin }));
+  if (saved.text) ctx.waitUntil(afterSend(env, ctx, { n, courseName: names[n], courseFlag: flags[n], run, before, mine, links: linksIn(files), pending: saved.pending, rank: saved.rank, newBest: saved.newBest, site: url.origin }));
   if (saved.text && !saved.pending) ctx.waitUntil(profileAfterRun(env, ctx, user.id));
   // Sent twice: the run that's already in, with its id (undefined ones are left out of the answer)
   const shown = saved.text ? run : { ...run, id: saved.id, sentAt: undefined };
@@ -1100,13 +1351,14 @@ async function review(request, env, ctx) {
   try { body = JSON.parse(await request.text()); } catch (e) { body = null; }
   const n = Number(body && body.course), id = String((body && body.id) || ""), approve = !!(body && body.approve);
   if (!Number.isInteger(n) || !/^[\w-]{1,16}$/.test(id)) return answer(400, { error: "bad" });
-  let run = null;
+  let run = null, before = null;
   const done = await editRuns(env, (data) => {
     const waiting = listIn(data.pending, n);
     const at = waiting.findIndex((r) => r && r.id === id);
     if (at < 0) return { error: "gone", status: 404 }; // someone else checked it already
     // Nobody checks their own run: another moderator has to
     if (waiting[at].discord === user.id) return { error: "own", status: 403 };
+    before = structuredClone(data); // for what it does to the boards, in its post and the DM (afterCheck)
     run = { ...waiting.splice(at, 1)[0], checkedBy: user.id, checkedAt: stamp() };
     listIn(approve ? data.runs : data.declined, n).push(run);
     return { message: `chore(leaderboard): ${approve ? "add" : "turn down"} ${run.name}'s ${run.time} on course ${n}, checked by ${user.name}` };
@@ -1114,8 +1366,9 @@ async function review(request, env, ctx) {
   if (done.error) return answer(done.status, { error: done.error });
   await showSaved(done.text, null).catch(() => {});
   if (approve && run.discord) ctx.waitUntil(profileAfterRun(env, ctx, run.discord));
-  const { names, flags } = await gameInfo(env, ctx);
-  ctx.waitUntil(tellPlayer(env, run.discord, checkedRunMessage({ run, n, courseName: names[n], courseFlag: flags[n], approve, site: new URL(request.url).origin }), `run ${run.id}`));
+  // Its post changes to say so, and its player gets a DM
+  ctx.waitUntil(afterCheck(env, ctx, { run, n, approve, before, by: user.name, site: new URL(request.url).origin })
+    .catch((e) => console.error(`run ${run.id}: couldn't change its post or tell its player: ${(e && e.message) || e}`)));
   return answer(200, { ok: true, run });
 }
 
