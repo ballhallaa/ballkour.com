@@ -362,12 +362,12 @@ main:focus { outline: none; }
   transition: color .15s, background-color .15s, box-shadow .15s;
 }
 .sections a:hover { color: var(--ink); background: var(--glass-hi); }
-/* The links scroll; Find a player stays at the right end */
+/* The links scroll; My profile and Find a player stay at the right end */
 .sections { display: flex; align-items: center; gap: 4px; }
 .sections-scroll { position: relative; flex: 1; min-width: 0; }
-.sections-find { flex: none; width: 38px; height: 33px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--ink-2); cursor: pointer; transition: color .15s, background-color .15s; }
-.sections-find:hover { color: var(--volt); background: var(--glass-hi); }
-.sections-find:focus-visible { outline-offset: -2px; }
+.sections-find, .sections-me { flex: none; width: 38px; height: 33px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--ink-2); cursor: pointer; transition: color .15s, background-color .15s; }
+.sections-find:hover, .sections-me:hover { color: var(--volt); background: var(--glass-hi); }
+.sections-find:focus-visible, .sections-me:focus-visible { outline-offset: -2px; }
 .sections a[aria-current="true"] { color: var(--ink); background: rgba(0, 230, 151, .12); box-shadow: inset 0 0 0 1px rgba(0, 230, 151, .35); }
 
 /* ---------- Panels ---------- */
@@ -857,7 +857,7 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-claim .btn { text-decoration: none; }
 .pl-claim-note { flex-basis: 100%; margin: 0; color: var(--coral); }
 /* Your link, in their own panel (see "Players' own links"), like the boxes above. Pick a name or Change turns it into
-   the form: ballkour.com/players/ in front of the box for the name, like it'll read in the address. */
+   the form: ballkour.com/profile/ in front of the box for the name, like it'll read in the address. */
 .pl-url-text { color: var(--ink); font-weight: 500; overflow-wrap: anywhere; }
 .pl-url-form .pl-claim-text { flex-basis: 100%; }
 .pl-url-field { flex: 1 1 100%; min-width: 0; height: 40px; display: flex; align-items: center; border: 1px solid var(--line-hi); border-radius: 10px; background: rgba(0, 0, 0, .3); transition: border-color .15s; }
@@ -1625,7 +1625,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     <button class="sections-more left" type="button" data-dir="-1" tabindex="-1" aria-hidden="true"><svg class="icon"><use href="#i-dots"/></svg></button>
     <button class="sections-more right" type="button" data-dir="1" tabindex="-1" aria-hidden="true"><svg class="icon"><use href="#i-dots"/></svg></button>
     </div>
-    <!-- Find a player, from anywhere on the page (see "Finding a player") -->
+    <!-- My profile (when signing in is on, see "My profile") and Find a player (see "Finding a player"), from anywhere
+         on the page -->
+    <button class="sections-me" id="sections-me" type="button" data-my-stats hidden><svg class="icon" aria-hidden="true"><use href="#i-user"/></svg></button>
     <button class="sections-find" type="button" data-find data-i18n-aria="find.open" aria-label="Find a player"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg></button>
   </nav>
 
@@ -2144,7 +2146,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "visits.day": "{date}: {views} views, {people} people",
   "visits.top": "Most viewed",
   "visits.home": "Top of the page",
-  "visits.players": "Players",
+  "visits.profile": "Profiles",
   "visits.other": "Other",
   "visits.note": "Counted by the site itself each time someone opens it in a browser. Most bots don’t count. Each person counts once a day, without the site keeping who they are.",
   "stats.fromTo": "{from} to {to}",
@@ -3545,11 +3547,11 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   LOADS.push(gameFile("leaderboards/runs.json").then(JSON.parse).then(applyRuns).catch(() => {}));
 
   /* ---------- Players' own links ----------
-     Every player's panel has a short link: ballkour.com/players/<number>, or /players/<name> once they've picked a name
+     Every player's panel has a short link: ballkour.com/profile/<number>, or /profile/<name> once they've picked a name
      for it in their own panel (Your link). links.json on the game repo's leaderboard-data branch has both: the Worker
      hands out the numbers and saves the names (see "Players' own links" in cloudflare/worker.js). A name from the
-     legacy boards with no Discord ID keeps /players/<in-game name>, and a player with no number yet (for up to half an
-     hour after their first run) has /players/<Discord ID>. Moderators can take the name off anyone else's link, from
+     legacy boards with no Discord ID keeps /profile/<in-game name>, and a player with no number yet (for up to half an
+     hour after their first run) has /profile/<Discord ID>. Moderators can take the name off anyone else's link, from
      their panel. */
   const LINKS = new Map(); // Discord ID → { n, link } ("" for no name)
   const LINK_OK = /^[\p{L}\p{N}][\p{L}\p{M}\p{N}_-]{0,31}$/u; // the same as the Worker's: keep the two in step
@@ -3950,17 +3952,18 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const back = spot && pl.querySelector(spot);
     if (back) back.focus({ preventScroll: true });
   }
-  /* A player's own link, ballkour.com/players/<number or name> (see "Players' own links"), opens their panel, so their
-     stats can be shared, and /players/<…>/runs opens it on Runs. The address shows it while their panel is open (their
-     own too, from My profile or their name on a board), and Copy link in the panel copies it. */
-  // What comes after /players/: the name they picked, else their number, else (no number yet) their Discord ID. A name
+  /* A player's own link, ballkour.com/profile/<number or name> (see "Players' own links"), opens their panel, so their
+     stats can be shared, and /profile/<…>/runs opens it on Runs. The links from before November 2026,
+     /players/<number or name>, open it the same way. The address shows it while their panel is open (their own too,
+     from My profile or their name on a board), and Copy link in the panel copies it. */
+  // What comes after /profile/: the name they picked, else their number, else (no number yet) their Discord ID. A name
   // with no Discord ID is its own.
   function linkOf(key) {
     if (!key.startsWith("d:")) return key.slice(2);
     const x = LINKS.get(key.slice(2));
     return x ? x.link || String(x.n) : key.slice(2);
   }
-  const playerPath = (key, runs) => `/players/${encodeURIComponent(linkOf(key))}${runs ? "/runs" : ""}`;
+  const playerPath = (key, runs) => `/profile/${encodeURIComponent(linkOf(key))}${runs ? "/runs" : ""}`;
   // The player a link is for, or null for a number nobody has. The same as keyOfLink() in cloudflare/worker.js: keep
   // the two in step.
   function keyOfLink(seg) {
@@ -3974,8 +3977,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     return "n:" + seg.toUpperCase();
   }
   let playerBack = null; // while a player's panel is open, the address from before, to go back to
-  // The address to go back to. A player's link someone opened (or ballkour.com/my-stats) goes back to the top of the page.
-  const beforePlayer = () => playerBack.replace(/^\/(?:players\/[^/?#]+(?:\/runs)?|stats)\/?(?=[?#]|$)/i, "/");
+  // The address to go back to. A player's link someone opened (or ballkour.com/profile) goes back to the top of the page.
+  const beforePlayer = () => playerBack.replace(/^\/(?:(?:profile|players)\/[^/?#]+(?:\/runs)?|profile|my-stats|stats)\/?(?=[?#]|$)/i, "/");
   // Once their panel is drawn, so /runs is only in the address while Runs is what it shows
   function showPlayerLink(key) {
     if (playerBack === null) playerBack = location.pathname + location.search + location.hash;
@@ -3984,7 +3987,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     try { history.replaceState(history.state, "", playerPath(key, runs) + (l ? `?lang=${encodeURIComponent(l)}` : "")); } catch (e) { /* address stays as it is */ }
   }
   // A player's link someone opened: their panel (on Runs, for runs). A name that nobody without a Discord ID goes by
-  // (/players/COLDSKIN, typed by hand, say) opens the one player who goes by it, or Find a player with it typed in
+  // (/profile/COLDSKIN, typed by hand, say) opens the one player who goes by it, or Find a player with it typed in
   // when several do.
   function openPlayerLink(key, runs) {
     // A number nobody has: Find a player, to look for them
@@ -4861,7 +4864,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     });
     // The foot: the day it's from, their link in the middle (as the address shows it), and what the dates are
     picFoot(ctx, W, footY + 8.5, picSplit("pic.asOf", "date", new Date().toISOString().slice(0, 10)),
-      d.rows.some((x) => x.best && formatDate(x.best.date)) ? picDates() : [], `ballkour.com/players/${linkOf(d.key)}`);
+      d.rows.some((x) => x.best && formatDate(x.best.date)) ? picDates() : [], `ballkour.com/profile/${linkOf(d.key)}`);
     return cv;
   }
   function openPlayerPicture(key) {
@@ -5557,12 +5560,14 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      asked about Ballkyrie there, doesn't come out of nowhere). Continue with Discord there signs them in, and comes
      back with ?me=1 to open their panel. Sign in with Discord above the form opens the same panel, and comes back to
      the form.
-     ballkour.com/my-stats is the link to it: it opens My profile the same way. Their panel shows their own link in the
-     address (/players/<number or name>, see playerPath), like anyone's, so what's in the address works for anyone it's sent
-     to. The panel that signs them in for it shows /my-stats. Closing either puts the address back. */
+     ballkour.com/profile is the link to it (and /my-stats, from before November 2026): it opens My profile the same
+     way. Their panel shows their own link in the address (/profile/<number or name>, see playerPath), like anyone's, so
+     what's in the address works for anyone it's sent to. The panel that signs them in for it shows /profile. Closing
+     either puts the address back. */
   const meWrap = $("#me-wrap");
   let meKnown = false; // whether /api/me has answered, so the chip doesn't flip from signed out to signed in
-  const startStats = /^\/my-stats\/?$/i.test(location.pathname);
+  const MINE_LINK = /^\/(?:profile|my-stats)\/?$/i;
+  const startStats = MINE_LINK.test(location.pathname);
   let wantMine = (() => {
     try {
       const u = new URL(location.href);
@@ -5577,10 +5582,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (me) { openPlayer("d:" + me.id, 0); return; }
     if (!loginOn) return;
     openSignIn("mine");
-    // Opened from ballkour.com/my-stats, it goes back to the top of the page
-    if (statsBack === null) statsBack = /^\/my-stats\/?$/i.test(location.pathname) ? "/" + location.search : location.pathname + location.search + location.hash;
+    // Opened from ballkour.com/profile, it goes back to the top of the page
+    if (statsBack === null) statsBack = MINE_LINK.test(location.pathname) ? "/" + location.search : location.pathname + location.search + location.hash;
     const l = new URLSearchParams(location.search).get("lang");
-    try { history.replaceState(history.state, "", `/my-stats${l ? `?lang=${encodeURIComponent(l)}` : ""}`); } catch (e) { /* address stays as it is */ }
+    try { history.replaceState(history.state, "", `/profile${l ? `?lang=${encodeURIComponent(l)}` : ""}`); } catch (e) { /* address stays as it is */ }
   }
   // Leaving it (closing the panel, or something else opening in its place) puts the address back
   function leaveStats() {
@@ -5666,6 +5671,11 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     // Just the profile icon, signed in or not: its name is in aria-label, and hovering says it (or that it signs them in)
     meWrap.innerHTML = `<button class="top-btn me-btn" type="button" data-my-stats aria-label="${esc(t("me.button"))}" ` +
       `title="${esc(t(me ? "me.button" : "me.signin"))}">${icon("user")}</button>`;
+    // And the same in the section bar, by Find a player
+    const bar = $("#sections-me");
+    bar.hidden = false;
+    bar.setAttribute("aria-label", t("me.button"));
+    bar.title = t(me ? "me.button" : "me.signin");
   }
   // Under Join our Discord: how to get the role and the stats on their profile, with My profile (the button's own name,
   // in every language) as a link to it. Without signing in on the site, there's no My profile, so it doesn't show.
@@ -5674,12 +5684,12 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     how.hidden = !loginOn;
     if (how.hidden) return;
     const myStats = esc(t("me.button"));
-    how.innerHTML = esc(t("dc.how")).replace(myStats, `<a href="/my-stats" data-my-stats>${myStats}</a>`);
+    how.innerHTML = esc(t("dc.how")).replace(myStats, `<a href="/profile" data-my-stats>${myStats}</a>`);
   }
   document.addEventListener("click", (e) => {
     const mine = e.target.closest("[data-my-stats]");
     if (mine) {
-      // A link to it (/my-stats) still opens in a new tab with Ctrl/Cmd or Shift
+      // A link to it (/profile) still opens in a new tab with Ctrl/Cmd or Shift
       if (mine.tagName === "A" && (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey)) return;
       e.preventDefault();
       openMine();
@@ -5764,11 +5774,11 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     claimNote = "";
   });
 
-  /* Your link, in their own panel (see "Players' own links"): ballkour.com/players/<number or name>, with Pick a name
+  /* Your link, in their own panel (see "Players' own links"): ballkour.com/profile/<number or name>, with Pick a name
      (Change, once they have one). That turns the box into the form: Save, Use my number ID (once they have a name, with
      the number it goes back to in parentheses), and Cancel. Moderators get Remove the name in anyone else's panel whose
      link has one. */
-  const shownLink = (key) => "ballkour.com/players/" + linkOf(key);
+  const shownLink = (key) => "ballkour.com/profile/" + linkOf(key);
   function linkHtml() {
     if (!loginOn) return "";
     const x = LINKS.get(me.id);
@@ -5780,7 +5790,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const value = linkDraft !== null ? linkDraft : named ? x.link : "";
     return `<form class="pl-claim pl-url pl-url-form" data-link-form novalidate>` +
       `<label class="pl-claim-text" for="pl-link-input"><b>${esc(t("link.title"))}</b> ${esc(t("link.rules"))}</label>` +
-      `<div class="pl-url-field" dir="ltr"><span class="pl-url-pre" aria-hidden="true">ballkour.com/players/</span>` +
+      `<div class="pl-url-field" dir="ltr"><span class="pl-url-pre" aria-hidden="true">ballkour.com/profile/</span>` +
         `<input id="pl-link-input" name="link" value="${esc(value)}" maxlength="32" autocomplete="off" autocapitalize="off" spellcheck="false" dir="auto"` +
         `${linkNote ? ` aria-invalid="true" aria-describedby="pl-link-note"` : ""}></div>` +
       (linkNote ? `<p class="pl-claim-note" id="pl-link-note" role="alert">${esc(t(linkNote))}</p>` : "") +
@@ -5953,6 +5963,15 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   let visits = null;
   fetch("/api/visits").then((r) => (r.ok ? r.json() : null)).then((d) => {
     visits = d && Array.isArray(d.days) && d.days.length ? d : null;
+    // Before November 2026, a player's panel was /players/<…> and My profile /my-stats: both are Profiles now, like
+    // /profile links. A day's people there are unknown (null) when either's are.
+    if (visits) visits.days.forEach(({ sections: s }) => ["players", "my-stats"].forEach((k) => {
+      if (!s || !Array.isArray(s[k])) return;
+      const [views, people] = s[k];
+      const [v0, p0] = s.profile || [0, 0];
+      s.profile = [v0 + (Number(views) || 0), people === null || p0 === null ? null : p0 + (Number(people) || 0)];
+      delete s[k];
+    }));
     renderStats();
   }).catch(() => {});
   /* The runs' numbers for each day, worked out once every file is in, and again when runs.json changes:
@@ -6114,13 +6133,12 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const arrow = icon("chev", "icon stats-row-arrow");
     if (key === "home") return `<li><a class="stats-row" href="/" data-stat-top>${inner}${arrow}</a></li>`;
     if (STAT_ROUTES.includes(key)) return `<li><a class="stats-row" href="/${key}" data-route="${key}">${inner}${arrow}</a></li>`;
-    if (key === "my-stats") return `<li><a class="stats-row" href="/my-stats" data-my-stats>${inner}${arrow}</a></li>`;
-    if (key === "players") return `<li><button class="stats-row" type="button" data-find>${inner}${arrow}</button></li>`;
+    if (key === "profile") return `<li><a class="stats-row" href="/profile" data-my-stats>${inner}${arrow}</a></li>`;
     return `<li><div class="stats-row">${inner}</div></li>`;
   }
   // Each section's name, from the words the site already uses for it where it has them
   const STAT_NAMES = { home: "visits.home", courses: "courses.title", leaderboards: "nav.leaderboards", submit: "nav.submit", runs: "pl.runs",
-    players: "visits.players", stats: "stats.title", "my-stats": "me.button", features: "run.title", faq: "faq.title", "source-code": "src.title", translations: "tr.title" };
+    profile: "visits.profile", stats: "stats.title", features: "run.title", faq: "faq.title", "source-code": "src.title", translations: "tr.title" };
   // Which days a button covers: "Today", "Last 7 days", … for today, and "2026-11-05", "2026-10-30 to 2026-11-05", …
   // before, from the first day it covers (see statSpan) to the day picked
   function statLabel(range, days, pick, today) {
@@ -7083,10 +7101,11 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   const RUN_GROUPS = ["pending", "runs", "declined", "removed"];
   // The page of a run whose link someone opened (/runs/<id>, or an old /submit?check=<id>)
   const startRun = (/^\/runs\/([\w-]{1,16})\/?$/i.exec(location.pathname) || [])[1] || (/^[\w-]{1,16}$/.test(checkParam) ? checkParam : "");
-  // The player whose link someone opened (/players/<number or name>, or /players/<…>/runs, see playerPath). Who that
+  // The player whose link someone opened (/profile/<number or name>, or /profile/<…>/runs, see playerPath, or the same
+  // with /players/ from before November 2026). Who that
   // is waits for links.json (see "Players' own links").
   const startPlayer = (() => {
-    try { const m = /^\/players\/([^/]+)(\/runs)?\/?$/i.exec(location.pathname); return m ? { seg: decodeURIComponent(m[1]), runs: !!m[2] } : null; } catch (e) { return null; }
+    try { const m = /^\/(?:profile|players)\/([^/]+)(\/runs)?\/?$/i.exec(location.pathname); return m ? { seg: decodeURIComponent(m[1]), runs: !!m[2] } : null; } catch (e) { return null; }
   })();
   let runId = ""; // the run whose page is open
   let runBack = null; // the address from before it opened, to go back to
@@ -7711,7 +7730,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // The address follows the section on screen (/faq, /features, …), and is / at the very top. It replaces the
   // current entry rather than adding one, so Back still leaves the page instead of stepping through sections.
   // A link someone opened (ballkour.com/faq) keeps its address until they scroll or click themselves.
-  // ballkour.com/my-stats stays too, until My profile opens (once the page knows whether they're signed in)
+  // ballkour.com/profile stays too, until My profile opens (once the page knows whether they're signed in)
   let addressHeld = !!startRoute || !!startRun || !!startPlayer || (startStats && loginOn);
   ["wheel", "touchstart", "keydown", "mousedown"].forEach((ev) => addEventListener(ev, () => { addressHeld = false; }, { passive: true }));
   // Opening a board or an answer puts its link in the address straight away, wherever the page is scrolled to, and

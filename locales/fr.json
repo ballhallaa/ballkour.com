@@ -433,6 +433,7 @@
   "visits.top": "Les plus vues",
   "visits.home": "Haut de la page",
   "visits.players": "Joueurs",
+  "visits.profile": "Profils",
   "visits.other": "Autre",
   "visits.note": "Comptées par le site lui-même chaque fois que quelqu’un l’ouvre dans un navigateur. La plupart des bots ne comptent pas. Chaque personne compte une fois par jour, sans que le site garde qui elle est.",
   "stats.title": "Statistiques",
