@@ -1161,7 +1161,7 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .sub-runs { margin: 0 18px 16px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255, 255, 255, .02); }
 .sub-runs .rev-title .icon { color: var(--volt); }
 .sub-runs .rev-count { background: rgba(0, 230, 151, .12); color: var(--volt); }
-/* Stats, at the very bottom: which days (a day, or the 7 or 30 days up to it), then Runs and Page views, each with a
+/* Stats, at the very bottom: which days (a day, or the 7 or 30 days or 3, 6, or 12 months up to it), then Runs and Page views, each with a
    bar for every day that picks it, and its numbers for those days */
 /* The month menu, in Stats' header where Find a player is in Courses': a button like the course picker's that opens a
    menu like the languages', newest month first, scrolling once there are more than fit */
@@ -2139,6 +2139,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "visits.today": "Today",
   "visits.week": "Last 7 days",
   "visits.month": "Last 30 days",
+  "visits.months3": "Last 3 months",
+  "visits.months6": "Last 6 months",
+  "visits.months12": "Last 12 months",
   "visits.title": "Page views",
   "visits.day": "{date}: {views} views, {people} people",
   "visits.top": "Most viewed",
@@ -5873,13 +5876,14 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   const checkParam = (() => { try { return new URLSearchParams(location.search).get("check") || ""; } catch (e) { return ""; } })();
   /* ---------- Stats ----------
      At the very bottom of the page, for everyone: Runs and Page views, on a day picked in the history, or over the 7
-     or 30 days up to it (the buttons at the top, the 30 days to start with). Each part has a bar for every day, 30 at
-     a time, and a click on one picks its day, as do the arrows beside them (and ←, →, Home, End, Page Up and Page Down
-     on a bar). Past either end, the 30 days on show slide along with the day picked. The month menu in the header
+     or 30 days or the 3, 6, or 12 months up to it (the buttons at the top, the 30 days to start with). Each part has a
+     bar for every day, 30 at a time, and a click on one picks its day, as do the arrows beside them (and ←, →, Home,
+     End, Page Up and Page Down on a bar). Past either end, the 30 days on show slide along with the day picked. The month menu in the header
      jumps to a month (see statMonthPicker), and each box and row under Runs opens what makes up its number (see "What a
      number in Stats is made of"). While Stats is on screen, the
      address says what's picked, so the link shows the same: /stats (today, and the 30 days up to it), /stats/2026-11-05
-     (that day), and /day or /week after either for just that day or the 7 days up to it. Days are UTC days.
+     (that day), and /day, /week, /3-months, /6-months, or /12-months after either for just that day or the days up to
+     it. Days are UTC days.
      Page views come from the Worker, which counts them (see "Page views" in cloudflare/worker.js), as the page opens,
      so they're in before anyone scrolls down to them:
        GET /api/visits → { since: "YYYY-MM-DD", days: [{ day, views, people, sections: { home: [views, people], … } }, …] }
@@ -5888,8 +5892,11 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      them, and shows "—" when none of the days picked do.
      Each person counts once a day, so over a week someone who came on three days counts three times.
      The runs' numbers are worked out here, from the same files as the boards (see runStatsNow). */
-  const STATS_LINK = /^\/stats(?:\/(\d{4}-\d{2}-\d{2}))?(?:\/(day|week))?\/?$/i;
-  const STAT_RANGES = { day: 1, week: 7, month: 30 };
+  const STATS_LINK = /^\/stats(?:\/(\d{4}-\d{2}-\d{2}))?(?:\/(day|week|3-months|6-months|12-months))?\/?$/i;
+  // Each button's days: that many up to the day picked, or months (from the day after the same date that many months
+  // before: 2026-08-11 to 2026-11-10, or all of March to May for 2026-05-31), and what it says when that's today
+  const STAT_RANGES = { day: { days: 1, today: "visits.today" }, week: { days: 7, today: "visits.week" }, month: { days: 30, today: "visits.month" },
+    "3-months": { months: 3, today: "visits.months3" }, "6-months": { months: 6, today: "visits.months6" }, "12-months": { months: 12, today: "visits.months12" } };
   const statNum = (v) => Math.round(Number(v) || 0).toLocaleString(htmlLang());
   // "+12" or "−3", rounded first so a tiny drop shows as +0, not −0
   const statChange = (v) => { const r = Math.round(Number(v) || 0); return `${r < 0 ? "−" : "+"}${statNum(Math.abs(r))}`; };
@@ -5902,6 +5909,17 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   const DAY = /^\d{4}-\d{2}-\d{2}$/;
   const utcDay = (ms) => new Date(ms).toISOString().slice(0, 10);
   const dayAfter = (d, by = 1) => utcDay(Date.parse(`${d}T00:00:00Z`) + by * 864e5);
+  // The same date k months before d, or that month's last day when it's shorter (2026-05-31 → 2026-02-28 for 3)
+  const monthsBefore = (d, k) => {
+    const [y, m, day] = d.split("-").map(Number);
+    return utcDay(Date.UTC(y, m - 1 - k, Math.min(day, new Date(Date.UTC(y, m - k, 0)).getUTCDate())));
+  };
+  // The days a range covers, up to the day picked (fewer at the very start of the history)
+  function statSpan(range, days, pick) {
+    const r = STAT_RANGES[range];
+    const from = r.months ? Math.max(0, days.indexOf(dayAfter(monthsBefore(days[pick], r.months)))) : Math.max(0, pick - r.days + 1);
+    return days.slice(from, pick + 1);
+  }
   /* The month menu, in Stats' header: every month in the history, newest first, named in the site's language with the
      years the rest of the site uses ("October 2026", "ตุลาคม 2026" rather than Thai's 2569), and a capital first letter
      like the other menus' options ("Octubre de 2026"). Picking one picks its last day (today for this month) and puts
@@ -6093,10 +6111,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   const STAT_NAMES = { home: "visits.home", courses: "courses.title", leaderboards: "nav.leaderboards", submit: "nav.submit", runs: "pl.runs",
     players: "visits.players", stats: "stats.title", "my-stats": "me.button", features: "run.title", faq: "faq.title", "source-code": "src.title", translations: "tr.title" };
   // Which days a button covers: "Today", "Last 7 days", … for today, and "2026-11-05", "2026-10-30 to 2026-11-05", …
-  // before, from the first day it covers (fewer than 7 or 30 at the very start of the history) to the day picked
+  // before, from the first day it covers (see statSpan) to the day picked
   function statLabel(range, days, pick, today) {
-    if (today) return t(range === "day" ? "visits.today" : range === "week" ? "visits.week" : "visits.month");
-    const from = days[Math.max(0, pick - STAT_RANGES[range] + 1)], to = days[pick];
+    if (today) return t(STAT_RANGES[range].today);
+    const span = statSpan(range, days, pick), from = span[0], to = days[pick];
     return from === to ? to : t("stats.fromTo", { from, to });
   }
   function renderStats() {
@@ -6108,7 +6126,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const n = statNum, change = statChange;
     const day = days[pick];
     const today = pick === last;
-    const span = days.slice(Math.max(0, pick - STAT_RANGES[statRange] + 1), pick + 1);
+    const span = statSpan(statRange, days, pick);
     // A box, which opens what makes up its number with list (see STAT_LISTS)
     const tile = (key, value, ico, list) => {
       const tag = list ? "button" : "div";
@@ -6284,7 +6302,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (!rs || !STAT_LISTS[kind]) return null;
     const { days, last, pick } = statPick();
     const day = days[pick], today = pick === last;
-    const span = days.slice(Math.max(0, pick - STAT_RANGES[statRange] + 1), pick + 1);
+    const span = statSpan(statRange, days, pick);
     const range = statLabel(statRange, days, pick, today);
     const each = (k) => span.flatMap((d) => (rs.per.get(d) || {})[k] || []);
     const when = (x) => String(x.run.sentAt || formatDate(x.run.date) || "");
