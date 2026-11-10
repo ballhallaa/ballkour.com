@@ -201,7 +201,7 @@ Both are kept in `links.json` on the game repo's `leaderboard-data` branch, one 
 }
 ```
 
-It's at the top of the branch, not in `leaderboards/`, so that a player changing their name doesn't start the leaderboard bot (its workflow there runs on every change to `leaderboards/**`). The Worker gives out numbers every half hour, at :15 and :45 (the second cron in `wrangler.toml`), to everyone with runs who doesn't have one yet, and right away to a player who picks a name. Until then, a new player's link is `/players/<Discord ID>`, which opens their panel too. `"last"` is the highest number given out, so a number is never used twice, even if someone's line is deleted. To take a name off by hand, delete its `"link"`.
+It's at the top of the branch, not in `leaderboards/`, so that a player changing their name doesn't start the leaderboard bot (its workflow there runs on every change to `leaderboards/**`). The Worker gives out numbers every half hour, at :15 and :45 (the second cron in `wrangler.toml`), to everyone with runs who doesn't have one yet, and right away to a player who picks a name. Until then, a new player's link is `/profile/<Discord ID>`, which opens their panel too. `"last"` is the highest number given out, so a number is never used twice, even if someone's line is deleted. To take a name off by hand, delete its `"link"`.
 
 Old links keep working: `/profile/<Discord ID>` and `/profile/<in-game name>` (or with `/players/`) still open the panel, and the address then switches to the player's number or name. A number nobody has opens Find a player.
 
