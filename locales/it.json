@@ -432,7 +432,6 @@
   "visits.day": "{date}: {views} visualizzazioni, {people} persone",
   "visits.top": "Le più viste",
   "visits.home": "Inizio della pagina",
-  "visits.players": "Giocatori",
   "visits.profile": "Profili",
   "visits.other": "Altro",
   "visits.note": "Contate dal sito stesso ogni volta che qualcuno lo apre in un browser. La maggior parte dei bot non conta. Ogni persona conta una volta al giorno, senza che il sito tenga chi è.",

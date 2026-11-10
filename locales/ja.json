@@ -432,7 +432,6 @@
   "visits.day": "{date}：{views}ビュー、{people}人",
   "visits.top": "よく見られている場所",
   "visits.home": "ページの先頭",
-  "visits.players": "プレイヤー",
   "visits.profile": "プロフィール",
   "visits.other": "その他",
   "visits.note": "ブラウザでサイトが開かれるたびにサイト自身が数えます。ほとんどのボットは数えません。同じ人は1日1回だけ数え、誰なのかは保存しません。",
