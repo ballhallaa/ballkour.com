@@ -917,6 +917,9 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl:has(.pl-signin) { padding-bottom: 0; }
 .pl-eyebrow { margin: 0 0 7px; display: flex; align-items: center; gap: 6px; font: 600 11px/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--volt); }
 .pl-eyebrow .icon { width: 13px; height: 13px; }
+/* A run's course over its player's name, and on its row in what the run did (on its page and after it's sent), goes
+   to the course's board, like the course in the lines over that row */
+.pl-eyebrow a, .res-label a { color: var(--volt); text-underline-offset: 3px; }
 .pl-lead { margin: 8px 0 0; font: 400 15px/1.45 var(--body); color: var(--ink-2); }
 .pl-signin { padding: 0 18px; }
 /* The site and Discord, joined */
@@ -6864,8 +6867,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       try { list = new Intl.ListFormat(htmlLang(), { style: "long", type: "conjunction" }).format(s.passed); } catch (e) { /* plain commas */ }
       names = esc(t(they ? "run.passed" : "res.passed", { names: list }));
     }
-    // The course
-    let html = `<div class="res-rows">` + resRow({ html: `${c.n} ${flagName(c)}` },
+    // The course, which goes to its board
+    let html = `<div class="res-rows">` + resRow({ html: `<a href="/leaderboards/${c.n}" data-board="${c.n}">${esc(`${c.n} `)}${flagName(c)}</a>` },
       (s.was && s.was !== s.place ? was(`#${s.was}`) : "") + esc(`#${s.place} · ${run.time}`),
       deltaHtml(s.was ? s.was - s.place : null, String(s.was - s.place)),
       esc(faster) + (names ? `<span class="res-passed">${names}</span>` : ""));
@@ -7337,7 +7340,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const c = course(x.n);
     const run = cleanRun(x.run);
     pl.innerHTML = statBackHtml() + `<div class="pl-head"><div class="pl-who">` +
-        `<p class="pl-eyebrow">${icon("play")}<span class="nowrap">${esc(`${c.n} `)}${flagName(c)}</span></p>` +
+        `<p class="pl-eyebrow">${icon("play")}<a class="nowrap" href="/leaderboards/${c.n}" data-board="${c.n}">${esc(`${c.n} `)}${flagName(c)}</a></p>` +
         `<h2 class="pl-name is-name" id="pl-name"><button class="run-name" type="button" data-run-player="${esc(playerKey(run))}" title="${esc(t("lb.playerOpen", { player: run.name }))}">${esc(caps(run.name))}</button></h2>` +
         `<div class="run-tags" id="run-tags"></div></div>${close}</div>` +
       `<div class="run-facts"><span class="stat time">${icon("bolt")}<span>${esc(run.time)}</span></span>` +
@@ -7352,19 +7355,21 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     renderRunCheck();
     renderRunStats();
   }
-  // How many runs its player has on its course and on every course, and its buttons to the board ("See it on the
-  // board" once it's been on one). They follow the boards, so they're drawn again when the boards change, but only
-  // when something in them did, so a button in focus keeps it.
+  // How many runs its player has on its course and on every course, each opening their panel at those runs (once there
+  // are any), and its buttons to the board ("See it on the board" once it's been on one). They follow the boards, so
+  // they're drawn again when the boards change, but only when something in them did, so a button in focus keeps it.
   const runDrawn = new WeakMap();
   function renderRunBoards() {
     const counts = runId && pl.open ? $("#run-counts", pl) : null;
     const x = counts && sentRun(runId);
     if (!x) return;
     const c = course(x.n);
-    const key = playerKey(cleanRun(x.run));
+    const run = cleanRun(x.run);
+    const key = playerKey(run);
     const put = (el, html) => { if (runDrawn.get(el) !== html) { runDrawn.set(el, html); el.innerHTML = html; } };
-    put(counts, statTile(t("pl.courseRuns"), `${icon("notes")}${esc(localNum(runCount(key, c.n)))}`) +
-      statTile(t("pl.allRuns"), `${icon("notes")}${esc(localNum(runCount(key)))}`));
+    const here = runCount(key, c.n), all = runCount(key);
+    put(counts, statTile(t("pl.courseRuns"), `${icon("notes")}${esc(localNum(here))}`, here ? { attrs: `data-run-runs="course"` } : null) +
+      statTile(t("pl.allRuns"), `${icon("notes")}${esc(localNum(all))}`, all ? { attrs: `data-run-runs="all" title="${esc(t("lb.playerOpen", { player: run.name }))}"` } : null));
     put($("#run-foot", pl), (boardSpot(x) ? `<a class="btn btn-sm" href="/leaderboards/${c.n}" data-board="${c.n}" data-board-run>${icon("eye")}<span>${esc(t("run.onBoard"))}</span></a>` : "") +
       `<a class="btn btn-sm" href="/leaderboards/${c.n}" data-board="${c.n}">${icon("trophy")}<span>${esc(t("run.today"))}</span></a>` +
       `<a class="btn btn-sm" href="/runs" data-route="runs">${icon("notes")}<span>${esc(t("run.all"))}</span></a>`);
@@ -7445,7 +7450,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       const why = `<p class="run-note">${withCourse(which === "then" ? "run.slowerThen" : "run.slowerNow", { time: s.best, rank: s.place })}</p>`;
       if (!s.alone) return why;
       return why + `<p class="run-stats-title run-alone">${esc(t("run.alone"))}</p><div class="res-rows">` +
-        resRow({ html: `${c.n} ${flagName(c)}` }, esc(`#${s.alone.place} · ${run.time}`), "", esc(slowerThan(run, s.best, true))) +
+        resRow({ html: where.replace(' class="nowrap"', "") }, esc(`#${s.alone.place} · ${run.time}`), "", esc(slowerThan(run, s.best, true))) +
         (s.alone.points !== null ? resRow(t("res.course"), esc(points(s.alone.points)), "") : "") + `</div>`;
     }
     const held = x.status === "pending";
@@ -7539,11 +7544,20 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       f.focus();
       return;
     }
-    // Their name opens their player panel in its place, at the run's course
+    // Their name opens their player panel in its place, at the run's course, and so does Runs on this course. Runs on
+    // all courses opens it on Runs, every run of theirs on one list.
     const who = e.target.closest("[data-run-player]");
     if (who) {
       const x = sentRun(runId);
       openPlayer(who.dataset.runPlayer, x ? x.n : 0);
+      return;
+    }
+    const runs = e.target.closest("[data-run-runs]");
+    const x = runs && sentRun(runId);
+    if (x) {
+      const all = runs.dataset.runRuns === "all";
+      openPlayer(playerKey(cleanRun(x.run)), all ? 0 : x.n, all ? "runs" : "courses");
+      if (all) { const back = pl.querySelector("[data-pl-back]"); if (back) back.focus(); }
     }
   });
   document.addEventListener("click", (e) => {
