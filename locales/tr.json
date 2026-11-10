@@ -432,7 +432,6 @@
   "visits.day": "{date}: {views} görüntüleme, {people} kişi",
   "visits.top": "En çok görüntülenen",
   "visits.home": "Sayfanın başı",
-  "visits.players": "Oyuncular",
   "visits.profile": "Profiller",
   "visits.other": "Diğer",
   "visits.note": "Biri siteyi bir tarayıcıda her açtığında site kendisi sayar. Çoğu bot sayılmaz. Her kişi günde bir kez sayılır ve site kim olduğunu saklamaz.",
