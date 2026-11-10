@@ -21,7 +21,8 @@
                        it in the run submissions channel links here. See "Each run's page".
    /my-stats           The home page, which opens My profile: the visitor's own player panel (signing them in first).
    /stats/<…>          The home page, at Stats: page views and runs for a day picked in the history (/stats/2026-11-05,
-                       and /day or /week for that day alone or the 7 days up to it). See "Page views".
+                       and /day, /week, /3-months, /6-months, or /12-months for that day alone or the days up to
+                       it). See "Page views".
    /players/<…>        The home page, which opens a player's panel: by their number, or the name they picked for their
                        link. See "Players' own links".
    /api/visits         How many times the site was opened, and by how many people, for Stats. See "Page views".
@@ -2149,10 +2150,10 @@ function previewOf(pathname, data, players) {
 // The sections (/submit, /faq, …) and the links into them (/leaderboards/6, /leaderboards/3/legacy, /leaderboards/3/12
 // for one of its older boards, /faq/pausing), and every run sent from the website (/runs, the list under the form)
 // and each one's page (/runs/<id>), /my-stats (My profile), Stats for a day picked in its history (/stats/2026-11-05,
-// /stats/2026-11-05/week, /stats/day), and each player's panel (/players/<number or name>, see "Players' own links",
+// /stats/2026-11-05/week, /stats/day, /stats/3-months), and each player's panel (/players/<number or name>, see "Players' own links",
 // and /players/<…>/runs for their Runs), are the home page. On ballkour.com a Cloudflare rule already serves the
 // sections that way, but the test copy on workers.dev has no such rule, so the Worker does it too.
-const DEEP_LINK = /^\/(?:(?:courses|leaderboards|submit|features|faq|source-code|translations|runs|stats|my-stats)\/?|leaderboards\/[\w-]+(?:\/legacy|\/\d+)?\/?|faq\/[\w-]+\/?|runs\/[\w-]+\/?|stats(?:\/\d{4}-\d{2}-\d{2})?(?:\/(?:day|week))?\/?|players\/[^/]{1,300}(?:\/runs)?\/?)$/i;
+const DEEP_LINK = /^\/(?:(?:courses|leaderboards|submit|features|faq|source-code|translations|runs|stats|my-stats)\/?|leaderboards\/[\w-]+(?:\/legacy|\/\d+)?\/?|faq\/[\w-]+\/?|runs\/[\w-]+\/?|stats(?:\/\d{4}-\d{2}-\d{2})?(?:\/(?:day|week|3-months|6-months|12-months))?\/?|players\/[^/]{1,300}(?:\/runs)?\/?)$/i;
 async function page(request, env, ctx) {
   // Ask for the full page every time (no 304 Not Modified), so a browser never reuses old data from its cache
   const headers = new Headers(request.headers);
