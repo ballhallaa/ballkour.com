@@ -455,7 +455,7 @@
   "stats.changeCourse": "Variazione del punteggio dei percorsi",
   "stats.busiest": "Più run",
   "stats.since": "Vengono contate dal {date}.",
-  "stats.runsNote": "I giorni vanno da mezzanotte a mezzanotte UTC. Il punteggio guadagnato somma quanto ogni run ha aggiunto al punteggio del suo giocatore, come il numero tra parentesi accanto a una run nelle classifiche. Le due variazioni indicano di quanto i totali sono saliti o scesi nei giorni scelti, quindi contano anche quello che perdono gli altri giocatori quando qualcuno batte un record.",
+  "stats.runsNote": "I giorni vanno da mezzanotte a mezzanotte UTC. Il punteggio guadagnato somma di quanto ogni run ha alzato il punteggio del suo giocatore: il numero tra parentesi accanto alla run nelle classifiche. Le due variazioni indicano di quanto i totali sono saliti o scesi nei giorni scelti, quindi contano anche quello che perdono gli altri giocatori quando qualcuno batte un record.",
   "foot.openDiscord": "Apri su Discord",
   "link.title": "Il tuo link:",
   "link.yours": "<b>Il tuo link:</b> {link}",

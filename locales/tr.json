@@ -455,7 +455,7 @@
   "stats.changeCourse": "Parkur puanındaki değişim",
   "stats.busiest": "En çok koşu",
   "stats.since": "{date} tarihinden beri sayılıyor.",
-  "stats.runsNote": "Günler UTC’ye göre gece yarısından gece yarısına kadardır. Kazanılan puan, her koşunun oyuncusunun puanına eklediklerini toplar; tablolarda bir koşunun yanındaki parantez içindeki sayı gibi. İki değişim, toplamların seçilen günlerde ne kadar arttığını ya da azaldığını gösterir; bu yüzden biri bir rekor kırdığında diğer oyuncuların kaybettiklerini de sayar.",
+  "stats.runsNote": "Günler UTC’ye göre gece yarısından gece yarısına kadardır. Kazanılan puan, her koşunun oyuncusunun puanını ne kadar artırdığını toplar: tablolarda koşunun yanındaki parantez içindeki sayı. İki değişim, toplamların seçilen günlerde ne kadar arttığını ya da azaldığını gösterir; bu yüzden biri bir rekor kırdığında diğer oyuncuların kaybettiklerini de sayar.",
   "foot.openDiscord": "Discord’da aç",
   "link.title": "Bağlantın:",
   "link.yours": "<b>Bağlantın:</b> {link}",

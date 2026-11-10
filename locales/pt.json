@@ -455,7 +455,7 @@
   "stats.changeCourse": "Variação da pontuação de percurso",
   "stats.busiest": "Mais corridas",
   "stats.since": "Elas são contadas desde {date}.",
-  "stats.runsNote": "Os dias vão de meia-noite a meia-noite UTC. A pontuação ganha soma o que cada corrida acrescentou à pontuação do seu jogador, como o número entre parênteses ao lado de uma corrida nas classificações. As duas variações mostram quanto os totais subiram ou desceram nos dias escolhidos, por isso também contam o que os outros jogadores perdem quando alguém bate um recorde.",
+  "stats.runsNote": "Os dias vão de meia-noite a meia-noite UTC. A pontuação ganha soma quanto cada corrida subiu a pontuação do seu jogador: o número entre parênteses ao lado dela nas classificações. As duas variações mostram quanto os totais subiram ou desceram nos dias escolhidos, por isso também contam o que os outros jogadores perdem quando alguém bate um recorde.",
   "foot.openDiscord": "Abrir no Discord",
   "link.title": "Seu link:",
   "link.yours": "<b>Seu link:</b> {link}",
