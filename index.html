@@ -5888,8 +5888,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      so they're in before anyone scrolls down to them:
        GET /api/visits → { since: "YYYY-MM-DD", days: [{ day, views, people, sections: { home: [views, people], … } }, …] }
      oldest first. since is the first day counted: days picked from before it show "—", and a line says since when.
-     A section's people is null on days from before they were counted (November 2026): it adds up the days that have
-     them, and shows "—" when none of the days picked do.
+     A section's people is null on days from before they were counted (the Worker shows none of those days now: see
+     FIRST_VIEW_DAY in cloudflare/worker.js): it shows "—" when any of the days picked has views for it but no people,
+     rather than adding up only some of the days next to all of their views.
      Each person counts once a day, so over a week someone who came on three days counts three times.
      The runs' numbers are worked out here, from the same files as the boards (see runStatsNow). */
   const STATS_LINK = /^\/stats(?:\/(\d{4}-\d{2}-\d{2}))?(?:\/(day|week|3-months|6-months|12-months))?\/?$/i;
@@ -6201,16 +6202,15 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (visits) {
       const byDay = new Map(visits.days.map((d) => [d.day, d]));
       const v = (d) => byDay.get(d) || { views: 0, people: 0, sections: {} };
-      // Each section over the days picked, most viewed first. People: once a day each, added up
+      // Each section over the days picked, most viewed first. People: once a day each, added up, or unknown (missing)
+      // when a day with views for it has no people
       const sections = new Map();
       span.forEach((d) => Object.entries(v(d).sections || {}).forEach(([key, x]) => {
         const [views, people] = Array.isArray(x) ? x : [0, null];
-        const s = sections.get(key) || { views: 0, people: 0, known: false };
+        const s = sections.get(key) || { views: 0, people: 0, missing: false };
         s.views += Number(views) || 0;
-        if (people !== null && people !== undefined) {
-          s.known = true;
-          s.people += Number(people) || 0;
-        }
+        if (people !== null && people !== undefined) s.people += Number(people) || 0;
+        else if (Number(views)) s.missing = true;
         sections.set(key, s);
       }));
       const top = [...sections].filter(([, x]) => x.views > 0).sort((a, b) => b[1].views - a[1].views || b[1].people - a[1].people).slice(0, 6);
@@ -6225,7 +6225,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         // readers, which read the row as one link.
         (top.length ? `<ul class="stats-rows stats-cols" aria-label="${esc(t("visits.top"))}">` +
           `<li class="stats-cols-head" aria-hidden="true"><span>${esc(t("visits.top"))}</span><span>${esc(t("stats.people"))}</span><span>${esc(t("stats.views"))}</span></li>` +
-          top.map(([key, x]) => statSectionRow(key, `<span class="num soft"><span class="sr-only">${esc(t("stats.people"))} </span>${x.known ? esc(n(x.people)) : "—"}</span>` +
+          top.map(([key, x]) => statSectionRow(key, `<span class="num soft"><span class="sr-only">${esc(t("stats.people"))} </span>${x.missing ? "—" : esc(n(x.people))}</span>` +
             `<span class="num"><span class="sr-only">${esc(t("stats.views"))} </span>${esc(n(x.views))}</span>`)).join("") +
           `</ul>` : "") +
         `<p class="rev-note">${esc(t("visits.note"))}${span[0] < since ? ` ${esc(t("stats.since", { date: since }))}` : ""}</p></div>`;
