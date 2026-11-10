@@ -46,7 +46,9 @@ simple = { limit = 5, period = 60 }
 # Stats on players' Discord profiles (see "Stats on Discord profiles" in worker.js): the Discord tokens of everyone who
 # turned them on, and what was last sent to their profile. Without it, the button for it doesn't show. It also keeps
 # what each run sent from the website did when it was sent (run:<id>, see "Each run's page"), which its page shows
-# beside today's numbers; without it, the page has just today's. Made once with
+# beside today's numbers; without it, the page has just today's. And a top 10 run's post in the run submissions channel
+# (post:<id>), until a moderator checks the run and the post changes to say so; without it, the post stays yellow.
+# Made once with
 #   npx wrangler kv namespace create PROFILES
 # which prints the id to put here.
 [[kv_namespaces]]
