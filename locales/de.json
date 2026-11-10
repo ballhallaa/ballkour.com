@@ -458,7 +458,7 @@
   "stats.changeCourse": "Änderung der Streckenwertung",
   "stats.busiest": "Meiste Läufe",
   "stats.since": "Sie werden seit dem {date} gezählt.",
-  "stats.runsNote": "Ein Tag geht von Mitternacht bis Mitternacht UTC. Die gewonnene Wertung zählt zusammen, was jeder Lauf zur Wertung seines Spielers beigetragen hat, wie die Zahl in Klammern neben einem Lauf auf den Listen. Die beiden Änderungen zeigen, wie weit die Gesamtwerte in den gewählten Tagen gestiegen oder gesunken sind, und zählen deshalb auch, was andere Spieler verlieren, wenn jemand einen Rekord bricht.",
+  "stats.runsNote": "Ein Tag geht von Mitternacht bis Mitternacht UTC. Die gewonnene Wertung zählt zusammen, wie viel jeder Lauf die Wertung seines Spielers erhöht hat: die Zahl in Klammern neben ihm auf den Listen. Die beiden Änderungen zeigen, wie weit die Gesamtwerte in den gewählten Tagen gestiegen oder gesunken sind, und zählen deshalb auch, was andere Spieler verlieren, wenn jemand einen Rekord bricht.",
   "foot.openDiscord": "Auf Discord öffnen",
   "link.title": "Dein Link:",
   "link.yours": "<b>Dein Link:</b> {link}",

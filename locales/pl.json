@@ -458,7 +458,7 @@
   "stats.changeCourse": "Zmiana rankingu tras",
   "stats.busiest": "Najwięcej przejść",
   "stats.since": "Są liczone od {date}.",
-  "stats.runsNote": "Dzień trwa od północy do północy UTC. Zdobyty ranking sumuje to, co każde przejście dodało do rankingu swojego gracza, jak liczba w nawiasie obok przejścia na tablicach. Obie zmiany pokazują, o ile sumy wzrosły lub spadły w wybranych dniach, więc liczą też to, co tracą inni gracze, gdy ktoś pobije rekord.",
+  "stats.runsNote": "Dzień trwa od północy do północy UTC. Zdobyty ranking sumuje, o ile każde przejście podniosło ranking swojego gracza: to liczba w nawiasie obok niego na tablicach. Obie zmiany pokazują, o ile sumy wzrosły lub spadły w wybranych dniach, więc liczą też to, co tracą inni gracze, gdy ktoś pobije rekord.",
   "foot.openDiscord": "Otwórz na Discordzie",
   "link.title": "Twój link:",
   "link.yours": "<b>Twój link:</b> {link}",

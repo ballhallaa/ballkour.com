@@ -458,7 +458,7 @@
   "stats.changeCourse": "Variation du score de parcours",
   "stats.busiest": "Le plus de parties",
   "stats.since": "Elles sont comptées depuis le {date}.",
-  "stats.runsNote": "Les jours vont de minuit à minuit UTC. Le score gagné additionne ce que chaque partie a ajouté au score de son joueur, comme le nombre entre parenthèses à côté d’une partie dans les classements. Les deux variations indiquent de combien les totaux ont monté ou baissé sur les jours choisis, donc elles comptent aussi ce que perdent les autres joueurs quand quelqu’un bat un record.",
+  "stats.runsNote": "Les jours vont de minuit à minuit UTC. Le score gagné additionne de combien chaque partie a fait monter le score de son joueur : le nombre entre parenthèses à côté d’elle dans les classements. Les deux variations indiquent de combien les totaux ont monté ou baissé sur les jours choisis, donc elles comptent aussi ce que perdent les autres joueurs quand quelqu’un bat un record.",
   "foot.openDiscord": "Ouvrir sur Discord",
   "link.title": "Votre lien :",
   "link.yours": "<b>Votre lien :</b> {link}",
