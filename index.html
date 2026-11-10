@@ -1166,8 +1166,11 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .sub-runs .rev-count { background: rgba(0, 230, 151, .12); color: var(--volt); }
 /* Stats, at the very bottom: which days (a day, or the 7 or 30 days or 3, 6, or 12 months up to it), then Runs and Page views, each with a
    bar for every day that picks it, and its numbers for those days */
-/* The month menu, in Stats' header where Find a player is in Courses': a button like the course picker's that opens a
-   menu like the languages', newest month first, scrolling once there are more than fit */
+/* Runs' and Page views' headings, each with the month menu at its end, so it's there on a phone without going back up
+   to the top of Stats: a button like the course picker's that opens a menu like the languages', newest month first,
+   scrolling once there are more than fit */
+.stats-head { display: flex; align-items: center; gap: 10px; padding: 12px 18px 0; }
+.stats-head .src-group { padding: 0; }
 .stats-month-wrap { position: relative; margin-inline-start: auto; }
 .stats-month { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 8px 0 11px; border: 1px solid var(--line-hi); border-radius: 9px; background: rgba(0, 0, 0, .25); color: var(--ink); font: 500 14px/1 var(--body); cursor: pointer; transition: border-color .15s; }
 .stats-month:hover, .stats-month[aria-expanded="true"] { border-color: var(--volt); }
@@ -1866,14 +1869,6 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     <section class="panel" id="stats" aria-labelledby="stats-title">
       <div class="panel-head">
         <h2 class="panel-title" id="stats-title"><svg class="icon" aria-hidden="true"><use href="#i-stats"/></svg><span data-i18n="stats.title">Stats</span></h2>
-        <div class="stats-month-wrap" id="stats-month-wrap" hidden>
-          <span class="sr-only" id="stats-month-label" data-i18n="stats.month">Month</span>
-          <button class="stats-month" id="stats-month" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="stats-month-menu" aria-labelledby="stats-month-label stats-month-current">
-            <span class="stats-month-current" id="stats-month-current"></span>
-            <svg class="icon chev" aria-hidden="true"><use href="#i-chev"/></svg>
-          </button>
-          <ul class="menu stats-month-menu" id="stats-month-menu" role="listbox" tabindex="-1" aria-labelledby="stats-month-label" hidden></ul>
-        </div>
       </div>
       <div id="stats-body"></div>
     </section>
@@ -2153,6 +2148,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "visits.other": "Other",
   "visits.note": "Counted by the site itself each time someone opens it in a browser. Most bots don’t count. Each person counts once a day, without the site keeping who they are.",
   "stats.fromTo": "{from} to {to}",
+  "stats.month": "Month",
   "stats.none": "None for the days picked.",
   "stats.backTo": "Back to {list}",
   "stats.prevDay": "Day before",
@@ -5881,8 +5877,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      At the very bottom of the page, for everyone: Runs and Page views, on a day picked in the history, or over the 7
      or 30 days or the 3, 6, or 12 months up to it (the buttons at the top, the 30 days to start with). Each part has a
      bar for every day, 30 at a time, and a click on one picks its day, as do the arrows beside them (and ←, →, Home,
-     End, Page Up and Page Down on a bar). Past either end, the 30 days on show slide along with the day picked. The month menu in the header
-     jumps to a month (see statMonthPicker), and each box and row under Runs opens what makes up its number (see "What a
+     End, Page Up and Page Down on a bar). Past either end, the 30 days on show slide along with the day picked. The
+     month menu beside each part's heading jumps to a month (see statMonthPickers), and each box and row under Runs
+     opens what makes up its number (see "What a
      number in Stats is made of"). While Stats is on screen, the
      address says what's picked, so the link shows the same: /stats (today, and the 30 days up to it), /stats/2026-11-05
      (that day), and /day, /week, /3-months, /6-months, or /12-months after either for just that day or the days up to
@@ -5923,25 +5920,35 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const from = r.months ? Math.max(0, days.indexOf(dayAfter(monthsBefore(days[pick], r.months)))) : Math.max(0, pick - r.days + 1);
     return days.slice(from, pick + 1);
   }
-  /* The month menu, in Stats' header: every month in the history, newest first, named in the site's language with the
-     years the rest of the site uses ("October 2026", "ตุลาคม 2026" rather than Thai's 2569), and a capital first letter
-     like the other menus' options ("Octubre de 2026"). Picking one picks its last day (today for this month) and puts
-     the 30 days up to it on show. */
+  /* The month menu, beside Runs' and Page views' headings (one each, both the same): every month in the history,
+     newest first, named in the site's language with the years the rest of the site uses ("October 2026", "ตุลาคม 2026"
+     rather than Thai's 2569), and a capital first letter like the other menus' options ("Octubre de 2026"). Picking one
+     picks its last day (today for this month) and puts the 30 days up to it on show. */
   const monthName = (m) => {
     try {
       const s = new Intl.DateTimeFormat(htmlLang(), { month: "long", year: "numeric", calendar: "gregory", timeZone: "UTC" }).format(Date.parse(`${m}-01T00:00:00Z`));
       return s.charAt(0).toLocaleUpperCase(htmlLang()) + s.slice(1);
     } catch (e) { return m; }
   };
-  const statMonthPicker = makeMenu($("#stats-month-wrap"), $("#stats-month"), $("#stats-month-menu"), 1, (m) => {
+  const pickMonth = (m) => {
     const { days, last } = statPick();
     const d = days.filter((x) => x.startsWith(m)).pop();
     if (!d) return;
     statDay = d === days[last] ? "" : d;
     statEnd = d;
     statsPicked();
+  };
+  // Each is made once, so its listeners stay, and put back beside its heading each time Stats is drawn (see renderStats)
+  const statMonthPickers = ["runs", "views"].map((part) => {
+    const wrap = document.createElement("div");
+    wrap.className = "stats-month-wrap";
+    wrap.innerHTML = `<span class="sr-only" id="stats-month-label-${part}"></span>` +
+      `<button class="stats-month" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="stats-month-menu-${part}" aria-labelledby="stats-month-label-${part} stats-month-current-${part}">` +
+        `<span class="stats-month-current" id="stats-month-current-${part}"></span>${icon("chev", "icon chev")}</button>` +
+      `<ul class="menu stats-month-menu" id="stats-month-menu-${part}" role="listbox" tabindex="-1" aria-labelledby="stats-month-label-${part}" hidden></ul>`;
+    return { part, wrap, btn: $("button", wrap), menu: makeMenu(wrap, $("button", wrap), $("ul", wrap), 1, pickMonth) };
   });
-  let statMonths = ""; // the language and months the menu has, so it's only filled again when they change
+  let statMonths = ""; // the language and months the menus have, so they're only filled again when they change
   let visits = null;
   fetch("/api/visits").then((r) => (r.ok ? r.json() : null)).then((d) => {
     visits = d && Array.isArray(d.days) && d.days.length ? d : null;
@@ -6123,8 +6130,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   function renderStats() {
     const box = $("#stats-body");
     const rs = runStatsNow();
-    const monthWrap = $("#stats-month-wrap");
-    if (!visits && !rs) { box.innerHTML = ""; monthWrap.hidden = true; return; }
+    if (!visits && !rs) { box.innerHTML = ""; return; }
     const { days, last, pick, end, from } = statPick();
     const n = statNum, change = statChange;
     const day = days[pick];
@@ -6137,14 +6143,17 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         `${list ? icon("chev", "icon pl-stat-arrow") : ""}</span><span class="pl-stat-value">${icon(ico)}<span>${esc(value)}</span></span></${tag}>`;
     };
     const months = [...new Set(days.map((d) => d.slice(0, 7)))].reverse();
-    if (statMonths !== lang + months.join()) {
-      statMonths = lang + months.join();
-      statMonthPicker.fill(months.map((m) => `<li class="opt" role="option" id="stats-month-${m}" data-value="${m}" aria-selected="false">` +
+    const fill = statMonths !== lang + months.join();
+    statMonths = lang + months.join();
+    statMonthPickers.forEach((p) => {
+      if (fill) p.menu.fill(months.map((m) => `<li class="opt" role="option" id="stats-month-${p.part}-${m}" data-value="${m}" aria-selected="false">` +
         `<span class="opt-label">${esc(monthName(m))}</span>${CHECK}</li>`).join(""));
-    }
-    statMonthPicker.select(day.slice(0, 7));
-    $("#stats-month-current").textContent = monthName(day.slice(0, 7));
-    monthWrap.hidden = false;
+      p.menu.select(day.slice(0, 7));
+      $(".sr-only", p.wrap).textContent = t("stats.month");
+      $(".stats-month-current", p.wrap).textContent = monthName(day.slice(0, 7));
+    });
+    // A part's heading, with the month menu's place at its end
+    const head = (key, part) => `<div class="stats-head"><h3 class="by src-group">${esc(t(key))}</h3><span data-stat-month="${part}"></span></div>`;
     // The 30 days on show, ‹ and › beside them, each bar as tall as its share of the busiest of them
     const chart = (name, key, valueOf, labelOf) => {
       const shown = days.slice(from, end + 1);
@@ -6175,7 +6184,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         `<span class="stats-row-value">${html || `<span class="num">${esc(value)}</span>`}${icon("chev", "icon stats-row-arrow")}</span></button></li>`;
       const standing = standingAt(day, today);
       const before = standingAt(dayAfter(span[0], -1), false); // the totals the day before the days picked
-      html += `<h3 class="by src-group">${esc(t("pl.runs"))}</h3><div class="stats-part">` +
+      html += head("pl.runs", "runs") + `<div class="stats-part">` +
         `<div class="stats-tiles" style="--n: 4">${tile("runs.title", n(sent), "upload", "sent")}${tile("stats.gained", change(add("gained")), "star", "gained")}` +
         `${tile("res.top10s", n(add("top10s")), "bolt", "top10s")}${tile("res.records", n(add("records")), "trophy", "records")}</div>` +
         chart("runs", "stats.runsChart", (d) => of(d).sent || 0, (d) => t("stats.runsDay", { date: d, count: n(of(d).sent) })) +
@@ -6209,7 +6218,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       // Days from before page views were counted have none to show, rather than 0
       const since = DAY.test(visits.since || "") ? visits.since : visits.days[0].day;
       const before = day < since;
-      html += `<h3 class="by src-group">${esc(t("visits.title"))}</h3><div class="stats-part">` +
+      html += head("visits.title", "views") + `<div class="stats-part">` +
         `<div class="stats-tiles">${tile("stats.people", before ? "—" : n(sum("people")), "user")}${tile("stats.views", before ? "—" : n(sum("views")), "eye")}</div>` +
         chart("views", "stats.viewsChart", (d) => Number(v(d).views) || 0, (d) => t("visits.day", { date: d, views: n(v(d).views), people: n(v(d).people) })) +
         // Most viewed: People and Views in columns under their names. Each number also says which it is, for screen
@@ -6221,7 +6230,11 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
           `</ul>` : "") +
         `<p class="rev-note">${esc(t("visits.note"))}${span[0] < since ? ` ${esc(t("stats.since", { date: since }))}` : ""}</p></div>`;
     }
+    // The month menus go back beside their headings, keeping focus where it was on one
+    const focused = statMonthPickers.find((p) => p.wrap.contains(document.activeElement));
     box.innerHTML = html;
+    statMonthPickers.forEach((p) => { const slot = $(`[data-stat-month="${p.part}"]`, box); if (slot) slot.replaceWith(p.wrap); });
+    if (focused && focused.wrap.isConnected) focused.btn.focus({ preventScroll: true });
     renderStatList();
   }
   // Picking a day (d) from a chart ("views" or "runs"): keyboard focus goes back to the same chart's bar, or arrow
