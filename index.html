@@ -134,18 +134,10 @@ main:focus { outline: none; }
 #balls { z-index: 20; }
 .page { position: relative; z-index: 1; }
 
-/* ---------- Find a player, My profile, Reduce motion and the language picker ---------- */
-/* Four square buttons: Find a player, My profile, Reduce motion and the language. Icons only, so no language's longer
-   words get cut off; their names are in aria-label and in the tooltip on hover. At the right, lined up with the panels.
-   Spaced with margins rather than a gap, so there's no extra space where My profile is when signing in isn't set up.
-   The language menu drops down over the page from their right edge, so nothing below moves when it opens (on a phone,
-   it opens in the page instead: see the language menu). */
-.topbar { position: relative; max-width: var(--col); margin: 0 auto; padding-block: 14px 0; display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto auto; align-items: start; }
-.lang-wrap { display: contents; }
-.top-find { grid-column: 2; }
-.me-wrap { grid-column: 3; margin-inline-start: 8px; }
-.motion-btn { grid-column: 4; margin-inline-start: 8px; }
-.lang-pick { grid-column: 5; margin-inline-start: 8px; }
+/* ---------- Reduce motion ---------- */
+/* A square button at the top right, lined up with the panels. An icon only: its name is in aria-label and in the
+   tooltip on hover. (My profile, Find a player and the language are at the end of the section bar.) */
+.topbar { max-width: var(--col); margin: 0 auto; padding-block: 14px 0; display: flex; justify-content: flex-end; }
 .top-btn {
   width: 38px;
   height: 38px;
@@ -161,16 +153,10 @@ main:focus { outline: none; }
   cursor: pointer;
   transition: border-color .15s ease;
 }
-.top-btn:hover, .top-btn[aria-expanded="true"] { border-color: var(--volt); }
-.top-find .icon { color: var(--volt); }
-.me-btn .icon { color: #b9befc; }
+.top-btn:hover { border-color: var(--volt); }
 /* Reduce motion is on: lit up in green, over the button's own glass */
 .motion-btn[aria-pressed="true"] { border-color: var(--volt); background-image: linear-gradient(rgba(0, 230, 151, .14), rgba(0, 230, 151, .14)); }
 .motion-btn[aria-pressed="true"] .icon { color: var(--volt); }
-/* Until the page knows whether they're signed in, My profile holds its place unseen, so the others don't move */
-.me-wrap.waiting { visibility: hidden; }
-.me-wrap:not(.waiting) { animation: fade-in .2s ease-out; }
-@keyframes fade-in { from { opacity: 0; } }
 .menu {
   position: absolute;
   top: calc(100% + 8px);
@@ -211,14 +197,9 @@ main:focus { outline: none; }
 .menu-group { padding: 10px 10px 4px; font: 600 10.5px/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
 .menu-group:first-child { padding-top: 6px; }
 
-/* Languages: a two-column grid that drops down centred under the language button (the last 38px of the top bar), or
-   further left if that would come closer than 24px to the screen's edge (room for a scrollbar too). From 800px wide
-   that still clears the logo. Under 800px there's no room for it right of the logo, so there it opens in the page under
-   the buttons instead, as wide as fits, and pushes the page down. */
-.lang-menu { width: 244px; max-width: 100%; left: min(100% - 19px - 122px, 50% + 50vw - 24px - 244px); right: auto; transform-origin: top center; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; }
-@media (max-width: 799px) {
-  .lang-menu { grid-column: 1 / -1; justify-self: end; position: static; width: min(340px, 100%); margin-top: 8px; }
-}
+/* Languages: a two-column grid that drops down over the page from the section bar's right end, under the language
+   button, so nothing below moves when it opens. It goes with the bar when the bar sticks to the top. */
+.lang-menu { top: calc(100% + 9px); right: -1px; width: 244px; max-width: calc(100% + 2px); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; }
 
 /* ---------- Hero ---------- */
 .hero {
@@ -321,7 +302,6 @@ main:focus { outline: none; }
   --bar: #0a1210;
   margin: 0 auto;
   padding: 5px;
-  overflow: hidden;
   border: 1px solid var(--line-hi);
   border-radius: 12px;
   background: var(--glass);
@@ -362,12 +342,14 @@ main:focus { outline: none; }
   transition: color .15s, background-color .15s, box-shadow .15s;
 }
 .sections a:hover { color: var(--ink); background: var(--glass-hi); }
-/* The links scroll; My profile and Find a player stay at the right end */
+/* The links scroll; My profile, Find a player and the language stay at the right end. Icons only, so no language's
+   longer words get cut off; their names are in aria-label and in the tooltip on hover. */
 .sections { display: flex; align-items: center; gap: 4px; }
 .sections-scroll { position: relative; flex: 1; min-width: 0; }
-.sections-find, .sections-me { flex: none; width: 38px; height: 33px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--ink-2); cursor: pointer; transition: color .15s, background-color .15s; }
-.sections-find:hover, .sections-me:hover { color: var(--volt); background: var(--glass-hi); }
-.sections-find:focus-visible, .sections-me:focus-visible { outline-offset: -2px; }
+.sections-find, .sections-me, .sections-lang { flex: none; width: 38px; height: 33px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--ink-2); cursor: pointer; transition: color .15s, background-color .15s; }
+.sections-find:hover, .sections-me:hover, .sections-lang:hover, .sections-lang[aria-expanded="true"] { color: var(--volt); background: var(--glass-hi); }
+.sections-find:focus-visible, .sections-me:focus-visible, .sections-lang:focus-visible { outline-offset: -2px; }
+.lang-wrap { display: contents; }
 .sections a[aria-current="true"] { color: var(--ink); background: rgba(0, 230, 151, .12); box-shadow: inset 0 0 0 1px rgba(0, 230, 151, .35); }
 
 /* ---------- Panels ---------- */
@@ -1516,8 +1498,8 @@ a.link-copy { text-decoration: none; }
 /* Reduce motion: the device's setting, unless the button at the top picked the other one (data-motion on <html>).
    Nothing animates then, except the logo: its bob and its glow's turn pause where they are, so turning it on doesn't
    make the logo jump back, and turning it off carries on from there. Everything else's animations take no time, rather
-   than being taken off: taken off, they'd play again from the start when it's turned off, so an open board or the
-   profile button would vanish and pop back in. */
+   than being taken off: taken off, they'd play again from the start when it's turned off, so an open board would
+   vanish and pop back in. */
 @media (prefers-reduced-motion: reduce) {
   html:not([data-motion="full"]) { scroll-behavior: auto; }
   html:not([data-motion="full"]) :not(.badge img), html:not([data-motion="full"]) :not(.badge)::before, html:not([data-motion="full"]) ::after { animation-duration: 0s !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition: none !important; }
@@ -1583,18 +1565,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
 <div class="page">
   <a class="skip" href="#main" data-i18n="a11y.skip">Skip to content</a>
   <div class="topbar">
-    <!-- Find a player, at the top too (see "Finding a player") -->
-    <button class="top-btn top-find" type="button" data-find data-i18n-aria="find.open" aria-label="Find a player"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg></button>
-    <div class="me-wrap" id="me-wrap" hidden></div>
     <!-- Reduce motion (see "Reduce motion") -->
     <button class="top-btn motion-btn" id="motion-btn" type="button" aria-pressed="false" data-i18n-aria="motion.label" aria-label="Reduce motion"><svg class="icon" aria-hidden="true"><use href="#i-pause"/></svg></button>
-    <div class="lang-wrap" id="lang-wrap">
-      <button class="top-btn lang-pick" id="lang-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="lang-menu">
-        <svg class="icon" aria-hidden="true"><use href="#i-langs"/></svg>
-        <span class="sr-only"><span data-i18n="lang.label">Language</span> <span id="lang-current">English</span></span>
-      </button>
-      <ul class="menu lang-menu" id="lang-menu" role="listbox" tabindex="-1" hidden></ul>
-    </div>
   </div>
 
   <header class="hero">
@@ -1630,10 +1602,17 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     <button class="sections-more left" type="button" data-dir="-1" tabindex="-1" aria-hidden="true"><svg class="icon"><use href="#i-dots"/></svg></button>
     <button class="sections-more right" type="button" data-dir="1" tabindex="-1" aria-hidden="true"><svg class="icon"><use href="#i-dots"/></svg></button>
     </div>
-    <!-- My profile (when signing in is on, see "My profile") and Find a player (see "Finding a player"), from anywhere
-         on the page -->
+    <!-- My profile (when signing in is on, see "My profile"), Find a player (see "Finding a player") and the language,
+         from anywhere on the page -->
     <button class="sections-me" id="sections-me" type="button" data-my-stats hidden><svg class="icon" aria-hidden="true"><use href="#i-user"/></svg></button>
     <button class="sections-find" type="button" data-find data-i18n-aria="find.open" aria-label="Find a player"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg></button>
+    <div class="lang-wrap" id="lang-wrap">
+      <button class="sections-lang" id="lang-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="lang-menu">
+        <svg class="icon" aria-hidden="true"><use href="#i-langs"/></svg>
+        <span class="sr-only"><span data-i18n="lang.label">Language</span> <span id="lang-current">English</span></span>
+      </button>
+      <ul class="menu lang-menu" id="lang-menu" role="listbox" tabindex="-1" hidden></ul>
+    </div>
   </nav>
 
   <main class="column" id="main" tabindex="-1">
@@ -2589,8 +2568,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const cur = LANGS.find((l) => l[0] === lang) || LANGS[0];
     $("#lang-current").textContent = cur[1];
     $("#lang-current").setAttribute("lang", cur[2]);
-    // The top bar's buttons are icons only, so hovering one says what it is
-    $(".top-find").title = `${t("find.open")} (/)`;
+    // These buttons are icons only, so hovering one says what it is
+    $(".sections-find").title = `${t("find.open")} (/)`;
     $("#motion-btn").title = t("motion.label");
     $("#lang-btn").title = `${t("lang.label")}: ${cur[1]}`;
     langMenu.setAttribute("aria-label", t("lang.label"));
@@ -5563,9 +5542,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (wantClaim) { const name = wantClaim; wantClaim = ""; openClaim(name); }
   }
   /* My profile: their own player panel, the one a click on their name on any board opens, with Sign out in it too. It's
-     by the language picker, next to Sign out and under a run's result, and linked under Join our Discord (renderDcHow).
-     Signed out, the one by the language picker
-     first opens a panel saying what signing in with Discord is for and what it shares (so being sent to Discord, and
+     at the end of the section bar, next to Sign out and under a run's result, and linked under Join our Discord
+     (renderDcHow). Signed out, the one in the section bar first opens a panel saying what signing in with Discord is for and what it shares (so being sent to Discord, and
      asked about Ballkyrie there, doesn't come out of nowhere). Continue with Discord there signs them in, and comes
      back with ?me=1 to open their panel. Sign in with Discord above the form opens the same panel, and comes back to
      the form.
@@ -5573,8 +5551,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      way. Their panel shows their own link in the address (/profile/<number or name>, see playerPath), like anyone's, so
      what's in the address works for anyone it's sent to. The panel that signs them in for it shows /profile. Closing
      either puts the address back. */
-  const meWrap = $("#me-wrap");
-  let meKnown = false; // whether /api/me has answered, so the chip doesn't flip from signed out to signed in
+  let meKnown = false; // whether /api/me has answered
   const MINE_LINK = /^\/(?:profile|my-stats)\/?$/i;
   const startStats = MINE_LINK.test(location.pathname);
   let wantMine = (() => {
@@ -5674,15 +5651,11 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     return (kind === "profile" ? "/api/profile" : "/api/login") + "?to=" + encodeURIComponent(path + (back.toString() ? `?${back}` : ""));
   }
   function renderMe() {
-    meWrap.hidden = !loginOn;
-    if (meWrap.hidden) return;
-    meWrap.classList.toggle("waiting", !meKnown);
-    // Just the profile icon, signed in or not: its name is in aria-label, and hovering says it (or that it signs them in)
-    meWrap.innerHTML = `<button class="top-btn me-btn" type="button" data-my-stats aria-label="${esc(t("me.button"))}" ` +
-      `title="${esc(t(me ? "me.button" : "me.signin"))}">${icon("user")}</button>`;
-    // And the same in the section bar, by Find a player
+    // Just the profile icon in the section bar, signed in or not: its name is in aria-label, and hovering says it (or
+    // that it signs them in)
     const bar = $("#sections-me");
-    bar.hidden = false;
+    bar.hidden = !loginOn;
+    if (bar.hidden) return;
     bar.setAttribute("aria-label", t("me.button"));
     bar.title = t(me ? "me.button" : "me.signin");
   }
@@ -6769,7 +6742,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   document.addEventListener("click", (e) => {
     if (!e.target.closest("[data-sign-out]")) return;
     pl.close();
-    signOut(() => { const b = $("#me-wrap .me-btn"); if (b) b.focus({ preventScroll: true }); });
+    signOut(() => { const b = $("#sections-me"); if (!b.hidden) b.focus({ preventScroll: true }); });
   });
   // The course whose board is open is picked already. Also as the course button's pressed, before its menu opens, since
   // Safari doesn't focus buttons that are clicked.
