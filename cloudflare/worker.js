@@ -957,7 +957,7 @@ function bestBefore({ n, run, before, mine }, stats) {
   return same.sort((a, b) => a.mistakes - b.mistakes)[0] || { time: stats.old };
 }
 /* The run's post in the run submissions channel. Its title says what the run is, and opens its page:
-     New record by NAME!               their best on the course, and #1 there
+     New record submission by NAME!    their best on the course, and #1 there
      New podium submission by NAME!    their best, and #2 or #3
      New top 10 submission by NAME!    their best, and #4 to #10
      New personal best by NAME!        their best, past the top 10 (or their first run there)
@@ -1077,7 +1077,7 @@ const GREEN = 0x00e697, YELLOW = 0xffd54f, RED = 0xff6a4f;
 function runPost(info) {
   const { n, courseName, courseFlag, run, pending, site, checked } = info;
   const { best, place, fields } = runBlocks(info);
-  const what = !best ? "New submission" : place === 1 ? "New record" : place <= 3 ? "New podium submission" : place <= 10 ? "New top 10 submission" : "New personal best";
+  const what = !best ? "New submission" : place === 1 ? "New record submission" : place <= 3 ? "New podium submission" : place <= 10 ? "New top 10 submission" : "New personal best";
   const title = `${what} by ${titleSafe(run.name)}!`;
   return {
     allowed_mentions: { parse: [] }, // shows who sent it without pinging them
