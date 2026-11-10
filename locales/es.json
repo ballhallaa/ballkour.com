@@ -454,8 +454,6 @@
   "stats.runsDay": "{date}: {count} carreras enviadas",
   "stats.month": "Mes",
   "stats.gained": "Puntuación ganada",
-  "stats.straight": "Directas a la clasificación",
-  "stats.approved": "Aprobadas por un moderador",
   "stats.newPlayers": "Jugadores nuevos",
   "stats.rated": "Jugadores con puntuación",
   "stats.totalGlobal": "Puntuación global total",

@@ -454,8 +454,6 @@
   "stats.runsDay": "{date}：提交了 {count} 个成绩",
   "stats.month": "月份",
   "stats.gained": "获得的积分",
-  "stats.straight": "直接上榜",
-  "stats.approved": "管理员通过",
   "stats.newPlayers": "新玩家",
   "stats.rated": "有积分的玩家",
   "stats.totalGlobal": "全局积分总和",

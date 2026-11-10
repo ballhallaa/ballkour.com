@@ -454,8 +454,6 @@
   "stats.runsDay": "{date}: {count} Läufe eingereicht",
   "stats.month": "Monat",
   "stats.gained": "Gewonnene Wertung",
-  "stats.straight": "Direkt auf die Liste",
-  "stats.approved": "Von einem Moderator angenommen",
   "stats.newPlayers": "Neue Spieler",
   "stats.rated": "Gewertete Spieler",
   "stats.totalGlobal": "Globale Wertung insgesamt",

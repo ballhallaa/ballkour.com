@@ -454,8 +454,6 @@
   "stats.runsDay": "{date}：提交了 {count} 個成績",
   "stats.month": "月份",
   "stats.gained": "獲得的積分",
-  "stats.straight": "直接上榜",
-  "stats.approved": "管理員通過",
   "stats.newPlayers": "新玩家",
   "stats.rated": "有積分的玩家",
   "stats.totalGlobal": "全域積分總和",

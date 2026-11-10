@@ -454,8 +454,6 @@
   "stats.runsDay": "{date}: {count} corridas enviadas",
   "stats.month": "Mês",
   "stats.gained": "Pontuação ganha",
-  "stats.straight": "Direto na classificação",
-  "stats.approved": "Aprovadas por um moderador",
   "stats.newPlayers": "Jogadores novos",
   "stats.rated": "Jogadores com pontuação",
   "stats.totalGlobal": "Pontuação global total",
