@@ -23,6 +23,10 @@ PAGES = re.compile(r"^/(?:(courses|leaderboards|submit|features|faq|source-code|
                    r"|stats(/\d{4}-\d{2}-\d{2})?(/day|/week|/3-months|/6-months|/12-months)?)/?$", re.I)
 
 
+# My profile and a player's panel at their links since November 2026 (/my-stats and /players/<…> before, in PAGES)
+PROFILE = re.compile(r"^/profile(/[^/]+(/runs)?)?/?$", re.I)
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(ROOT), **kwargs)
@@ -43,7 +47,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:  # offline: the page falls back to the runs written into it
                 self.send_error(503, f"ballkour.com can't be reached: {e}")
             return
-        if PAGES.match(path):
+        if PAGES.match(path) or PROFILE.match(path):
             self.path = "/index.html"
         super().do_GET()
 

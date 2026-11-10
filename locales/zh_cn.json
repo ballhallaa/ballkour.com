@@ -433,6 +433,7 @@
   "visits.top": "浏览最多",
   "visits.home": "页面顶部",
   "visits.players": "玩家",
+  "visits.profile": "个人主页",
   "visits.other": "其他",
   "visits.note": "每当有人在浏览器中打开网站，都由网站自己计数。大多数机器人不计入。每个人每天只算一次，网站不会保存是谁。",
   "stats.title": "统计",

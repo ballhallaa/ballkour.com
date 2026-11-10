@@ -25,6 +25,9 @@
                        it). See "Page views".
    /players/<…>        The home page, which opens a player's panel: by their number, or the name they picked for their
                        link. See "Players' own links".
+   /profile, /profile/<…>
+                       The same as /my-stats and /players/<…>: their links since November 2026, which the page shows in
+                       the address. The older ones keep working. See PROFILE_LINK.
    /api/visits         How many times the site was opened, and by how many people, for Stats. See "Page views".
 
    Each page also gets the latest copy of all three in <head> as <script type="application/json"> blocks, and its
@@ -964,18 +967,18 @@ function checkedRunMessage({ run, n, courseName, courseFlag, approve, site }) {
 }
 // And about a claim to legacy runs
 function checkedClaimMessage({ claim, approve, site }) {
-  const runs = `${site}/players/${encodeURIComponent(upper(claim.name))}`;
+  const runs = `${site}/profile/${encodeURIComponent(upper(claim.name))}`;
   return {
     allowed_mentions: { parse: [] },
     embeds: [{
       title: approve ? `Your legacy runs as ${claim.name} are linked to you` : `Your claim to the legacy runs as ${claim.name} was turned down`,
-      url: approve ? `${site}/my-stats` : runs,
+      url: approve ? `${site}/profile` : runs,
       color: approve ? 0x00e697 : 0xff6a4f,
       description: approve
         ? "A moderator checked that they’re yours. They’re in My profile now, with your Discord name and picture by them on the boards."
         : "A moderator couldn’t confirm that they’re yours. If they are, open a ticket on our Discord with proof, like an old screenshot or clip.",
     }],
-    components: [{ type: 1, components: [{ type: 2, style: 5, label: approve ? "My profile" : "See the runs", url: approve ? `${site}/my-stats` : runs }] }],
+    components: [{ type: 1, components: [{ type: 2, style: 5, label: approve ? "My profile" : "See the runs", url: approve ? `${site}/profile` : runs }] }],
   };
 }
 // After a run is saved: its numbers first, kept for its page so they're there by the time anyone opens it from the
@@ -1270,8 +1273,9 @@ async function reviewClaim(request, env, ctx) {
 }
 
 /* ---------- Players' own links ----------
-   Every player's panel has a short link, ballkour.com/players/<number> (and /players/<number>/runs for their Runs), and
-   each player can pick a name for theirs in their own panel, for ballkour.com/players/<name>. Numbers go from 1 in the
+   Every player's panel has a short link, ballkour.com/profile/<number> (and /profile/<number>/runs for their Runs), and
+   each player can pick a name for theirs in their own panel, for ballkour.com/profile/<name>. Links from before
+   November 2026 have /players/ in place of /profile/, and keep working. Numbers go from 1 in the
    order players first ran a course: runs with no date (the legacy ones, from before May 2026) first, then by date, and
    players who started the same day by how old their Discord account is. New players get the next number. A number is
    never given to anyone else, even when a player's line is deleted by hand ("last" counts them, like runs.json's
@@ -1800,8 +1804,11 @@ function viewSection(request) {
   try {
     const page = new URL(request.headers.get("Referer") || "");
     if (page.host !== new URL(request.url).host) return "other";
-    const first = page.pathname.split("/")[1].toLowerCase();
-    return !first ? "home" : VIEW_SECTIONS.includes(first) ? first : "other";
+    const seg = page.pathname.split("/")[1].toLowerCase();
+    // A player's panel and My profile are one section, profile, at their links from before November 2026 too
+    // (/players/<…> and /my-stats)
+    const first = seg === "players" || seg === "my-stats" ? "profile" : seg;
+    return !first ? "home" : first === "profile" || VIEW_SECTIONS.includes(first) ? first : "other";
   } catch (e) { return "other"; }
 }
 async function countView(request, env) {
@@ -2037,7 +2044,11 @@ function pastId(n, key) {
 const mistakesText = (n) => `${n} mistake${n === 1 ? "" : "s"}`;
 const ratingText = (r) => `⭐ ${Math.round(r)}`; // no separator: a rating only reaches 1000 (see points() in index.html)
 // The addresses that have a preview of their own
-const PREVIEWED = /^\/(?:runs|leaderboards|players)\/./i;
+const PREVIEWED = /^\/(?:runs|leaderboards|players|profile)\/./i;
+// My profile and a player's panel at their links since November 2026: /profile, and /profile/<number or name> (with
+// /runs for their Runs). DEEP_LINK (below) has the older /my-stats and /players/<…>, which keep working.
+const PROFILE_LINK = /^\/profile(?:\/[^/]{1,300}(?:\/runs)?)?\/?$/i;
+const isPage = (path) => DEEP_LINK.test(path) || PROFILE_LINK.test(path);
 function previewOf(pathname, data, players) {
   if (!PREVIEWED.test(pathname) || !data || !data.files || !Array.isArray(data.courses)) return null;
   let loaded = null;
@@ -2124,7 +2135,7 @@ function previewOf(pathname, data, players) {
     };
   }
   // A player (or their Runs): their place, rating, and Top %
-  if ((m = /^\/players\/([^/]{1,300})(?:\/runs)?\/?$/i.exec(pathname))) {
+  if ((m = /^\/(?:profile|players)\/([^/]{1,300})(?:\/runs)?\/?$/i.exec(pathname))) {
     let seg;
     try { seg = decodeURIComponent(m[1]); } catch (e) { return null; }
     const { players: rated, counted } = rate(courses());
@@ -2166,7 +2177,7 @@ async function page(request, env, ctx) {
   headers.delete("If-Modified-Since");
   // /leaderboards/6 and /faq/pausing are the home page
   const url = new URL(request.url);
-  if (DEEP_LINK.test(url.pathname)) url.pathname = "/";
+  if (isPage(url.pathname)) url.pathname = "/";
   // Cloudflare's free plan allows 50 fetches per request. Refreshing the game data takes about 20 and the player names
   // one or two per player, so a page load only refreshes the names when the game data is fresh. Past the limit, the
   // releases (fetched last) can't be refreshed and every page keeps getting the last list.
@@ -2269,7 +2280,7 @@ async function handle(request, env, ctx) {
   } catch (e) {
     if (path.startsWith("/data/") || path === "/players.json") return unavailable(String((e && e.message) || e));
   }
-  return DEEP_LINK.test(path) || (request.headers.get("Accept") || "").includes("text/html") ? page(request, env, ctx) : file(request, env);
+  return isPage(path) || (request.headers.get("Accept") || "").includes("text/html") ? page(request, env, ctx) : file(request, env);
 }
 
 export default {
