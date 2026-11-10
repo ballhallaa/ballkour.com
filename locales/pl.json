@@ -454,8 +454,6 @@
   "stats.runsDay": "{date}: przesłane przejścia {count}",
   "stats.month": "Miesiąc",
   "stats.gained": "Zdobyty ranking",
-  "stats.straight": "Od razu na tablicę",
-  "stats.approved": "Zatwierdzone przez moderatora",
   "stats.newPlayers": "Nowi gracze",
   "stats.rated": "Gracze z rankingiem",
   "stats.totalGlobal": "Łączny ranking globalny",

@@ -454,8 +454,6 @@
   "stats.runsDay": "{date}: ส่งการวิ่ง {count} ครั้ง",
   "stats.month": "เดือน",
   "stats.gained": "เรตติ้งที่ได้",
-  "stats.straight": "ขึ้นกระดานทันที",
-  "stats.approved": "ผู้ดูแลอนุมัติ",
   "stats.newPlayers": "ผู้เล่นใหม่",
   "stats.rated": "ผู้เล่นที่มีเรตติ้ง",
   "stats.totalGlobal": "เรตติ้งโกลบอลรวม",

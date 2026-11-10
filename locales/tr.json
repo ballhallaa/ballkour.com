@@ -454,8 +454,6 @@
   "stats.runsDay": "{date}: {count} koşu gönderildi",
   "stats.month": "Ay",
   "stats.gained": "Kazanılan puan",
-  "stats.straight": "Doğrudan tabloya",
-  "stats.approved": "Moderatör onayladı",
   "stats.newPlayers": "Yeni oyuncular",
   "stats.rated": "Puanı olan oyuncular",
   "stats.totalGlobal": "Toplam genel puan",

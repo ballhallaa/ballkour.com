@@ -454,8 +454,6 @@
   "stats.runsDay": "{date} : {count} parties envoyées",
   "stats.month": "Mois",
   "stats.gained": "Score gagné",
-  "stats.straight": "Directement au classement",
-  "stats.approved": "Approuvées par un modérateur",
   "stats.newPlayers": "Nouveaux joueurs",
   "stats.rated": "Joueurs classés",
   "stats.totalGlobal": "Score global total",

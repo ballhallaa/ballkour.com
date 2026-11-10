@@ -454,8 +454,6 @@
   "stats.runsDay": "{date}：記録の提出{count}件",
   "stats.month": "月",
   "stats.gained": "獲得したレーティング",
-  "stats.straight": "そのままランキングに掲載",
-  "stats.approved": "モデレーターが承認",
   "stats.newPlayers": "新しいプレイヤー",
   "stats.rated": "レーティングのあるプレイヤー",
   "stats.totalGlobal": "グローバルレーティングの合計",
