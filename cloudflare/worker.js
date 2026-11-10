@@ -1723,9 +1723,13 @@ async function profileOff(request, env) {
    They're kept in a Durable Object: PageViews below, a small SQLite database the Worker owns (PAGE_VIEWS in
    wrangler.toml), which a deploy sets up on its own. Without it, nothing is counted.
      GET /api/visits   → { since, days: [{ day, views, people, sections: { home: [views, people], … } }, …] }: since
-                       is the first day counted, and days every day kept and at least the last 30, oldest first (0 and
-                       no sections for a day nobody came, or from before since). A section's people is null on a day
-                       from before they were counted. The copy served is at most a minute old. */
+                       is the first day shown (see FIRST_VIEW_DAY), and days every day kept and at least the last 30,
+                       oldest first (0 and no sections for a day nobody came, or from before since). A section's people
+                       is null on a day from before they were counted. The copy served is at most a minute old. */
+// The first day shown. Views were first counted on 2026-11-09, but each section's people only from partway through
+// it, so most sections had none that day beside the day's 29 people. That day is still kept (until it's over a year
+// old, like the rest), just never shown.
+const FIRST_VIEW_DAY = "2026-11-10";
 const VIEW_SECTIONS = ["courses", "leaderboards", "submit", "runs", "players", "stats", "my-stats", "features", "faq", "source-code", "translations"];
 const today = () => new Date().toISOString().slice(0, 10);
 export class PageViews extends DurableObject {
@@ -1770,11 +1774,12 @@ export class PageViews extends DurableObject {
     const sql = this.ctx.storage.sql;
     const last = today();
     const month = new Date(Date.now() - 29 * 864e5).toISOString().slice(0, 10);
-    const oldest = (sql.exec("SELECT MIN(day) AS day FROM days").toArray()[0] || {}).day;
+    const oldest = (sql.exec("SELECT MIN(day) AS day FROM days WHERE day >= ?", FIRST_VIEW_DAY).toArray()[0] || {}).day;
     const from = oldest && oldest < month ? oldest : month;
-    const got = new Map(sql.exec("SELECT day, views, people FROM days WHERE day >= ?", from).toArray().map((r) => [r.day, r]));
+    const shown = from > FIRST_VIEW_DAY ? from : FIRST_VIEW_DAY;
+    const got = new Map(sql.exec("SELECT day, views, people FROM days WHERE day >= ?", shown).toArray().map((r) => [r.day, r]));
     const sections = new Map();
-    sql.exec("SELECT day, section, views, people FROM sections WHERE day >= ?", from).toArray().forEach((r) => {
+    sql.exec("SELECT day, section, views, people FROM sections WHERE day >= ?", shown).toArray().forEach((r) => {
       if (!sections.has(r.day)) sections.set(r.day, {});
       sections.get(r.day)[r.section] = [r.views, r.people ?? null];
     });
