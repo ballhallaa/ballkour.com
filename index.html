@@ -2161,8 +2161,6 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "stats.runsChart": "Runs sent each day",
   "stats.runsDay": "{date}: {count} runs sent",
   "stats.gained": "Rating gained",
-  "stats.straight": "Straight on the boards",
-  "stats.approved": "Approved by a moderator",
   "stats.newPlayers": "New players",
   "stats.rated": "Rated players",
   "stats.totalGlobal": "Total global rating",
@@ -5976,7 +5974,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   }).catch(() => {});
   /* The runs' numbers for each day, worked out once every file is in, and again when runs.json changes:
      - sent: the runs sent from the website that day (by when they were sent), and the ones from before it by their
-       date (see sentRuns), and of those, how many a moderator approved or turned down, and how many are waiting
+       date (see sentRuns)
      - gained: what that day's runs added to their players' ratings. On each rated course, each player who got faster
        that day gains their new course rating, less what their old best had against the record without their new run,
        over the number of rated courses: the way boardRatings works out the gain beside a run.
@@ -6002,7 +6000,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (runStats || !runsReady) return runStats;
     const per = new Map();
     const at = (d) => {
-      if (!per.has(d)) per.set(d, { sent: 0, approved: 0, declined: 0, pending: 0, gained: 0, top10s: 0, podiums: 0, records: 0, players: 0, courses: new Map(),
+      if (!per.has(d)) per.set(d, { sent: 0, gained: 0, top10s: 0, podiums: 0, records: 0, players: 0, courses: new Map(),
         runs: [], gains: [], fresh: [], newcomers: [] });
       return per.get(d);
     };
@@ -6023,9 +6021,6 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       if (!DAY.test(d)) return;
       const s = at(d);
       s.sent++;
-      if (x.group === "pending") s.pending++;
-      else if (x.group === "declined") s.declined++;
-      else if (x.run.checkedBy) s.approved++;
       s.courses.set(x.n, (s.courses.get(x.n) || 0) + 1);
       s.runs.push(x);
     });
@@ -6192,7 +6187,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (rs) {
       const of = (d) => rs.per.get(d) || {};
       const add = (k) => span.reduce((a, d) => a + (of(d)[k] || 0), 0);
-      const sent = add("sent"), approved = add("approved"), declined = add("declined"), pending = add("pending");
+      const sent = add("sent");
       // The course with the most runs sent (the lower number when two have as many)
       const courses = new Map();
       span.forEach((d) => (of(d).courses || new Map()).forEach((count, cn) => courses.set(cn, (courses.get(cn) || 0) + count)));
@@ -6208,8 +6203,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         `${tile("res.top10s", n(add("top10s")), "bolt", "top10s")}${tile("res.records", n(add("records")), "trophy", "records")}</div>` +
         chart("runs", "stats.runsChart", (d) => of(d).sent || 0, (d) => t("stats.runsDay", { date: d, count: n(of(d).sent) })) +
         `<ul class="stats-rows">` +
-          row("stats.straight", n(sent - approved - declined - pending), "straight") + row("stats.approved", n(approved), "approved") +
-          row("run.declined", n(declined), "declined") + row("run.pending", n(pending), "pending") + row("res.podiums", n(add("podiums")), "podiums") +
+          row("res.podiums", n(add("podiums")), "podiums") +
           row("stats.newPlayers", n(add("players")), "players") + row("stats.rated", n(standing.rated), "rated") +
           row("stats.totalGlobal", n(standing.global), "global") + row("stats.changeGlobal", change(standing.global - before.global), "globalChange") +
           row("stats.totalCourse", n(standing.course), "course") + row("stats.changeCourse", change(standing.course - before.course), "courseChange") +
@@ -6321,8 +6315,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      Player ratings were at the end of the day picked, and the two changes count from the end of the day before the
      days picked, like the numbers themselves (see standingAt). Newest first, the rating gained and the changes the
      most first. A list with nothing in it says so. */
-  const STAT_LISTS = { sent: "runs.title", gained: "stats.gained", top10s: "res.top10s", records: "res.records",
-    straight: "stats.straight", approved: "stats.approved", declined: "run.declined", pending: "run.pending", podiums: "res.podiums",
+  const STAT_LISTS = { sent: "runs.title", gained: "stats.gained", top10s: "res.top10s", records: "res.records", podiums: "res.podiums",
     players: "stats.newPlayers", rated: "stats.rated", global: "stats.totalGlobal", globalChange: "stats.changeGlobal",
     course: "stats.totalCourse", courseChange: "stats.changeCourse", busiest: "stats.busiest" };
   // A player on a list: their place at the end of the day picked, their name and Discord, and value
@@ -6347,12 +6340,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     };
     // A board's run with its page, or as itself when it has none
     const item = (r, n) => rs.entryOf(n, r) || { run: { name: r.name, discord: r.discord, time: r.time, mistakes: r.miss, date: r.date || "", id: "" }, n, group: "past", status: "" };
-    const kept = (x) => x.group !== "pending" && x.group !== "declined";
     if (kind === "sent") return sent(() => true);
-    if (kind === "straight") return sent((x) => kept(x) && !x.run.checkedBy);
-    if (kind === "approved") return sent((x) => kept(x) && !!x.run.checkedBy);
-    if (kind === "declined") return sent((x) => x.group === "declined");
-    if (kind === "pending") return sent((x) => x.group === "pending");
     if (kind === "busiest") {
       // The course with the most runs sent (the lower number when two have as many), as under Runs
       const count = new Map();
