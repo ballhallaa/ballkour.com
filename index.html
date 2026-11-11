@@ -884,7 +884,7 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .runs-mode .lb-tab[data-runs-mode="assisted"][aria-pressed="true"] { background: rgba(255, 128, 192, .12); box-shadow: inset 0 0 0 1px rgba(255, 128, 192, .4); }
 /* The form's Played in Assist Mode */
 .sub-check { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font: 600 14px/1.25 var(--body); color: var(--ink); cursor: pointer; }
-.sub-check input { width: 16px; height: 16px; margin: 0; accent-color: var(--assist); cursor: pointer; }
+.sub-check input { flex: none; width: 16px; height: 16px; margin: 0; accent-color: var(--assist); cursor: pointer; }
 .pl-runs { padding: 0 18px 14px 50px; }
 .pl-run-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 .pl-runs-count { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; margin: 0 0 6px; padding: 0 10px; font: 600 10.5px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
@@ -1137,7 +1137,8 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .field-wide { grid-column: 1 / -1; }
 .field-label { font: 600 11.5px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
 .field-hint { font: 400 12.5px/1.4 var(--body); color: var(--ink-3); }
-.sub-form input, .sub-form .sub-pick {
+/* Every field but the Assist Mode checkbox (.sub-check), which keeps its own size */
+.sub-form input:not([type="checkbox"]), .sub-form .sub-pick {
   width: 100%;
   height: 42px;
   padding: 0 12px;
@@ -1169,7 +1170,7 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
   .sub-course-menu { position: static; max-height: none; margin-top: 6px; grid-template-columns: minmax(0, 1fr); }
 }
 .sub-form input::placeholder { color: var(--ink-3); opacity: 1; }
-.sub-form input:hover, .sub-form .sub-pick:hover, .sub-pick[aria-expanded="true"] { border-color: rgba(196, 255, 232, .42); }
+.sub-form input:not([type="checkbox"]):hover, .sub-form .sub-pick:hover, .sub-pick[aria-expanded="true"] { border-color: rgba(196, 255, 232, .42); }
 .sub-form input:focus-visible, .sub-form .sub-pick:focus-visible { outline: 2px solid var(--volt); outline-offset: 1px; border-color: var(--volt); }
 .sub-form [aria-invalid="true"] { border-color: var(--coral); }
 #sub-time, #sub-miss { font-family: var(--mono); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
