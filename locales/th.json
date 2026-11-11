@@ -1,5 +1,6 @@
 {
   "a11y.skip": "ข้ามไปยังเนื้อหา",
+  "lang.label": "ภาษา",
   "hero.tagline": "คอร์สพาร์กัวร์ Wrecking Ball สำหรับ Overwatch",
   "hero.codes": "เลือกคอร์ส",
   "hero.discord": "เข้าร่วม Discord ของเรา",
@@ -14,7 +15,6 @@
   "src.title": "ซอร์สโค้ด",
   "tr.title": "คำแปล",
   "stats.title": "สถิติ",
-  "lang.label": "ภาษา",
   "find.open": "ค้นหาผู้เล่น",
   "steps.start": "เริ่มแมตช์ได้เลย",
   "steps.luck": "ขอให้โชคดี!",

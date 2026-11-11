@@ -1,5 +1,6 @@
 {
   "a11y.skip": "Zum Inhalt springen",
+  "lang.label": "Sprache",
   "hero.tagline": "Wrecking-Ball-Parkourstrecken für Overwatch",
   "hero.codes": "Strecke wählen",
   "hero.discord": "Tritt unserem Discord bei",
@@ -14,7 +15,6 @@
   "src.title": "Quellcode",
   "tr.title": "Übersetzungen",
   "stats.title": "Statistiken",
-  "lang.label": "Sprache",
   "find.open": "Spieler finden",
   "steps.start": "Starte das Match.",
   "steps.luck": "Viel Glück!",

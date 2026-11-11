@@ -1,5 +1,6 @@
 {
   "a11y.skip": "Перейти к содержимому",
+  "lang.label": "Язык",
   "hero.tagline": "Паркур-трассы для Тарана в Overwatch",
   "hero.codes": "Выбрать трассу",
   "hero.discord": "Присоединяйтесь к нашему Discord",
@@ -14,7 +15,6 @@
   "src.title": "Исходный код",
   "tr.title": "Переводы",
   "stats.title": "Статистика",
-  "lang.label": "Язык",
   "find.open": "Найти игрока",
   "steps.start": "Запустите матч.",
   "steps.luck": "Удачи!",

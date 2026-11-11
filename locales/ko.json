@@ -1,5 +1,6 @@
 {
   "a11y.skip": "본문으로 건너뛰기",
+  "lang.label": "언어",
   "hero.tagline": "오버워치 레킹볼 파쿠르 코스",
   "hero.codes": "코스 고르기",
   "hero.discord": "Discord 참여하기",
@@ -14,7 +15,6 @@
   "src.title": "소스 코드",
   "tr.title": "번역",
   "stats.title": "통계",
-  "lang.label": "언어",
   "find.open": "플레이어 찾기",
   "steps.start": "경기를 시작하세요.",
   "steps.luck": "행운을 빕니다!",

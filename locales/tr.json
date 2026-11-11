@@ -1,5 +1,6 @@
 {
   "a11y.skip": "İçeriğe geç",
+  "lang.label": "Dil",
   "hero.tagline": "Overwatch için Wrecking Ball parkur haritaları",
   "hero.codes": "Bir parkur seç",
   "hero.discord": "Discord’umuza katıl",
@@ -14,7 +15,6 @@
   "src.title": "Kaynak kod",
   "tr.title": "Çeviriler",
   "stats.title": "İstatistikler",
-  "lang.label": "Dil",
   "find.open": "Oyuncu bul",
   "steps.start": "Maçı başlat.",
   "steps.luck": "Bol şans!",

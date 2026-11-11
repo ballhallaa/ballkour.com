@@ -1,5 +1,6 @@
 {
   "a11y.skip": "跳到主要内容",
+  "lang.label": "语言",
   "hero.tagline": "守望先锋破坏球跑酷关卡",
   "hero.codes": "选择关卡",
   "hero.discord": "加入我们的 Discord",
@@ -14,7 +15,6 @@
   "src.title": "源代码",
   "tr.title": "翻译",
   "stats.title": "统计",
-  "lang.label": "语言",
   "find.open": "查找玩家",
   "steps.start": "开始比赛。",
   "steps.luck": "祝你好运！",
