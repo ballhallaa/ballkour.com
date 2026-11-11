@@ -4238,9 +4238,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      and what happens next. Like the sign-in panel, so Discord's question doesn't come out of nowhere, and drawn once
      like it. Not now goes back to their panel. */
   function profileCardHtml() {
-    // In English, the way Discord shows it
+    // In English, the way Discord shows it, with their Global rating (see profilesFrom in cloudflare/worker.js)
     const key = "d:" + me.id;
-    const p = ratings().players.find((x) => x.key === key) || null;
+    const p = ratings(null, "global").players.find((x) => x.key === key) || null;
     const n = medalsOf(key);
     // As in PROFILE_FIELDS in cloudflare/worker.js
     const stats = [[p ? Math.round(p.rating) : 0, "⭐ Rating"], [n.top10s, "⚡ Top 10s"], [n.podiums, "🏆 Podiums"], [n.records, "👑 Records"], [p ? p.courses : 0, "🗺️ Courses run"]];

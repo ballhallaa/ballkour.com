@@ -1730,15 +1730,17 @@ async function setLink(request, env, ctx) {
    Players can put their stats on their Discord profile, under Apps, like a linked game account. It's Discord's
    "role connection", which shows as:
      ballkour.com · Top 0.1%      their Top % (Rated for the bottom 10%, Unrated before they have a rating)
-     DUCKLING · #3                their in-game name and place in the player ratings
+     DUCKLING · #3                their in-game name and place in the Global rating
      812 ⭐ Rating  4 ⚡ Top 10s  2 🏆 Podiums  1 👑 Records  12 🗺️ Courses run
+   Their rating, place and Top % are the Global rating's (the unassisted and assisted ratings added up, see combine() in
+   ratings.js), the one the Global roles on our server go by.
    PROFILE_FIELDS are the numbers on the last line. Discord allows at most 5 per app, whole numbers only (so Top %,
    with its 0.1, goes in the text above), and shows each as "<number> <name>", so each name's emoji comes right
    after its number. Changing a name only needs a deploy: Discord gets the new names, and everyone's profile shows
    them straight away. Server owners can also use them for
    linked roles (Server Settings → Linked Roles), like "Top 10s: at least 1". The numbers are the same as the site's
    and the leaderboard bot's: Top 10s, Podiums and Records count every course's board, broken ones too, like the
-   bot's Top 10 role, and Courses run counts the courses in the ratings, like the player panel's.
+   bot's Top 10 role, and Courses run counts the courses in the ratings they've run, unassisted or assisted.
      GET  /api/profile      Discord's sign-in page, also asking to update their connection, then back to the page
                             (to=…, or their own panel), signed in and with their stats on their profile. It's also
                             the app's Linked Roles Verification URL in the Developer Portal.
@@ -1775,7 +1777,7 @@ const SEND_CALLS = 7;
 // type 2: a whole number, which linked roles check with "at least". Keys can't change without everyone's profile
 // losing that number until they're sent again.
 const PROFILE_FIELDS = [
-  { key: "rating", name: "⭐ Rating", description: "Their player rating over every course, out of 1,000" },
+  { key: "rating", name: "⭐ Rating", description: "Their Global rating, unassisted plus assisted, out of 2,000" },
   { key: "top10s", name: "⚡ Top 10s", description: "How many courses they're on the top 10 of" },
   { key: "podiums", name: "🏆 Podiums", description: "How many courses they're in the top 3 of" },
   { key: "records", name: "👑 Records", description: "How many courses they hold the record on" },
@@ -1827,7 +1829,8 @@ async function registerFields(env, calls) {
 function profilesFrom(data) {
   if (!data || !data.files || !Array.isArray(data.courses)) throw new Error("the game data has no course list yet");
   const courses = loadCourses(data.files, data.courses);
-  const rated = new Map(rate(courses).players.map((p) => [p.key, p]));
+  // The Global rating: the unassisted and assisted ratings added up
+  const rated = new Map(combine([rate(courses), rate(loadCourses(data.files, data.courses, { assisted: true }))]).players.map((p) => [p.key, p]));
   const boards = new Map(); // player → { top10s, podiums, records, name }
   for (const c of courses) {
     const { top, rest } = standings(c);
