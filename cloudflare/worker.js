@@ -826,13 +826,13 @@ function onScale(stats) {
 // What a run did to the boards: where its player stood on its course and in the player ratings just before it, and
 // with it (a run waiting for a check, as if it were on the board already). before is runs.json as it was just before.
 // The page works out the same numbers from today's boards (statsFrom() in index.html): keep the two in step.
-//   { place, was, players, best, bestMiss, old, record, passed, points, rating, rank, of, tier, courses, counted,
+//   { place, was, players, best, bestMiss, old, record, points, rating, rank, of, tier, courses, counted,
 //     top10s, podiums, records, scale, alone }
 // place and was are their place on the course with and before the run (was is null on their first run there),
 // players how many players are on the course's board with it (what was kept before there was players has none), best
 // and old their best time there with and before it, and bestMiss the mistakes on that best (it isn't the run when its
-// time or mistakes aren't the run's: a tie on time goes to fewer mistakes), passed the
-// names of the players it put them ahead of. points (the course rating), rating, rank (their place in the ratings) and
+// time or mistakes aren't the run's: a tie on time goes to fewer mistakes). points (the course rating), rating, rank
+// (their place in the ratings) and
 // tier are [before, with] (before null when they weren't rated yet, the pair null when the course isn't rated), of is
 // how many players are rated, courses [before, with] the rated courses they've run out of counted, and top10s,
 // podiums and records [before, with] over every course. alone is the run by itself, for one that isn't its player's
@@ -863,8 +863,6 @@ function runStats(game, before, run, n) {
     return { board, at, best: at >= 0 ? board[at] : null, p: rated.players.find((x) => x.key === key) || null, total: rated.players.length, counted: rated.counted.length, medals };
   };
   const b = side(before), a = side(after);
-  const beforeKeys = b.board.map(playerKey);
-  const wasAt = b.at >= 0 ? b.at : Infinity;
   const rated = !(game.courses.find((c) => c.n === n) || { broken: true }).broken;
   const record = a.board[0];
   const pair = (get) => (a.p && get(a.p) !== undefined ? [b.p && get(b.p) !== undefined ? get(b.p) : null, get(a.p)] : null);
@@ -877,7 +875,6 @@ function runStats(game, before, run, n) {
     bestMiss: a.best ? a.best.mistakes : null,
     old: b.best ? b.best.time : null,
     record: a.at === 0 && (!b.board[0] || runByTime(a.best, b.board[0]) < 0),
-    passed: a.at < 0 ? [] : a.board.filter((r, i) => i > a.at && playerKey(r) !== key && beforeKeys.includes(playerKey(r)) && beforeKeys.indexOf(playerKey(r)) < wasAt).map((r) => r.name),
     points: pair((p) => round(p.points[n])),
     rating: pair((p) => Math.round(p.rating)),
     rank: pair((p) => p.rank),
