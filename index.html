@@ -876,6 +876,9 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .tag-assisted { height: 17px; padding: 0 5px; font-size: 9.5px; color: var(--assist); background: rgba(255, 128, 192, .1); border: 1px solid rgba(255, 128, 192, .45); }
 .lb-tab[data-tab="assisted"][aria-selected="true"] { background: rgba(255, 128, 192, .12); box-shadow: inset 0 0 0 1px rgba(255, 128, 192, .4); }
 .board-assisted > span { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+/* Their link and their stats on Discord, under their name and above the tabs (see playerHtml) */
+.pl-account { padding-top: 14px; }
+.pl-account > :last-child { margin-bottom: 0; }
 /* Unassisted and Assisted under a player's name, once they have assisted runs */
 .pl-modes { display: flex; flex-wrap: wrap; gap: 4px; padding: 14px 18px 0; }
 .pl-modes .lb-tab[data-pl-mode="assisted"][aria-pressed="true"] { background: rgba(255, 128, 192, .12); box-shadow: inset 0 0 0 1px rgba(255, 128, 192, .4); }
@@ -940,6 +943,8 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 /* While Discord keeps hiding app boxes now and then: a heads-up in the panel and the explainer (DISCORD_FLAKY) */
 .dcp-flaky { display: block; flex: 1 1 100%; padding: 9px 11px; border: 1px solid rgba(255, 154, 46, .32); border-radius: 8px; background: rgba(255, 154, 46, .07); font: 400 13.5px/1.45 var(--body); color: var(--ink-2); }
 .pl-why .dcp-flaky { margin-top: 12px; }
+/* The short one in the panel, smaller */
+.pl-dcp .dcp-flaky { padding: 6px 9px; font-size: 12.5px; line-height: 1.4; }
 /* The steps' little pictures of where to click in Discord, the way Discord shows them */
 .dcp-ui { display: inline-flex; align-items: center; gap: 6px; margin: 0 1px; padding: 1px 8px 1px 6px; border-radius: 6px; background: #2b2d31; box-shadow: 0 0 0 1px rgba(255, 255, 255, .08); font-weight: 600; color: #f2f3f5; white-space: nowrap; vertical-align: baseline; }
 .dcp-ui img { width: 16px; height: 16px; border-radius: 50%; }
@@ -2210,6 +2215,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "dcp.cancel": "Cancel",
   "dcp.cancelFail": "Couldn’t cancel just now. Try again in a minute.",
   "dcp.flaky": "Heads up: Discord has a bug right now that hides boxes like this from profiles now and then, for every app, not just ours. Your stats stay on Discord the whole time, and the box comes back on its own.",
+  "dcp.flakyShort": "Discord bug: boxes like this vanish from profiles now and then, for every app. Your stats stay on Discord.",
   "dcpi.title": "Your Discord profile",
   "dcpi.lead": "Your Top %, rating, and top 10s go under Apps on your Discord profile, where anyone who opens it can see them.",
   "dcpi.lookTitle": "How it looks",
@@ -3983,7 +3989,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const runsIn = (list) => list.reduce((sum, x) => sum + x.runs.length, 0);
     /* Which runs it shows (plMode), picked with the buttons under their name once they have more than one kind: their
        runs since 2026-04-29 (Unassisted), their assisted ones, or their legacy ones. A kind they have nothing of isn't
-       offered, apart from Unassisted in their own panel, which has their account too, or when they have nothing at all.
+       offered, apart from Unassisted in their own panel, which always lists the courses to run, or when they have
+       nothing at all.
        It's the first one they have, until another is picked. */
     const has = { "": !!p || runsIn(rows) > 0, assisted: !!ap || arows.length > 0, legacy: !!lp || lrows.length > 0 };
     const modes = ["", "assisted", "legacy"].filter((k) => has[k] || (k === "" && (mine || (!has.assisted && !has.legacy))));
@@ -3993,9 +4000,13 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     let html = `<div class="pl-head"><div class="pl-who"><h2 class="pl-name is-name" id="pl-name">${esc(caps(named.name || (dc ? dc.name : "")))}</h2>` +
       (mine ? `<div class="pl-me">${dcLine}<button class="pl-signout" type="button" data-sign-out>${esc(t("sub.signout"))}</button></div>` : dcLine) +
       `</div><div class="pl-tools">${runTotal ? picButtonHtml(named.name || (dc ? dc.name : "")) : ""}${copyLinkHtml(key, named.name || (dc ? dc.name : ""), plView === "runs" && runTotal > 0)}` +
-      `<button class="pl-close" type="button" data-pl-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button></div></div>` +
-      (modes.length > 1 ? plModesHtml(modes, mode) : "");
-    if (plView === "runs" && runsIn(shown)) return html + allRunsHtml(shown);
+      `<button class="pl-close" type="button" data-pl-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button></div></div>`;
+    const modesHtml = modes.length > 1 ? plModesHtml(modes, mode) : "";
+    if (plView === "runs" && runsIn(shown)) return html + modesHtml + allRunsHtml(shown);
+    // Their link and their stats on Discord profile in their own panel (Remove the name in someone else's, for
+    // moderators) are about the player, not the runs a tab shows, so they're under the name, above the tabs
+    const account = mine ? linkHtml() + profileHtml() : modLinkHtml(key);
+    html += (account ? `<div class="pl-account">${account}</div>` : "") + modesHtml;
     // Rating, Place and Top % open the Player ratings (on the view's tab) with their row marked (see openBoard), and
     // Runs lists every run of theirs here. Before they're rated, or before their first run, there's nothing to open.
     const toRuns = runsIn(shown) ? { attrs: `data-pl-runs title="${esc(t("lb.playerOpen", { player: named.name || (dc ? dc.name : "") }))}"` } : null;
@@ -4023,9 +4034,6 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         `<a class="btn btn-sm btn-primary" href="/submit" data-route="submit">${icon("upload")}<span>${esc(t("nav.submit"))}</span></a></p>` : "") +
       // In their own panel: legacy names like theirs (see "Claiming legacy runs")
       (mine ? maybeHtml(key) : "") +
-      (mine ? linkHtml() : modLinkHtml(key)) +
-      // Everyone can put their stats on their profile, runs or not: before their first, it says they're unrated
-      (mine ? profileHtml() : "") +
       courses;
   }
   // Unassisted, Assisted, and Legacy under a player's name (modes: the ones they have, on: the one shown)
@@ -4130,23 +4138,24 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   let dcpNote = "";
   /* Discord has been hiding app boxes like this one from profiles now and then (November 2026), for every app: the
      box comes and goes while Discord still has the stats. Until that's fixed, the panel and the explainer say so.
-     Once it is, set this to false (and dcp.flaky can go). */
+     Once it is, set this to false (and dcp.flaky and dcp.flakyShort can go). The panel has the short one, so the box
+     above the tabs stays small, and the explainer the whole one. */
   const DISCORD_FLAKY = true;
   // The Discord Profile App role as a role pill, in place of the first mention of its name (the same in every language)
   const withRole = (html) => html.replace("Discord Profile App", `<span class="dcp-role" lang="en"><span class="dcp-role-dot" aria-hidden="true"></span>Discord Profile App</span>`);
-  const flakyHtml = (tag) => (DISCORD_FLAKY ? `<${tag} class="dcp-flaky">${esc(t("dcp.flaky"))}</${tag}>` : "");
+  const flakyHtml = (tag, key = "dcp.flaky") => (DISCORD_FLAKY ? `<${tag} class="dcp-flaky">${esc(t(key))}</${tag}>` : "");
   function profileHtml() {
     if (typeof me.profile !== "boolean") return "";
     if (me.profile && me.role) {
       return `<p class="pl-dcp"><span class="pl-dcp-ok">${icon("check")}</span><span class="pl-dcp-text">${esc(t(dcpNote || "dcp.set"))}</span>` +
-        `<button class="pl-signout" type="button" data-dcp-off>${esc(t("dcp.off"))}</button>${flakyHtml("span")}</p>`;
+        `<button class="pl-signout" type="button" data-dcp-off>${esc(t("dcp.off"))}</button>${flakyHtml("span", "dcp.flakyShort")}</p>`;
     }
     if (me.profile) {
       return `<div class="pl-dcp pl-dcp-on">` +
         `<p class="dcp-next">${withRole(esc(t("dcp.role")))}</p>` +
         `<ol class="dcp-next-steps">${["dcpi.step4", "dcpi.step5", "dcpi.step6"].map((k) => `<li><div>${discordUiHtml(esc(t(k)))}</div></li>`).join("")}</ol>` +
         `<p class="dcp-foot">${dcpNote ? `<span class="pl-dcp-text">${esc(t(dcpNote))}</span>` : ""}` +
-        `<button class="pl-signout" type="button" data-dcp-off>${esc(t("dcp.cancel"))}</button></p>${flakyHtml("div")}</div>`;
+        `<button class="pl-signout" type="button" data-dcp-off>${esc(t("dcp.cancel"))}</button></p>${flakyHtml("div", "dcp.flakyShort")}</div>`;
     }
     return `<p class="pl-dcp"><span class="pl-dcp-text">${withBot("dcp.what")}</span>` +
       `<a class="btn btn-sm btn-discord" href="${esc(loginFor("profile"))}" data-login-for="profile" data-dcp-info>${icon("discord")}<span>${esc(t("dcp.add"))}</span></a></p>`;

@@ -272,6 +272,7 @@
   "dcp.cancel": "취소",
   "dcp.cancelFail": "지금은 취소하지 못했습니다. 1분 뒤에 다시 시도하세요.",
   "dcp.flaky": "참고: 지금 Discord에 버그가 있어서 이런 상자가 가끔 프로필에서 사라집니다. 저희 앱뿐 아니라 모든 앱에서 그렇습니다. 기록은 계속 Discord에 남아 있고, 상자는 저절로 다시 나타납니다.",
+  "dcp.flakyShort": "Discord 버그: 이런 상자는 모든 앱에서 가끔 프로필에서 사라집니다. 기록은 Discord에 그대로 남아 있습니다.",
   "dcpi.title": "내 Discord 프로필",
   "dcpi.lead": "상위 %, 레이팅, TOP 10 기록이 Discord 프로필의 앱 항목에 표시되며, 프로필을 여는 누구나 볼 수 있습니다.",
   "dcpi.lookTitle": "표시 모습",

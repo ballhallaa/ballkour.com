@@ -272,6 +272,7 @@
   "dcp.cancel": "取消",
   "dcp.cancelFail": "暂时无法取消。请一分钟后再试。",
   "dcp.flaky": "注意：Discord 目前有个 bug，会不时把这类框从个人资料上隐藏，所有应用都会这样，不只是我们的。你的数据一直保存在 Discord 上，框会自己回来。",
+  "dcp.flakyShort": "Discord 的 bug：这类框会不时从个人资料上消失，所有应用都会这样。你的数据仍保存在 Discord 上。",
   "dcpi.title": "你的 Discord 个人资料",
   "dcpi.lead": "你的前 %、积分和前 10 名次数会显示在 Discord 个人资料的“应用”下，任何打开你资料的人都能看到。",
   "dcpi.lookTitle": "效果预览",

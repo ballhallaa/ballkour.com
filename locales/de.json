@@ -272,6 +272,7 @@
   "dcp.cancel": "Abbrechen",
   "dcp.cancelFail": "Konnte gerade nicht abbrechen. Versuch es in einer Minute noch mal.",
   "dcp.flaky": "Hinweis: Discord hat gerade einen Fehler, durch den Boxen wie diese ab und zu von Profilen verschwinden, bei jeder App, nicht nur bei unserer. Deine Stats bleiben die ganze Zeit bei Discord, und die Box kommt von selbst zurück.",
+  "dcp.flakyShort": "Discord-Fehler: Boxen wie diese verschwinden ab und zu von Profilen, bei jeder App. Deine Stats bleiben bei Discord.",
   "dcpi.title": "Dein Discord-Profil",
   "dcpi.lead": "Deine Top %, deine Wertung und deine Top-10-Plätze erscheinen unter „Apps“ auf deinem Discord-Profil, wo jeder sie sehen kann, der es öffnet.",
   "dcpi.lookTitle": "So sieht es aus",

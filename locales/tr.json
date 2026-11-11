@@ -272,6 +272,7 @@
   "dcp.cancel": "İptal et",
   "dcp.cancelFail": "Şu anda iptal edilemedi. Bir dakika sonra tekrar dene.",
   "dcp.flaky": "Dikkat: Discord’da şu anda bu tür kutuları profillerden ara sıra gizleyen bir hata var; sadece bizimkinde değil, tüm uygulamalarda. İstatistiklerin bu süre boyunca Discord’da kalır ve kutu kendiliğinden geri gelir.",
+  "dcp.flakyShort": "Discord hatası: bu tür kutular, tüm uygulamalarda, profillerden ara sıra kaybolur. İstatistiklerin Discord’da kalır.",
   "dcpi.title": "Discord profilin",
   "dcpi.lead": "İlk %’n, puanın ve ilk 10’ların Discord profilinde Uygulamalar altında görünür; profili açan herkes görebilir.",
   "dcpi.lookTitle": "Nasıl görünür",
