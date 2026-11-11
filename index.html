@@ -1557,6 +1557,8 @@ a.rev-run:hover, button.rev-run:hover { border-color: var(--line-hi); background
 /* Footer */
 .foot { max-width: var(--col); margin: 0 auto; padding-block: 8px 44px; text-align: center; font: 400 13.5px/1.5 var(--body); color: var(--ink-3); }
 .foot p { margin: 0 auto; max-width: 60ch; }
+.foot p a { color: inherit; text-decoration: underline; text-decoration-color: rgba(118, 134, 127, .55); text-underline-offset: 3px; transition: color .15s, text-decoration-color .15s; }
+.foot p a:hover { color: var(--ink); text-decoration-color: currentColor; }
 .contact { margin-bottom: 16px; padding-bottom: 18px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; }
 .contact-q { flex-basis: 100%; margin-bottom: 2px; font: 500 14.5px/1.3 var(--body); color: var(--ink-2); }
 a.link-copy { text-decoration: none; }
@@ -1960,7 +1962,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         <a class="link-copy" href="mailto:hi@ballhal.la"><span class="sr-only" data-i18n="foot.writeEmail">Write an email</span><svg class="icon ext" aria-hidden="true"><use href="#i-out"/></svg></a>
       </span>
     </div>
-    <p data-i18n="foot.disclaimer">Ballkour is a fan-made Overwatch Workshop mode. It isn’t affiliated with Blizzard Entertainment.</p>
+    <p data-i18n-html="foot.disclaimer">Ballkour is a fan-made {overwatch} Workshop mode. It isn’t affiliated with {blizzard}.</p>
   </footer>
 </div>
 <p class="sr-only" id="announce" aria-live="polite"></p>
@@ -1976,6 +1978,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
 <!-- English for text the script builds. Translations override these keys too. -->
 <script type="application/json" id="i18n-dynamic">
 {
+  "foot.overwatch": "Overwatch",
   "hero.members": "{count} members",
   "unit.mistakes": "{count} mistakes",
   "course.by": "Courses by {creator}",
@@ -2509,11 +2512,15 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     dict = cache[code] || {};
     try { return fn(); } finally { [lang, dict] = was; }
   }
-  // Translations may only use <b> and <code>; everything else is shown as text. {beta} becomes the Beta tag.
+  // Translations may only use <b> and <code>; everything else is shown as text. {beta} becomes the Beta tag, and the
+  // footer's {overwatch} and {blizzard} links to their sites (Overwatch by its name in the language).
+  const outLink = (href, text) => `<a href="${href}" target="_blank" rel="noopener">${esc(text)}</a>`;
   const safeHtml = (s) => esc(s).replace(/&lt;(\/?)(b|code|kbd)&gt;/g, "<$1$2>")
-    .replace("{beta}", `<span class="tag tag-beta">${esc(t("tag.beta"))}</span>`);
-  // The English is already on the page, but its {beta} still needs the tag
-  $$("[data-i18n-html]").forEach((el) => { if (el.innerHTML.includes("{beta}")) el.innerHTML = safeHtml(EN[el.dataset.i18nHtml]); });
+    .replace("{beta}", `<span class="tag tag-beta">${esc(t("tag.beta"))}</span>`)
+    .replace("{overwatch}", () => outLink("https://overwatch.blizzard.com/", t("foot.overwatch")))
+    .replace("{blizzard}", () => outLink("https://www.blizzard.com/", "Blizzard Entertainment"));
+  // The English is already on the page, but its {beta}, {overwatch}, and {blizzard} still need filling in
+  $$("[data-i18n-html]").forEach((el) => { if (/\{(beta|overwatch|blizzard)\}/.test(el.innerHTML)) el.innerHTML = safeHtml(EN[el.dataset.i18nHtml]); });
 
   function applyStatic() {
     $$("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
