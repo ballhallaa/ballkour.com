@@ -226,6 +226,7 @@
   "res.rating": "积分",
   "res.place": "名次",
   "res.of": "第 {rank} / {total} 名",
+  "res.ofNone": "— / {total} 名",
   "res.tier": "前 %",
   "res.globalTier": "前 %（全局）",
   "res.new": "新",
