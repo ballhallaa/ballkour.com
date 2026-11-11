@@ -3607,8 +3607,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      Player ratings: every course is worth up to 1,000 points, 1000 × ln(1 + (e − 1) × record ÷ time)², so the record
      gets all of them (lucio.surf's curve for a player who has run every map). A rating is the average over every course
      that isn't broken, with 0 for the ones a player hasn't run (and for courses nobody has run yet), so a new or
-     faster run never lowers it, and the first run on a course changes nobody else's rating. Their tier is the share of rated players ahead of them (#1 is
-     always in the Top 0.1%, and #5 of 40, with 4 ahead, is in the Top 10%), and the bottom 10% are just Rated. Each board (and its picture) shows its players' ratings beside their dates:
+     faster run never lowers it, and the first run on a course changes nobody else's rating. Their tier is the share of rated players at their place or ahead of it (#4
+     of 40 is 10%, so in the Top 10%, and so is #1 of 16, at 6.25%: the Top 0.1% needs 1,000 players), and the bottom 10% are just Rated. Each board (and its picture) shows its players' ratings beside their dates:
      today's on the newest board, and on an older one, the ones they had at the end of its day (see standingsOn).
      The leaderboard bot posts the same boards and gives out the same tiers as roles
      on Discord, worked out by tools/leaderboard-bot/ratings.mjs in the game repo: keep the two in step. */
@@ -3693,7 +3693,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const same = (a, b) => Math.round(a.rating * 100) === Math.round(b.rating * 100);
     list.forEach((p, i) => {
       p.rank = i > 0 && same(list[i - 1], p) ? list[i - 1].rank : i + 1;
-      p.tier = TIERS.find((tier) => ((p.rank - 1) / list.length) * 100 <= tier + 1e-9) ?? null;
+      p.tier = TIERS.find((tier) => (p.rank / list.length) * 100 <= tier + 1e-9) ?? null;
     });
     return list;
   }
