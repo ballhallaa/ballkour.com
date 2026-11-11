@@ -123,6 +123,7 @@
   "lb.tab.top": "トップ10",
   "lb.tab.unassisted": "アシストなし",
   "lb.assisted.title": "アシストモードでプレイされた記録",
+  "lb.unassisted.title": "アシストモードなしでプレイされた記録",
   "lb.legacy.ratingNote": "レーティング：旧ランキング全体での各プレイヤーの旧レーティング",
   "lb.assisted.ratingNote": "レーティング：各プレイヤーのアシストモードがあるコースでのアシストレーティング",
   "lb.assisted.ratingThen": "レーティング：各プレイヤーのアシストモードがあるコースでのアシストレーティング（{date}時点）",

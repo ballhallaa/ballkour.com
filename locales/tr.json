@@ -123,6 +123,7 @@
   "lb.tab.top": "İlk 10",
   "lb.tab.unassisted": "Yardımsız",
   "lb.assisted.title": "Yardım modunda oynanan koşular",
+  "lb.unassisted.title": "Yardım modu olmadan oynanan koşular",
   "lb.legacy.ratingNote": "Puanlar: her oyuncunun tüm eski tablolardaki eski puanı",
   "lb.assisted.ratingNote": "Puanlar: her oyuncunun yardım modu olan parkurlardaki yardımlı puanı",
   "lb.assisted.ratingThen": "Puanlar: her oyuncunun yardım modu olan parkurlardaki yardımlı puanı, {date} itibarıyla",

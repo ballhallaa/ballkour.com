@@ -123,6 +123,7 @@
   "lb.tab.top": "Top 10",
   "lb.tab.unassisted": "Senza assistenza",
   "lb.assisted.title": "Run giocate in modalità assistita",
+  "lb.unassisted.title": "Run giocate senza modalità assistita",
   "lb.legacy.ratingNote": "Punteggi: il punteggio precedente di ogni giocatore su tutte le classifiche precedenti",
   "lb.assisted.ratingNote": "Punteggi: il punteggio assistito di ogni giocatore sui percorsi con la modalità assistita",
   "lb.assisted.ratingThen": "Punteggi: il punteggio assistito di ogni giocatore sui percorsi con la modalità assistita, com’era il {date}",

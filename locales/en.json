@@ -122,6 +122,7 @@
   "lb.tab.top": "Top 10",
   "lb.tab.unassisted": "Unassisted",
   "lb.assisted.title": "Runs played in Assist Mode",
+  "lb.unassisted.title": "Runs played without Assist Mode",
   "lb.legacy.ratingNote": "Ratings: each player’s Legacy rating over every legacy board",
   "lb.assisted.ratingNote": "Ratings: each player’s assisted rating over the courses with Assist Mode",
   "lb.assisted.ratingThen": "Ratings: each player’s assisted rating over the courses with Assist Mode, as it was on {date}",

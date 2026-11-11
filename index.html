@@ -88,6 +88,7 @@
   --bronze: #e8a066;
   /* Assist Mode's pink, as in the game: its runs, boards, and ratings (see "Assisted boards") */
   --assist: #ff80c0;
+  --unassist: #e69700;
   --discord: #7c86ff;
   --menu: #0a110e;
   --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
@@ -874,8 +875,10 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .tag-legacy { height: 17px; padding: 0 5px; font-size: 9.5px; color: var(--ink-2); border: 1px solid var(--line-hi); }
 /* A run played in Assist Mode, and the assisted boards and ratings (see "Assisted boards") */
 .tag-assisted { height: 17px; padding: 0 5px; font-size: 9.5px; color: var(--assist); background: rgba(255, 128, 192, .1); border: 1px solid rgba(255, 128, 192, .45); }
+/* A remake's regular board, which has an assisted one beside it, in the game's orange */
+.tag-unassisted { height: 17px; padding: 0 5px; font-size: 9.5px; color: var(--unassist); background: rgba(230, 151, 0, .1); border: 1px solid rgba(230, 151, 0, .45); }
 .lb-tab[data-tab="assisted"][aria-selected="true"] { background: rgba(255, 128, 192, .12); box-shadow: inset 0 0 0 1px rgba(255, 128, 192, .4); }
-.board-assisted > span { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.board-assisted > span, .board-unassisted > span { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
 /* Their link and their stats on Discord, under their name and above the tabs (see playerHtml) */
 .pl-account { padding-top: 14px; }
 .pl-account > :last-child { margin-bottom: 0; }
@@ -2066,6 +2069,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "lb.tab.unassisted": "Unassisted",
   "lb.tab.assisted": "Assisted",
   "lb.assisted.title": "Runs played in Assist Mode",
+  "lb.unassisted.title": "Runs played without Assist Mode",
   "lb.legacy.ratingNote": "Ratings: each player’s Legacy rating over every legacy board",
   "lb.assisted.ratingNote": "Ratings: each player’s assisted rating over the courses with Assist Mode",
   "lb.assisted.ratingThen": "Ratings: each player’s assisted rating over the courses with Assist Mode, as it was on {date}",
@@ -2601,6 +2605,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   const legacyCourses = () => COURSES.filter((c) => HISTORY[c.n] && HISTORY[c.n].legacy.length).map(legacyOf);
   // A pink "Assisted" tag, after a course or on a run that's on an assisted board
   const assistedTag = () => `<span class="tag tag-assisted">${esc(t("lb.tab.assisted"))}</span>`;
+  // And an orange "Unassisted" one, over a remake's regular board, so it isn't mistaken for the assisted one beside it
+  const unassistedTag = () => `<span class="tag tag-unassisted">${esc(t("lb.tab.unassisted"))}</span>`;
 
   /* ---------- Translations ---------- */
   const LANGS = [
@@ -2844,7 +2850,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     // history arrives
     const ids = ["top", ...(hasAssistMode(c) ? ["assisted"] : []), ...(h && h.legacy.length ? ["legacy"] : [])];
     const on = ids.includes(v.tab) ? v.tab : "top";
-    const panel = on === "legacy" ? legacyHtml(c, h.legacy) : on === "assisted" ? assistedHtml(c, v) : topHtml(c, v);
+    const panel = on === "legacy" ? legacyHtml(c, h.legacy) : on === "assisted" ? assistedHtml(c, v)
+      : hasAssistMode(c) ? unassistedHtml(c, v) : topHtml(c, v);
     return tabsHtml(c, ids, on, t("lb.toggle", { course: `${c.n} ${c.name}` }), panel);
   }
   // A board's tabs (ids, each named "lb.tab.<id>" unless names says), with on picked, over the picked one's panel
@@ -2856,6 +2863,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // A course's assisted board (see "Assisted boards"): like its Top 10, with its history, from its assisted twin
   function assistedHtml(c, v) {
     return `<div class="board-meta board-assisted"><span>${assistedTag()}<span>${esc(t("lb.assisted.title"))}</span></span></div>` + topHtml(assistedOf(c), v);
+  }
+  // A remake's regular board: its Top 10, with the line saying it's the one without Assist Mode
+  function unassistedHtml(c, v) {
+    return `<div class="board-meta board-unassisted"><span>${unassistedTag()}<span>${esc(t("lb.unassisted.title"))}</span></span></div>` + topHtml(c, v);
   }
   // A board's top 10 is as posted, and Show all lists everyone past it (see "Every run, and the ratings")
   function topHtml(c, v) {
@@ -4770,15 +4781,16 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   }
   // A word in a pill after a title, like an assisted board's ASSISTED, in Assist Mode's pink (w: its width, from PIC_CHIP)
   const PIC_CHIP = '700 17px "JetBrains Mono", monospace';
-  function picChip(ctx, text, x, cy, w) {
+  // rgb: the chip's color, pink (Assisted) unless it says otherwise
+  function picChip(ctx, text, x, cy, w, rgb = "255,128,192") {
     picBox(ctx, x, cy - 16, w, 32, 8);
-    ctx.fillStyle = "rgba(255,128,192,.12)";
+    ctx.fillStyle = `rgba(${rgb},.12)`;
     ctx.fill();
     ctx.lineWidth = 1;
-    ctx.strokeStyle = "rgba(255,128,192,.5)";
+    ctx.strokeStyle = `rgba(${rgb},.5)`;
     ctx.stroke();
     picFont(ctx, PIC_CHIP, 2.4);
-    picText(ctx, text, x + 12, cy, "#ff80c0");
+    picText(ctx, text, x + 12, cy, `rgb(${rgb})`);
   }
   // Words on a picture, in capitals the way the page's language writes them (i is İ in Turkish). Names and codes
   // keep plain capitals.
@@ -4879,13 +4891,15 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     // The title, with the site's orange and blue edges, and the two lines under it
     const textTop = PIC.top + (PIC.head - 99.6) / 2;
     const titleY = textTop + 24.3;
-    // An assisted board's title has a pink ASSISTED chip after it, like the leaderboard bot's pictures
-    const chip = d.assisted ? up(t("lb.tab.assisted")) : "";
+    // An assisted board's title has a pink ASSISTED chip after it, and a remake's regular board an orange UNASSISTED
+    // one, like the leaderboard bot's pictures
+    const unassisted = !d.assisted && !d.legacy && hasAssistMode(c);
+    const chip = d.assisted ? up(t("lb.tab.assisted")) : unassisted ? up(t("lb.tab.unassisted")) : "";
     const chipW = chip ? (picFont(ctx, PIC_CHIP, 2.4), ctx.measureText(chip).width + 24) : 0;
     picFont(ctx, `40px ${EMOJI}`);
     const flagW = c.flag ? picText(ctx, c.flag, PIC.pad, titleY, "#fff") + 16 : 0;
     const titleW = picTitle(ctx, c.name.toUpperCase(), PIC.pad + flagW, titleY, chip ? W - 2 * PIC.pad - PIC.head - 24 - flagW - chipW - 16 : 0);
-    if (chip) picChip(ctx, chip, PIC.pad + flagW + titleW + 16, titleY, chipW);
+    if (chip) picChip(ctx, chip, PIC.pad + flagW + titleW + 16, titleY, chipW, unassisted ? "230,151,0" : undefined);
     const line = (parts, cy) => picLine(ctx, parts, cy, W - 2 * PIC.pad - PIC.head - 24);
     const sorted = d.byMiss ? up(t("pic.fewest")) : "";
     line(d.legacy ? [up(t(sorted ? "lb.tab.legacy" : "pic.legacyTop")), sorted, up(t("pic.beforeMay"))]

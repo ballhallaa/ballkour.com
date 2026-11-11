@@ -123,6 +123,7 @@
   "lb.tab.top": "Top 10",
   "lb.tab.unassisted": "Sin asistencia",
   "lb.assisted.title": "Carreras jugadas en modo asistido",
+  "lb.unassisted.title": "Carreras jugadas sin modo asistido",
   "lb.legacy.ratingNote": "Puntuaciones: la puntuación anterior de cada jugador en todas las clasificaciones anteriores",
   "lb.assisted.ratingNote": "Puntuaciones: la puntuación asistida de cada jugador en los recorridos con modo asistido",
   "lb.assisted.ratingThen": "Puntuaciones: la puntuación asistida de cada jugador en los recorridos con modo asistido, tal como era el {date}",

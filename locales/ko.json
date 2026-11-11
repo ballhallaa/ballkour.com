@@ -123,6 +123,7 @@
   "lb.tab.top": "TOP 10",
   "lb.tab.unassisted": "어시스트 없음",
   "lb.assisted.title": "어시스트 모드로 플레이한 기록",
+  "lb.unassisted.title": "어시스트 모드 없이 플레이한 기록",
   "lb.legacy.ratingNote": "레이팅: 모든 이전 기록 순위표에 대한 각 플레이어의 이전 기록 레이팅",
   "lb.assisted.ratingNote": "레이팅: 각 플레이어의 어시스트 모드가 있는 코스 어시스트 레이팅",
   "lb.assisted.ratingThen": "레이팅: {date} 기준 각 플레이어의 어시스트 모드가 있는 코스 어시스트 레이팅",
