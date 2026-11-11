@@ -15,7 +15,7 @@
    /api/…              Signing in with Discord, and runs sent from the form under Submit a run, which go on the boards
                        straight away. See "Signing in with Discord, and runs sent from the website" below. Players'
                        stats on their Discord profiles too: see "Stats on Discord profiles". And players claiming their
-                       runs from before May 2026: see "Claiming legacy runs". And the names players pick for their
+                       runs from before 2026-04-29: see "Claiming legacy runs". And the names players pick for their
                        links: see "Players' own links".
    /runs/<id>          A run sent from the website: the home page, which opens the run's page. Ballkyrie's post for
                        it in the run submissions channel links here. See "Each run's page".
@@ -1390,7 +1390,7 @@ async function review(request, env, ctx) {
 }
 
 /* ---------- Claiming legacy runs ----------
-   The legacy boards (history.json's "legacy", from before May 2026) have runs under just an in-game name, with no
+   The legacy boards (history.json's "legacy", from before 2026-04-29) have runs under just an in-game name, with no
    Discord ID. Those runs aren't anyone's on the site: they're their own player, with no Discord name or picture, and
    they don't show in anyone's My profile. A signed-in player can say a legacy name is theirs (Is this you? in its panel
    on the site). The claim waits in runs.json's "claims" until a moderator checks that it's really them, under the form
@@ -1546,7 +1546,7 @@ async function reviewClaim(request, env, ctx) {
    Every player's panel has a short link, ballkour.com/profile/<number> (and /profile/<number>/runs for their Runs), and
    each player can pick a name for theirs in their own panel, for ballkour.com/profile/<name>. Links from before
    November 2026 have /players/ in place of /profile/, and keep working. Numbers go from 1 in the
-   order players first ran a course: runs with no date (the legacy ones, from before May 2026) first, then by date, and
+   order players first ran a course: runs with no date (the legacy ones, from before 2026-04-29) first, then by date, and
    players who started the same day by how old their Discord account is. New players get the next number. A number is
    never given to anyone else, even when a player's line is deleted by hand ("last" counts them, like runs.json's
    "lastId").
@@ -2391,7 +2391,7 @@ function previewOf(pathname, data, players) {
       const legacy = ((history[n] && history[n].legacy) || []).filter((r) => r && typeof r.name === "string" && typeof r.time === "string")
         .map((r) => ({ ...r, time: r.time.replace(".--", "") })).sort((a, b) => toSeconds(a.time) - toSeconds(b.time))
         .filter((r) => !seen.has(playerKey(r)) && seen.add(playerKey(r)));
-      return { title: `${name(n)} · Legacy Top 10`, description: legacy.length ? `Before May 2026: ${top3(legacy)}` : "Before May 2026" };
+      return { title: `${name(n)} · Legacy Top 10`, description: legacy.length ? `Before 2026-04-29: ${top3(legacy)}` : "Before 2026-04-29" };
     }
     // The boards in its history, then today's when it's changed since the last one (boardsOf() in index.html), so an
     // older board's number is the same as on the page
@@ -2433,7 +2433,7 @@ function previewOf(pathname, data, players) {
       title: caps(shown),
       description: p
         ? [`#${p.rank} of ${rated.length} in the Player ratings`, ratingText(p.rating), p.tier === null ? "Rated" : `Top ${p.tier}%`, `${p.courses} of ${counted.length} courses run`].join(" · ")
-        : theirs.length ? "Not rated yet" : legacy.length ? "Runs from before May 2026" : "No runs yet",
+        : theirs.length ? "Not rated yet" : legacy.length ? "Runs from before 2026-04-29" : "No runs yet",
     };
   }
   return null;
