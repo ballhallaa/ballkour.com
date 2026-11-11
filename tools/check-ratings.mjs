@@ -51,9 +51,10 @@ const ratingRows = (r) => r.players.map((p) => `${p.key} #${p.rank} ${p.rating.t
 async function worker() {
   const copy = path.join(tmp, "worker-ratings.mjs");
   fs.copyFileSync(path.join(ROOT, "cloudflare/ratings.js"), copy);
-  const { loadCourses, standings, rate } = await import(pathToFileURL(copy).href);
+  const { loadCourses, standings, rate, combine } = await import(pathToFileURL(copy).href);
   const courses = loadCourses(files, game.courses);
-  return { boards: Object.fromEntries(courses.map((c) => [c.n, boardRows(standings(c))])), ratings: ratingRows(rate(courses)), counted: rate(courses).counted };
+  const global = combine([rate(courses), rate(loadCourses(files, game.courses, { assisted: true }))]);
+  return { boards: Object.fromEntries(courses.map((c) => [c.n, boardRows(standings(c))])), ratings: ratingRows(rate(courses)), counted: rate(courses).counted, global: ratingRows(global) };
 }
 
 // ---------- The bot's: its own files, reading the same course files and data from folders, like its workflow ----------
@@ -70,9 +71,11 @@ async function bot() {
   process.env.REPO_ROOT = repo;
   process.env.DATA_ROOT = data;
   const { loadCourses } = await import(pathToFileURL(path.join(dir, "boards.mjs")).href);
-  const { standings, rate } = await import(pathToFileURL(path.join(dir, "ratings.mjs")).href);
+  const { standings, rate, combine } = await import(pathToFileURL(path.join(dir, "ratings.mjs")).href);
   const courses = loadCourses();
-  return { boards: Object.fromEntries(courses.map((c) => [c.n, boardRows(standings(c))])), ratings: ratingRows(rate(courses)), counted: rate(courses).counted };
+  // The Global rating, once the bot has it (combine)
+  const global = combine ? ratingRows(combine([rate(courses), rate(loadCourses({ assisted: true }))])) : null;
+  return { boards: Object.fromEntries(courses.map((c) => [c.n, boardRows(standings(c))])), ratings: ratingRows(rate(courses)), counted: rate(courses).counted, global };
 }
 
 // ---------- The page's: its script, in a stand-in for the browser ----------
@@ -154,6 +157,7 @@ async function page() {
     boards: Object.fromEntries(COURSES.map((c) => [c.n, boardRows(standingsOf(c))])),
     ratings: ratingRows(rated),
     counted: rated.counted.map((c) => c.n),
+    global: ratingRows(ratings(null, "global")),
   };
 }
 
@@ -172,10 +176,15 @@ for (const [name, c] of Object.entries(copies).slice(1)) {
       problems.push(`course ${n}'s board: at #${i + 1}, ${baseName} has ${a[i] || "nobody"} and ${name} has ${b[i] || "nobody"} (${a.length} and ${b.length} players)`);
     }
   }
-  const at = base.ratings.findIndex((row, i) => row !== c.ratings[i]);
-  if (at >= 0 || base.ratings.length !== c.ratings.length) {
-    const i = at >= 0 ? at : Math.min(base.ratings.length, c.ratings.length);
-    problems.push(`the Player ratings: at #${i + 1}, ${baseName} has ${base.ratings[i] || "nobody"} and ${name} has ${c.ratings[i] || "nobody"}`);
+  // The Player ratings, and the Global rating (the unassisted and assisted ratings added up, for the Global roles)
+  for (const [what, rows] of [["the Player ratings", "ratings"], ["the Global rating", "global"]]) {
+    const a = base[rows], b = c[rows];
+    if (!b) continue; // the bot's copy has no Global rating yet
+    const at = a.findIndex((row, i) => row !== b[i]);
+    if (at >= 0 || a.length !== b.length) {
+      const i = at >= 0 ? at : Math.min(a.length, b.length);
+      problems.push(`${what}: at #${i + 1}, ${baseName} has ${a[i] || "nobody"} and ${name} has ${b[i] || "nobody"}`);
+    }
   }
 }
 const players = base.ratings.length;

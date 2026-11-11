@@ -53,7 +53,7 @@
    so /code/game/issues goes to the game's issues. Everything else is the site's own files, which Cloudflare serves from its copy of this repo. */
 
 import { DurableObject } from "cloudflare:workers";
-import { loadCourses, rate, standings, playerKey } from "./ratings.js";
+import { loadCourses, rate, combine, standings, playerKey } from "./ratings.js";
 
 const GUILD_ID = "1212553452283101245";
 // Where players open a ticket on our Discord (the site's ticket button links to it too)
@@ -2367,13 +2367,14 @@ function previewOf(pathname, data, players) {
     };
   }
   // A board: the top 3 on it (the newest board, an older one from its history, the legacy one, or the assisted one),
-  // or the ratings' (or the assisted ratings')
-  if ((m = /^\/leaderboards\/(ratings|\d+)(?:-[\w-]*)?(?:\/(legacy|assisted|\d+))?\/?$/i.exec(pathname))) {
+  // or the ratings' (or the assisted or Global ratings')
+  if ((m = /^\/leaderboards\/(ratings|\d+)(?:-[\w-]*)?(?:\/(legacy|assisted|global|\d+))?\/?$/i.exec(pathname))) {
     const assisted = !!m[2] && m[2].toLowerCase() === ASSISTED;
     if (m[1].toLowerCase() === "ratings") {
-      const { players: rated } = rate(courses(assisted));
+      const global = !!m[2] && m[2].toLowerCase() === "global";
+      const { players: rated } = global ? combine([rate(courses(false)), rate(courses(true))]) : rate(courses(assisted));
       return {
-        title: assisted ? "Assisted player ratings" : "Player ratings",
+        title: global ? "Global player ratings" : assisted ? "Assisted player ratings" : "Player ratings",
         description: rated.length ? rated.slice(0, 3).map((p) => `${p.rank}. ${caps(p.name)} ${ratingText(p.rating)}`).join(" · ") : "No ratings yet",
       };
     }
@@ -2446,7 +2447,7 @@ function previewOf(pathname, data, players) {
 // /stats/2026-11-05/week, /stats/day, /stats/3-months), and each player's panel (/players/<number or name>, see "Players' own links",
 // and /players/<…>/runs for their Runs), are the home page. On ballkour.com a Cloudflare rule already serves the
 // sections that way, but the test copy on workers.dev has no such rule, so the Worker does it too.
-const DEEP_LINK = /^\/(?:(?:courses|leaderboards|submit|features|faq|source-code|translations|runs|stats|my-stats)\/?|leaderboards\/[\w-]+(?:\/legacy|\/assisted|\/\d+)?\/?|faq\/[\w-]+\/?|runs\/[\w-]+\/?|stats(?:\/\d{4}-\d{2}-\d{2})?(?:\/(?:day|week|3-months|6-months|12-months))?\/?|players\/[^/]{1,300}(?:\/runs)?\/?)$/i;
+const DEEP_LINK = /^\/(?:(?:courses|leaderboards|submit|features|faq|source-code|translations|runs|stats|my-stats)\/?|leaderboards\/[\w-]+(?:\/legacy|\/assisted|\/global|\/\d+)?\/?|faq\/[\w-]+\/?|runs\/[\w-]+\/?|stats(?:\/\d{4}-\d{2}-\d{2})?(?:\/(?:day|week|3-months|6-months|12-months))?\/?|players\/[^/]{1,300}(?:\/runs)?\/?)$/i;
 async function page(request, env, ctx) {
   // Ask for the full page every time (no 304 Not Modified), so a browser never reuses old data from its cache
   const headers = new Headers(request.headers);

@@ -19,7 +19,7 @@ import urllib.request
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
 # The addresses that are the home page, like the Worker and Cloudflare's rules serve them
-PAGES = re.compile(r"^/(?:(courses|leaderboards|submit|features|faq|source-code|translations|runs|my-stats|players)(/[^/]+(/legacy|/assisted|/\d+|/runs)?)?"
+PAGES = re.compile(r"^/(?:(courses|leaderboards|submit|features|faq|source-code|translations|runs|my-stats|players)(/[^/]+(/legacy|/assisted|/global|/\d+|/runs)?)?"
                    r"|stats(/\d{4}-\d{2}-\d{2})?(/day|/week|/3-months|/6-months|/12-months)?)/?$", re.I)
 
 
