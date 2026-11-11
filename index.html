@@ -3840,7 +3840,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const top = r.players.slice(0, 10);
     const rest = r.players.slice(10);
     const courses = r.counted.map((c) => `<span class="nowrap">${c.n} ${flagName(c)}</span>`).join(esc(" · "));
-    return meta + `<div class="lb-bar">${searchHtml(RATINGS)}</div>` + rowsHtml(RATINGS, top, rest, (p) => ratingRow(p, r)) +
+    return meta + `<div class="lb-bar">${searchHtml(RATINGS)}<button class="lb-pic" type="button" data-course="${RATINGS.n}">${icon("image")}<span>${esc(t("pic.button"))}</span></button></div>` +
+      rowsHtml(RATINGS, top, rest, (p) => ratingRow(p, r)) +
       `<p class="lb-foot"><span>${esc(t(r.legacy ? "rt.legacy.how" : r.assisted ? "rt.assisted.how" : r.global ? "rt.global.how" : "rt.how"))}</span><span>${esc(t(r.legacy ? "rt.legacy.tiers" : r.assisted ? "rt.assisted.tiers" : r.global ? "rt.global.tiers" : "rt.tiers", { count: r.players.length.toLocaleString(htmlLang()) }))}</span>` +
       `<span>${esc(t(r.legacy ? "rt.legacy.counted" : "rt.counted", { courses: "\u0000" })).replace("\u0000", courses)}</span></p>` + mathHtml(r);
   }
@@ -5328,9 +5329,131 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       d.rows.filter((x) => x.best).map(({ c, at, best, total, tagged }) => `${c.n}. ${c.name}${tagged ? ` (${t("lb.tab.assisted")})` : ""}: ${best.time}, ${t("unit.mistakes", { count: best.miss })}, ${t("res.of", { rank: at + 1, total })}`).join("; ");
     pictureWindow(esc(t("pic.player", { player: d.name })), (code) => drawPlayerPicture(d, code), filename, alt);
   }
+  /* ---------- Ratings pictures ----------
+     Picture on the Player ratings draws the tab that's open the same way, to save, copy or share: its top 10 in two
+     columns of five, each with their place, name, Top %, rating and courses run, and their Discord under it, with the
+     tab's link at the foot. In the page's language too. */
+  // The tab's chip after the title, in its color: the site's green (Global), the game's orange (Unassisted), Assist
+  // Mode's pink (Assisted), and grey (Legacy)
+  const RATINGS_PIC = {
+    global: { name: "lb.tab.global", line: "rt.global.title", rgb: "0,230,151" },
+    top: { name: "lb.tab.unassisted", line: "lb.unassisted.title", rgb: "230,151,0" },
+    assisted: { name: "lb.tab.assisted", line: "rt.assisted.title", rgb: "255,128,192" },
+    legacy: { name: "lb.tab.legacy", line: "rt.legacy.title", rgb: "167,182,176" },
+  };
+  function picRatings() {
+    const tab = RATINGS_TABS.includes(viewOf(RATINGS).tab) ? viewOf(RATINGS).tab : "global";
+    const r = ratings(null, ratingsFor(tab));
+    const players = r.players.slice(0, 10);
+    return { tab, players, counted: r.counted.length, people: players.map((p) => (p.discord && PLAYERS.get(p.discord)) || null) };
+  }
+  // The ratings picture in a language (code), once its fonts and pictures have loaded
+  async function drawRatingsPicture(d, code) {
+    await picFonts([
+      'italic 800 54px "Barlow Condensed"', '700 25px Barlow', '600 16px Barlow', '700 23px "JetBrains Mono"',
+      '600 15px "JetBrains Mono"', '400 13.5px "JetBrains Mono"',
+    ], "", code);
+    const [logo, ...pfps] = await Promise.all([loadImg("/assets/logo.webp"), ...d.people.map((p) => (p && /^https:\/\/cdn\.discordapp\.com\//.test(p.avatar) ? loadImg(p.avatar, true) : null))]);
+    return inLang(code, () => paintRatingsPicture(d, logo, pfps));
+  }
+  function paintRatingsPicture(d, logo, pfps) {
+    const W = PIC.w, rowsTop = PIC.top + PIC.head + 22, footY = rowsTop + 5 * PIC.rowH + 4 * PIC.gap + 18, H = Math.round(footY + 17 + 26);
+    const { cv, ctx } = picCanvas(W, H, logo);
+    const look = RATINGS_PIC[d.tab];
+    // The title and the tab's chip, then what the tab's ratings are and how many courses count
+    const textTop = PIC.top + (PIC.head - 99.6) / 2;
+    const titleY = textTop + 24.3;
+    const chip = up(t(look.name));
+    const chipW = (picFont(ctx, PIC_CHIP, 2.4), ctx.measureText(chip).width + 24);
+    const titleW = picTitle(ctx, up(t("rt.title")), PIC.pad, titleY, W - 2 * PIC.pad - PIC.head - 24 - chipW - 16);
+    picChip(ctx, chip, PIC.pad + titleW + 16, titleY, chipW, look.rgb);
+    const max = W - 2 * PIC.pad - PIC.head - 24;
+    picLine(ctx, [up(t(look.line))], textTop + 48.6 + 12 + 7.5, max);
+    picLine(ctx, [field(t("pl.courses"), localNum(d.counted))], textTop + 48.6 + 12 + 15 + 9 + 7.5, max);
+    // The players, in two columns of five, the best three in their colors
+    const colW = (W - 2 * PIC.pad - PIC.colGap) / 2;
+    const TIER = ["#ffd54f", "#d3dde2", "#e8a066"];
+    for (let i = 0; i < 10; i++) {
+      const p = d.players[i] || null;
+      const x = PIC.pad + (i < 5 ? 0 : colW + PIC.colGap), y = rowsTop + (i % 5) * (PIC.rowH + PIC.gap);
+      const tint = p && p.rank <= 3 ? TIER[p.rank - 1] : null;
+      ctx.save();
+      if (!p) ctx.globalAlpha = 0.38;
+      picBox(ctx, x, y, colW, PIC.rowH, 11);
+      if (tint) {
+        const g = ctx.createLinearGradient(x, 0, x + colW, 0);
+        g.addColorStop(0, mix(rgb(tint), [9, 15, 13], 0.17)); g.addColorStop(0.7, "rgba(9,15,13,.93)");
+        ctx.fillStyle = g;
+      } else ctx.fillStyle = "rgba(9,15,13,.93)";
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = tint ? `rgba(${rgb(tint)},.3)` : "rgba(196,255,232,.11)";
+      ctx.stroke();
+      const left = x + 16, right = x + colW - 16, midY = y + PIC.rowH / 2;
+      picFont(ctx, '700 22px "JetBrains Mono", monospace');
+      picText(ctx, String(p ? p.rank : i + 1), left, midY, tint || "#76867f");
+      const who = p && d.people[i];
+      const blockTop = y + (PIC.rowH - (27.5 + (who ? 7 + 17.6 : 0))) / 2;
+      const y1 = blockTop + 13.75, y2 = blockTop + 27.5 + 7 + 17.6 / 2;
+      // Courses run, then the rating, from the right
+      picFont(ctx, '700 20px "JetBrains Mono", monospace');
+      const ran = p ? `${p.courses}/${d.counted}` : `-/${d.counted}`;
+      const ranW = picText(ctx, ran, right, y1, "#a7b6b0", "right");
+      picIcon(ctx, "map", right - ranW - 7 - 19, y1, 19, "#76867f");
+      const ratingRight = right - ranW - 7 - 19 - 18;
+      picFont(ctx, '700 23px "JetBrains Mono", monospace');
+      const rw = picText(ctx, p ? points(p.rating) : "-", ratingRight, y1, p ? "#ecf6f2" : "#76867f", "right");
+      picIcon(ctx, "star", ratingRight - rw - 7 - 21, y1, 21, "#ffd54f");
+      // The name, shrunk to fit, then their Top % (gold for the Top 5% and up, like the board's)
+      const nameLeft = left + 34 + 12;
+      const tag = p ? up(tierLabel(p.tier)) : "";
+      const tagColor = p && p.tier !== null ? (p.tier <= 5 ? "#ffd54f" : "#33c6ff") : "#a7b6b0";
+      picFont(ctx, '700 11px "JetBrains Mono", monospace', 1.1);
+      const tagW = tag ? ctx.measureText(tag).width + 12 : 0;
+      const nameMax = ratingRight - rw - 7 - 21 - 12 - nameLeft - (tagW ? 9 + tagW : 0);
+      const name = p ? caps(p.name) : "---";
+      let size = 25;
+      picFont(ctx, `700 ${size}px Barlow, sans-serif`, size * 0.03);
+      while (ctx.measureText(name).width > nameMax && size > 16) { size -= 0.5; picFont(ctx, `700 ${size}px Barlow, sans-serif`, size * 0.03); }
+      ctx.save(); ctx.beginPath(); ctx.rect(nameLeft, y, Math.max(0, nameMax), PIC.rowH); ctx.clip();
+      const nw = Math.min(nameMax, picText(ctx, name, nameLeft, y1, p ? tint || "#ecf6f2" : "#76867f"));
+      ctx.restore();
+      if (tag) {
+        picFont(ctx, '700 11px "JetBrains Mono", monospace', 1.1);
+        const tx = nameLeft + nw + 9;
+        picBox(ctx, tx, y1 - 8.5, tagW, 17, 5);
+        ctx.fillStyle = `rgba(${rgb(tagColor)},.1)`; ctx.fill(); ctx.strokeStyle = `rgba(${rgb(tagColor)},.34)`; ctx.stroke();
+        picText(ctx, tag, tx + 6, y1, tagColor);
+      }
+      // Under them: their Discord name and picture
+      if (who) {
+        let dx = nameLeft;
+        if (pfps[i]) {
+          ctx.save(); ctx.beginPath(); ctx.arc(dx + 11, y2, 11, 0, Math.PI * 2); ctx.clip();
+          ctx.drawImage(pfps[i], dx, y2 - 11, 22, 22); ctx.restore();
+          dx += 29;
+        }
+        picFont(ctx, '600 16px Barlow, sans-serif');
+        ctx.save(); ctx.beginPath(); ctx.rect(dx, y2 - 12, Math.max(0, right - dx), 24); ctx.clip();
+        picText(ctx, who.name, dx, y2, "#b9befc");
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+    // The foot: the day it's from, and the tab's link in the middle (as the address shows it)
+    picFoot(ctx, W, footY + 8.5, picSplit("pic.asOf", "date", new Date().toISOString().slice(0, 10)), [], `ballkour.com/leaderboards/${ratingsPath(d.tab)}`);
+    return cv;
+  }
+  function openRatingsPicture() {
+    const d = picRatings();
+    const name = t(RATINGS_PIC[d.tab].name);
+    const filename = `player-ratings-${slugOf(d.tab === "top" ? "unassisted" : d.tab)}.png`;
+    const alt = `${t("rt.title")} · ${name}: ` + d.players.map((p) => `${p.rank}. ${p.name} ${points(p.rating)}, ${tierLabel(p.tier)}, ${t("pl.courses")} ${p.courses}/${d.counted}`).join("; ");
+    pictureWindow(esc(`${t("rt.title")} · ${name}`), (code) => drawRatingsPicture(d, code), filename, alt);
+  }
   document.addEventListener("click", (e) => {
     const b = e.target.closest(".lb-pic");
-    if (b) openPicture(course(Number(b.dataset.course)));
+    if (b) b.dataset.course === RATINGS.n ? openRatingsPicture() : openPicture(course(Number(b.dataset.course)));
   });
   pic.addEventListener("click", async (e) => {
     if (e.target.closest("[data-pic-close]")) { pic.close(); return; }
