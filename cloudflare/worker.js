@@ -637,8 +637,17 @@ function historyRuns(files, n) {
     return (Array.isArray(boards) ? boards : []).flat().filter((r) => r && typeof r.name === "string" && typeof r.time === "string" && Number.isInteger(r.mistakes));
   } catch (e) { return []; }
 }
+/* A run played in Assist Mode ("mode": "assisted" in runs.json) goes on its course's assisted board, which has its
+   own places, records, and rating (the leaderboard bot posts it, and gives out the "(Assisted)" roles): only the other
+   assisted runs count there, and it counts for nothing else. The courses' files and the old boards in history.json's
+   "boards" only have regular runs (the assisted boards the bot posted are under "assisted"). */
+const ASSISTED = "assisted";
+const isAssisted = (r) => !!r && r.mode === ASSISTED;
+// The runs in a list that are on the same boards as run: the assisted ones, or the regular ones
+const ofMode = (list, run) => (Array.isArray(list) ? list : []).filter((r) => !!r && isAssisted(r) === isAssisted(run));
 // Where a run would place on its course's board (1 + the other players whose best is faster), and whether it's its
-// player's new best there, which is the only way it changes the board
+// player's new best there, which is the only way it changes the board. pool and removed: the runs of its board's
+// (see ofMode).
 function placeOf(run, pool, removed) {
   const best = new Map();
   let mine = null;
@@ -687,7 +696,7 @@ function dumpHistory(data) {
     .map(([k, v]) => `${JSON.stringify(k)}: ${JSON.stringify(v)}`).join(", ") + "}";
   const entry = (e) => Object.entries(e).map(([k, v]) => {
     if (k === "legacy" && Array.isArray(v)) return `    "legacy": [\n${v.map((r) => "      " + run(r)).join(",\n")}\n    ]`;
-    if (k === "boards" && Array.isArray(v)) return `    "boards": [\n${v.map((b) => `      [\n${b.map((r) => "        " + run(r)).join(",\n")}\n      ]`).join(",\n")}\n    ]`;
+    if ((k === "boards" || k === ASSISTED) && Array.isArray(v)) return `    ${JSON.stringify(k)}: [\n${v.map((b) => `      [\n${b.map((r) => "        " + run(r)).join(",\n")}\n      ]`).join(",\n")}\n    ]`;
     return `    ${JSON.stringify(k)}: ${JSON.stringify(v)}`;
   }).join(",\n");
   return `{\n${Object.entries(data).map(([k, e]) => `  ${JSON.stringify(k)}: {\n${entry(e)}\n  }`).join(",\n")}\n}\n`;
@@ -828,12 +837,13 @@ function onScale(stats) {
 // best (which changes none of the above): { place } among everyone else's bests, and the course rating its time gets
 // ({ points }, null when the course isn't rated). scale is what a course was worth when they were worked out (see
 // RATING_SCALE).
+// An assisted run's are all on the assisted boards, and its ratings are the assisted ones.
 function runStats(game, before, run, n) {
   const key = playerKey(run);
   const after = structuredClone(before);
   listIn(after.runs, n).push(run);
   const side = (runs) => {
-    const courses = loadCourses({ ...game.files, [RUNS_FILE]: JSON.stringify(runs) }, game.courses);
+    const courses = loadCourses({ ...game.files, [RUNS_FILE]: JSON.stringify(runs) }, game.courses, { assisted: isAssisted(run) });
     const medals = { top10s: 0, podiums: 0, records: 0 };
     let board = [];
     for (const c of courses) {
@@ -951,7 +961,7 @@ function spanText(from, to) {
 // have its day. null on their first run there, or without stats.
 function bestBefore({ n, run, before, mine }, stats) {
   if (!stats || !stats.old) return null;
-  const sent = before && Array.isArray(before.runs[n]) ? before.runs[n] : [];
+  const sent = before ? ofMode(before.runs[n], run) : [];
   const same = [...sent, ...(mine || [])].filter((r) => r && r.discord === run.discord && r.time === stats.old && Number.isInteger(r.mistakes));
   // A tie on time goes to fewer mistakes, as on the boards
   return same.sort((a, b) => a.mistakes - b.mistakes)[0] || { time: stats.old };
@@ -981,6 +991,8 @@ function bestBefore({ n, run, before, mine }, stats) {
 // which still is, with what the run would have done.
 function runBlocks({ n, run, rank, newBest, stats, before, mine, checked }) {
   const s = stats || {};
+  // An assisted run's ratings are the assisted ones
+  const scope = isAssisted(run) ? "Assisted" : "Global";
   // Whether it's their best on the course: by its numbers, which read the boards the way the site does, or else by
   // where it placed
   const best = stats ? s.best === run.time && s.bestMiss === run.mistakes : !!newBest;
@@ -1013,9 +1025,9 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked }) {
     Number.isInteger(r.mistakes) && `Mistakes: ${r.mistakes}`,
     num(d.points) && `Course rating: ${d.points}`,
     num(d.place) && `Course rank: #${d.place}${s.players ? ` of ${s.players}` : ""}`,
-    num(d.rating) && `Global rating: ${d.rating}${first && gain ? ` (${changeText(gain)})` : ""}`,
-    num(d.rank) && `Global rank: ${first && climb ? `#${of(s.rank, 0)} → ` : ""}#${d.rank} of ${s.of}`,
-    d.tier && `Global Top %: ${first && rose ? `${was.tier} → ` : ""}${d.tier}`,
+    num(d.rating) && `${scope} rating: ${d.rating}${first && gain ? ` (${changeText(gain)})` : ""}`,
+    num(d.rank) && `${scope} rank: ${first && climb ? `#${of(s.rank, 0)} → ` : ""}#${d.rank} of ${s.of}`,
+    d.tier && `${scope} Top %: ${first && rose ? `${was.tier} → ` : ""}${d.tier}`,
     whenText(r) && `Date: ${whenText(r)}`,
   ].filter(Boolean).join("\n");
   const both = (a, b) => num(a) && num(b);
@@ -1035,10 +1047,10 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked }) {
             Number.isInteger(old.mistakes) && `Mistakes: ${changeText(run.mistakes - old.mistakes)}`,
             both(now.points, was.points) && `Course rating: ${changeText(now.points - was.points)}`,
             both(now.place, was.place) && `Course rank: ${movedText(was.place, now.place)}`,
-            both(now.rating, was.rating) && `Global rating: ${changeText(now.rating - was.rating)}`,
-            both(now.rank, was.rank) && `Global rank: ${movedText(was.rank, now.rank)}`,
+            both(now.rating, was.rating) && `${scope} rating: ${changeText(now.rating - was.rating)}`,
+            both(now.rank, was.rank) && `${scope} rank: ${movedText(was.rank, now.rank)}`,
             // "Global Top %: 50% → 25%" is a little wider than the column, so a change there may take two lines
-            tiers && `Global Top %: ${tierMoved ? `${was.tier} → ${now.tier}` : "Same"}`,
+            tiers && `${scope} Top %: ${tierMoved ? `${was.tier} → ${now.tier}` : "Same"}`,
             span && `${best && !down ? "Achieved" : "Sent"} after: ${span}`,
           ].filter(Boolean).join("\n"),
           inline: true,
@@ -1055,7 +1067,7 @@ function runButtons({ n, run, site, links }) {
     type: 1,
     components: [
       button("View run", `${site}/runs/${run.id}`),
-      button("Board", `${site}/leaderboards/${n}`),
+      button("Board", `${site}/leaderboards/${n}${isAssisted(run) ? "/assisted" : ""}`),
       button("Profile", `${site}/profile/${encodeURIComponent(linkOf(links, run.discord))}`),
     ],
   }];
@@ -1078,14 +1090,15 @@ function runPost(info) {
   const { n, courseName, courseFlag, run, pending, site, checked } = info;
   const { best, place, fields } = runBlocks(info);
   const what = !best ? "New submission" : place === 1 ? "New record submission" : place <= 3 ? "New podium submission" : place <= 10 ? "New top 10 submission" : "New personal best";
-  const title = `${what} by ${titleSafe(run.name)}!`;
+  // "New assisted record submission by NAME!": a run played in Assist Mode, for its course's assisted board
+  const title = `${isAssisted(run) ? what.replace(/^New /, "New assisted ") : what} by ${titleSafe(run.name)}!`;
   return {
     allowed_mentions: { parse: [] }, // shows who sent it without pinging them
     embeds: [{
       // Struck through once it's turned down, so it's plain that it isn't one
       title: checked && !checked.approve ? `~~${title}~~` : title,
       url: `${site}/runs/${run.id}`,
-      description: `**${courseText(n, courseName, courseFlag, mdSafe)}**`,
+      description: `**${courseText(n, courseName, courseFlag, mdSafe)}**${isAssisted(run) ? " · Assisted" : ""}`,
       color: checked ? (checked.approve ? GREEN : RED) : pending ? YELLOW : GREEN,
       fields: [
         { name: "Sent by", value: `<@${run.discord}>`, inline: true },
@@ -1182,11 +1195,11 @@ function checkedRunMessage(info) {
   return {
     allowed_mentions: { parse: [] },
     embeds: [{
-      title: checked.approve ? `Your ${run.time} on ${where} is on the board!` : `Your ${run.time} on ${where} was turned down`,
+      title: checked.approve ? `Your ${run.time} on ${where} is on the ${isAssisted(run) ? "assisted " : ""}board!` : `Your ${run.time} on ${where} was turned down`,
       url: `${site}/runs/${run.id}`,
       color: checked.approve ? GREEN : RED,
       description: checked.approve
-        ? "A moderator checked your video and approved your run. The new top 10 goes up on our Discord in a few minutes."
+        ? `A moderator checked your video and approved your run. The new ${isAssisted(run) ? "assisted " : ""}top 10 goes up on our Discord in a few minutes.`
         : `A moderator checked your video and turned your run down, so it won’t go on the board. You can send it again with another video, and if you think it’s a mistake, open a ticket on our Discord here: <#${TICKETS_CHANNEL}>`,
       fields: runBlocks(info).fields,
       ...checkedFooter(run, checked),
@@ -1203,9 +1216,10 @@ async function afterCheck(env, ctx, { run, n, approve, before, by, site }) {
   if (!dm && !post) return;
   const { files, names, flags } = await gameInfo(env, ctx);
   const file = courseFile(files, n);
-  const board = fileRuns(file, file && files[file]);
-  const mine = [...board, ...historyRuns(files, n)].filter((r) => r.discord === run.discord);
-  const { rank, newBest } = placeOf(run, [...board, ...listIn(before.runs, n)], Array.isArray(before.removed[n]) ? before.removed[n] : []);
+  // An assisted run's board has none of the course file's runs, or of its old boards (see ofMode)
+  const board = isAssisted(run) ? [] : fileRuns(file, file && files[file]);
+  const mine = isAssisted(run) ? [] : [...board, ...historyRuns(files, n)].filter((r) => r.discord === run.discord);
+  const { rank, newBest } = placeOf(run, [...board, ...ofMode(before.runs[n], run)], ofMode(before.removed[n], run));
   const stats = await sentStats(env, ctx, { n, run, before }).catch((e) => {
     console.error(`run ${run.id}: couldn't work out what it does now: ${(e && e.message) || e}`);
     return null;
@@ -1274,6 +1288,8 @@ async function submit(request, env, ctx) {
   if (!time) return answer(400, { error: "time" });
   if (!Number.isInteger(mistakes) || mistakes < 0 || mistakes > 9999) return answer(400, { error: "miss" });
   if (!video) return answer(400, { error: "video" });
+  // Played in Assist Mode: it goes on the course's assisted board (see ofMode)
+  const assisted = body.assisted === true;
 
   // The course has to have a board. Without the game data (GitHub down, and no copy kept here), there's no telling which
   // courses there are, so nothing is saved: the form says to open a ticket instead.
@@ -1285,24 +1301,25 @@ async function submit(request, env, ctx) {
   // works. The form doesn't offer them, the same way.
   const info = courses.find((c) => c.n === n);
   if (info && info.broken && !info.remake) return answer(400, { error: "course" });
-  const board = fileRuns(file, file && files[file]);
-  // Their runs from before the website's form are on the board, or on its old boards
-  const mine = [...board, ...historyRuns(files, n)].filter((r) => r.discord === user.id);
+  // An assisted run's board has none of the course file's runs (see ofMode)
+  const board = assisted ? [] : fileRuns(file, file && files[file]);
+  // Their runs from before the website's form are on the board, or on its old boards (none of them assisted)
+  const mine = assisted ? [] : [...board, ...historyRuns(files, n)].filter((r) => r.discord === user.id);
 
   const sentAt = stamp();
-  const run = { name: caps(name), discord: user.id, time, mistakes, date: sentAt.slice(0, 10), video, id: "", sentAt };
+  const run = { name: caps(name), discord: user.id, time, mistakes, date: sentAt.slice(0, 10), video, id: "", sentAt, ...(assisted ? { mode: ASSISTED } : {}) };
   let before = null; // runs.json just before the run went in, for what it did (runStats)
   const saved = await editRuns(env, (data) => {
     const list = listIn(data.runs, n), waiting = listIn(data.pending, n);
     // The same run sent twice is only saved once, and so is one from before the form that's on a board, which has no
     // id (a turned-down run can be sent again, with a new video, say, and so can one that's taken off)
-    const removed = Array.isArray(data.removed[n]) ? data.removed[n] : [];
+    const removed = ofMode(data.removed[n], run);
     const old = mine.filter((r) => !removed.some((x) => sameRunAs(x, r)));
-    const same = [...list, ...waiting, ...old].find((r) => r && r.discord === run.discord && r.time === run.time && r.mistakes === run.mistakes);
+    const same = [...ofMode(list, run), ...ofMode(waiting, run), ...old].find((r) => r && r.discord === run.discord && r.time === run.time && r.mistakes === run.mistakes);
     if (same) return { skip: true, id: same.id };
     const today = ["runs", "pending", "declined"].flatMap((k) => Object.values(data[k]).flat()).filter((r) => r && r.discord === run.discord && r.date === run.date).length;
     if (today >= 20) return { error: "rate", status: 429 };
-    const { rank, newBest } = placeOf(run, [...board, ...list], Array.isArray(data.removed[n]) ? data.removed[n] : []);
+    const { rank, newBest } = placeOf(run, [...board, ...ofMode(list, run)], removed);
     before = structuredClone(data);
     // Its id: the next number, worked out again if runs.json changed under it (see editRuns), so two runs sent at
     // once can't get the same one
@@ -1310,10 +1327,10 @@ async function submit(request, env, ctx) {
     run.id = String(data.lastId);
     if (rank <= 10 && newBest) {
       waiting.push(run);
-      return { message: `chore(leaderboard): hold ${run.name}'s ${run.time} on course ${n} for a check`, pending: true, rank, newBest };
+      return { message: `chore(leaderboard): hold ${run.name}'s ${assisted ? "assisted " : ""}${run.time} on course ${n} for a check`, pending: true, rank, newBest };
     }
     list.push(run);
-    return { message: `chore(leaderboard): add ${run.name}'s ${run.time} on course ${n} from ballkour.com`, pending: false, rank, newBest };
+    return { message: `chore(leaderboard): add ${run.name}'s ${assisted ? "assisted " : ""}${run.time} on course ${n} from ballkour.com`, pending: false, rank, newBest };
   });
   if (saved.error) return answer(saved.status, { error: saved.error });
   await showSaved(saved.text, user).catch((e) => console.error(`submit: couldn't update the cached copy: ${(e && e.message) || e}`));
@@ -1333,7 +1350,7 @@ async function pending(request, env, ctx) {
   const { files, names } = await gameInfo(env, ctx);
   const runs = Object.entries(data.pending).flatMap(([n, list]) => (Array.isArray(list) ? list : []).filter((r) => r && r.id).map((r) => {
     const file = courseFile(files, n);
-    const { rank } = placeOf(r, [...fileRuns(file, file && files[file]), ...listIn(data.runs, n)], Array.isArray(data.removed[n]) ? data.removed[n] : []);
+    const { rank } = placeOf(r, [...(isAssisted(r) ? [] : fileRuns(file, file && files[file])), ...ofMode(data.runs[n], r)], ofMode(data.removed[n], r));
     return { course: Number(n), courseName: names[n] || "", rank, ...r };
   })).sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
   // And the claims to legacy runs waiting for a check, oldest first (see "Claiming legacy runs")
@@ -2304,9 +2321,10 @@ const PROFILE_LINK = /^\/profile(?:\/[^/]{1,300}(?:\/runs)?)?\/?$/i;
 const isPage = (path) => DEEP_LINK.test(path) || PROFILE_LINK.test(path);
 function previewOf(pathname, data, players) {
   if (!PREVIEWED.test(pathname) || !data || !data.files || !Array.isArray(data.courses)) return null;
-  let loaded = null;
-  const courses = () => loaded || (loaded = loadCourses(data.files, data.courses));
-  const boardOf = (n) => { const c = courses().find((x) => x.n === n); if (!c) return []; const { top, rest } = standings(c); return [...top, ...rest]; };
+  const loaded = {};
+  // The regular boards, or with assisted, the assisted ones (see ofMode)
+  const courses = (assisted = false) => loaded[assisted] || (loaded[assisted] = loadCourses(data.files, data.courses, { assisted }));
+  const boardOf = (n, assisted = false) => { const c = courses(assisted).find((x) => x.n === n); if (!c) return []; const { top, rest } = standings(c); return [...top, ...rest]; };
   // Its number, flag, and name, like the page's ("1 🇬🇮 Watchpoint: Gibraltar")
   const name = (n) => (data.names[n] ? `${n} ${data.flags[n] ? `${data.flags[n]} ` : ""}${data.names[n]}` : `Course ${n}`);
   const history = (() => { try { return JSON.parse(data.files[HISTORY_FILE]) || {}; } catch (e) { return {}; } })();
@@ -2335,7 +2353,7 @@ function previewOf(pathname, data, players) {
       group = "runs";
     }
     if (!run) return null;
-    const board = boardOf(n);
+    const board = boardOf(n, isAssisted(run));
     const at = board.findIndex((r) => playerKey(r) === playerKey(run) && r.time === run.time && r.mistakes === run.mistakes);
     const best = board.find((r) => playerKey(r) === playerKey(run));
     const where = group === "pending" ? "Waiting for a moderator to check it"
@@ -2344,22 +2362,28 @@ function previewOf(pathname, data, players) {
       : at >= 0 ? `#${at + 1} of ${board.length} on the board`
       : best ? `Their best there is ${best.time}` : "Taken off the board";
     return {
-      title: `${caps(run.name)} · ${run.time} on ${name(n)}`,
+      title: `${caps(run.name)} · ${run.time} on ${name(n)}${isAssisted(run) ? " (Assisted)" : ""}`,
       description: [where, mistakesText(run.mistakes), run.date || ""].filter(Boolean).join(" · "),
     };
   }
-  // A board: the top 3 on it (the newest board, an older one from its history, or the legacy one), or the ratings'
-  if ((m = /^\/leaderboards\/(ratings|\d+)(?:-[\w-]*)?(?:\/(legacy|\d+))?\/?$/i.exec(pathname))) {
+  // A board: the top 3 on it (the newest board, an older one from its history, the legacy one, or the assisted one),
+  // or the ratings' (or the assisted ratings')
+  if ((m = /^\/leaderboards\/(ratings|\d+)(?:-[\w-]*)?(?:\/(legacy|assisted|\d+))?\/?$/i.exec(pathname))) {
+    const assisted = !!m[2] && m[2].toLowerCase() === ASSISTED;
     if (m[1].toLowerCase() === "ratings") {
-      const { players: rated } = rate(courses());
+      const { players: rated } = rate(courses(assisted));
       return {
-        title: "Player ratings",
+        title: assisted ? "Assisted player ratings" : "Player ratings",
         description: rated.length ? rated.slice(0, 3).map((p) => `${p.rank}. ${caps(p.name)} ${ratingText(p.rating)}`).join(" · ") : "No ratings yet",
       };
     }
     const n = Number(m[1]);
     const c = data.courses.find((x) => x.n === n);
     if (!c) return null;
+    if (assisted) {
+      const board = boardOf(n, true);
+      return { title: `${name(n)} · Assisted Top 10`, description: board.length ? `Played in Assist Mode: ${top3(board)}` : "No assisted times yet" };
+    }
     const boards = ((history[n] && history[n].boards) || []).filter((b) => Array.isArray(b) && b.length);
     if (m[2] && m[2].toLowerCase() === "legacy") {
       // Timed to the second ("4:30.--"), and a player could be on it twice: their fastest, like the page's legacyHtml()
@@ -2422,7 +2446,7 @@ function previewOf(pathname, data, players) {
 // /stats/2026-11-05/week, /stats/day, /stats/3-months), and each player's panel (/players/<number or name>, see "Players' own links",
 // and /players/<…>/runs for their Runs), are the home page. On ballkour.com a Cloudflare rule already serves the
 // sections that way, but the test copy on workers.dev has no such rule, so the Worker does it too.
-const DEEP_LINK = /^\/(?:(?:courses|leaderboards|submit|features|faq|source-code|translations|runs|stats|my-stats)\/?|leaderboards\/[\w-]+(?:\/legacy|\/\d+)?\/?|faq\/[\w-]+\/?|runs\/[\w-]+\/?|stats(?:\/\d{4}-\d{2}-\d{2})?(?:\/(?:day|week|3-months|6-months|12-months))?\/?|players\/[^/]{1,300}(?:\/runs)?\/?)$/i;
+const DEEP_LINK = /^\/(?:(?:courses|leaderboards|submit|features|faq|source-code|translations|runs|stats|my-stats)\/?|leaderboards\/[\w-]+(?:\/legacy|\/assisted|\/\d+)?\/?|faq\/[\w-]+\/?|runs\/[\w-]+\/?|stats(?:\/\d{4}-\d{2}-\d{2})?(?:\/(?:day|week|3-months|6-months|12-months))?\/?|players\/[^/]{1,300}(?:\/runs)?\/?)$/i;
 async function page(request, env, ctx) {
   // Ask for the full page every time (no 304 Not Modified), so a browser never reuses old data from its cache
   const headers = new Headers(request.headers);

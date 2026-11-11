@@ -125,19 +125,24 @@ function fileRuns(path, text) {
 }
 // The game data's files and course list ({ n, file, broken }) → every course with what its board is made of, for
 // standings() and rate(). Throws when history.json or runs.json can't be read, so no stats go out without them.
-export function loadCourses(files, courses) {
+// assisted: the assisted boards instead (boards.mjs's loadCourses({ assisted: true })): the runs played in Assist Mode
+// ("mode": "assisted" in runs.json) alone, and the assisted boards posted (history.json's "assisted"). The courses'
+// files only have regular runs.
+export function loadCourses(files, courses, { assisted = false } = {}) {
   const history = JSON.parse(files["leaderboards/history.json"]);
   const extra = JSON.parse(files["leaderboards/runs.json"]);
   if (!history || typeof history !== "object" || !extra || typeof extra !== "object") throw new Error("history.json or runs.json isn't a JSON object");
   const byCourse = (obj, clean) => Object.fromEntries(Object.entries(obj && typeof obj === "object" ? obj : {})
-    .filter(([, list]) => Array.isArray(list)).map(([n, list]) => [n, list.map(clean).filter(Boolean)]));
+    .filter(([, list]) => Array.isArray(list))
+    .map(([n, list]) => [n, list.filter((r) => !!r && (r.mode === "assisted") === assisted).map(clean).filter(Boolean)]));
   const runs = byCourse(extra.runs, cleanRun), removed = byCourse(extra.removed, cleanRemoved);
+  const posted = assisted ? "assisted" : "boards";
   return courses.map((c) => ({
     n: c.n,
     broken: !!c.broken,
-    file: fileRuns(c.file, files[c.file]),
+    file: assisted ? [] : fileRuns(c.file, files[c.file]),
     more: runs[c.n] || [],
     removed: removed[c.n] || [],
-    boards: ((history[c.n] && history[c.n].boards) || []).map((b) => (Array.isArray(b) ? b.map(cleanRun).filter(Boolean) : [])),
+    boards: ((history[c.n] && history[c.n][posted]) || []).map((b) => (Array.isArray(b) ? b.map(cleanRun).filter(Boolean) : [])),
   }));
 }
