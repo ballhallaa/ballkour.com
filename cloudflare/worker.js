@@ -918,7 +918,7 @@ const movedText = (from, to) => (from === to ? "Same" : `#${from} → #${to}`);
 // A player's name in an embed's title. Discord draws bold, italics, underline, strikethrough and spoilers there, but not
 // links, headings or quotes, so only the characters for those five are escaped (no stray backslashes before a dash).
 const titleSafe = (s) => String(s).replace(/([\\*_~|])/g, "\\$1");
-// A player's Top % (a tier from rate(), null past the last one), under "Global Top %" in a run's post: "10%", or
+// A player's Top % (a tier from rate(), null past the last one), under "Unassisted Top %" in a run's post: "10%", or
 // "Rated" for the bottom 10% (as their role on Discord), or "Unrated" when they have no rating
 const tierText = (tier, rated) => (typeof tier === "number" ? `${tier}%` : rated ? "Rated" : "Unrated");
 // What comes after /profile/ in a player's link: the name they picked, else their number, else (no number yet) their
@@ -994,8 +994,9 @@ function bestBefore({ n, run, before, mine }, stats) {
 // which still is, with what the run would have done.
 function runBlocks({ n, run, rank, newBest, stats, before, mine, checked }) {
   const s = stats || {};
-  // An assisted run's ratings are the assisted ones
-  const scope = isAssisted(run) ? "Assisted" : "Global";
+  // A run's ratings are the ones of its kind: the unassisted ones, or an assisted run's assisted ones, named the way
+  // the Player ratings' tabs and the run's page name them (not Global, which is both added up)
+  const scope = isAssisted(run) ? "Assisted" : "Unassisted";
   // Whether it's their best on the course: by its numbers, which read the boards the way the site does, or else by
   // where it placed
   const best = stats ? s.best === run.time && s.bestMiss === run.mistakes : !!newBest;
@@ -1052,7 +1053,7 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked }) {
             both(now.place, was.place) && `Course rank: ${movedText(was.place, now.place)}`,
             both(now.rating, was.rating) && `${scope} rating: ${changeText(now.rating - was.rating)}`,
             both(now.rank, was.rank) && `${scope} rank: ${movedText(was.rank, now.rank)}`,
-            // "Global Top %: 50% → 25%" is a little wider than the column, so a change there may take two lines
+            // "Unassisted Top %: 50% → 25%" is a little wider than the column, so a change there may take two lines
             tiers && `${scope} Top %: ${tierMoved ? `${was.tier} → ${now.tier}` : "Same"}`,
             span && `${best && !down ? "Achieved" : "Sent"} after: ${span}`,
           ].filter(Boolean).join("\n"),
