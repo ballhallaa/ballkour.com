@@ -2115,10 +2115,11 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "rt.title": "Player ratings",
   "rt.assisted.title": "Ratings from runs played in Assist Mode",
   "rt.assisted.empty": "No assisted ratings yet. Send a run you played in Assist Mode to get one.",
+  "rt.assisted.tiers": "Top % is where you place among all {count} rated players. On our Discord, it’s your role: everyone below Top 90% (Assisted) is Rated (Assisted), and anyone without a rating yet is Unrated (Assisted).",
   "rt.legacy.title": "Ratings from the leaderboards before May 2026",
   "rt.legacy.empty": "No legacy ratings yet.",
   "rt.legacy.how": "Every course’s legacy board is worth up to 1,000 points: its record gets all of them, and the further behind it a run is, the fewer it gets. Your Legacy rating is your average over every legacy board, with 0 for any you’re not on. Those boards don’t change any more, and their times were only to the second.",
-  "rt.legacy.tiers": "Top % is where you place among all {count} players on the legacy boards. It doesn’t come with a role on our Discord.",
+  "rt.legacy.tiers": "Top % is where you place among all {count} players on the legacy boards. On our Discord, it’s your role once your legacy runs are linked to you: everyone below Top 90% (Legacy) is Rated (Legacy).",
   "rt.legacy.counted": "Legacy boards that count: {courses}.",
   "rt.meta": "All courses in one rating",
   "rt.none": "No ratings yet",
@@ -2126,7 +2127,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "rt.tier": "Top {pct}%",
   "rt.courses": "{n} of {total} courses run",
   "rt.how": "Every course is worth up to 1,000 points: the record gets all of them, and the further behind it a run is, the fewer it gets. Your rating is your average over every course that works, with 0 for any you haven’t run, so every new or faster run raises it. Be the first on a course and it’s all yours.",
-  "rt.tiers": "Top % is where you place among all {count} rated players. On our Discord, it’s your role: everyone below Top 90% is Rated, and anyone without a rating yet is Unrated.",
+  "rt.tiers": "Top % is where you place among all {count} rated players. On our Discord, it’s your role: everyone below Top 90% (Unassisted) is Rated (Unassisted), and anyone without a rating yet is Unrated (Unassisted).",
   "rt.counted": "Courses that count: {courses}. Broken courses don’t.",
   "rt.mathTitle": "The formulas",
   "rt.mathCourse": "Course rating = 1,000 × [ln(1 + (e − 1) × record ÷ your time)]²",
@@ -3749,7 +3750,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const rest = r.players.slice(10);
     const courses = r.counted.map((c) => `<span class="nowrap">${c.n} ${flagName(c)}</span>`).join(esc(" · "));
     return meta + `<div class="lb-bar">${searchHtml(RATINGS)}</div>` + rowsHtml(RATINGS, top, rest, (p) => ratingRow(p, r)) +
-      `<p class="lb-foot"><span>${esc(t(r.legacy ? "rt.legacy.how" : "rt.how"))}</span><span>${esc(t(r.legacy ? "rt.legacy.tiers" : "rt.tiers", { count: r.players.length.toLocaleString(htmlLang()) }))}</span>` +
+      `<p class="lb-foot"><span>${esc(t(r.legacy ? "rt.legacy.how" : "rt.how"))}</span><span>${esc(t(r.legacy ? "rt.legacy.tiers" : r.assisted ? "rt.assisted.tiers" : "rt.tiers", { count: r.players.length.toLocaleString(htmlLang()) }))}</span>` +
       `<span>${esc(t(r.legacy ? "rt.legacy.counted" : "rt.counted", { courses: "\u0000" })).replace("\u0000", courses)}</span></p>` + mathHtml(r);
   }
   // The formulas under the board, with two runs on a 4:00.00 record as an example
