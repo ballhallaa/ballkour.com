@@ -353,8 +353,9 @@ main:focus { outline: none; }
   transition: color .15s, background-color .15s, box-shadow .15s;
 }
 .sections a:hover { color: var(--ink); background: var(--glass-hi); }
-/* The links scroll; My profile and Find a player stay at the right end. Icons only, so no language's longer words get
-   cut off; their names are in aria-label and in the tooltip on hover. */
+/* The links scroll; Find a player and My profile stay at the right end, with My profile last, where an account
+   usually is. Icons only, so no language's longer words get cut off; their names are in aria-label and in the tooltip
+   on hover. */
 .sections { display: flex; align-items: center; gap: 4px; }
 .sections-scroll { position: relative; flex: 1; min-width: 0; }
 /* A line between the links and the icons */
@@ -364,8 +365,7 @@ main:focus { outline: none; }
 .sections-find:focus-visible, .sections-me:focus-visible { outline-offset: -2px; }
 .sections a[aria-current="true"] { color: var(--ink); background: rgba(0, 230, 151, .12); box-shadow: inset 0 0 0 1px rgba(0, 230, 151, .35); }
 /* On a phone there's only room for a link or two beside the icons, so the links fold into a menu instead. Its button
-   says which section is on screen, and the menu drops down over the page from the bar's left end, like the
-   languages do from its right end. */
+   says which section is on screen, and the menu drops down over the page from the bar's left end. */
 .sections-pick { display: none; }
 @media (max-width: 640px) {
   .sections-scroll { position: static; }
@@ -1753,10 +1753,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     <button class="sections-more left" type="button" data-dir="-1" tabindex="-1" aria-hidden="true"><svg class="icon"><use href="#i-dots"/></svg></button>
     <button class="sections-more right" type="button" data-dir="1" tabindex="-1" aria-hidden="true"><svg class="icon"><use href="#i-dots"/></svg></button>
     </div>
-    <!-- My profile (when signing in is on, see "My profile") and Find a player (see "Finding a player"), from anywhere
+    <!-- Find a player (see "Finding a player") and My profile (when signing in is on, see "My profile"), from anywhere
          on the page -->
-    <button class="sections-me" id="sections-me" type="button" data-my-stats hidden><svg class="icon" aria-hidden="true"><use href="#i-user"/></svg></button>
     <button class="sections-find" type="button" data-find data-i18n-aria="find.open" aria-label="Find a player"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg></button>
+    <button class="sections-me" id="sections-me" type="button" data-my-stats hidden><svg class="icon" aria-hidden="true"><use href="#i-user"/></svg></button>
   </nav>
 
   <main class="column" id="main" tabindex="-1">
