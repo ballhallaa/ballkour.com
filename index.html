@@ -3902,9 +3902,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // What the panel lists under its name: "courses" (their stats, then every course), or "runs" (Runs: every run of
   // theirs, newest first, under Back; see allRunsHtml)
   let plView = "courses";
-  // Which runs it shows, once they have assisted ones: their regular ones (""), or "assisted" (see "Assisted boards").
-  // It opens on the assisted ones from an assisted board or run.
-  let plMode = "";
+  // Which runs it shows: "global", their regular ones (""), "assisted" (see "Assisted boards"), or "legacy", or null
+  // for the first one they have (see playerHtml). It opens on the ones of the board or run it was opened from.
+  let plMode = null;
   // A list from Stats in the panel ("sent", "top10s", …, see STAT_LISTS), and the one a run's page or a player's panel
   // was opened from, for its Back (see "What a number in Stats is made of")
   let statList = "";
@@ -3942,13 +3942,14 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     return `<span class="run-pts" title="${esc(title)}">${icon("star")}${esc(points(pts) + gainText(gain))}</span>`;
   };
   // c: the course, named over the run (on the list of every run, where runs from every course are together). gain:
-  // what their best run there adds to its course rating (see plRows)
-  function plRunHtml(r, record, isBest, legacy, c, gain) {
+  // what their best run there adds to its course rating (see plRows). tagged: an assisted run among unassisted ones
+  // (Global's list of every run), with the Assisted tag by its course
+  function plRunHtml(r, record, isBest, legacy, c, gain, tagged = false) {
     const time = `${icon("bolt")}<span class="v">${esc(r.time)}</span>`;
     const pts = record && !legacy ? coursePoints(record, r) : null;
     const date = r.date ? formatDate(r.date) : "";
     return `<li class="pl-run${isBest ? " best" : ""}">` +
-      (c ? `<span class="pl-run-course"><span class="pl-run-num">${c.n}</span> ${flagName(c)}${c.broken ? ` <span class="tag tag-broken">${esc(t("code.broken"))}</span>` : ""}</span>` : "") +
+      (c ? `<span class="pl-run-course"><span class="pl-run-num">${c.n}</span> ${flagName(c)}${tagged ? ` ${assistedTag()}` : ""}${c.broken ? ` <span class="tag tag-broken">${esc(t("code.broken"))}</span>` : ""}</span>` : "") +
       timeLink(r, time, c && c.n) +
       `<span class="stat miss" title="${esc(t("unit.mistakes", { count: r.miss }))}">${icon("skull")}${esc(r.miss)}</span>` +
       `<span class="pl-run-tags">${isBest ? `<span class="tag tag-latest">${esc(t("pl.best"))}</span>` : ""}${legacy ? `<span class="tag tag-legacy">${esc(t("pl.legacy"))}</span>` : ""}</span>` +
@@ -3994,6 +3995,14 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       return { c, at, best, total: all.length, record, gain: pts ? Math.round(pts[1]) - Math.round(pts[0]) : null, ...theirs };
     }).filter((x) => (which ? x.runs.length > 0 : !x.c.broken || x.runs.length || x.legacy.length));
   }
+  // The Global rating's rows (see ratingsSum), in a player's panel and its picture: every course's regular row (rows),
+  // each with its assisted board's under it once they've run that one (arows), tagged so the two stand apart, and any
+  // assisted one without its regular one after them
+  function globalRows(rows, arows) {
+    const tag = (y) => ({ ...y, tagged: true });
+    return rows.flatMap((x) => [x, ...arows.filter((y) => y.c.n === x.c.n).map(tag)])
+      .concat(arows.filter((y) => !rows.some((x) => x.c.n === y.c.n)).map(tag));
+  }
   function playerHtml() {
     const key = plKey;
     const r = ratings();
@@ -4004,6 +4013,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const ar = ratings(null, true);
     const ap = ar.players.find((x) => x.key === key) || null;
     const arows = plRows(key, true);
+    // Their Global rating (see ratingsSum), and the runs it's made of: their regular and assisted ones (see globalRows)
+    const gr = ratings(null, "global");
+    const gp = gr.players.find((x) => x.key === key) || null;
+    const grows = globalRows(rows, arows);
     // Their Legacy rating, and their runs on the legacy boards, from before 2026-04-29 (see legacyOf)
     const lr = ratings(null, "legacy");
     const lp = lr.players.find((x) => x.key === key) || null;
@@ -4019,15 +4032,15 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const tierTag = (q) => (q ? `<span class="tag tag-tier${q.tier !== null && q.tier <= 5 ? " elite" : ""}">${esc(q.tier === null ? t("rt.rated") : t("rt.tier", { pct: q.tier.toLocaleString(htmlLang()) }))}</span>` : "—");
     const dcLine = dc && named.name ? dcLink(discord, "pl-dc", 18) : "";
     const runsIn = (list) => list.reduce((sum, x) => sum + x.runs.length, 0);
-    /* Which runs it shows (plMode), picked with the buttons under their name once they have more than one kind: their
-       runs since 2026-04-29 (Unassisted), their assisted ones, or their legacy ones. A kind they have nothing of isn't
-       offered, apart from Unassisted in their own panel, which always lists the courses to run, or when they have
-       nothing at all.
-       It's the first one they have, until another is picked. */
-    const has = { "": !!p || runsIn(rows) > 0, assisted: !!ap || arows.length > 0, legacy: !!lp || lrows.length > 0 };
-    const modes = ["", "assisted", "legacy"].filter((k) => has[k] || (k === "" && (mine || (!has.assisted && !has.legacy))));
-    const mode = modes.includes(plMode) ? plMode : modes[0];
-    const shown = mode === "assisted" ? arows : mode === "legacy" ? lrows : rows;
+    /* Which runs it shows (plMode), picked with the buttons under their name once they have more than one kind: the
+       ones their Global rating is made of (Global), their runs since 2026-04-29 (Unassisted), their assisted ones, or
+       their legacy ones. A kind they have nothing of isn't offered, apart from Unassisted in their own panel, which
+       always lists the courses to run, or when they have nothing at all.
+       It's the first one they have (Global, once they're rated), until another is picked. */
+    const has = { global: !!gp, "": !!p || runsIn(rows) > 0, assisted: !!ap || arows.length > 0, legacy: !!lp || lrows.length > 0 };
+    const modes = ["global", "", "assisted", "legacy"].filter((k) => has[k] || (k === "" && (mine || (!has.assisted && !has.legacy))));
+    const mode = plMode !== null && modes.includes(plMode) ? plMode : modes[0];
+    const shown = mode === "global" ? grows : mode === "assisted" ? arows : mode === "legacy" ? lrows : rows;
     const runTotal = runsIn(every);
     let html = `<div class="pl-head"><div class="pl-who"><h2 class="pl-name is-name" id="pl-name">${esc(caps(named.name || (dc ? dc.name : "")))}</h2>` +
       (mine ? `<div class="pl-me">${dcLine}<button class="pl-signout" type="button" data-sign-out>${esc(t("sub.signout"))}</button></div>` : dcLine) +
@@ -4053,6 +4066,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       `</div>`;
     };
     const courses = `<ul class="pl-courses">${shown.map(plCourseHtml).join("")}</ul>`;
+    // Global: their Global rating, place and Top %, and the runs it's made of. In their own panel, the legacy names
+    // like theirs too (see "Claiming legacy runs"), as it's the first thing it shows.
+    if (mode === "global") return html + tiles(gp, gr, "global", "pl.seeRatings") + (mine ? maybeHtml(key) : "") + courses;
     // Assisted: their assisted rating, place and Top %, and their runs on the assisted boards (see "Assisted boards")
     if (mode === "assisted") return html + tiles(ap, ar, "assisted", "pl.seeAssistedRatings") + courses;
     // Legacy: their Legacy rating, place and Top %, and their runs on the legacy boards. A name from them that isn't
@@ -4068,13 +4084,14 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       (mine ? maybeHtml(key) : "") +
       courses;
   }
-  // Unassisted, Assisted, and Legacy under a player's name (modes: the ones they have, on: the one shown)
-  const PL_MODES = { "": "lb.tab.unassisted", assisted: "lb.tab.assisted", legacy: "lb.tab.legacy" };
+  // Global, Unassisted, Assisted, and Legacy under a player's name (modes: the ones they have, on: the one shown)
+  const PL_MODES = { global: "lb.tab.global", "": "lb.tab.unassisted", assisted: "lb.tab.assisted", legacy: "lb.tab.legacy" };
   const plModesHtml = (modes, on) => `<div class="pl-modes" role="group" aria-label="${esc(t("pl.modes"))}">` +
     modes.map((k) => `<button class="lb-tab" type="button" data-pl-mode="${k}" aria-pressed="${k === on}">${esc(t(PL_MODES[k]))}</button>`).join("") + `</div>`;
   // A course in a player's panel (row: see plRows), which opens to their runs there. An assisted board's is keyed
-  // "a" and its number, and a legacy one's "l", so each opens on its own (see plOpen).
-  function plCourseHtml({ c, at, best, total, record, gain, runs, legacy }) {
+  // "a" and its number, and a legacy one's "l", so each opens on its own (see plOpen). tagged: an assisted board among
+  // the regular ones (Global's), with the Assisted tag by its name
+  function plCourseHtml({ c, at, best, total, record, gain, runs, legacy, tagged }) {
     const k = `${c.assisted ? "a" : c.legacy ? "l" : ""}${c.n}`;
     const open = plOpen.has(k);
     const summary = best
@@ -4087,7 +4104,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     return `<li class="pl-course${best ? "" : " none"}">` +
       `<button class="pl-course-btn" type="button" data-pl-course="${k}" aria-expanded="${open}" aria-controls="pl-runs-${k}">` +
         `<span class="num">${c.n}</span><span class="flag" aria-hidden="true">${c.flag}</span>` +
-        `<span class="pl-course-name">${esc(c.name)}${c.broken ? ` <span class="tag tag-broken">${esc(t("code.broken"))}</span>` : ""}</span>` +
+        `<span class="pl-course-name">${esc(c.name)}${tagged ? ` ${assistedTag()}` : ""}${c.broken ? ` <span class="tag tag-broken">${esc(t("code.broken"))}</span>` : ""}</span>` +
         summary + icon("chev", "icon chev") +
       `</button>` +
       `<div class="pl-runs" id="pl-runs-${k}"${open ? "" : " hidden"}>` +
@@ -4109,9 +4126,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   }
   // A player's runs on a list, to sort (see sortRuns): a course's (see plRows), each as { r: the run, day, order, pts:
   // its course rating, or -1 for none, html }. named: each with its course's name over it, on the list of every run.
-  function runItems({ c, best, record, gain, runs, legacy }, named) {
+  function runItems({ c, best, record, gain, runs, legacy, tagged }, named) {
     return [
-      ...runs.map((r) => ({ r, day: runDay(r), order: runDay(r) ? 0 : 1, pts: record ? coursePoints(record, r) : -1, html: plRunHtml(r, record, r === best, false, named ? c : null, gain) })),
+      ...runs.map((r) => ({ r, day: runDay(r), order: runDay(r) ? 0 : 1, pts: record ? coursePoints(record, r) : -1, html: plRunHtml(r, record, r === best, false, named ? c : null, gain, named && tagged) })),
       ...legacy.map((r) => ({ r, day: "", order: 2, pts: -1, html: plRunHtml(r, null, false, true, named ? c : null) })),
     ];
   }
@@ -4382,13 +4399,14 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   }
   // view: "courses" (the default) or "runs"
   // n: a course to open in it ("a6" for its assisted board, "l6" for its legacy one), and mode: open on their
-  // "assisted" or "legacy" runs (an "a" or "l" course does too)
-  function openPlayer(key, n, view, mode = "") {
+  // "global", regular (""), "assisted" or "legacy" runs. Without one, a course opens on its kind ("a" or "l", or
+  // regular), and no course on the first kind they have.
+  function openPlayer(key, n, view, mode) {
     leaveRun();
     leaveStats();
     plKey = key;
     plView = view === "runs" ? "runs" : "courses";
-    plMode = mode || { a: "assisted", l: "legacy" }[String(n || "")[0]] || "";
+    plMode = mode !== undefined ? mode : n ? { a: "assisted", l: "legacy" }[String(n)[0]] || "" : null;
     linkEditing = false;
     linkDraft = null;
     linkNote = "";
@@ -4412,9 +4430,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (!b) return;
     const box = b.closest(".course-board");
     const n = box && /^board-\d+$/.test(box.id) ? Number(box.id.slice(6)) : 0;
-    // From an assisted or legacy board, or the Player ratings' Assisted or Legacy tab, those runs (see plCourseHtml)
+    // From a board, or a tab of the Player ratings, those runs (see plCourseHtml): Global's, regular ones from a Top 10
+    // or Unassisted, or assisted or legacy ones. From anywhere else, the first kind they have.
     const tab = n ? viewOf(course(n)).tab : box && box.id === `board-${RATINGS.n}` ? viewOf(RATINGS).tab : "";
-    const mode = tab === "assisted" || tab === "legacy" ? tab : "";
+    const mode = ["global", "assisted", "legacy"].includes(tab) ? tab : tab ? "" : undefined;
     openPlayer(b.dataset.player, n ? `${{ assisted: "a", legacy: "l" }[mode] || ""}${n}` : 0, undefined, mode);
   });
   pl.addEventListener("click", (e) => {
@@ -4454,7 +4473,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       announce.textContent = t(SORTED[plSort][plRev ? 1 : 0]);
       return;
     }
-    // Unassisted or Assisted: the panel shows those runs instead, with the same button in focus
+    // Global, Unassisted, Assisted, or Legacy: the panel shows those runs instead, with the same button in focus
     const mode = e.target.closest("[data-pl-mode]");
     if (mode) {
       if (mode.dataset.plMode === plMode) return;
@@ -5100,13 +5119,13 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
 
   /* ---------- Player pictures ----------
      Picture in a player's panel (by Copy link) draws their stats the same way, to save, copy or share: their name and
-     Discord, their Top 10s, Podiums and Records, the panel's five boxes (Rating, Place, Top %, Courses and Runs), then
-     every course in their panel with their place and best run there, and their link at the foot. In the page's
-     language too. */
+     Discord, their Top 10s, Podiums and Records, the five boxes of the panel's Global section (Rating, Place, Top %,
+     Courses and Runs), then every course in it with their place and best run there (their assisted ones with the
+     Assisted tag, see globalRows), and their link at the foot. In the page's language too. */
   function picPlayer(key) {
-    const r = ratings();
+    const r = ratings(null, "global");
     const p = r.players.find((x) => x.key === key) || null;
-    const rows = plRows(key);
+    const rows = globalRows(plRows(key), plRows(key, true));
     const named = p || rows.map((x) => x.best || x.runs[0] || x.legacy[0]).find(Boolean) || { name: "" };
     const discord = key.startsWith("d:") ? key.slice(2) : "";
     const dc = (discord && PLAYERS.get(discord)) || null;
@@ -5188,7 +5207,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     // time and mistakes, the course rating it earns, and its date. Courses they haven't run are dimmed.
     const colW = (W - 2 * PIC.pad - PIC.colGap) / 2;
     const TIER = ["#ffd54f", "#d3dde2", "#e8a066"];
-    d.rows.forEach(({ c, at, best, total, record, gain, legacy }, i) => {
+    d.rows.forEach(({ c, at, best, total, record, gain, legacy, tagged }, i) => {
       const old = !best && legacy.length ? legacy.slice().sort(byTime)[0] : null;
       const run = best || old;
       const x = PIC.pad + (i < perCol ? 0 : colW + PIC.colGap), y = rowsTop + (i % perCol) * (PIC.rowH + PIC.gap);
@@ -5211,25 +5230,33 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       const blockTop = y + (PIC.rowH - (27.5 + 8 + 20)) / 2;
       const y1 = blockTop + 13.75, y2 = blockTop + 27.5 + 8 + 10;
       const nameLeft = left + 34 + 12;
-      // On top: the flag and the course's name (shrunk to fit), Broken, and their place there at the right (or that
-      // it's a legacy run, or not run yet)
+      // On top: the flag and the course's name (shrunk to fit), Assisted on an assisted board's, Broken, and their place
+      // there at the right (or that it's a legacy run, or not run yet)
       const place = best ? t("res.of", { rank: at + 1, total }) : old ? t("pl.legacy") : "";
       picFit(ctx, place, (right - nameLeft) * 0.42, (size) => `600 ${size}px "JetBrains Mono", monospace`, 15, 10, 0.04);
       const placeW = place ? picText(ctx, place, right, y1, best ? tint || "#a7b6b0" : "#76867f", "right") : -14;
       picFont(ctx, `22px ${EMOJI}`);
       const flagW = c.flag ? picText(ctx, c.flag, nameLeft, y1, "#fff") + 9 : 0;
       picFont(ctx, '700 11px "JetBrains Mono", monospace', 1.1);
-      const broken = up(t("code.broken"));
+      const broken = up(t("code.broken")), assisted = up(t("lb.tab.assisted"));
       const brokenW = c.broken ? ctx.measureText(broken).width + 12 : 0;
-      const nameMax = right - placeW - 14 - nameLeft - flagW - (brokenW ? brokenW + 9 : 0);
+      const assistedW = tagged ? ctx.measureText(assisted).width + 12 : 0;
+      const nameMax = right - placeW - 14 - nameLeft - flagW - (brokenW ? brokenW + 9 : 0) - (assistedW ? assistedW + 9 : 0);
       let size = 23;
       picFont(ctx, `700 ${size}px Barlow, sans-serif`, size * 0.03);
       while (ctx.measureText(c.name).width > nameMax && size > 15) { size -= 0.5; picFont(ctx, `700 ${size}px Barlow, sans-serif`, size * 0.03); }
       ctx.save(); ctx.beginPath(); ctx.rect(nameLeft + flagW, y, Math.max(0, nameMax), PIC.rowH); ctx.clip();
       const nw = Math.min(nameMax, picText(ctx, c.name, nameLeft + flagW, y1, tint || (run ? "#ecf6f2" : "#76867f")));
       ctx.restore();
+      if (assistedW) {
+        const ax = nameLeft + flagW + nw + 9;
+        picFont(ctx, '700 11px "JetBrains Mono", monospace', 1.1);
+        picBox(ctx, ax, y1 - 8.5, assistedW, 17, 5);
+        ctx.fillStyle = "rgba(255,128,192,.1)"; ctx.fill(); ctx.strokeStyle = "rgba(255,128,192,.45)"; ctx.stroke();
+        picText(ctx, assisted, ax + 6, y1, "#ff80c0");
+      }
       if (brokenW) {
-        const bx = nameLeft + flagW + nw + 9;
+        const bx = nameLeft + flagW + nw + 9 + (assistedW ? assistedW + 9 : 0);
         picFont(ctx, '700 11px "JetBrains Mono", monospace', 1.1);
         picBox(ctx, bx, y1 - 8.5, brokenW, 17, 5);
         ctx.fillStyle = "rgba(255,106,79,.12)"; ctx.fill(); ctx.strokeStyle = "rgba(255,106,79,.4)"; ctx.stroke();
@@ -5282,7 +5309,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const filename = `${slugOf(d.name) || slugOf(linkOf(key)) || "player"}-stats.png`;
     const alt = `${d.name}: ` + (d.p ? `${t("pl.rating")} ${points(d.p.rating)}, ${t("res.of", { rank: d.p.rank, total: d.total })}, ${tierLabel(d.p.tier)}` : t("find.unrated")) +
       `, ${t("pl.courses")} ${d.p ? d.p.courses : 0}/${d.counted}, ${t("pl.runs")} ${localNum(d.runs)}. ` +
-      d.rows.filter((x) => x.best).map(({ c, at, best, total }) => `${c.n}. ${c.name}: ${best.time}, ${t("unit.mistakes", { count: best.miss })}, ${t("res.of", { rank: at + 1, total })}`).join("; ");
+      d.rows.filter((x) => x.best).map(({ c, at, best, total, tagged }) => `${c.n}. ${c.name}${tagged ? ` (${t("lb.tab.assisted")})` : ""}: ${best.time}, ${t("unit.mistakes", { count: best.miss })}, ${t("res.of", { rank: at + 1, total })}`).join("; ");
     pictureWindow(esc(t("pic.player", { player: d.name })), (code) => drawPlayerPicture(d, code), filename, alt);
   }
   document.addEventListener("click", (e) => {
