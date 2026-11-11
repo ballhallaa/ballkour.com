@@ -510,7 +510,7 @@
   "faq.valid.q": "Geçerli deneme nedir?",
   "faq.valid.a": "Denemen yalnızca bu denemede henüz geçmediğin bir CP'yi atlarsan <fgFF4646FF>diskalifiye</fg> olur. CP'lere geri gitmek veya onları yeniden başlatmak, geçtiğin CP'lere atlamak ve <fg00BEFFFF>izlemek</fg> serbesttir. Geçilmemiş bir CP'den <fgCB87FFFF>Serbest mod</fg>'da ayrılmak, onu atlamak sayılır. <fgFF4646FF>Diskalifiye</fg> denemeler ilk 10 skor tablosuna, <b>Lobi İlk 3</b>'e veya <b>Lobby Stats</b>'a dahil edilmez.",
   "faq.leaderboard.q": "Liderlik tablosuna nasıl girerim?",
-  "faq.leaderboard.a": "Geçerli bir denemeyi bitir ve ballkour.com'a gönder. Kanıt olarak video yalnızca ilk 10'a giren denemeler için gerekir. <b>Tüm Zamanlar İlk 3</b> sıralamadaki en hızlı 3 denemeyi gösterir. <b>Lobi İlk 3</b> bu lobide bitirilen en hızlı geçerli denemeleri gösterir.",
+  "faq.leaderboard.a": "Geçerli bir denemeyi bitir ve ballkour.com'a gönder. Kanıt olarak video yalnızca ilk 10'a giren denemeler için gerekir. <b>Tüm Zamanlar İlk 3</b> sıralamadaki en hızlı 3 denemeyi gösterir. <b>Lobi İlk 3</b> bu lobide bitirilen en hızlı geçerli denemeleri gösterir. <fgFF80C0FF>Yardım modunda</fg> <fgFF80C0FF>Yardımlı İlk 3</fg>, <b>Tüm Zamanlar İlk 3</b>'ün yerini alır ve <b>Lobi İlk 3</b> <fgFF80C0FF>yardımlı</fg> denemeleri gösterir.",
   "faq.timer.q": "Denememin süresi ne zaman başlar?",
   "faq.timer.a": "İlk CP'den ayrıldığında, doğduğunda değil.",
   "faq.mistake.q": "Hata sayılan nedir?",

@@ -510,7 +510,7 @@
   "faq.valid.q": "¿Qué cuenta como partida válida?",
   "faq.valid.a": "Tu partida solo se <fgFF4646FF>descalifica</fg> si te saltas un CP que aún no has superado en esta partida. Volver a CP anteriores o reiniciarlos, saltar a CP ya superados y <fg00BEFFFF>espectar</fg> están permitidos. Salir de un CP no superado con el <fgCB87FFFF>Modo libre</fg> cuenta como saltarlo. Las partidas <fgFF4646FF>descalificadas</fg> no cuentan para la clasificación del top 10, el <b>Top 3 del lobby</b> ni <b>Lobby Stats</b>.",
   "faq.leaderboard.q": "¿Cómo entro en la clasificación?",
-  "faq.leaderboard.a": "Termina una partida válida y envíala en ballkour.com. Solo las partidas del top 10 necesitan un video como prueba. El <b>Top 3 histórico</b> muestra las 3 partidas más rápidas de la clasificación. El <b>Top 3 del lobby</b> muestra las partidas válidas más rápidas terminadas en este lobby.",
+  "faq.leaderboard.a": "Termina una partida válida y envíala en ballkour.com. Solo las partidas del top 10 necesitan un video como prueba. El <b>Top 3 histórico</b> muestra las 3 partidas más rápidas de la clasificación. El <b>Top 3 del lobby</b> muestra las partidas válidas más rápidas terminadas en este lobby. En el <fgFF80C0FF>modo asistido</fg>, el <fgFF80C0FF>Top 3 asistido</fg> sustituye al <b>Top 3 histórico</b>, y el <b>Top 3 del lobby</b> muestra las partidas <fgFF80C0FF>asistidas</fg>.",
   "faq.timer.q": "¿Cuándo empieza el tiempo de mi partida?",
   "faq.timer.a": "Cuando sales del primer CP, no cuando apareces.",
   "faq.mistake.q": "¿Qué cuenta como error?",

@@ -510,7 +510,7 @@
   "faq.valid.q": "Qu'est-ce qu'une partie valide ?",
   "faq.valid.a": "Ta partie n'est <fgFF4646FF>disqualifiée</fg> que si tu sautes un CP que tu n'as pas encore franchi pendant cette partie. Revenir à des CP ou les recommencer, avancer jusqu'à des CP déjà franchis et <fg00BEFFFF>observer</fg> sont autorisés. Quitter un CP non franchi en <fgCB87FFFF>Mode libre</fg> compte comme le sauter. Les parties <fgFF4646FF>disqualifiées</fg> ne comptent ni pour le classement du top 10, ni pour le <b>Top 3 du lobby</b>, ni pour <b>Lobby Stats</b>.",
   "faq.leaderboard.q": "Comment entrer dans le classement ?",
-  "faq.leaderboard.a": "Termine une partie valide et envoie-la sur ballkour.com. Seules les parties du top 10 ont besoin d'une vidéo comme preuve. Le <b>Top 3 de tous les temps</b> montre les 3 parties les plus rapides du classement. Le <b>Top 3 du lobby</b> liste les parties valides les plus rapides terminées dans ce lobby.",
+  "faq.leaderboard.a": "Termine une partie valide et envoie-la sur ballkour.com. Seules les parties du top 10 ont besoin d'une vidéo comme preuve. Le <b>Top 3 de tous les temps</b> montre les 3 parties les plus rapides du classement. Le <b>Top 3 du lobby</b> liste les parties valides les plus rapides terminées dans ce lobby. En <fgFF80C0FF>mode assisté</fg>, le <fgFF80C0FF>Top 3 assisté</fg> remplace le <b>Top 3 de tous les temps</b>, et le <b>Top 3 du lobby</b> liste les parties <fgFF80C0FF>assistées</fg>.",
   "faq.timer.q": "Quand le chrono de ma partie démarre-t-il ?",
   "faq.timer.a": "Quand tu quittes le premier CP, pas quand tu apparais.",
   "faq.mistake.q": "Qu'est-ce qui compte comme erreur ?",

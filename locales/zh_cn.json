@@ -510,7 +510,7 @@
   "faq.valid.q": "什么样的成绩有效？",
   "faq.valid.a": "只有跳过本次游戏中尚未通过的CP才会被<fgFF4646FF>取消资格</fg>。回到或重新开始CP、跳到已通过的CP以及<fg00BEFFFF>观战</fg>都没问题。在<fgCB87FFFF>自由模式</fg>下离开未通过的CP视为跳过该CP。被<fgFF4646FF>取消资格</fg>的成绩不计入前 10 名排行榜、<b>大厅前三名</b>或<b>Lobby Stats</b>。",
   "faq.leaderboard.q": "如何登上排行榜？",
-  "faq.leaderboard.a": "完成一次有效游戏，并在ballkour.com提交。只有前10名的成绩需要视频作为证明。<b>历史前三名</b>显示排行榜上最快的3次成绩。<b>大厅前三名</b>列出在本大厅完成的最快有效成绩。",
+  "faq.leaderboard.a": "完成一次有效游戏，并在ballkour.com提交。只有前10名的成绩需要视频作为证明。<b>历史前三名</b>显示排行榜上最快的3次成绩。<b>大厅前三名</b>列出在本大厅完成的最快有效成绩。在<fgFF80C0FF>辅助模式</fg>下，<fgFF80C0FF>辅助前三名</fg>会取代<b>历史前三名</b>，<b>大厅前三名</b>则列出<fgFF80C0FF>辅助</fg>成绩。",
   "faq.timer.q": "计时什么时候开始？",
   "faq.timer.a": "离开第一个CP时开始，而不是出生时。",
   "faq.mistake.q": "什么算失误？",
