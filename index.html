@@ -623,7 +623,9 @@ a.stat:hover .play { color: var(--volt); }
 
 /* Leaderboard archive: Top 10 / Legacy tabs, a scrubber through every board posted to Discord (gold ticks
    set a new #1), the congrats line for that board's new times, and the fine print under the runs */
-.lb-tabs { display: flex; gap: 4px; padding: 7px; border-bottom: 1px solid var(--line); }
+.lb-tabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 7px; border-bottom: 1px solid var(--line); }
+/* A tab's name stays on one line (Japanese would break mid-word): tabs that don't fit go to the next row */
+.lb-tabs .lb-tab, .pl-modes .lb-tab, .runs-mode .lb-tab { white-space: nowrap; }
 .lb-tab {
   padding: 6px 11px;
   border: 0;
