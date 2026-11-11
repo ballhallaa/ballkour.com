@@ -226,6 +226,7 @@
   "res.rating": "เรตติ้ง",
   "res.place": "อันดับ",
   "res.of": "#{rank} จาก {total}",
+  "res.ofNone": "— จาก {total}",
   "res.tier": "ท็อป %",
   "res.globalTier": "ท็อป % (โกลบอล)",
   "res.new": "ใหม่",

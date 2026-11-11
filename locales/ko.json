@@ -226,6 +226,7 @@
   "res.rating": "레이팅",
   "res.place": "순위",
   "res.of": "{total}명 중 #{rank}",
+  "res.ofNone": "{total}명 중 —",
   "res.tier": "상위 %",
   "res.globalTier": "상위 % (글로벌)",
   "res.new": "신규",

@@ -226,6 +226,7 @@
   "res.rating": "Puan",
   "res.place": "Sıra",
   "res.of": "#{rank} / {total}",
+  "res.ofNone": "— / {total}",
   "res.tier": "İlk %",
   "res.globalTier": "İlk % (Global)",
   "res.new": "Yeni",

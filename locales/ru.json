@@ -226,6 +226,7 @@
   "res.rating": "Рейтинг",
   "res.place": "Место",
   "res.of": "#{rank} из {total}",
+  "res.ofNone": "— из {total}",
   "res.tier": "Топ-%",
   "res.globalTier": "Топ-% (глобальный)",
   "res.new": "Новое",

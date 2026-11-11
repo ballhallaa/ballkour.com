@@ -226,6 +226,7 @@
   "res.rating": "レーティング",
   "res.place": "順位",
   "res.of": "{total}人中#{rank}",
+  "res.ofNone": "{total}人中—",
   "res.tier": "上位%",
   "res.globalTier": "上位%（グローバル）",
   "res.new": "新規",

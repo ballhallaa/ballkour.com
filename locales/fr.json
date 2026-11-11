@@ -226,6 +226,7 @@
   "res.rating": "Score",
   "res.place": "Place",
   "res.of": "#{rank} sur {total}",
+  "res.ofNone": "— sur {total}",
   "res.tier": "Top %",
   "res.globalTier": "Top % (Global)",
   "res.new": "Nouveau",
