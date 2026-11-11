@@ -317,6 +317,8 @@
   "runs.found": "Runs found: {count}",
   "runs.toTop": "To the top of Submitted runs",
   "runs.toEnd": "To the end of Submitted runs",
+  "runs.allTime": "All time",
+  "runs.rangeLabel": "When they were sent",
   "run.all": "All runs",
   "run.onBoard": "See it on the board",
   "run.today": "See today’s board",

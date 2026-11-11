@@ -1209,8 +1209,23 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .sub-runs .rev-title .icon { color: var(--volt); }
 .sub-runs .rev-count { background: rgba(0, 230, 151, .12); color: var(--volt); }
 .sub-runs-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
-/* Its search, under the title and sort: a board's box, across the whole card */
-.sub-runs .lb-search { margin-top: 10px; }
+/* Its search, under the title and sort: a board's box, across the card, and on its right the menu for the days the
+   runs were sent in (see runsRangePicker), which goes under the box when they don't fit side by side */
+.sub-runs-find { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+.runs-range-wrap { position: relative; flex: none; margin-inline-start: auto; }
+.runs-range { display: flex; align-items: center; gap: 6px; height: 26px; padding: 0 6px 0 8px; border: 1px solid var(--line); border-radius: 7px; background: rgba(0, 0, 0, .25); color: var(--ink); font: 500 13px/1 var(--body); white-space: nowrap; cursor: pointer; transition: border-color .15s; }
+.runs-range:hover { border-color: var(--line-hi); }
+.runs-range[aria-expanded="true"] { border-color: var(--volt); }
+.runs-range:focus-visible { outline: 2px solid var(--volt); outline-offset: 1px; }
+.runs-range .icon { width: 13px; height: 13px; flex: none; color: var(--ink-3); }
+.runs-range .chev { width: 14px; height: 14px; transition: transform .2s ease; }
+.runs-range[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.runs-range-name { display: grid; text-align: start; }
+.runs-range-name > span { grid-area: 1 / 1; }
+.runs-range-name > [aria-hidden] { visibility: hidden; }
+.runs-range-menu { min-width: 100%; width: max-content; display: grid; gap: 2px; overflow-y: auto; overscroll-behavior: contain; }
+.runs-range-menu.up { top: auto; bottom: calc(100% + 8px); transform-origin: bottom right; }
+@media (pointer: coarse) { .runs-range { height: 32px; font-size: 14px; } }
 /* Under the runs: Show more, and on the right, while the list is longer than the screen, ↑ (to its top) and ↓ (to
    its end), in a row that keeps their room. Until that row is on screen, they ride along at the bottom of the screen
    (sticky, from an empty box under the row, with the buttons above it), and see placeJump for the rest. Sticking
@@ -2210,6 +2225,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "runs.found": "Runs found: {count}",
   "runs.toTop": "To the top of Submitted runs",
   "runs.toEnd": "To the end of Submitted runs",
+  "runs.allTime": "All time",
+  "runs.rangeLabel": "When they were sent",
   "run.all": "All runs",
   "run.onBoard": "See it on the board",
   "run.today": "See today’s board",
@@ -2594,8 +2611,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   /* A button that opens a listbox menu: mouse, touch and keyboard (arrows, Home/End, Enter, Escape). cols is how many
      columns it has, or a function that says, for a menu whose columns change with the screen's width. An option with
      aria-disabled="true" (a broken course in the course picker) shows, and lights up under the pointer, but can't be
-     picked: the arrows go on past it, the way they were going. */
-  function makeMenu(wrap, btn, menu, cols, onChoose) {
+     picked: the arrows go on past it, the way they were going. onOpen, when there is one, runs as it opens, once it's
+     on screen (to place it where it fits). */
+  function makeMenu(wrap, btn, menu, cols, onChoose, onOpen) {
     let opts = [];
     let active = 0;
     const off = (o) => o.getAttribute("aria-disabled") === "true";
@@ -2615,6 +2633,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     function open() {
       menu.hidden = false;
       btn.setAttribute("aria-expanded", "true");
+      if (onOpen) onOpen();
       setActive(Math.max(0, opts.findIndex((o) => o.getAttribute("aria-selected") === "true")), true);
       menu.focus({ preventScroll: true });
     }
@@ -6017,10 +6036,22 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const [y, m, day] = d.split("-").map(Number);
     return utcDay(Date.UTC(y, m - 1 - k, Math.min(day, new Date(Date.UTC(y, m - k, 0)).getUTCDate())));
   };
+  // The first day of a range (a key of STAT_RANGES) that ends on day d
+  const rangeStart = (range, d) => {
+    const r = STAT_RANGES[range];
+    return r.months ? dayAfter(monthsBefore(d, r.months)) : dayAfter(d, 1 - r.days);
+  };
+  // The day a run (x: as sentRuns has it) was sent: from the website, when it was sent, and from before it, its date.
+  // Not a day ("") when it has none.
+  const sentDay = (x) => {
+    const sent = Date.parse(x.run.sentAt || "");
+    const d = Number.isFinite(sent) ? utcDay(sent) : formatDate(x.run.date);
+    return DAY.test(d) ? d : "";
+  };
   // The days a range covers, up to the day picked (fewer at the very start of the history)
   function statSpan(range, days, pick) {
     const r = STAT_RANGES[range];
-    const from = r.months ? Math.max(0, days.indexOf(dayAfter(monthsBefore(days[pick], r.months)))) : Math.max(0, pick - r.days + 1);
+    const from = r.months ? Math.max(0, days.indexOf(rangeStart(range, days[pick]))) : Math.max(0, pick - r.days + 1);
     return days.slice(from, pick + 1);
   }
   /* The month menu, beside Runs' and Page views' headings (one each, both the same): every month in the history,
@@ -6111,9 +6142,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       if (r.video) put(`${x.n}|${r.video}`, x);
     });
     all.forEach((x) => {
-      const sent = Date.parse(x.run.sentAt || "");
-      const d = Number.isFinite(sent) ? utcDay(sent) : formatDate(x.run.date);
-      if (!DAY.test(d)) return;
+      const d = sentDay(x);
+      if (!d) return;
       const s = at(d);
       s.sent++;
       s.courses.set(x.n, (s.courses.get(x.n) || 0) + 1);
@@ -6612,14 +6642,65 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      whatever the course), mistakes, or course rating, and pressing the sort that's on turns it around. Under that, a
      box like a board's finds a player's runs by their in-game or Discord name (see found()), and the number by the
      title counts the runs it finds. Typing only redraws the runs under it (see searchRuns), so the box keeps focus.
-     The sort and what's typed hold until the page is left. Each run opens its page (a middle click, in a new tab).
+     The menu beside the box keeps only the runs sent today, or over the last 7 or 30 days or 3, 6, or 12 months (see
+     runsRangePicker). The sort, what's typed, and the days picked hold until the page is left. Each run opens its
+     page (a middle click, in a new tab).
      Reviewers also see who checked each one. It waits for every board to load, so it doesn't fill in bit by bit, and
      it's hidden until there's a run to show. */
   let runsShown = 5;
   let runsSort = "date";
   let runsRev = false;
   let runsQ = "";
+  let runsRange = ""; // "" for all of them, or a key of STAT_RANGES
   let runsReady = false;
+  /* The menu beside its box: All time, or the days of Stats' buttons, up to today. They're UTC days, sent by when
+     they were sent (see sentDay), as Stats counts them, so the number by the title is Stats' Runs for the same days.
+     It's made once, so its listeners stay, and put back each time Submitted runs is drawn (see renderSentRuns).
+     Picking one only redraws the runs under it, like typing in the box. */
+  const RUNS_RANGES = ["", ...Object.keys(STAT_RANGES)];
+  const runsRangeName = (k) => t(k ? STAT_RANGES[k].today : "runs.allTime");
+  const runsRangeWrap = document.createElement("div");
+  runsRangeWrap.className = "runs-range-wrap";
+  runsRangeWrap.innerHTML = `<span class="sr-only" id="runs-range-label"></span>` +
+    `<button class="runs-range" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="runs-range-menu" aria-labelledby="runs-range-label runs-range-current">` +
+      `${icon("calendar")}<span class="runs-range-name"><span id="runs-range-current"></span></span>${icon("chev", "icon chev")}</button>` +
+    `<ul class="menu runs-range-menu" id="runs-range-menu" role="listbox" tabindex="-1" aria-labelledby="runs-range-label" hidden></ul>`;
+  const runsRangePicker = makeMenu(runsRangeWrap, $("button", runsRangeWrap), $("ul", runsRangeWrap), 1, (k) => {
+    if (k === runsRange) return;
+    runsRange = k;
+    runsRangeShow();
+    redrawRuns();
+  }, placeRunsRange);
+  /* The Courses panel clips what's past its edges (see #courses), so under a short list (none for the days picked)
+     the menu opens upward when it doesn't fit under the button and does over it (but not under the section bar), and
+     otherwise goes where there's more room and scrolls */
+  function placeRunsRange() {
+    const menu = $("ul", runsRangeWrap);
+    menu.classList.remove("up");
+    menu.style.maxHeight = "";
+    const b = $("button", runsRangeWrap).getBoundingClientRect();
+    const panel = $("#courses").getBoundingClientRect();
+    const below = panel.bottom - b.bottom - 16;
+    const above = b.top - Math.max(panel.top, $("#sections").getBoundingClientRect().bottom) - 16;
+    const h = menu.offsetHeight;
+    if (h <= below) return;
+    if (h <= above || above > below) menu.classList.add("up");
+    if (h > Math.max(above, below)) menu.style.maxHeight = `${Math.max(120, Math.max(above, below))}px`;
+  }
+  let runsRangeLang = ""; // the language its options are in, so they're only filled again when it changes
+  function runsRangeShow() {
+    if (runsRangeLang !== lang) {
+      runsRangeLang = lang;
+      $("#runs-range-label", runsRangeWrap).textContent = t("runs.rangeLabel");
+      // Every option's name, hidden, under the one picked, so the button is as wide as the longest and doesn't change
+      $$(".runs-range-name > [aria-hidden]", runsRangeWrap).forEach((s) => s.remove());
+      $(".runs-range-name", runsRangeWrap).insertAdjacentHTML("beforeend", RUNS_RANGES.map((k) => `<span aria-hidden="true">${esc(runsRangeName(k))}</span>`).join(""));
+      runsRangePicker.fill(RUNS_RANGES.map((k) => `<li class="opt" role="option" id="runs-range-opt-${k || "all"}" data-value="${k}" aria-selected="false">` +
+        `<span class="opt-label">${esc(runsRangeName(k))}</span>${CHECK}</li>`).join(""));
+    }
+    runsRangePicker.select(runsRange);
+    $("#runs-range-current", runsRangeWrap).textContent = runsRangeName(runsRange);
+  }
   // Runs to check and Submitted runs share the line over them, which goes while neither is there
   function sentShown() { $("#runs").hidden = $("#sub-review").hidden && $("#sub-runs").hidden; }
   // A run on a list (x: as sentRuns has it): its course, player, time and mistakes, extra (what the list says about
@@ -6636,7 +6717,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       [sentBy(r.date, who && who.name), checked && esc(checked)].filter(Boolean).map((h) => `<span class="rev-meta">${h}</span>`).join("");
     return r.id ? `<li><a class="rev-run" href="/runs/${esc(r.id)}" data-run-open="${esc(r.id)}">${inner}</a></li>` : `<li><div class="rev-run">${inner}</div></li>`;
   }
-  // The runs it lists (all: from sentRuns), sorted: the ones the box finds, or all of them while it's empty
+  // The runs it lists (all: from sentRuns), sorted: the ones the box finds (all of them while it's empty) that were
+  // sent in the days picked
   function sentRunsFound(all) {
     // What its time is worth on its course, like a run in a player's Runs (see coursePoints): against the course's
     // record today, so up to 1000, for one waiting for a check too (what it would be if it's approved). One that was
@@ -6650,13 +6732,17 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       return record ? Math.min(1000, coursePoints(record, cleanRun(x.run))) : x.status === "pending" ? 1000 : -1;
     };
     const q = fold(runsQ).trim();
-    const hits = q ? all.filter((x) => found(x.run, q)) : all;
+    const from = runsRange ? rangeStart(runsRange, utcDay(Date.now())) : "";
+    const hits = q || from ? all.filter((x) => (!q || found(x.run, q)) && (!from || sentDay(x) >= from)) : all;
     return sortRuns(hits.map((x) => ({ x, r: cleanRun(x.run), day: sentWhen(x), order: sentWhen(x) ? 0 : 1, pts: ptsOf(x) })), runsSort, runsRev);
   }
   // The runs under the box (list: from sentRunsFound), with Show more and ↑ and ↓ under them (see placeJump), or that
-  // none match what's typed
+  // none match what's typed, or that none were sent in the days picked
   function sentRunsRowsHtml(list) {
-    if (!list.length) return `<div class="sub-runs-rows"><p class="rev-empty">${esc(t("runs.noMatch", { query: runsQ.trim() }))}</p></div>`;
+    if (!list.length) {
+      const none = fold(runsQ).trim() ? t("runs.noMatch", { query: runsQ.trim() }) : t("stats.none");
+      return `<div class="sub-runs-rows"><p class="rev-empty">${esc(none)}</p></div>`;
+    }
     const left = Math.max(0, list.length - runsShown);
     const row = ({ x, pts }) => runItemHtml(x, pts < 0 ? ""
       : `<span class="stat pts" title="${esc(t("rt.coursePoints", { points: points(pts) }))}">${icon("star")}${esc(points(pts))}</span>`);
@@ -6708,27 +6794,34 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     // do ↑ and ↓
     const typing = document.activeElement === $(".lb-search input", box);
     const jumping = box.contains(document.activeElement) && document.activeElement.dataset.runsJump;
+    const picking = runsRangeWrap.contains(document.activeElement) && document.activeElement;
     box.innerHTML = `<div class="sub-runs-head"><p class="rev-title">${icon("notes")}<span>${esc(t("runs.title"))}</span><span class="rev-count">${list.length.toLocaleString(htmlLang())}</span></p>` +
       (all.length > 1 ? runSortHtml(runsSort, runsRev) : "") + `</div>` +
-      (all.length > 1 ? `<label class="lb-search">${icon("search")}<input type="search" value="${esc(runsQ)}" placeholder="${esc(t("lb.search"))}" ` +
-        `aria-label="${esc(t("runs.searchLabel"))}" autocomplete="off" spellcheck="false" enterkeyhint="search"></label>` : "") +
+      (all.length > 1 ? `<div class="sub-runs-find"><label class="lb-search">${icon("search")}<input type="search" value="${esc(runsQ)}" placeholder="${esc(t("lb.search"))}" ` +
+        `aria-label="${esc(t("runs.searchLabel"))}" autocomplete="off" spellcheck="false" enterkeyhint="search"></label><span data-runs-range></span></div>` : "") +
       sentRunsRowsHtml(list);
+    const slot = $("[data-runs-range]", box);
+    if (slot) { runsRangeShow(); slot.replaceWith(runsRangeWrap); }
     fitSorts(box);
     placeJump();
     if (typing) refocus($(".lb-search input", box));
     if (jumping) $(`[data-runs-jump="${jumping}"]`, box).focus({ preventScroll: true });
+    if (picking && slot) picking.focus({ preventScroll: true });
   }
-  // Typing in its box: only the runs under it are drawn again, and the number by the title
+  // Typing in its box, or picking days beside it: only the runs under them are drawn again, and the number by the title
   function searchRuns(input) {
+    runsQ = input.value;
+    redrawRuns();
+  }
+  function redrawRuns() {
     const box = $("#sub-runs");
     const rows = $(".sub-runs-rows", box);
     if (!rows) return;
-    runsQ = input.value;
     const list = sentRunsFound(sentRuns());
     rows.outerHTML = sentRunsRowsHtml(list);
     placeJump();
     $(".rev-count", box).textContent = list.length.toLocaleString(htmlLang());
-    announce.textContent = fold(runsQ).trim() ? t("runs.found", { count: list.length.toLocaleString(htmlLang()) }) : "";
+    announce.textContent = fold(runsQ).trim() || runsRange ? t("runs.found", { count: list.length.toLocaleString(htmlLang()) }) : "";
   }
   // Who checked a run: their Discord name, or null when it isn't known yet (the names are looked up once an hour)
   const checkerOf = (r) => (r.checkedBy ? PLAYERS.get(r.checkedBy) || (me && me.id === r.checkedBy ? me : null) : null);
