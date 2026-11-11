@@ -89,6 +89,11 @@
   /* Assist Mode's pink, as in the game: its runs, boards, and ratings (see "Assisted boards") */
   --assist: #ff80c0;
   --unassist: #e69700;
+  /* The game's HUD orange (its Unassisted orange too), hints violet, and Spectate blue, for the
+     Features icons of the parts of the game that use them */
+  --hud: #e69700;
+  --violet: #6432ff;
+  --spectate: #00beff;
   --discord: #7c86ff;
   --menu: #0a110e;
   --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
@@ -1868,7 +1873,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
           <div><p class="f-title"><span data-i18n="f.rules.title">Checkpoint rules</span></p><p class="f-text" data-i18n="f.rules.text">Some checkpoints block or utilize only Grapple, Shield Bounce, and/or Piledriver.</p></div>
         </li>
         <li class="feature">
-          <span class="f-icon" style="--c: var(--ink)"><svg class="icon" aria-hidden="true"><use href="#i-skip"/></svg></span>
+          <span class="f-icon" style="--c: var(--hud)"><svg class="icon" aria-hidden="true"><use href="#i-skip"/></svg></span>
           <div><p class="f-title"><span data-i18n="f.practice.title">Skip, go back, freemode</span></p><p class="f-text" data-i18n="f.practice.text">Practice any checkpoint, or roam the map with the clock paused.</p></div>
         </li>
         <li class="feature">
@@ -1883,15 +1888,15 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       <div class="f-group"><span class="tag tag-beta" data-i18n="tag.beta">Beta</span><span data-i18n="f.beta.tryList">Try these with a Beta code from the course list.</span></div>
       <ul class="features">
         <li class="feature">
-          <span class="f-icon" style="--c: var(--ember)"><svg class="icon" aria-hidden="true"><use href="#i-bulb"/></svg></span>
+          <span class="f-icon" style="--c: var(--violet)"><svg class="icon" aria-hidden="true"><use href="#i-bulb"/></svg></span>
           <div><p class="f-title"><span data-i18n="f.hints.title">Hints</span></p><p class="f-text" data-i18n="f.hints.text">A recorded route shows you the way through. Turn hints on yourself, or they switch on after 10 mistakes on one checkpoint.</p></div>
         </li>
         <li class="feature">
-          <span class="f-icon" style="--c: var(--volt)"><svg class="icon" aria-hidden="true"><use href="#i-eye"/></svg></span>
+          <span class="f-icon" style="--c: var(--spectate)"><svg class="icon" aria-hidden="true"><use href="#i-eye"/></svg></span>
           <div><p class="f-title"><span data-i18n="f.spectate.title">Spectate</span></p><p class="f-text" data-i18n="f.spectate.text">Watch other runners in first or third person, or fly in freecam mode.</p></div>
         </li>
         <li class="feature">
-          <span class="f-icon" style="--c: var(--arc)"><svg class="icon" aria-hidden="true"><use href="#i-timer"/></svg></span>
+          <span class="f-icon" style="--c: var(--hud)"><svg class="icon" aria-hidden="true"><use href="#i-timer"/></svg></span>
           <div><p class="f-title"><span data-i18n="f.splits.title">Splits</span></p><p class="f-text" data-i18n="f.splits.text">Best and average times for every checkpoint, plus a pace timer to see your estimated finish time.</p></div>
         </li>
         <li class="feature">
@@ -1899,7 +1904,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
           <div><p class="f-title"><span data-i18n="f.assist.title">Assist Mode</span></p><p class="f-text" data-i18n="f.assist.text">Every ability as often as you like, free usage of the ground, while your timer runs and checkpoints still clear. Assisted runs have their own leaderboards.</p></div>
         </li>
         <li class="feature">
-          <span class="f-icon" style="--c: var(--ember)"><svg class="icon" aria-hidden="true"><use href="#i-scorecard"/></svg></span>
+          <span class="f-icon" style="--c: var(--hud)"><svg class="icon" aria-hidden="true"><use href="#i-scorecard"/></svg></span>
           <div><p class="f-title"><span data-i18n="f.scorecards.title">Scorecards</span></p><p class="f-text" data-i18n="f.scorecards.text">See every player’s checkpoint, time, and mistakes live, along with the lobby’s top 3.</p></div>
         </li>
         <li class="feature">
