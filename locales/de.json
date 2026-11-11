@@ -123,6 +123,7 @@
   "lb.tab.top": "Top 10",
   "lb.tab.unassisted": "Ohne Assistenz",
   "lb.assisted.title": "Im Assistenzmodus gespielte Läufe",
+  "lb.unassisted.title": "Ohne Assistenzmodus gespielte Läufe",
   "lb.legacy.ratingNote": "Wertungen: die frühere Wertung jedes Spielers über alle früheren Listen",
   "lb.assisted.ratingNote": "Wertungen: die assistierte Wertung jedes Spielers über die Strecken mit Assistenzmodus",
   "lb.assisted.ratingThen": "Wertungen: die assistierte Wertung jedes Spielers über die Strecken mit Assistenzmodus, Stand {date}",

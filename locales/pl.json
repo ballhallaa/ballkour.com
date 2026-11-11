@@ -123,6 +123,7 @@
   "lb.tab.top": "Top 10",
   "lb.tab.unassisted": "Bez wspomagania",
   "lb.assisted.title": "Przejścia rozegrane w trybie wspomaganym",
+  "lb.unassisted.title": "Przejścia rozegrane bez trybu wspomaganego",
   "lb.legacy.ratingNote": "Rankingi: dawny ranking każdego gracza ze wszystkich dawnych tablic",
   "lb.assisted.ratingNote": "Rankingi: wspomagany ranking każdego gracza z tras z trybem wspomaganym",
   "lb.assisted.ratingThen": "Rankingi: wspomagany ranking każdego gracza z tras z trybem wspomaganym, stan na {date}",

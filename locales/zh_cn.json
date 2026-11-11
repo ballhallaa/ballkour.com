@@ -123,6 +123,7 @@
   "lb.tab.top": "前 10 名",
   "lb.tab.unassisted": "无辅助",
   "lb.assisted.title": "在辅助模式中跑出的成绩",
+  "lb.unassisted.title": "不用辅助模式跑出的成绩",
   "lb.legacy.ratingNote": "积分：每位玩家在所有旧榜上的旧榜积分",
   "lb.assisted.ratingNote": "积分：每位玩家在有辅助模式的关卡的辅助积分",
   "lb.assisted.ratingThen": "积分：每位玩家在有辅助模式的关卡的辅助积分（截至 {date}）",

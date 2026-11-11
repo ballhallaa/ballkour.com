@@ -123,6 +123,7 @@
   "lb.tab.top": "Top 10",
   "lb.tab.unassisted": "Sans assistance",
   "lb.assisted.title": "Parties jouées en mode assisté",
+  "lb.unassisted.title": "Parties jouées sans mode assisté",
   "lb.legacy.ratingNote": "Scores : l’ancien score de chaque joueur sur tous les anciens classements",
   "lb.assisted.ratingNote": "Scores : le score assisté de chaque joueur sur les parcours avec le mode assisté",
   "lb.assisted.ratingThen": "Scores : le score assisté de chaque joueur sur les parcours avec le mode assisté, tel qu’il était le {date}",
