@@ -150,8 +150,8 @@ function fileRuns(path, text) {
 // The game data's files and course list ({ n, file, broken }) → every course with what its board is made of, for
 // standings() and rate(). Throws when history.json or runs.json can't be read, so no stats go out without them.
 // assisted: the assisted boards instead (boards.mjs's loadCourses({ assisted: true })): the runs played in Assist Mode
-// ("mode": "assisted" in runs.json) alone, and the assisted boards posted (history.json's "assisted"). The courses'
-// files only have regular runs.
+// ("mode": "assisted" in runs.json) alone, and the assisted boards posted (history.json's "assisted"), for the courses
+// with Assist Mode (the remakes) alone, so the assisted rating is over them. The courses' files only have regular runs.
 export function loadCourses(files, courses, { assisted = false } = {}) {
   const history = JSON.parse(files["leaderboards/history.json"]);
   const extra = JSON.parse(files["leaderboards/runs.json"]);
@@ -161,7 +161,7 @@ export function loadCourses(files, courses, { assisted = false } = {}) {
     .map(([n, list]) => [n, list.filter((r) => !!r && (r.mode === "assisted") === assisted).map(clean).filter(Boolean)]));
   const runs = byCourse(extra.runs, cleanRun), removed = byCourse(extra.removed, cleanRemoved);
   const posted = assisted ? "assisted" : "boards";
-  return courses.map((c) => ({
+  return courses.filter((c) => !assisted || c.remake).map((c) => ({
     n: c.n,
     broken: !!c.broken,
     file: assisted ? [] : fileRuns(c.file, files[c.file]),
