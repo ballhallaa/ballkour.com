@@ -2061,6 +2061,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "lb.assisted.ratingNote": "Ratings: each player’s assisted rating over every course",
   "lb.assisted.ratingThen": "Ratings: each player’s assisted rating over every course, as it was on {date}",
   "lb.tab.legacy": "Legacy",
+  "lb.tab.global": "Global",
   "lb.legacy.title": "Leaderboard before 2026-04-29",
   "lb.legacy.note": "Run videos weren’t required at the time",
   "lb.history": "Board history",
@@ -2122,6 +2123,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "rt.legacy.how": "Every course’s legacy board is worth up to 1,000 points: its record gets all of them, and the further behind it a run is, the fewer it gets. Your Legacy rating is your average over every legacy board, with 0 for any you’re not on. Those boards don’t change any more, and their times were only to the second.",
   "rt.legacy.tiers": "Top % is where you place among all {count} players on the legacy boards. On our Discord, it’s your role once your legacy runs are linked to you: everyone below Top 90% (Legacy) is Rated (Legacy).",
   "rt.legacy.counted": "Legacy boards that count: {courses}.",
+  "rt.global.title": "Unassisted and assisted ratings added up",
+  "rt.global.how": "Your global rating is your unassisted rating plus your assisted rating, so it’s worth up to 2,000. Legacy ratings don’t count toward it, as their boards don’t change any more.",
+  "rt.global.tiers": "Top % is where you place among all {count} rated players. On our Discord, it’s your role: everyone below Top 90% (Global) is Rated (Global), and anyone without a rating yet is Unrated (Global). The 10 best players get Top 10 (Global) too.",
   "rt.meta": "All courses in one rating",
   "rt.none": "No ratings yet",
   "rt.empty": "No ratings yet. Set a time on any course to get rated.",
@@ -2133,6 +2137,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "rt.mathTitle": "The formulas",
   "rt.mathCourse": "Course rating = 1,000 × [ln(1 + (e − 1) × record ÷ your time)]²",
   "rt.mathRating": "Rating = (your course ratings added up) ÷ {n}",
+  "rt.mathGlobal": "Global rating = unassisted rating + assisted rating",
   "rt.mathNote": "ln is the natural log, and e is about 2.718. {n} is the number of courses that count, and a course you haven’t run adds 0. With a 4:00.00 record, a 5:00.00 run gets a course rating of {a}, and an 8:00.00 run gets {b}.",
   "sub.pick": "Pick a course",
   "sub.assisted": "Played in Assist Mode",
@@ -2261,7 +2266,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "rev.none": "No runs to check right now.",
   "rev.would": "Would be #{rank}",
   "rev.wouldOf": "Would be #{rank} of {total}",
-  "rev.global": "Global #{rank} of {total}",
+  "rev.global": "Unassisted #{rank} of {total}",
   "rev.assistedGlobal": "Assisted #{rank} of {total}",
   "rev.watch": "Watch",
   "rev.approve": "Approve",
@@ -2327,9 +2332,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "stats.gained": "Rating gained",
   "stats.newPlayers": "New players",
   "stats.rated": "Rated players",
-  "stats.totalGlobal": "Total global rating",
+  "stats.totalGlobal": "Total player rating",
   "stats.totalCourse": "Total course rating",
-  "stats.changeGlobal": "Change in global rating",
+  "stats.changeGlobal": "Change in player rating",
   "stats.changeCourse": "Change in course rating",
   "stats.busiest": "Most runs",
   "stats.since": "They’re counted from {date} on.",
@@ -3606,9 +3611,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   }
   // then: { day, c, runs } for the ratings as they were on an older board's day (c's board being runs), or none for
   // today's. which: true for the assisted ratings, from the assisted boards (see "Assisted boards"), or "legacy" for
-  // the Legacy rating, from the legacy boards (see legacyOf).
+  // the Legacy rating, from the legacy boards (see legacyOf), or "global" for the Global rating (see ratingsSum).
   // → { counted: [course, …], players: [{ key, name, discord, rating, points: { n: points }, courses, rank, tier }], assisted, legacy }
   function ratings(then, which = false) {
+    if (which === "global") return ratingsSum([ratings(then), ratings(then, true)]);
     const legacy = which === "legacy", assisted = which === true;
     const counted = [];
     const players = new Map();
@@ -3631,14 +3637,38 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       const pts = Object.values(p.points);
       return Object.assign(p, { courses: pts.length, rating: pts.reduce((a, b) => a + b, 0) / (counted.length || 1) });
     });
+    return { counted, players: ranked(list), assisted, legacy };
+  }
+  // Rated players, best first (then whoever has run more courses, then by name), each with their place and tier.
+  // Players with the same rating share the better place.
+  function ranked(list) {
     list.sort((a, b) => b.rating - a.rating || b.courses - a.courses || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
-    // Players with the same rating share the better place
     const same = (a, b) => Math.round(a.rating * 100) === Math.round(b.rating * 100);
     list.forEach((p, i) => {
       p.rank = i > 0 && same(list[i - 1], p) ? list[i - 1].rank : i + 1;
       p.tier = TIERS.find((tier) => ((p.rank - 1) / list.length) * 100 <= tier + 1e-9) ?? null;
     });
-    return { counted, players: list, assisted, legacy };
+    return list;
+  }
+  /* The Global rating: each player's unassisted and assisted ratings (sets, as ratings() works them out) added up, so
+     it's worth up to 2,000 (parts: the two of them), ranked like the others. courses: the courses they've run either
+     way. The Legacy rating stays out of it, as its boards can't change any more. It's what the Global Discord roles go
+     by: the bot (tools/leaderboard-bot/ratings.mjs in the game repo) and the Worker (cloudflare/ratings.js) work it out
+     the same way, with combine(). */
+  function ratingsSum(sets) {
+    const players = new Map();
+    sets.forEach((set, i) => set.players.forEach((p) => {
+      if (!players.has(p.key)) players.set(p.key, { key: p.key, name: p.name, discord: p.discord, date: p.date, rating: 0, parts: sets.map(() => 0), ran: new Set() });
+      const g = players.get(p.key);
+      g.rating += p.rating;
+      g.parts[i] = p.rating;
+      Object.keys(p.points).forEach((n) => g.ran.add(n));
+      // Named as on their newest run
+      if (p.date > g.date) { g.date = p.date; g.name = p.name; }
+    }));
+    const counted = sets[0].counted.concat(...sets.slice(1).map((set) => set.counted.filter((c) => !sets[0].counted.some((x) => x.n === c.n))));
+    const list = [...players.values()].map(({ ran, ...p }) => Object.assign(p, { courses: ran.size }));
+    return { counted, players: ranked(list), global: true };
   }
   // Which ratings a board's are (see ratings): a course's, its assisted twin's, or its legacy twin's
   const ratingsOf = (c) => (c.legacy ? "legacy" : !!c.assisted);
@@ -3726,9 +3756,11 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   function ratingRow(p, r) {
     const total = r.counted.length;
     const ran = t("rt.courses", { n: p.courses, total });
-    const breakdown = r.counted.filter((c) => c.n in p.points).map((c) => `${c.n} · ${c.name}: ${points(p.points[c.n])}`).join("\n");
+    // What it's made of: each course rating, or for the Global rating, the unassisted and assisted ratings
+    const breakdown = r.global ? [t("lb.tab.unassisted"), t("lb.tab.assisted")].map((name, i) => `${name}: ${points(p.parts[i])}`).join("\n")
+      : r.counted.filter((c) => c.n in p.points).map((c) => `${c.n} · ${c.name}: ${points(p.points[c.n])}`).join("\n");
     const tier = p.tier ? `<span class="tag tag-tier${p.tier <= 5 ? " elite" : ""}">${esc(t("rt.tier", { pct: p.tier.toLocaleString(htmlLang()) }))}</span>` : "";
-    const mark = !!boardMark && boardMark.n === RATINGS.n && boardMark.key === p.key && boardMark.tab === (r.legacy ? "legacy" : r.assisted ? "assisted" : "top");
+    const mark = !!boardMark && boardMark.n === RATINGS.n && boardMark.key === p.key && boardMark.tab === tabOfRatings(r);
     return `<li class="run${p.rank <= 3 ? " p" + p.rank : ""}${mark ? " mark" : ""}" data-k="${esc(p.key)}"${ratingCols(r)}>` +
       `<span class="run-rank">${p.rank}</span>` +
       `<span class="run-who"><span class="run-line">${nameButton(p.key, p.name)}${tier}</span></span>` +
@@ -3737,22 +3769,26 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       dcHtml(p) +
       `</li>`;
   }
-  // The Player ratings' board: the ratings, and the assisted ratings on their own tab (see "Assisted boards")
-  // The Legacy rating on its own tab too, from the legacy boards (see legacyOf)
+  // The Player ratings' board: the ratings, and the assisted ratings on their own tab (see "Assisted boards"), the
+  // Global rating, both added up (see ratingsSum), and the Legacy rating, from the legacy boards (see legacyOf)
+  const RATINGS_TABS = ["top", "assisted", "global", "legacy"];
+  // Which ratings a tab of the Player ratings has (see ratings), and which tab has these ratings
+  const ratingsFor = (tab) => (tab === "legacy" ? "legacy" : tab === "assisted" ? true : tab === "global" ? "global" : false);
+  const tabOfRatings = (r) => (r.legacy ? "legacy" : r.assisted ? "assisted" : r.global ? "global" : "top");
   function ratingsBoardHtml() {
     const tab = viewOf(RATINGS).tab;
-    const on = tab === "assisted" || tab === "legacy" ? tab : "top";
-    return tabsHtml(RATINGS, ["top", "assisted", "legacy"], on, t("rt.title"), ratingsHtml(ratings(null, on === "legacy" ? "legacy" : on === "assisted")), { top: "lb.tab.unassisted" });
+    const on = RATINGS_TABS.includes(tab) ? tab : "top";
+    return tabsHtml(RATINGS, RATINGS_TABS, on, t("rt.title"), ratingsHtml(ratings(null, ratingsFor(on))), { top: "lb.tab.unassisted" });
   }
   function ratingsHtml(r) {
     const meta = r.assisted ? `<div class="board-meta board-assisted"><span>${assistedTag()}<span>${esc(t("rt.assisted.title"))}</span></span></div>`
-      : r.legacy ? `<div class="board-meta"><span>${esc(t("rt.legacy.title"))}</span></div>` : "";
+      : r.legacy || r.global ? `<div class="board-meta"><span>${esc(t(r.legacy ? "rt.legacy.title" : "rt.global.title"))}</span></div>` : "";
     if (!r.players.length) return meta + `<p class="board-empty">${esc(t(r.assisted ? "rt.assisted.empty" : r.legacy ? "rt.legacy.empty" : "rt.empty"))}</p>`;
     const top = r.players.slice(0, 10);
     const rest = r.players.slice(10);
     const courses = r.counted.map((c) => `<span class="nowrap">${c.n} ${flagName(c)}</span>`).join(esc(" · "));
     return meta + `<div class="lb-bar">${searchHtml(RATINGS)}</div>` + rowsHtml(RATINGS, top, rest, (p) => ratingRow(p, r)) +
-      `<p class="lb-foot"><span>${esc(t(r.legacy ? "rt.legacy.how" : "rt.how"))}</span><span>${esc(t(r.legacy ? "rt.legacy.tiers" : r.assisted ? "rt.assisted.tiers" : "rt.tiers", { count: r.players.length.toLocaleString(htmlLang()) }))}</span>` +
+      `<p class="lb-foot"><span>${esc(t(r.legacy ? "rt.legacy.how" : r.global ? "rt.global.how" : "rt.how"))}</span><span>${esc(t(r.legacy ? "rt.legacy.tiers" : r.assisted ? "rt.assisted.tiers" : r.global ? "rt.global.tiers" : "rt.tiers", { count: r.players.length.toLocaleString(htmlLang()) }))}</span>` +
       `<span>${esc(t(r.legacy ? "rt.legacy.counted" : "rt.counted", { courses: "\u0000" })).replace("\u0000", courses)}</span></p>` + mathHtml(r);
   }
   // The formulas under the board, with two runs on a 4:00.00 record as an example
@@ -3762,6 +3798,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     return `<div class="rt-math"><p class="rt-math-title">${esc(t("rt.mathTitle"))}</p>` +
       `<p class="rt-math-f">${esc(t("rt.mathCourse"))}</p>` +
       `<p class="rt-math-f">${esc(t("rt.mathRating", { n }))}</p>` +
+      (r.global ? `<p class="rt-math-f">${esc(t("rt.mathGlobal"))}</p>` : "") +
       `<p class="rt-math-note">${esc(t("rt.mathNote", { n, a: eg("5:00.00"), b: eg("8:00.00") }))}</p></div>`;
   }
   // runs.json as it is, for the runs sent from the website by their id: their pages, and the reviewers' All runs
@@ -4560,7 +4597,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       boardMark = spot ? { n: c.n, key: spot.key, tab } : null;
       if (spot) {
         viewOf(c).q = "";
-        if (ratings(null, tab === "legacy" ? "legacy" : tab === "assisted").players.findIndex((p) => p.key === spot.key) >= 10) viewOf(c).all = true;
+        if (ratings(null, ratingsFor(tab)).players.findIndex((p) => p.key === spot.key) >= 10) viewOf(c).all = true;
       }
     } else {
       boardMark = spot ? { n: c.n, run: spot.run } : null;
@@ -8199,13 +8236,13 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   const pathFor = (route) => (route === "discord" ? "/#discord" : "/" + route);
   const routeOf = (path) => {
     if (STATS_LINK.test(path)) return "stats"; // /stats/2026-11-05/week, … (see "Stats")
-    const m = /^\/([a-z-]+)(?:\/[\w-]+(?:\/(?:legacy|assisted|\d+))?)?\/?$/i.exec(path);
+    const m = /^\/([a-z-]+)(?:\/[\w-]+(?:\/(?:legacy|assisted|global|\d+))?)?\/?$/i.exec(path);
     const r = m && m[1].toLowerCase();
     return r && r !== "discord" && ROUTES[r] ? r : null;
   };
   // The board or answer a link names: /leaderboards/6 (/leaderboards/6/legacy for its Legacy tab, /leaderboards/6/3
   // for its third board), /faq/pausing, or the older /leaderboards/6-dorado, /faq/pause, #6-dorado and #pause
-  const subOf = (path, hash) => { const m = /^\/(?:leaderboards\/([\w-]+)(?:\/(?:legacy|assisted|\d+))?|faq\/([\w-]+))\/?$/i.exec(path); return m ? (m[1] || m[2]).toLowerCase() : /^#[\w-]+$/.test(hash) ? hash.slice(1) : null; };
+  const subOf = (path, hash) => { const m = /^\/(?:leaderboards\/([\w-]+)(?:\/(?:legacy|assisted|global|\d+))?|faq\/([\w-]+))\/?$/i.exec(path); return m ? (m[1] || m[2]).toLowerCase() : /^#[\w-]+$/.test(hash) ? hash.slice(1) : null; };
   const BOARD_LINK = /^\/leaderboards\/[\w-]+\/(\d+)\/?$/i; // a link to one of a course's boards, like /leaderboards/6/3
   // Old hash links still work too, including #leaderboard from the workshop.codes README
   const hashRoute = (hash) => { const h = hash.slice(1).toLowerCase(); return h === "leaderboard" ? "leaderboards" : Object.keys(ROUTES).find((r) => ROUTES[r] === h) || null; };
@@ -8215,6 +8252,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   const startBoard = startRoute === "leaderboards" && startSub ? (startSub === RATINGS.n ? RATINGS : courseOfHash(startSub)) : null;
   if (startBoard && /^\/leaderboards\/[\w-]+\/legacy\/?$/i.test(location.pathname)) viewOf(startBoard).tab = "legacy";
   if (startBoard && /^\/leaderboards\/[\w-]+\/assisted\/?$/i.test(location.pathname)) viewOf(startBoard).tab = "assisted";
+  // The Global rating is only the Player ratings' tab
+  if (startBoard === RATINGS && /^\/leaderboards\/[\w-]+\/global\/?$/i.test(location.pathname)) viewOf(startBoard).tab = "global";
   const startFaq = startRoute === "faq" && startSub ? faqOfLink(startSub) : null;
   if (startRoute === "leaderboards") openCourse = startBoard ? startBoard.n : 1;
   // A link to one of a course's boards (/leaderboards/6/3) opens on that board, counted from its oldest, once the
@@ -8319,7 +8358,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // Stats' links to the day picked: /stats/2026-11-05, /stats/2026-11-05/week, …
   function subPath(route) {
     if (route === "stats") return statsPath();
-    if (route === "leaderboards" && openCourse === RATINGS.n) return RATINGS.n + ({ assisted: "/assisted", legacy: "/legacy" }[viewOf(RATINGS).tab] || "");
+    if (route === "leaderboards" && openCourse === RATINGS.n) return RATINGS.n + ({ assisted: "/assisted", global: "/global", legacy: "/legacy" }[viewOf(RATINGS).tab] || "");
     if (route === "leaderboards" && openCourse) {
       const c = course(openCourse);
       const v = viewOf(c);
