@@ -259,6 +259,7 @@
   "pl.legacyBest": "Antiga: {time}",
   "pl.board": "Ver a classificação",
   "pl.seeRatings": "Ver a posição de {player} na Pontuação dos jogadores",
+  "pl.seeUnassistedRatings": "Ver a posição de {player} na Pontuação dos jogadores sem assistência",
   "pl.seeAssistedRatings": "Ver a posição de {player} na Pontuação dos jogadores assistida",
   "pl.seeLegacyRatings": "Ver a posição de {player} na pontuação antiga",
   "pl.modes": "Quais corridas mostrar",

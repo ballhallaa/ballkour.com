@@ -259,6 +259,7 @@
   "pl.legacyBest": "กระดานเก่า: {time}",
   "pl.board": "ดูกระดาน",
   "pl.seeRatings": "ดูอันดับของ {player} ในเรตติ้งผู้เล่น",
+  "pl.seeUnassistedRatings": "ดูอันดับของ {player} ในเรตติ้งผู้เล่นแบบไม่ช่วยเหลือ",
   "pl.seeAssistedRatings": "ดูอันดับของ {player} ในเรตติ้งผู้เล่นแบบช่วยเหลือ",
   "pl.seeLegacyRatings": "ดูอันดับของ {player} ในเรตติ้งกระดานเก่า",
   "pl.modes": "การวิ่งที่จะแสดง",

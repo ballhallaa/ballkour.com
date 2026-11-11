@@ -45,8 +45,9 @@
    and the PROFILES KV namespace (wrangler.toml), for the stats on players' Discord profiles and each run's numbers from
    when it was sent.
 
-   Board, answer and run links (/leaderboards/6, /leaderboards/3/legacy, /leaderboards/3/12, /faq/pausing, /runs/<id>)
-   get the home page, like /leaderboards and /faq do; the page opens the board, answer or run itself.
+   Board, answer and run links (/leaderboards/6, /leaderboards/3/legacy, /leaderboards/3/12,
+   /leaderboards/ratings/unassisted, /faq/pausing, /runs/<id>) get the home page, like /leaderboards and /faq do; the
+   page opens the board, answer or run itself.
 
    /code/game and /code/site (also /code/website) redirect to the game's and this website's GitHub repos, and
    /releases and /releases/site (also /releases/website) to their release notes. Anything after them carries over,
@@ -2388,14 +2389,15 @@ function previewOf(pathname, data, players) {
     };
   }
   // A board: the top 3 on it (the newest board, an older one from its history, the legacy one, or the assisted one),
-  // or the ratings' (or the assisted or Global ratings')
-  if ((m = /^\/leaderboards\/(ratings|\d+)(?:-[\w-]*)?(?:\/(legacy|assisted|global|\d+))?\/?$/i.exec(pathname))) {
+  // or the ratings' (the Global rating, the tab the board opens on, or the unassisted or assisted ratings)
+  if ((m = /^\/leaderboards\/(ratings|\d+)(?:-[\w-]*)?(?:\/(legacy|assisted|unassisted|global|\d+))?\/?$/i.exec(pathname))) {
     const assisted = !!m[2] && m[2].toLowerCase() === ASSISTED;
     if (m[1].toLowerCase() === "ratings") {
-      const global = !!m[2] && m[2].toLowerCase() === "global";
+      const unassisted = !!m[2] && m[2].toLowerCase() === "unassisted";
+      const global = !assisted && !unassisted;
       const { players: rated } = global ? combine([rate(courses(false)), rate(courses(true))]) : rate(courses(assisted));
       return {
-        title: global ? "Global player ratings" : assisted ? "Assisted player ratings" : "Player ratings",
+        title: global ? "Global player ratings" : assisted ? "Assisted player ratings" : "Unassisted player ratings",
         description: rated.length ? rated.slice(0, 3).map((p) => `${p.rank}. ${caps(p.name)} ${ratingText(p.rating)}`).join(" · ") : "No ratings yet",
       };
     }
@@ -2469,7 +2471,7 @@ function previewOf(pathname, data, players) {
 // /stats/2026-11-05/week, /stats/day, /stats/3-months), and each player's panel (/players/<number or name>, see "Players' own links",
 // and /players/<…>/runs for their Runs), are the home page. On ballkour.com a Cloudflare rule already serves the
 // sections that way, but the test copy on workers.dev has no such rule, so the Worker does it too.
-const DEEP_LINK = /^\/(?:(?:courses|leaderboards|submit|features|faq|source-code|translations|runs|stats|my-stats)\/?|leaderboards\/[\w-]+(?:\/legacy|\/assisted|\/global|\/\d+)?\/?|faq\/[\w-]+\/?|runs\/[\w-]+\/?|stats(?:\/\d{4}-\d{2}-\d{2})?(?:\/(?:day|week|3-months|6-months|12-months))?\/?|players\/[^/]{1,300}(?:\/runs)?\/?)$/i;
+const DEEP_LINK = /^\/(?:(?:courses|leaderboards|submit|features|faq|source-code|translations|runs|stats|my-stats)\/?|leaderboards\/[\w-]+(?:\/legacy|\/assisted|\/unassisted|\/global|\/\d+)?\/?|faq\/[\w-]+\/?|runs\/[\w-]+\/?|stats(?:\/\d{4}-\d{2}-\d{2})?(?:\/(?:day|week|3-months|6-months|12-months))?\/?|players\/[^/]{1,300}(?:\/runs)?\/?)$/i;
 async function page(request, env, ctx) {
   // Ask for the full page every time (no 304 Not Modified), so a browser never reuses old data from its cache
   const headers = new Headers(request.headers);

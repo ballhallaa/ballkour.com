@@ -259,6 +259,7 @@
   "pl.legacyBest": "旧榜：{time}",
   "pl.board": "查看排行榜",
   "pl.seeRatings": "查看 {player} 在玩家积分中的排名",
+  "pl.seeUnassistedRatings": "查看 {player} 在无辅助玩家积分中的排名",
   "pl.seeAssistedRatings": "查看 {player} 在辅助玩家积分中的排名",
   "pl.seeLegacyRatings": "查看 {player} 在旧榜积分中的排名",
   "pl.modes": "要显示的成绩",

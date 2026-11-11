@@ -259,6 +259,7 @@
   "pl.legacyBest": "Dawna tablica: {time}",
   "pl.board": "Zobacz tablicę",
   "pl.seeRatings": "Zobacz, które miejsce zajmuje {player} w Rankingu graczy",
+  "pl.seeUnassistedRatings": "Zobacz, które miejsce zajmuje {player} w Rankingu graczy bez wspomagania",
   "pl.seeAssistedRatings": "Zobacz, które miejsce zajmuje {player} we wspomaganym Rankingu graczy",
   "pl.seeLegacyRatings": "Zobacz, które miejsce zajmuje {player} w dawnym rankingu",
   "pl.modes": "Które przejścia pokazać",

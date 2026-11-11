@@ -259,6 +259,7 @@
   "pl.legacyBest": "Legacy: {time}",
   "pl.board": "See the board",
   "pl.seeRatings": "See where {player} places in the Player ratings",
+  "pl.seeUnassistedRatings": "See where {player} places in the unassisted Player ratings",
   "pl.seeAssistedRatings": "See where {player} places in the assisted Player ratings",
   "pl.seeLegacyRatings": "See where {player} places in the Legacy ratings",
   "pl.modes": "Which runs to show",
