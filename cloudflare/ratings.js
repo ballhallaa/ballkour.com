@@ -10,8 +10,9 @@
    runs slower than today's #10.
 
    Every course is worth up to 1,000 points: 1000 × ln(1 + (e − 1) × record ÷ time)². A rating is the average over
-   every course that isn't broken, with 0 for the ones a player hasn't run. A player's tier is their place divided by
-   the number of rated players: #4 of 40 is in the Top 10%. Everyone past the last tier (the bottom 10%) is just Rated. */
+   every course that isn't broken, with 0 for the ones a player hasn't run. A player's tier is the share of rated
+   players ahead of them: #1 is always in the Top 0.1%, and #5 of 40 (4 ahead, 10%) is in the Top 10%. Everyone past
+   the last tier (the bottom 10%) is just Rated. */
 
 export const TIERS = [0.1, 1, 5, 10, 25, 50, 75, 90];
 
@@ -74,7 +75,7 @@ export function rate(courses) {
   const same = (a, b) => Math.round(a.rating * 100) === Math.round(b.rating * 100);
   list.forEach((p, i) => {
     p.rank = i > 0 && same(list[i - 1], p) ? list[i - 1].rank : i + 1;
-    p.tier = TIERS.find((tier) => (p.rank / list.length) * 100 <= tier + 1e-9) ?? null;
+    p.tier = TIERS.find((tier) => ((p.rank - 1) / list.length) * 100 <= tier + 1e-9) ?? null;
   });
   return { counted, players: list };
 }
