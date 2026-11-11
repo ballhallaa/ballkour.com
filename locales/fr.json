@@ -259,6 +259,7 @@
   "pl.legacyBest": "Ancien : {time}",
   "pl.board": "Voir le classement",
   "pl.seeRatings": "Voir la place de {player} dans le Score des joueurs",
+  "pl.seeUnassistedRatings": "Voir la place de {player} dans le Score des joueurs sans assistance",
   "pl.seeAssistedRatings": "Voir la place de {player} dans le Score des joueurs assisté",
   "pl.seeLegacyRatings": "Voir la place de {player} dans l’ancien score",
   "pl.modes": "Quelles parties afficher",

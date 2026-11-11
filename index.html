@@ -2213,6 +2213,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "pl.legacyBest": "Legacy: {time}",
   "pl.board": "See the board",
   "pl.seeRatings": "See where {player} places in the Player ratings",
+  "pl.seeUnassistedRatings": "See where {player} places in the unassisted Player ratings",
   "pl.seeAssistedRatings": "See where {player} places in the assisted Player ratings",
   "pl.seeLegacyRatings": "See where {player} places in the Legacy ratings",
   "pl.modes": "Which runs to show",
@@ -3534,7 +3535,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      so a new run that ties an old one exactly still counts. */
   const HISTORY = {};
   const views = {};
-  const viewOf = (c) => views[c.n] || (views[c.n] = { tab: "top", at: -1 }); // at: board index, -1 = newest
+  // The tab a board opens on: a course's Top 10, or the Player ratings' Global rating
+  const firstTab = (c) => (c === RATINGS ? "global" : "top");
+  const viewOf = (c) => views[c.n] || (views[c.n] = { tab: firstTab(c), at: -1 }); // at: board index, -1 = newest
   const samePlayer = (a, b) => (a.discord && b.discord ? a.discord === b.discord : a.name.toUpperCase() === b.name.toUpperCase());
   function freshRuns(runs, before) {
     const left = before.slice();
@@ -3768,8 +3771,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     return { rating, gain: rating - Math.round(s.rating[0] ?? 0) };
   }
   const ratingAddedHtml = (x) => `${icon("star")}${esc(points(x.rating))} (${esc(signed(x.gain))})`;
+  // The Player ratings' row, with the leader of the Global rating, the tab it opens on
   function ratingsRow() {
-    const r = ratings();
+    const r = ratings(null, "global");
     const top = r.players[0];
     const open = openCourse === RATINGS.n;
     const body = top
@@ -3807,15 +3811,18 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       dcHtml(p) +
       `</li>`;
   }
-  // The Player ratings' board: the ratings, and the assisted ratings on their own tab (see "Assisted boards"), the
-  // Global rating, both added up (see ratingsSum), and the Legacy rating, from the legacy boards (see legacyOf)
-  const RATINGS_TABS = ["top", "assisted", "global", "legacy"];
+  // The Player ratings' board: the Global rating first, the unassisted and assisted ratings added up (see ratingsSum),
+  // then the ratings on their own (Unassisted), the assisted ratings (see "Assisted boards"), and the Legacy rating, from
+  // the legacy boards (see legacyOf)
+  const RATINGS_TABS = ["global", "top", "assisted", "legacy"];
+  // A tab's link: /leaderboards/ratings for Global, then /unassisted, /assisted and /legacy after it
+  const ratingsPath = (tab) => RATINGS.n + ({ top: "/unassisted", assisted: "/assisted", legacy: "/legacy" }[tab] || "");
   // Which ratings a tab of the Player ratings has (see ratings), and which tab has these ratings
   const ratingsFor = (tab) => (tab === "legacy" ? "legacy" : tab === "assisted" ? true : tab === "global" ? "global" : false);
   const tabOfRatings = (r) => (r.legacy ? "legacy" : r.assisted ? "assisted" : r.global ? "global" : "top");
   function ratingsBoardHtml() {
     const tab = viewOf(RATINGS).tab;
-    const on = RATINGS_TABS.includes(tab) ? tab : "top";
+    const on = RATINGS_TABS.includes(tab) ? tab : "global";
     return tabsHtml(RATINGS, RATINGS_TABS, on, t("rt.title"), ratingsHtml(ratings(null, ratingsFor(on))), { top: "lb.tab.unassisted" });
   }
   function ratingsHtml(r) {
@@ -4043,7 +4050,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     // Runs lists every run of theirs here. Before they're rated, or before their first run, there's nothing to open.
     const toRuns = runsIn(shown) ? { attrs: `data-pl-runs title="${esc(t("lb.playerOpen", { player: named.name || (dc ? dc.name : "") }))}"` } : null;
     const tiles = (q, rated, tab, seeKey) => {
-      const to = q ? { href: `/leaderboards/${RATINGS.n}${tab ? `/${tab}` : ""}`, attrs: `data-board="${RATINGS.n}"${tab ? ` data-board-tab="${tab}"` : ""} data-board-player="${esc(key)}" title="${esc(t(seeKey, { player: named.name }))}"` } : null;
+      const to = q ? { href: `/leaderboards/${ratingsPath(tab)}`, attrs: `data-board="${RATINGS.n}" data-board-tab="${tab}" data-board-player="${esc(key)}" title="${esc(t(seeKey, { player: named.name }))}"` } : null;
       return `<div class="pl-stats">` +
         stat(t("pl.rating"), q ? `${icon("star")}${esc(points(q.rating))}` : "—", to) +
         stat(t("pl.place"), q ? esc(t("res.of", { rank: q.rank, total: rated.players.length })) : "—", to) +
@@ -4061,7 +4068,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       return html + tiles(lp, lr, "legacy", "pl.seeLegacyRatings") +
         (key.startsWith("n:") && lrows.length ? claimHtml(named.name) : "") + courses;
     }
-    return html + tiles(p, r, "", "pl.seeRatings") +
+    return html + tiles(p, r, "top", "pl.seeUnassistedRatings") +
       (mine && ranNone ? `<p class="pl-mine-empty"><span>${esc(t("pl.mineEmpty"))}</span>` +
         `<a class="btn btn-sm btn-primary" href="/submit" data-route="submit">${icon("upload")}<span>${esc(t("nav.submit"))}</span></a></p>` : "") +
       // In their own panel: legacy names like theirs (see "Claiming legacy runs")
@@ -4621,8 +4628,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // board a run went on, with its row marked, and in view
   // n can be the Player ratings' (RATINGS.n), and spot { key } there: that player's row marked, from Rating, Place
   // or Top % in their panel, with Show all open when they're past the top 10 and no search hiding them. tab: the tab
-  // it opens on (the spot's, when it has one), "top" or "assisted" (see "Assisted boards")
-  function openBoard(n, spot, tab = "top") {
+  // it opens on (the spot's, when it has one), "top" or "assisted" (see "Assisted boards"), or the board's first
+  // (see firstTab) without one
+  function openBoard(n, spot, tab) {
     const c = rowOf(n);
     if (!c) return;
     // The address goes back before the board's link goes in (the panel's close event comes later)
@@ -4632,7 +4640,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (pl.open) pl.close();
     const before = openCourse;
     openCourse = c.n;
-    viewOf(c).tab = tabFor(c, (spot && spot.tab) || tab);
+    viewOf(c).tab = tabFor(c, (spot && spot.tab) || tab || firstTab(c));
     if (c === RATINGS) {
       const tab = viewOf(c).tab;
       boardMark = spot ? { n: c.n, key: spot.key, tab } : null;
@@ -4661,7 +4669,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     // "See it on the board" on a run's page (before opening the board closes it), or a player on the Player ratings
     const spot = a.hasAttribute("data-board-run") && runId ? boardSpot(sentRun(runId))
       : a.dataset.boardPlayer ? { key: a.dataset.boardPlayer } : null;
-    openBoard(a.dataset.board, spot, a.dataset.boardTab || "top");
+    openBoard(a.dataset.board, spot, a.dataset.boardTab);
   });
 
   /* ---------- Board pictures ----------
@@ -8336,13 +8344,13 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   const pathFor = (route) => (route === "discord" ? "/#discord" : "/" + route);
   const routeOf = (path) => {
     if (STATS_LINK.test(path)) return "stats"; // /stats/2026-11-05/week, … (see "Stats")
-    const m = /^\/([a-z-]+)(?:\/[\w-]+(?:\/(?:legacy|assisted|global|\d+))?)?\/?$/i.exec(path);
+    const m = /^\/([a-z-]+)(?:\/[\w-]+(?:\/(?:legacy|assisted|unassisted|global|\d+))?)?\/?$/i.exec(path);
     const r = m && m[1].toLowerCase();
     return r && r !== "discord" && ROUTES[r] ? r : null;
   };
   // The board or answer a link names: /leaderboards/6 (/leaderboards/6/legacy for its Legacy tab, /leaderboards/6/3
   // for its third board), /faq/pausing, or the older /leaderboards/6-dorado, /faq/pause, #6-dorado and #pause
-  const subOf = (path, hash) => { const m = /^\/(?:leaderboards\/([\w-]+)(?:\/(?:legacy|assisted|global|\d+))?|faq\/([\w-]+))\/?$/i.exec(path); return m ? (m[1] || m[2]).toLowerCase() : /^#[\w-]+$/.test(hash) ? hash.slice(1) : null; };
+  const subOf = (path, hash) => { const m = /^\/(?:leaderboards\/([\w-]+)(?:\/(?:legacy|assisted|unassisted|global|\d+))?|faq\/([\w-]+))\/?$/i.exec(path); return m ? (m[1] || m[2]).toLowerCase() : /^#[\w-]+$/.test(hash) ? hash.slice(1) : null; };
   const BOARD_LINK = /^\/leaderboards\/[\w-]+\/(\d+)\/?$/i; // a link to one of a course's boards, like /leaderboards/6/3
   // Old hash links still work too, including #leaderboard from the workshop.codes README
   const hashRoute = (hash) => { const h = hash.slice(1).toLowerCase(); return h === "leaderboard" ? "leaderboards" : Object.keys(ROUTES).find((r) => ROUTES[r] === h) || null; };
@@ -8352,8 +8360,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   const startBoard = startRoute === "leaderboards" && startSub ? (startSub === RATINGS.n ? RATINGS : courseOfHash(startSub)) : null;
   if (startBoard && /^\/leaderboards\/[\w-]+\/legacy\/?$/i.test(location.pathname)) viewOf(startBoard).tab = "legacy";
   if (startBoard && /^\/leaderboards\/[\w-]+\/assisted\/?$/i.test(location.pathname)) viewOf(startBoard).tab = tabFor(startBoard, "assisted");
-  // The Global rating is only the Player ratings' tab
-  if (startBoard === RATINGS && /^\/leaderboards\/[\w-]+\/global\/?$/i.test(location.pathname)) viewOf(startBoard).tab = "global";
+  // The Player ratings open on Global (see firstTab), so the older /leaderboards/ratings/global still opens it, and
+  // /leaderboards/ratings/unassisted opens the ratings on their own
+  if (startBoard === RATINGS && /^\/leaderboards\/[\w-]+\/unassisted\/?$/i.test(location.pathname)) viewOf(startBoard).tab = "top";
   const startFaq = startRoute === "faq" && startSub ? faqOfLink(startSub) : null;
   if (startRoute === "leaderboards") openCourse = startBoard ? startBoard.n : 1;
   // A link to one of a course's boards (/leaderboards/6/3) opens on that board, counted from its oldest, once the
@@ -8458,7 +8467,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // Stats' links to the day picked: /stats/2026-11-05, /stats/2026-11-05/week, …
   function subPath(route) {
     if (route === "stats") return statsPath();
-    if (route === "leaderboards" && openCourse === RATINGS.n) return RATINGS.n + ({ assisted: "/assisted", global: "/global", legacy: "/legacy" }[viewOf(RATINGS).tab] || "");
+    if (route === "leaderboards" && openCourse === RATINGS.n) return ratingsPath(viewOf(RATINGS).tab);
     if (route === "leaderboards" && openCourse) {
       const c = course(openCourse);
       const v = viewOf(c);

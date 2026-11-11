@@ -259,6 +259,7 @@
   "pl.legacyBest": "Früher: {time}",
   "pl.board": "Zur Liste",
   "pl.seeRatings": "Sieh, wo {player} in der Spielerwertung steht",
+  "pl.seeUnassistedRatings": "Sieh, wo {player} in der Spielerwertung ohne Assistenz steht",
   "pl.seeAssistedRatings": "Sieh, wo {player} in der assistierten Spielerwertung steht",
   "pl.seeLegacyRatings": "Sieh, wo {player} in der früheren Wertung steht",
   "pl.modes": "Welche Läufe angezeigt werden",

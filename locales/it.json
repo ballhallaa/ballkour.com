@@ -259,6 +259,7 @@
   "pl.legacyBest": "Precedente: {time}",
   "pl.board": "Vedi la classifica",
   "pl.seeRatings": "Vedi la posizione di {player} nel Punteggio dei giocatori",
+  "pl.seeUnassistedRatings": "Vedi la posizione di {player} nel Punteggio dei giocatori senza assistenza",
   "pl.seeAssistedRatings": "Vedi la posizione di {player} nel Punteggio dei giocatori assistito",
   "pl.seeLegacyRatings": "Vedi la posizione di {player} nel punteggio precedente",
   "pl.modes": "Quali run mostrare",

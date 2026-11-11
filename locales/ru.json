@@ -259,6 +259,7 @@
   "pl.legacyBest": "Старая таблица: {time}",
   "pl.board": "Открыть таблицу",
   "pl.seeRatings": "Посмотреть место игрока {player} в рейтинге игроков",
+  "pl.seeUnassistedRatings": "Посмотреть место игрока {player} в рейтинге игроков без помощи",
   "pl.seeAssistedRatings": "Посмотреть место игрока {player} в рейтинге игроков с помощью",
   "pl.seeLegacyRatings": "Посмотреть место игрока {player} в старом рейтинге",
   "pl.modes": "Какие забеги показывать",

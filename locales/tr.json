@@ -259,6 +259,7 @@
   "pl.legacyBest": "Eski: {time}",
   "pl.board": "Tabloyu gör",
   "pl.seeRatings": "{player} adlı oyuncunun Oyuncu puanlarındaki yerini gör",
+  "pl.seeUnassistedRatings": "{player} adlı oyuncunun yardımsız Oyuncu puanlarındaki yerini gör",
   "pl.seeAssistedRatings": "{player} adlı oyuncunun yardımlı Oyuncu puanlarındaki yerini gör",
   "pl.seeLegacyRatings": "{player} adlı oyuncunun eski puanlardaki yerini gör",
   "pl.modes": "Hangi koşular gösterilsin",

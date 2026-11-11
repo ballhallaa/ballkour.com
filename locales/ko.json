@@ -259,6 +259,7 @@
   "pl.legacyBest": "이전 기록: {time}",
   "pl.board": "순위표 보기",
   "pl.seeRatings": "플레이어 레이팅에서 {player}의 순위 보기",
+  "pl.seeUnassistedRatings": "어시스트 없음 플레이어 레이팅에서 {player}의 순위 보기",
   "pl.seeAssistedRatings": "어시스트 플레이어 레이팅에서 {player}의 순위 보기",
   "pl.seeLegacyRatings": "이전 기록 레이팅에서 {player}의 순위 보기",
   "pl.modes": "표시할 기록",

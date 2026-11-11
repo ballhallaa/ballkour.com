@@ -259,6 +259,7 @@
   "pl.legacyBest": "Anterior: {time}",
   "pl.board": "Ver la clasificación",
   "pl.seeRatings": "Ver en qué puesto está {player} en la Puntuación de jugadores",
+  "pl.seeUnassistedRatings": "Ver en qué puesto está {player} en la Puntuación de jugadores sin asistencia",
   "pl.seeAssistedRatings": "Ver en qué puesto está {player} en la Puntuación de jugadores asistida",
   "pl.seeLegacyRatings": "Ver en qué puesto está {player} en la puntuación anterior",
   "pl.modes": "Qué carreras mostrar",

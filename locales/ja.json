@@ -259,6 +259,7 @@
   "pl.legacyBest": "旧ランキング：{time}",
   "pl.board": "ランキングを見る",
   "pl.seeRatings": "プレイヤーレーティングでの{player}の順位を見る",
+  "pl.seeUnassistedRatings": "アシストなしのプレイヤーレーティングでの{player}の順位を見る",
   "pl.seeAssistedRatings": "アシストのプレイヤーレーティングでの{player}の順位を見る",
   "pl.seeLegacyRatings": "旧レーティングでの{player}の順位を見る",
   "pl.modes": "表示する記録",
