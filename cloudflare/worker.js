@@ -835,7 +835,9 @@ function onScale(stats) {
 // names of the players it put them ahead of. points (the course rating), rating, rank (their place in the ratings) and
 // tier are [before, with] (before null when they weren't rated yet, the pair null when the course isn't rated), of is
 // how many players are rated, courses [before, with] the rated courses they've run out of counted, and top10s,
-// podiums and records [before, with] over every course. alone is the run by itself, for one that isn't its player's
+// podiums and records [before, with] over every course. global is their Top % in the Global rating [before, with],
+// each { tier } (before null when they weren't rated yet, global null when they aren't with it either; what was kept
+// before there was global has none). alone is the run by itself, for one that isn't its player's
 // best (which changes none of the above): { place } among everyone else's bests, and the course rating its time gets
 // ({ points }, null when the course isn't rated). scale is what a course was worth when they were worked out (see
 // RATING_SCALE).
@@ -844,6 +846,9 @@ function runStats(game, before, run, n) {
   const key = playerKey(run);
   const after = structuredClone(before);
   listIn(after.runs, n).push(run);
+  // Their place in the Global rating too (the unassisted and assisted ratings added up, see combine()), for their
+  // (Global) role on Discord. The other kind's ratings don't change with this run, so they're worked out once.
+  const other = rate(loadCourses({ ...game.files, [RUNS_FILE]: JSON.stringify(before) }, game.courses, { assisted: !isAssisted(run) }));
   const side = (runs) => {
     const courses = loadCourses({ ...game.files, [RUNS_FILE]: JSON.stringify(runs) }, game.courses, { assisted: isAssisted(run) });
     const medals = { top10s: 0, podiums: 0, records: 0 };
@@ -860,7 +865,8 @@ function runStats(game, before, run, n) {
     }
     const at = board.findIndex((r) => playerKey(r) === key);
     const rated = rate(courses);
-    return { board, at, best: at >= 0 ? board[at] : null, p: rated.players.find((x) => x.key === key) || null, total: rated.players.length, counted: rated.counted.length, medals };
+    const g = combine([rated, other]).players.find((x) => x.key === key) || null;
+    return { board, at, best: at >= 0 ? board[at] : null, p: rated.players.find((x) => x.key === key) || null, g, total: rated.players.length, counted: rated.counted.length, medals };
   };
   const b = side(before), a = side(after);
   const beforeKeys = b.board.map(playerKey);
@@ -883,6 +889,7 @@ function runStats(game, before, run, n) {
     rank: pair((p) => p.rank),
     of: a.total,
     tier: pair((p) => p.tier),
+    global: a.g ? [b.g ? { tier: b.g.tier } : null, { tier: a.g.tier }] : null,
     courses: a.p ? [b.p ? b.p.courses : 0, a.p.courses] : null,
     counted: a.counted,
     top10s: [b.medals.top10s, a.medals.top10s],
@@ -976,7 +983,8 @@ function bestBefore({ n, run, before, mine }, stats) {
      New submission by NAME!           not their best
    Under it: the course, who sent it, their in-game name and the video, then three blocks side by side. New personal
    best is the run: its time, mistakes, course rating, the place it takes on the course, the player's rating, place and
-   Top % in the player ratings with it, and its date. Old personal best is the same for their best on the course
+   Top % in the player ratings with it, the courses they've run and their Top 10s, Podiums and Records when it changes
+   them, and its date. Under the blocks, New role names the roles on our Discord it gives them, once it's on the board. Old personal best is the same for their best on the course
    before it, with their place, rating, place and Top % in the ratings as they were. Comparison is what changed between
    the two, and how long after the old one it came. On their first run on a course there's just the run, with what it
    added to their rating, and where it moved them in the ratings, in the same rows. A run that isn't
@@ -991,7 +999,7 @@ function bestBefore({ n, run, before, mine }, stats) {
 // it (checkedRunMessage), with whether it's its player's best on the course and the place it takes there. A run that's
 // been turned down (checked.approve false) is Turned-down run, beside Personal best: the best it would have replaced,
 // which still is, with what the run would have done.
-function runBlocks({ n, run, rank, newBest, stats, before, mine, checked }) {
+function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pending }) {
   const s = stats || {};
   // An assisted run's ratings are the assisted ones
   const scope = isAssisted(run) ? "Assisted" : "Global";
@@ -1021,6 +1029,22 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked }) {
   const gain = !old && num(now.rating) ? now.rating - (of(s.rating, 0) ?? 0) : 0;
   const climb = !old && num(now.rank) && num(of(s.rank, 0)) && of(s.rank, 0) !== now.rank;
   const rose = !old && ratedBefore && tierMoved;
+  // The rated courses they've run ("3 of 11"), and their Top 10s, Podiums and Records over every course (the numbers
+  // on their Discord profile), when the run changes them, as the site shows them after a run: with the run in its
+  // block, before it in their old best's, and what changed in Comparison, or on their first run on the course, after
+  // the run's count ("2 (+1)")
+  const counts = best ? [["courses", "Courses run"], ["top10s", "Top 10s"], ["podiums", "Podiums"], ["records", "Records"]]
+    .filter(([k]) => num(of(s[k], 0)) && num(of(s[k], 1)) && s[k][0] !== s[k][1]) : [];
+  const countText = (k, v) => (k === "courses" && num(s.counted) ? `${v} of ${s.counted}` : String(v));
+  // The roles on our Discord the run gives them, named as there, once it's on the board (not while it waits for a check,
+  // or once it's turned down): for its Top % in the ratings of its kind ((Unassisted) or (Assisted)), and in the Global
+  // rating, each a role of its own
+  const roleOf = (tier, rated, kind) => `${!rated ? "Unrated" : typeof tier === "number" ? `Top ${tier}%` : "Rated"} (${kind})`;
+  const onBoard = best && !pending && (!checked || checked.approve);
+  const roles = !onBoard ? [] : [
+    tiers && [roleOf(tiers[0], ratedBefore, isAssisted(run) ? "Assisted" : "Unassisted"), roleOf(tiers[1], true, isAssisted(run) ? "Assisted" : "Unassisted")],
+    Array.isArray(s.global) && s.global[1] && [roleOf(s.global[0] && s.global[0].tier, !!s.global[0], "Global"), roleOf(s.global[1].tier, true, "Global")],
+  ].filter((pair) => pair && pair[0] !== pair[1]).map((pair) => pair[1]);
   // The same rows in the same order in every block, so they line up side by side
   const about = (r, d, first) => [
     `Time: ${r.time}`,
@@ -1030,6 +1054,7 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked }) {
     num(d.rating) && `${scope} rating: ${d.rating}${first && gain ? ` (${changeText(gain)})` : ""}`,
     num(d.rank) && `${scope} rank: ${first && climb ? `#${of(s.rank, 0)} → ` : ""}#${d.rank} of ${s.of}`,
     d.tier && `${scope} Top %: ${first && rose ? `${was.tier} → ` : ""}${d.tier}`,
+    ...counts.map(([k, name]) => `${name}: ${countText(k, s[k][first ? 1 : 0])}${first && !old ? ` (${changeText(s[k][1] - s[k][0])})` : ""}`),
     whenText(r) && `Date: ${whenText(r)}`,
   ].filter(Boolean).join("\n");
   const both = (a, b) => num(a) && num(b);
@@ -1053,11 +1078,14 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked }) {
             both(now.rank, was.rank) && `${scope} rank: ${movedText(was.rank, now.rank)}`,
             // "Global Top %: 50% → 25%" is a little wider than the column, so a change there may take two lines
             tiers && `${scope} Top %: ${tierMoved ? `${was.tier} → ${now.tier}` : "Same"}`,
+            ...counts.map(([k, name]) => `${name}: ${changeText(s[k][1] - s[k][0])}`),
             span && `${best && !down ? "Achieved" : "Sent"} after: ${span}`,
           ].filter(Boolean).join("\n"),
           inline: true,
         },
       ] : []),
+      // Under the blocks, across the whole post
+      ...(roles.length ? [{ name: roles.length > 1 ? "New roles" : "New role", value: roles.join("\n"), inline: false }] : []),
     ],
   };
 }
