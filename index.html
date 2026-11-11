@@ -623,7 +623,9 @@ a.stat:hover .play { color: var(--volt); }
 
 /* Leaderboard archive: Top 10 / Legacy tabs, a scrubber through every board posted to Discord (gold ticks
    set a new #1), the congrats line for that board's new times, and the fine print under the runs */
-.lb-tabs { display: flex; gap: 4px; padding: 7px; border-bottom: 1px solid var(--line); }
+.lb-tabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 7px; border-bottom: 1px solid var(--line); }
+/* A tab's name stays on one line (Japanese would break mid-word): tabs that don't fit go to the next row */
+.lb-tabs .lb-tab, .pl-modes .lb-tab, .runs-mode .lb-tab { white-space: nowrap; }
 .lb-tab {
   padding: 6px 11px;
   border: 0;
@@ -2050,8 +2052,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "lb.empty": "No times on this board yet. Submit a run and take first place.",
   "lb.emptyBroken": "No times on this board yet. This course no longer works due to Overwatch’s map updates, so no new runs can be set for now.",
   "lb.tab.top": "Top 10",
+  "lb.tab.unassisted": "Unassisted",
   "lb.tab.assisted": "Assisted",
   "lb.assisted.title": "Runs played in Assist Mode",
+  "lb.legacy.ratingNote": "Ratings: each player’s Legacy rating over every legacy board",
   "lb.assisted.ratingNote": "Ratings: each player’s assisted rating over every course",
   "lb.assisted.ratingThen": "Ratings: each player’s assisted rating over every course, as it was on {date}",
   "lb.tab.legacy": "Legacy",
@@ -2108,9 +2112,13 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "find.keys": "↑ ↓ to pick, Enter to see their stats. Press / anywhere on the site to open this.",
   "rt.group": "Every course",
   "rt.title": "Player ratings",
-  "rt.tab": "Ratings",
   "rt.assisted.title": "Ratings from runs played in Assist Mode",
   "rt.assisted.empty": "No assisted ratings yet. Send a run you played in Assist Mode to get one.",
+  "rt.legacy.title": "Ratings from the leaderboards before May 2026",
+  "rt.legacy.empty": "No legacy ratings yet.",
+  "rt.legacy.how": "Every course’s legacy board is worth up to 1,000 points: its record gets all of them, and the further behind it a run is, the fewer it gets. Your Legacy rating is your average over every legacy board, with 0 for any you’re not on. Those boards don’t change any more, and their times were only to the second.",
+  "rt.legacy.tiers": "Top % is where you place among all {count} players on the legacy boards. It doesn’t come with a role on our Discord.",
+  "rt.legacy.counted": "Legacy boards that count: {courses}.",
   "rt.meta": "All courses in one rating",
   "rt.none": "No ratings yet",
   "rt.empty": "No ratings yet. Set a time on any course to get rated.",
@@ -2176,8 +2184,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "pl.board": "See the board",
   "pl.seeRatings": "See where {player} places in the Player ratings",
   "pl.seeAssistedRatings": "See where {player} places in the assisted Player ratings",
+  "pl.seeLegacyRatings": "See where {player} places in the Legacy ratings",
   "pl.modes": "Which runs to show",
-  "pl.mode.regular": "Unassisted",
   "pl.copyLink": "Copy a link to {player}’s stats",
   "pl.back": "Back",
   "pl.sort.date": "Date",
@@ -2553,6 +2561,17 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   const assistedOf = (c) => (c.assisted ? c : TWINS.get(c.n) || TWINS.set(c.n, Object.create(c, { assisted: { value: true }, runs: { value: [] } })).get(c.n));
   const ACOURSES = COURSES.map(assistedOf);
   const isAssistedRun = (r) => !!r && r.mode === "assisted";
+  /* A course's legacy board (before May 2026, see "Leaderboard history") is its legacy twin's, for the Legacy rating
+     (the Player ratings' Legacy tab, and the ratings on the legacy boards): made like the assisted twin, its runs are
+     the legacy board's, with nothing from runs.json or the boards posted since. It counts whether or not the course
+     works now, as its board can't change any more. */
+  const LEGACY_TWINS = new Map();
+  const legacyOf = (c) => LEGACY_TWINS.get(c.n) || LEGACY_TWINS.set(c.n, Object.create(c, {
+    legacy: { value: true }, broken: { value: false }, latestBroken: { value: false },
+    runs: { get: () => (HISTORY[c.n] ? HISTORY[c.n].legacy : []) },
+  })).get(c.n);
+  // The courses with a legacy board, as their legacy twins
+  const legacyCourses = () => COURSES.filter((c) => HISTORY[c.n] && HISTORY[c.n].legacy.length).map(legacyOf);
   // A pink "Assisted" tag, after a course or on a run that's on an assisted board
   const assistedTag = () => `<span class="tag tag-assisted">${esc(t("lb.tab.assisted"))}</span>`;
 
@@ -2987,8 +3006,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       date: [byNewest, (a, b) => !runDay(a) - !runDay(b) || runDay(a).localeCompare(runDay(b)) || toSeconds(a.time) - toSeconds(b.time)],
     };
   }
-  // How a board is sorted, [sort, turned around], a Legacy board by time while Rating or Date is picked; and its order
-  const boardSortOf = (legacy) => (legacy && (boardSort === "rating" || boardSort === "date") ? ["time", false] : [boardSort, boardRev]);
+  // How a board is sorted, [sort, turned around], a Legacy board by time while Date is picked; and its order
+  const boardSortOf = (legacy) => (legacy && boardSort === "date" ? ["time", false] : [boardSort, boardRev]);
   const boardOrder = (legacy, ratingOf) => { const [k, rev] = boardSortOf(legacy); return boardSorts(ratingOf)[k][rev ? 1 : 0]; };
   // What each sort says when it's picked (read out, and the pressed button's hint), then turned around, for a
   // player's Runs; and for the boards, where Rating is each player's rating over every course, not a course rating
@@ -3000,15 +3019,15 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   const sortArrow = (k, rev) => `<span class="sort-dir${(k === "date" || k === "rating" ? rev : !rev) ? " up" : ""}" aria-hidden="true">${icon("chev")}</span>`;
   const sortHint = (k, rev, said = SORTED) => ` title="${esc(t(said[k][rev ? 1 : 0]))}"`;
   // The bar above a board: its search (see "Searching a board") and picture (see "Board pictures") on the left, how
-  // it's sorted on the right. legacy: a Legacy board, which has no Rating or Date (it's by time while either is picked)
+  // it's sorted on the right. legacy: a Legacy board, which has no Date (it's by time while Date is picked)
   function sortHtml(c, legacy) {
     const [on, rev] = boardSortOf(legacy);
     const b = (key, ico, label) => `<button type="button" data-sort="${key}" data-course="${c.n}" aria-pressed="${on === key}"${on === key ? sortHint(key, rev, BOARD_SORTED) : ""}>` +
       `${icon(ico)}<span>${esc(t(label))}</span>${on === key ? sortArrow(key, rev) : ""}</button>`;
     return `<div class="lb-bar">${searchHtml(c)}<button class="lb-pic" type="button" data-course="${c.n}">${icon("image")}<span>${esc(t("pic.button"))}</span></button>` +
       `<div class="lb-sort" role="group" aria-label="${esc(t("lb.sortBy"))}"><span class="lb-sort-label" aria-hidden="true">${esc(t("lb.sortBy"))}</span>` +
-      `<span class="sort-btns">${b("time", "bolt", "lb.sort.time") + b("miss", "skull", "lb.sort.miss") +
-      (legacy ? "" : b("rating", "star", "pl.rating") + b("date", "calendar", "pl.sort.date"))}</span></div></div>`;
+      `<span class="sort-btns">${b("time", "bolt", "lb.sort.time") + b("miss", "skull", "lb.sort.miss") + b("rating", "star", "pl.rating") +
+      (legacy ? "" : b("date", "calendar", "pl.sort.date"))}</span></div></div>`;
   }
   /* A sort bar, a board's or one over a player's runs (see runSortHtml), has its buttons in a row beside "Sort by"
      where they fit, and two on each line where they don't (.two): on phones, and in the longer languages. Where
@@ -3038,18 +3057,19 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       `<button class="lb-more" type="button" data-course="${row.n}" aria-expanded="${all}"><span>${esc(label)}</span>${icon("chev", "icon chev")}</button>`;
   }
   // The leaderboard from before May 2026: its top 10, and everyone else behind "Show all", once each with their
-  // fastest run (the old leaderboard sometimes listed a player twice)
+  // fastest run (the old leaderboard sometimes listed a player twice), with each player's Legacy rating beside it
   function legacyHtml(c, runs) {
     const seen = new Set();
     const best = runs.slice().sort(byTime).filter((r) => !seen.has(playerKey(r)) && seen.add(playerKey(r)));
-    const order = boardOrder(true);
+    const ratingOf = boardRatings(legacyOf(c));
+    const order = boardOrder(true, ratingOf);
     const sorted = order ? best.slice().sort(order) : best;
     const top = sorted.slice(0, 10);
     const rest = sorted.slice(10);
     const podium = (r) => (order ? best.slice(0, 3).indexOf(r) : undefined);
     return `<div class="board-meta"><span>${esc(t("lb.legacy.title"))}</span></div>` + sortHtml(c, true) +
-      rowsHtml(c, top, rest, (r, i) => runRow(r, i, null, true, null, podium(r))) +
-      `<p class="lb-foot"><span>${esc(t("lb.legacy.note"))}</span></p>`;
+      rowsHtml(c, top, rest, (r, i) => runRow(r, i, null, true, ratingOf, podium(r))) +
+      `<p class="lb-foot"><span>${esc(t("lb.legacy.note"))}</span>${best.some((r) => ratingOf.has(playerKey(r))) ? `<span>${esc(t("lb.legacy.ratingNote"))}</span>` : ""}</p>`;
   }
   // "‹ ▮▮▮▮ ›": one tick per board, the selected one in mint, the ones that set a new #1 in gold
   function historyHtml(c, list, at) {
@@ -3439,9 +3459,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   const AMORE = {}; // the same for the assisted boards (see "Assisted boards")
   const AREMOVED = {};
   // A board's runs from runs.json, its runs taken off, and the boards posted of it: a course's, or its assisted twin's
-  const moreOf = (c) => (c.assisted ? AMORE : MORE)[c.n] || [];
-  const removedOf = (c) => (c.assisted ? AREMOVED : REMOVED)[c.n] || [];
-  const postedOf = (c) => (HISTORY[c.n] ? HISTORY[c.n][c.assisted ? "assisted" : "boards"] : []);
+  // (a legacy twin has none: see legacyOf)
+  const moreOf = (c) => (c.legacy ? [] : (c.assisted ? AMORE : MORE)[c.n] || []);
+  const removedOf = (c) => (c.legacy ? [] : (c.assisted ? AREMOVED : REMOVED)[c.n] || []);
+  const postedOf = (c) => (c.legacy || !HISTORY[c.n] ? [] : HISTORY[c.n][c.assisted ? "assisted" : "boards"]);
   classics.forEach((c) => {
     if (!CLASSIC_FILES[c.n]) return;
     LOADS.push(gameFile(`leaderboards/${CLASSIC_FILES[c.n]}.json`)
@@ -3580,12 +3601,14 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     return bestEach([...top, ...(last ? known.filter((r) => byTime(r, last) >= 0) : [])]);
   }
   // then: { day, c, runs } for the ratings as they were on an older board's day (c's board being runs), or none for
-  // today's. assisted: the assisted ratings, from the assisted boards (see "Assisted boards").
-  // → { counted: [course, …], players: [{ key, name, discord, rating, points: { n: points }, courses, rank, tier }], assisted }
-  function ratings(then, assisted = false) {
+  // today's. which: true for the assisted ratings, from the assisted boards (see "Assisted boards"), or "legacy" for
+  // the Legacy rating, from the legacy boards (see legacyOf).
+  // → { counted: [course, …], players: [{ key, name, discord, rating, points: { n: points }, courses, rank, tier }], assisted, legacy }
+  function ratings(then, which = false) {
+    const legacy = which === "legacy", assisted = which === true;
     const counted = [];
     const players = new Map();
-    (assisted ? ACOURSES : COURSES).forEach((c) => {
+    (legacy ? legacyCourses() : assisted ? ACOURSES : COURSES).forEach((c) => {
       if (c.broken || c.latestBroken) return;
       counted.push(c);
       const { top, rest } = then ? { top: standingsOn(c, then.day, c === then.c ? then.runs : null), rest: [] } : standingsOf(c);
@@ -3611,8 +3634,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       p.rank = i > 0 && same(list[i - 1], p) ? list[i - 1].rank : i + 1;
       p.tier = TIERS.find((tier) => (p.rank / list.length) * 100 <= tier + 1e-9) ?? null;
     });
-    return { counted, players: list, assisted };
+    return { counted, players: list, assisted, legacy };
   }
+  // Which ratings a board's are (see ratings): a course's, its assisted twin's, or its legacy twin's
+  const ratingsOf = (c) => (c.legacy ? "legacy" : !!c.assisted);
   /* What a player's best run on a course adds to its course rating, the way a run's page works it out (statsFrom): its
      course rating, and what they'd have without it, when their next-fastest run there counts instead, against the
      record without it. all: the course's board, fastest first, as the ratings count it. at: their place on it.
@@ -3639,7 +3664,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      rated adds nothing, so it has no gain (null). then: an older board's day, as for ratings, or none for today's.
      → Map: player (see playerKey) → { rating, gain } */
   function boardRatings(c, then) {
-    const r = ratings(then, !!c.assisted);
+    const r = ratings(then, ratingsOf(c));
     const out = new Map(r.players.map((p) => [p.key, { rating: p.rating, gain: null }]));
     if (!r.counted.includes(c)) return out;
     const all = then ? standingsOn(c, then.day, then.runs) : (({ top, rest }) => top.concat(rest))(standingsOf(c));
@@ -3699,7 +3724,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const ran = t("rt.courses", { n: p.courses, total });
     const breakdown = r.counted.filter((c) => c.n in p.points).map((c) => `${c.n} · ${c.name}: ${points(p.points[c.n])}`).join("\n");
     const tier = p.tier ? `<span class="tag tag-tier${p.tier <= 5 ? " elite" : ""}">${esc(t("rt.tier", { pct: p.tier.toLocaleString(htmlLang()) }))}</span>` : "";
-    const mark = !!boardMark && boardMark.n === RATINGS.n && boardMark.key === p.key && !!boardMark.assisted === !!r.assisted;
+    const mark = !!boardMark && boardMark.n === RATINGS.n && boardMark.key === p.key && boardMark.tab === (r.legacy ? "legacy" : r.assisted ? "assisted" : "top");
     return `<li class="run${p.rank <= 3 ? " p" + p.rank : ""}${mark ? " mark" : ""}" data-k="${esc(p.key)}"${ratingCols(r)}>` +
       `<span class="run-rank">${p.rank}</span>` +
       `<span class="run-who"><span class="run-line">${nameButton(p.key, p.name)}${tier}</span></span>` +
@@ -3709,19 +3734,22 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       `</li>`;
   }
   // The Player ratings' board: the ratings, and the assisted ratings on their own tab (see "Assisted boards")
+  // The Legacy rating on its own tab too, from the legacy boards (see legacyOf)
   function ratingsBoardHtml() {
-    const on = viewOf(RATINGS).tab === "assisted" ? "assisted" : "top";
-    return tabsHtml(RATINGS, ["top", "assisted"], on, t("rt.title"), ratingsHtml(ratings(null, on === "assisted")), { top: "rt.tab" });
+    const tab = viewOf(RATINGS).tab;
+    const on = tab === "assisted" || tab === "legacy" ? tab : "top";
+    return tabsHtml(RATINGS, ["top", "assisted", "legacy"], on, t("rt.title"), ratingsHtml(ratings(null, on === "legacy" ? "legacy" : on === "assisted")), { top: "lb.tab.unassisted" });
   }
   function ratingsHtml(r) {
-    const meta = r.assisted ? `<div class="board-meta board-assisted"><span>${assistedTag()}<span>${esc(t("rt.assisted.title"))}</span></span></div>` : "";
-    if (!r.players.length) return meta + `<p class="board-empty">${esc(t(r.assisted ? "rt.assisted.empty" : "rt.empty"))}</p>`;
+    const meta = r.assisted ? `<div class="board-meta board-assisted"><span>${assistedTag()}<span>${esc(t("rt.assisted.title"))}</span></span></div>`
+      : r.legacy ? `<div class="board-meta"><span>${esc(t("rt.legacy.title"))}</span></div>` : "";
+    if (!r.players.length) return meta + `<p class="board-empty">${esc(t(r.assisted ? "rt.assisted.empty" : r.legacy ? "rt.legacy.empty" : "rt.empty"))}</p>`;
     const top = r.players.slice(0, 10);
     const rest = r.players.slice(10);
     const courses = r.counted.map((c) => `<span class="nowrap">${c.n} ${flagName(c)}</span>`).join(esc(" · "));
     return meta + `<div class="lb-bar">${searchHtml(RATINGS)}</div>` + rowsHtml(RATINGS, top, rest, (p) => ratingRow(p, r)) +
-      `<p class="lb-foot"><span>${esc(t("rt.how"))}</span><span>${esc(t("rt.tiers", { count: r.players.length.toLocaleString(htmlLang()) }))}</span>` +
-      `<span>${esc(t("rt.counted", { courses: "\u0000" })).replace("\u0000", courses)}</span></p>` + mathHtml(r);
+      `<p class="lb-foot"><span>${esc(t(r.legacy ? "rt.legacy.how" : "rt.how"))}</span><span>${esc(t(r.legacy ? "rt.legacy.tiers" : "rt.tiers", { count: r.players.length.toLocaleString(htmlLang()) }))}</span>` +
+      `<span>${esc(t(r.legacy ? "rt.legacy.counted" : "rt.counted", { courses: "\u0000" })).replace("\u0000", courses)}</span></p>` + mathHtml(r);
   }
   // The formulas under the board, with two runs on a 4:00.00 record as an example
   function mathHtml(r) {
@@ -3827,7 +3855,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     [...c.runs, ...moreOf(c)].forEach((r) => add(r, false));
     postedOf(c).flat().forEach((r) => add(r, true));
     // An assisted board (see "Assisted boards") has no legacy runs
-    return { runs: runs.sort(byTime), legacy: (!c.assisted && HISTORY[c.n] ? HISTORY[c.n].legacy : []).filter((r) => playerKey(r) === key) };
+    return { runs: runs.sort(byTime), legacy: (!c.assisted && !c.legacy && HISTORY[c.n] ? HISTORY[c.n].legacy : []).filter((r) => playerKey(r) === key) };
   }
   // A course rating in a player's panel, and what their run adds to it (gain: for their best run there, see plRows)
   const coursePtsHtml = (pts, gain) => {
@@ -3868,15 +3896,15 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const boards = assisted ? ACOURSES : COURSES;
     return boards.filter((c) => !n || c.n === n).reduce((sum, c) => {
       const all = (({ top, rest }) => top.concat(rest))(standingsOf(c));
-      const { runs, legacy } = runsOf(key, c, all.find((x) => playerKey(x) === key) || null);
-      return sum + runs.length + legacy.length;
+      return sum + runsOf(key, c, all.find((x) => playerKey(x) === key) || null).runs.length;
     }, 0);
   }
   // Every course in a player's panel (and its picture): their place and best run there, what that run adds to their
   // course rating there (gain, like a run's page: see pointsWithout), and every run they've sent for it. Broken
   // courses only when they've run them. assisted: the assisted boards' (see "Assisted boards"), only the ones they've run
-  function plRows(key, assisted = false) {
-    return (assisted ? ACOURSES : COURSES).map((c) => {
+  // which: true for the assisted boards, or "legacy" for the legacy ones (see legacyOf), only the ones they've run
+  function plRows(key, which = false) {
+    return (which === "legacy" ? legacyCourses() : which ? ACOURSES : COURSES).map((c) => {
       const { top, rest } = standingsOf(c);
       const all = top.concat(rest);
       const at = all.findIndex((x) => playerKey(x) === key);
@@ -3885,83 +3913,88 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       const theirs = runsOf(key, c, best);
       const pts = record && best ? pointsWithout(all, at, theirs.runs) : null;
       return { c, at, best, total: all.length, record, gain: pts ? Math.round(pts[1]) - Math.round(pts[0]) : null, ...theirs };
-    }).filter((x) => (assisted ? x.runs.length > 0 : !x.c.broken || x.runs.length || x.legacy.length));
+    }).filter((x) => (which ? x.runs.length > 0 : !x.c.broken || x.runs.length || x.legacy.length));
   }
   function playerHtml() {
     const key = plKey;
     const r = ratings();
     const p = r.players.find((x) => x.key === key) || null;
-    const rows = plRows(key);
+    // Their runs since May 2026 (their legacy runs are the Legacy view's), on every course, and broken ones they've run
+    const rows = plRows(key).map((x) => ({ ...x, legacy: [] })).filter((x) => !x.c.broken || x.runs.length);
     // Their assisted rating, and their runs on the assisted boards (see "Assisted boards")
     const ar = ratings(null, true);
     const ap = ar.players.find((x) => x.key === key) || null;
     const arows = plRows(key, true);
-    const named = p || rows.concat(arows).map((x) => x.best || x.runs[0] || x.legacy[0]).find(Boolean) || { name: "" };
+    // Their Legacy rating, and their runs on the legacy boards, from before May 2026 (see legacyOf)
+    const lr = ratings(null, "legacy");
+    const lp = lr.players.find((x) => x.key === key) || null;
+    const lrows = plRows(key, "legacy");
+    const every = rows.concat(arows, lrows);
+    const named = p || every.map((x) => x.best || x.runs[0]).find(Boolean) || { name: "" };
     const discord = key.startsWith("d:") ? key.slice(2) : "";
     const dc = discord && PLAYERS.get(discord);
     // Their own panel (My profile) opens before their first run too: it's named after their Discord, with a way to send one
     const mine = !!me && key === "d:" + me.id;
-    const ranNone = !rows.concat(arows).some((x) => x.best || x.runs.length || x.legacy.length);
+    const ranNone = !every.some((x) => x.best || x.runs.length);
     const stat = statTile;
-    const tier = p ? `<span class="tag tag-tier${p.tier !== null && p.tier <= 5 ? " elite" : ""}">${esc(p.tier === null ? t("rt.rated") : t("rt.tier", { pct: p.tier.toLocaleString(htmlLang()) }))}</span>` : "—";
+    const tierTag = (q) => (q ? `<span class="tag tag-tier${q.tier !== null && q.tier <= 5 ? " elite" : ""}">${esc(q.tier === null ? t("rt.rated") : t("rt.tier", { pct: q.tier.toLocaleString(htmlLang()) }))}</span>` : "—");
     const dcLine = dc && named.name ? dcLink(discord, "pl-dc", 18) : "";
-    const runsIn = (list) => list.reduce((sum, x) => sum + x.runs.length + x.legacy.length, 0);
-    const runTotal = runsIn(rows.concat(arows));
-    // Once they have assisted runs, the panel shows either their regular stats and runs or their assisted ones, picked
-    // with Unassisted and Assisted under their name (see plMode)
-    const hasAssisted = !!ap || arows.length > 0;
-    const assisted = hasAssisted && plMode === "assisted";
-    const shown = assisted ? arows : rows;
+    const runsIn = (list) => list.reduce((sum, x) => sum + x.runs.length, 0);
+    /* Which runs it shows (plMode), picked with the buttons under their name once they have more than one kind: their
+       runs since May 2026 (Unassisted), their assisted ones, or their legacy ones. A kind they have nothing of isn't
+       offered, apart from Unassisted in their own panel, which has their account too, or when they have nothing at all.
+       It's the first one they have, until another is picked. */
+    const has = { "": !!p || runsIn(rows) > 0, assisted: !!ap || arows.length > 0, legacy: !!lp || lrows.length > 0 };
+    const modes = ["", "assisted", "legacy"].filter((k) => has[k] || (k === "" && (mine || (!has.assisted && !has.legacy))));
+    const mode = modes.includes(plMode) ? plMode : modes[0];
+    const shown = mode === "assisted" ? arows : mode === "legacy" ? lrows : rows;
+    const runTotal = runsIn(every);
     let html = `<div class="pl-head"><div class="pl-who"><h2 class="pl-name is-name" id="pl-name">${esc(caps(named.name || (dc ? dc.name : "")))}</h2>` +
       (mine ? `<div class="pl-me">${dcLine}<button class="pl-signout" type="button" data-sign-out>${esc(t("sub.signout"))}</button></div>` : dcLine) +
       `</div><div class="pl-tools">${runTotal ? picButtonHtml(named.name || (dc ? dc.name : "")) : ""}${copyLinkHtml(key, named.name || (dc ? dc.name : ""), plView === "runs" && runTotal > 0)}` +
       `<button class="pl-close" type="button" data-pl-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button></div></div>` +
-      (hasAssisted ? plModesHtml(assisted) : "");
+      (modes.length > 1 ? plModesHtml(modes, mode) : "");
     if (plView === "runs" && runsIn(shown)) return html + allRunsHtml(shown);
-    // Rating, Place and Top % open the Player ratings with their row marked (see openBoard), and Runs lists every run
-    // of theirs here. Before they're rated, or before their first run, there's nothing to open.
-    const toRatings = p ? { href: `/leaderboards/${RATINGS.n}`, attrs: `data-board="${RATINGS.n}" data-board-player="${esc(key)}" title="${esc(t("pl.seeRatings", { player: named.name }))}"` } : null;
+    // Rating, Place and Top % open the Player ratings (on the view's tab) with their row marked (see openBoard), and
+    // Runs lists every run of theirs here. Before they're rated, or before their first run, there's nothing to open.
     const toRuns = runsIn(shown) ? { attrs: `data-pl-runs title="${esc(t("lb.playerOpen", { player: named.name || (dc ? dc.name : "") }))}"` } : null;
-    // Assisted: their assisted rating, place and Top %, which open the assisted Player ratings, and their runs on the
-    // assisted boards (see "Assisted boards")
-    if (assisted) {
-      const toAssisted = ap ? { href: `/leaderboards/${RATINGS.n}/assisted`, attrs: `data-board="${RATINGS.n}" data-board-tab="assisted" data-board-player="${esc(key)}" title="${esc(t("pl.seeAssistedRatings", { player: named.name }))}"` } : null;
-      const atier = ap ? `<span class="tag tag-tier${ap.tier !== null && ap.tier <= 5 ? " elite" : ""}">${esc(ap.tier === null ? t("rt.rated") : t("rt.tier", { pct: ap.tier.toLocaleString(htmlLang()) }))}</span>` : "—";
-      return html + `<div class="pl-stats">` +
-          stat(t("pl.rating"), ap ? `${icon("star")}${esc(points(ap.rating))}` : "—", toAssisted) +
-          stat(t("pl.place"), ap ? esc(t("res.of", { rank: ap.rank, total: ar.players.length })) : "—", toAssisted) +
-          stat(t("pl.tier"), atier, toAssisted) +
-          stat(t("pl.courses"), `${icon("map")}${ap ? ap.courses : 0}/${ar.counted.length}`) +
-          stat(t("pl.runs"), `${icon("notes")}${esc(localNum(runsIn(arows)))}`, toRuns) +
-        `</div><ul class="pl-courses">${arows.map(plCourseHtml).join("")}</ul>`;
+    const tiles = (q, rated, tab, seeKey) => {
+      const to = q ? { href: `/leaderboards/${RATINGS.n}${tab ? `/${tab}` : ""}`, attrs: `data-board="${RATINGS.n}"${tab ? ` data-board-tab="${tab}"` : ""} data-board-player="${esc(key)}" title="${esc(t(seeKey, { player: named.name }))}"` } : null;
+      return `<div class="pl-stats">` +
+        stat(t("pl.rating"), q ? `${icon("star")}${esc(points(q.rating))}` : "—", to) +
+        stat(t("pl.place"), q ? esc(t("res.of", { rank: q.rank, total: rated.players.length })) : "—", to) +
+        stat(t("pl.tier"), tierTag(q), to) +
+        stat(t("pl.courses"), `${icon("map")}${q ? q.courses : 0}/${rated.counted.length}`) +
+        stat(t("pl.runs"), `${icon("notes")}${esc(localNum(runsIn(shown)))}`, toRuns) +
+      `</div>`;
+    };
+    const courses = `<ul class="pl-courses">${shown.map(plCourseHtml).join("")}</ul>`;
+    // Assisted: their assisted rating, place and Top %, and their runs on the assisted boards (see "Assisted boards")
+    if (mode === "assisted") return html + tiles(ap, ar, "assisted", "pl.seeAssistedRatings") + courses;
+    // Legacy: their Legacy rating, place and Top %, and their runs on the legacy boards. A name from them that isn't
+    // anyone's yet has Is this you? (see "Claiming legacy runs").
+    if (mode === "legacy") {
+      return html + tiles(lp, lr, "legacy", "pl.seeLegacyRatings") +
+        (key.startsWith("n:") && lrows.length ? claimHtml(named.name) : "") + courses;
     }
-    html += `<div class="pl-stats">` +
-        stat(t("pl.rating"), p ? `${icon("star")}${esc(points(p.rating))}` : "—", toRatings) +
-        stat(t("pl.place"), p ? esc(t("res.of", { rank: p.rank, total: r.players.length })) : "—", toRatings) +
-        stat(t("pl.tier"), tier, toRatings) +
-        stat(t("pl.courses"), `${icon("map")}${p ? p.courses : 0}/${r.counted.length}`) +
-        stat(t("pl.runs"), `${icon("notes")}${esc(localNum(runsIn(rows)))}`, toRuns) +
-      `</div>` +
+    return html + tiles(p, r, "", "pl.seeRatings") +
       (mine && ranNone ? `<p class="pl-mine-empty"><span>${esc(t("pl.mineEmpty"))}</span>` +
         `<a class="btn btn-sm btn-primary" href="/submit" data-route="submit">${icon("upload")}<span>${esc(t("nav.submit"))}</span></a></p>` : "") +
-      // A name from the legacy boards that isn't anyone's yet: Is this you?. In their own panel: legacy names like theirs.
-      // (See "Claiming legacy runs".)
-      (key.startsWith("n:") && rows.some((x) => x.legacy.length) ? claimHtml(named.name) : "") +
+      // In their own panel: legacy names like theirs (see "Claiming legacy runs")
       (mine ? maybeHtml(key) : "") +
       (mine ? linkHtml() : modLinkHtml(key)) +
       // Everyone can put their stats on their profile, runs or not: before their first, it says they're unrated
       (mine ? profileHtml() : "") +
-      `<ul class="pl-courses">${rows.map(plCourseHtml).join("")}</ul>`;
-    return html;
+      courses;
   }
-  // Unassisted and Assisted under a player's name, once they have assisted runs: which of the two the panel shows
-  const plModesHtml = (assisted) => `<div class="pl-modes" role="group" aria-label="${esc(t("pl.modes"))}">` +
-    [["", "pl.mode.regular"], ["assisted", "lb.tab.assisted"]].map(([k, label]) =>
-      `<button class="lb-tab" type="button" data-pl-mode="${k}" aria-pressed="${(k === "assisted") === assisted}">${esc(t(label))}</button>`).join("") + `</div>`;
+  // Unassisted, Assisted, and Legacy under a player's name (modes: the ones they have, on: the one shown)
+  const PL_MODES = { "": "lb.tab.unassisted", assisted: "lb.tab.assisted", legacy: "lb.tab.legacy" };
+  const plModesHtml = (modes, on) => `<div class="pl-modes" role="group" aria-label="${esc(t("pl.modes"))}">` +
+    modes.map((k) => `<button class="lb-tab" type="button" data-pl-mode="${k}" aria-pressed="${k === on}">${esc(t(PL_MODES[k]))}</button>`).join("") + `</div>`;
   // A course in a player's panel (row: see plRows), which opens to their runs there. An assisted board's is keyed
-  // "a" and its number, so it opens on its own (see plOpen).
+  // "a" and its number, and a legacy one's "l", so each opens on its own (see plOpen).
   function plCourseHtml({ c, at, best, total, record, gain, runs, legacy }) {
-    const k = `${c.assisted ? "a" : ""}${c.n}`;
+    const k = `${c.assisted ? "a" : c.legacy ? "l" : ""}${c.n}`;
     const open = plOpen.has(k);
     const summary = best
       ? `<span class="pl-course-best"><span class="pl-place">${esc(t("res.of", { rank: at + 1, total }))}</span>` +
@@ -3978,7 +4011,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       `</button>` +
       `<div class="pl-runs" id="pl-runs-${k}"${open ? "" : " hidden"}>` +
         (runs.length || legacy.length ? courseRunsHtml({ c, best, record, gain, runs, legacy }) : `<p class="pl-empty">${esc(t("pl.noRuns"))}</p>`) +
-        `<a class="pl-board" href="/leaderboards/${c.n}${c.assisted ? "/assisted" : ""}" data-board="${c.n}"${c.assisted ? ' data-board-tab="assisted"' : ""}>${esc(t("pl.board"))}${icon("chev", "icon chev")}</a>` +
+        `<a class="pl-board" href="/leaderboards/${c.n}${c.assisted ? "/assisted" : c.legacy ? "/legacy" : ""}" data-board="${c.n}"${c.assisted ? ' data-board-tab="assisted"' : c.legacy ? ' data-board-tab="legacy"' : ""}>${esc(t("pl.board"))}${icon("chev", "icon chev")}</a>` +
       `</div></li>`;
   }
   // Picture, which draws their stats as a picture to save, copy or share (see "Player pictures")
@@ -4266,14 +4299,14 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     putAddressBack(back);
   }
   // view: "courses" (the default) or "runs"
-  // n: a course to open in it ("a6" for its assisted board), and assisted: open on their assisted runs (an "a" course
-  // does too)
-  function openPlayer(key, n, view, assisted = false) {
+  // n: a course to open in it ("a6" for its assisted board, "l6" for its legacy one), and mode: open on their
+  // "assisted" or "legacy" runs (an "a" or "l" course does too)
+  function openPlayer(key, n, view, mode = "") {
     leaveRun();
     leaveStats();
     plKey = key;
     plView = view === "runs" ? "runs" : "courses";
-    plMode = assisted || /^a/.test(String(n || "")) ? "assisted" : "";
+    plMode = mode || { a: "assisted", l: "legacy" }[String(n || "")[0]] || "";
     linkEditing = false;
     linkDraft = null;
     linkNote = "";
@@ -4297,8 +4330,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (!b) return;
     const box = b.closest(".course-board");
     const n = box && /^board-\d+$/.test(box.id) ? Number(box.id.slice(6)) : 0;
-    // From an assisted board, the course's assisted runs (see plCourseHtml)
-    openPlayer(b.dataset.player, n && viewOf(course(n)).tab === "assisted" ? `a${n}` : n);
+    // From an assisted or legacy board, or the Player ratings' Assisted or Legacy tab, those runs (see plCourseHtml)
+    const tab = n ? viewOf(course(n)).tab : box && box.id === `board-${RATINGS.n}` ? viewOf(RATINGS).tab : "";
+    const mode = tab === "assisted" || tab === "legacy" ? tab : "";
+    openPlayer(b.dataset.player, n ? `${{ assisted: "a", legacy: "l" }[mode] || ""}${n}` : 0, undefined, mode);
   });
   pl.addEventListener("click", (e) => {
     if (e.target.closest("[data-pl-close]")) { pl.close(); return; }
@@ -4517,11 +4552,11 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     openCourse = c.n;
     viewOf(c).tab = (spot && spot.tab) || tab;
     if (c === RATINGS) {
-      const assisted = viewOf(c).tab === "assisted";
-      boardMark = spot ? { n: c.n, key: spot.key, assisted } : null;
+      const tab = viewOf(c).tab;
+      boardMark = spot ? { n: c.n, key: spot.key, tab } : null;
       if (spot) {
         viewOf(c).q = "";
-        if (ratings(null, assisted).players.findIndex((p) => p.key === spot.key) >= 10) viewOf(c).all = true;
+        if (ratings(null, tab === "legacy" ? "legacy" : tab === "assisted").players.findIndex((p) => p.key === spot.key) >= 10) viewOf(c).all = true;
       }
     } else {
       boardMark = spot ? { n: c.n, run: spot.run } : null;
@@ -4777,7 +4812,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const W = PIC.w, rowsTop = PIC.top + PIC.head + 22, footY = rowsTop + 5 * PIC.rowH + 4 * PIC.gap + 18, H = Math.round(footY + 17 + 26);
     // Each player's rating over every course and what their run adds to it, beside the date like the bot's pictures
     // (legacy boards don't count)
-    const ratingOf = d.legacy ? new Map() : boardRatings(d.assisted ? assistedOf(c) : c, d.then);
+    const ratingOf = boardRatings(d.legacy ? legacyOf(c) : d.assisted ? assistedOf(c) : c, d.legacy ? null : d.then);
     const { cv, ctx } = picCanvas(W, H, logo);
     // The title, with the site's orange and blue edges, and the two lines under it
     const textTop = PIC.top + (PIC.head - 99.6) / 2;
@@ -7818,7 +7853,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (!e) return false;
     // Its course: what the link says, or else the board it's on, or the course it's under in a player's panel
     const box = a.closest(".course-board, .pl-runs");
-    const at = box && /-a?(\d+)$/.exec(box.id);
+    const at = box && /-[al]?(\d+)$/.exec(box.id);
     const c = course(Number(a.dataset.watch || (at ? at[1] : 0)));
     const { playerName: name, runTime: time, runMiss: miss } = a.dataset;
     const label = t("lb.watch", { time, player: name });
@@ -8128,7 +8163,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const x = runs && sentRun(runId);
     if (x) {
       const all = runs.dataset.runRuns === "all";
-      openPlayer(playerKey(cleanRun(x.run)), all ? 0 : `${x.assisted ? "a" : ""}${x.n}`, all ? "runs" : "courses", x.assisted);
+      openPlayer(playerKey(cleanRun(x.run)), all ? 0 : `${x.assisted ? "a" : ""}${x.n}`, all ? "runs" : "courses", x.assisted ? "assisted" : "");
       if (all) { const back = pl.querySelector("[data-pl-back]"); if (back) back.focus(); }
     }
   });
@@ -8277,7 +8312,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // Stats' links to the day picked: /stats/2026-11-05, /stats/2026-11-05/week, …
   function subPath(route) {
     if (route === "stats") return statsPath();
-    if (route === "leaderboards" && openCourse === RATINGS.n) return RATINGS.n + (viewOf(RATINGS).tab === "assisted" ? "/assisted" : "");
+    if (route === "leaderboards" && openCourse === RATINGS.n) return RATINGS.n + ({ assisted: "/assisted", legacy: "/legacy" }[viewOf(RATINGS).tab] || "");
     if (route === "leaderboards" && openCourse) {
       const c = course(openCourse);
       const v = viewOf(c);
