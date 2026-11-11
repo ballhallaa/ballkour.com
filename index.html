@@ -7145,7 +7145,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (picked) { reviewScrolled = true; picked.scrollIntoView({ block: "center" }); }
   }
   /* Submitted runs, over the form for everyone (ballkour.com/runs goes here): every run sent from the website, and
-     every run from before it (see pastRuns), with where it is now and its course rating, 5 at first and then 20 more
+     every run from before it (see pastRuns), with where it is now and its course rating, 3 at first and then 20 more
      at a time. It sorts like a player's Runs (see sortRuns): newest first to start with, or by time (fastest first,
      whatever the course), mistakes, or course rating, and pressing the sort that's on turns it around. Under that, a
      box like a board's finds a player's runs by their in-game or Discord name (see found()), and the number by the
@@ -7155,7 +7155,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      page (a middle click, in a new tab).
      Reviewers also see who checked each one. It waits for every board to load, so it doesn't fill in bit by bit, and
      it's hidden until there's a run to show. */
-  let runsShown = 5;
+  let runsShown = 3;
   let runsSort = "date";
   let runsRev = false;
   let runsQ = "";
