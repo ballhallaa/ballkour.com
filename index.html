@@ -5931,10 +5931,11 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      goes up straight away, with or without one. The Worker works it out the same way as the run's sent (placeOf() in
      cloudflare/worker.js), and turns down a top 10 run without a video, so keep the two in step.
      → the place the run in the form would take (1 to 10) when it needs a video, 0 when it doesn't, or null until
-     there's a course, a time, and mistakes to tell by. */
+     there's a course and a time to tell by. Mistakes only break ties, so until they're typed in it goes by 0, like
+     the field's placeholder. */
   function videoRank() {
     const c = me && subCourse ? course(Number(subCourse)) : null;
-    const time = cleanTime(subField("time").value), miss = subField("miss").value.trim();
+    const time = cleanTime(subField("time").value), miss = subField("miss").value.trim() || "0";
     if (!c || !time || !/^\d{1,4}$/.test(miss)) return null;
     const assisted = subField("assisted").checked && !subField("assisted").disabled;
     const run = { discord: me.id, time, miss: Number(miss) };
