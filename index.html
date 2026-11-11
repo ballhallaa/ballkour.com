@@ -880,7 +880,7 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 /* A remake's regular board, which has an assisted one beside it, in the game's orange */
 .tag-unassisted { height: 17px; padding: 0 5px; font-size: 9.5px; color: var(--unassist); background: rgba(230, 151, 0, .1); border: 1px solid rgba(230, 151, 0, .45); }
 .lb-tab[data-tab="assisted"][aria-selected="true"] { background: rgba(255, 128, 192, .12); box-shadow: inset 0 0 0 1px rgba(255, 128, 192, .4); }
-.board-assisted > span, .board-unassisted > span { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.board-assisted > span, .board-unassisted > span, .board-legacy > span { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
 /* Their link and their stats on Discord, under their name and above the tabs (see playerHtml) */
 .pl-account { padding-top: 14px; }
 .pl-account > :last-child { margin-bottom: 0; }
@@ -2621,6 +2621,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   const assistedTag = () => `<span class="tag tag-assisted">${esc(t("lb.tab.assisted"))}</span>`;
   // And an orange "Unassisted" one, over a remake's regular board, so it isn't mistaken for the assisted one beside it
   const unassistedTag = () => `<span class="tag tag-unassisted">${esc(t("lb.tab.unassisted"))}</span>`;
+  // And a grey "Legacy" one, over a legacy board (from before 2026-04-29) and the Legacy rating
+  const legacyTag = () => `<span class="tag tag-legacy">${esc(t("lb.tab.legacy"))}</span>`;
 
   /* ---------- Translations ---------- */
   const LANGS = [
@@ -3120,7 +3122,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const top = sorted.slice(0, 10);
     const rest = sorted.slice(10);
     const podium = (r) => (order ? best.slice(0, 3).indexOf(r) : undefined);
-    return `<div class="board-meta"><span>${esc(t("lb.legacy.title"))}</span></div>` + sortHtml(c, true) +
+    return `<div class="board-meta board-legacy"><span>${legacyTag()}<span>${esc(t("lb.legacy.title"))}</span></span></div>` + sortHtml(c, true) +
       rowsHtml(c, top, rest, (r, i) => runRow(r, i, null, true, ratingOf, podium(r))) +
       `<p class="lb-foot"><span>${esc(t("lb.legacy.note"))}</span>${best.some((r) => ratingOf.has(playerKey(r))) ? `<span>${esc(t("lb.legacy.ratingNote"))}</span>` : ""}</p>`;
   }
@@ -3835,7 +3837,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   }
   function ratingsHtml(r) {
     const meta = r.assisted ? `<div class="board-meta board-assisted"><span>${assistedTag()}<span>${esc(t("rt.assisted.title"))}</span></span></div>`
-      : r.legacy || r.global ? `<div class="board-meta"><span>${esc(t(r.legacy ? "rt.legacy.title" : "rt.global.title"))}</span></div>` : "";
+      : r.legacy ? `<div class="board-meta board-legacy"><span>${legacyTag()}<span>${esc(t("rt.legacy.title"))}</span></span></div>`
+      : r.global ? `<div class="board-meta"><span>${esc(t("rt.global.title"))}</span></div>` : "";
     if (!r.players.length) return meta + `<p class="board-empty">${esc(t(r.assisted ? "rt.assisted.empty" : r.legacy ? "rt.legacy.empty" : "rt.empty"))}</p>`;
     const top = r.players.slice(0, 10);
     const rest = r.players.slice(10);
