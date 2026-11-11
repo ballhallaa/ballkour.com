@@ -493,8 +493,8 @@ main:focus { outline: none; }
 .group { padding: 4px 0 10px; }
 .group + .group { border-top: 1px solid var(--line); }
 
-#leaderboards, #submit { scroll-margin-top: 72px; }
-.course, .qa, #sub-runs { scroll-margin-top: 80px; }
+#leaderboards, #runs, #submit { scroll-margin-top: 72px; }
+.course, .qa { scroll-margin-top: 80px; }
 .by { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; padding: 16px 18px 6px; }
 .by-title { margin: 0; font: italic 700 22px/1 var(--display); letter-spacing: .02em; text-transform: uppercase; color: var(--ink-3); }
 .by-name { color: var(--ink); }
@@ -1154,9 +1154,12 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .sub-form [aria-invalid="true"] { border-color: var(--coral); }
 #sub-time, #sub-miss { font-family: var(--mono); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
 .sub-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px 14px; }
-/* Runs to check, for reviewers, under the form: one card per run, the one an old ?check= link picked out in gold.
+/* Over the form (ballkour.com/runs): Runs to check for reviewers, then Submitted runs for everyone, under a line like
+   the form's. It's hidden while neither is there. */
+.sub-sent { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 16px 18px; border-top: 1px solid var(--line); }
+/* Runs to check, for reviewers, over Submitted runs: one card per run, the one an old ?check= link picked out in gold.
    All runs, its other tab, lists every run sent from the website the same way. */
-.sub-review { margin: 0 18px 16px; padding: 12px 14px; border: 1px solid rgba(255, 213, 79, .28); border-radius: 12px; background: rgba(255, 213, 79, .045); }
+.sub-review { padding: 12px 14px; border: 1px solid rgba(255, 213, 79, .28); border-radius: 12px; background: rgba(255, 213, 79, .045); }
 .rev-title { margin: 0; display: flex; align-items: center; gap: 8px; font: 600 12px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink); }
 .rev-title .icon { width: 15px; height: 15px; color: var(--gold); }
 .rev-count { padding: 2px 7px; border-radius: 999px; background: rgba(255, 213, 79, .16); color: var(--gold); }
@@ -1198,11 +1201,31 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .rev-ask .btn[disabled] { opacity: .6; cursor: progress; transform: none; }
 .btn-warn { background: var(--coral); border-color: var(--coral); color: #2a0800; }
 .btn-warn:hover { background-color: #ff8a74; border-color: #ff8a74; }
-/* Submitted runs, under the form for everyone: every run sent from the website, newest first, each opening its page */
-.sub-runs { margin: 0 18px 16px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255, 255, 255, .02); }
+/* Submitted runs, over the form for everyone: every run sent from the website, newest first, each opening its page */
+.sub-runs { padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255, 255, 255, .02); }
 .sub-runs .rev-title .icon { color: var(--volt); }
 .sub-runs .rev-count { background: rgba(0, 230, 151, .12); color: var(--volt); }
 .sub-runs-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+/* Its search, under the title and sort: a board's box, across the whole card */
+.sub-runs .lb-search { margin-top: 10px; }
+/* Under the runs: Show more, and on the right, while the list is longer than the screen, ↑ (to its top) and ↓ (to
+   its end), in a row that keeps their room. Until that row is on screen, they ride along at the bottom of the screen
+   (sticky, from an empty box under the row, with the buttons above it), and see placeJump for the rest. Sticking
+   needs the panel to clip its corners without being a box that scrolls (overflow: clip; a browser that doesn't know
+   it keeps the panel's hidden, and they just stay in their row). */
+#courses { overflow: clip; }
+#sub-runs { scroll-margin: 80px 0 16px; }
+.sub-runs-foot { display: flex; align-items: center; min-height: 36px; margin-top: 8px; }
+.sub-runs-foot .rev-more { margin-top: 0; }
+.sub-runs-jump { position: sticky; bottom: 16px; z-index: 1; height: 0; display: flex; justify-content: flex-end; align-items: flex-end; gap: 6px; transition: opacity .15s, visibility .15s; }
+.sub-runs-jump.away { opacity: 0; visibility: hidden; }
+.sub-runs-jump button { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 1px solid var(--line-hi); border-radius: 10px; background: var(--glass); -webkit-backdrop-filter: blur(16px) saturate(1.2); backdrop-filter: blur(16px) saturate(1.2); box-shadow: 0 10px 24px -14px rgba(0, 0, 0, .9); color: var(--ink-2); cursor: pointer; transition: color .15s, border-color .15s, opacity .15s; }
+.sub-runs-jump button:hover { color: var(--ink); border-color: var(--volt); }
+.sub-runs-jump button:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; }
+.sub-runs-jump button[aria-disabled="true"] { opacity: .4; cursor: default; }
+.sub-runs-jump button[aria-disabled="true"]:hover { color: var(--ink-2); border-color: var(--line-hi); }
+.sub-runs-jump .icon { width: 16px; height: 16px; }
+.sub-runs-jump [data-runs-jump="up"] .icon { transform: rotate(180deg); }
 /* Stats, at the very bottom: which days (a day, or the 7 or 30 days or 3, 6, or 12 months up to it), then Runs and Page views, each with a
    bar for every day that picks it, and its numbers for those days */
 /* Runs' and Page views' headings, each with the month menu at its end, so it's there on a phone without going back up
@@ -1652,6 +1675,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     <div class="sections-track" id="sections-track">
       <a href="/courses" data-route="courses" data-i18n="courses.title">Courses</a>
       <a href="/leaderboards" data-route="leaderboards" data-i18n="nav.leaderboards">Leaderboards</a>
+      <a href="/runs" data-route="runs" data-i18n="runs.title">Submitted runs</a>
       <a href="/submit" data-route="submit" data-i18n="nav.submit">Submit a run</a>
       <a href="/features" data-route="features" data-i18n="run.title">Features</a>
       <a href="/faq" data-route="faq" data-i18n="faq.title">FAQ</a>
@@ -1691,6 +1715,11 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       <div id="leaderboards"></div>
       <noscript><p class="note">Turn on JavaScript to see the course codes, or find them in the README on GitHub.</p></noscript>
       <p class="note" data-i18n="courses.note">Struck-through courses haven’t worked since Overwatch’s August 2026 map updates.</p>
+      <!-- Runs to check (for reviewers) and Submitted runs, over the form: ballkour.com/runs -->
+      <div class="sub-sent" id="runs" hidden>
+        <div class="sub-review" id="sub-review" hidden></div>
+        <div class="sub-runs" id="sub-runs" hidden></div>
+      </div>
       <div class="submit" id="submit">
         <div class="submit-head">
           <span class="lr-icon"><svg class="icon" aria-hidden="true"><use href="#i-upload"/></svg></span>
@@ -1746,8 +1775,6 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
           </div>
           <p class="sub-status field-wide" id="sub-status" role="status"></p>
         </form>
-        <div class="sub-review" id="sub-review" hidden></div>
-        <div class="sub-runs" id="sub-runs" hidden></div>
         <div class="submit-alt">
           <span class="lr-sub" id="sub-alt" data-i18n="lb.submit.how">Open a ticket on our Discord and share your video. Not in our server yet? Join us first!</span>
           <span class="submit-actions">
@@ -2175,6 +2202,11 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "rev.fail": "That didn’t go through. Try again in a moment.",
   "rev.own": "This is your own run, so another moderator has to check it.",
   "runs.title": "Submitted runs",
+  "runs.searchLabel": "Find a player’s submitted runs by in-game or Discord name",
+  "runs.noMatch": "No submitted runs match “{query}”",
+  "runs.found": "Runs found: {count}",
+  "runs.toTop": "To the top of Submitted runs",
+  "runs.toEnd": "To the end of Submitted runs",
   "run.all": "All runs",
   "run.onBoard": "See it on the board",
   "run.today": "See today’s board",
@@ -2792,8 +2824,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     rows.replaceWith(next);
     announce.textContent = queryOf(row) ? t("lb.found", { count: next.querySelectorAll(".run").length.toLocaleString(htmlLang()) }) : "";
   }
+  // A board's box, or Submitted runs' (see searchRuns), which works the same way
+  const searchIn = (input) => (input.closest("#sub-runs") ? searchRuns(input) : searchBoard(input));
   document.addEventListener("input", (e) => {
-    if (e.target instanceof HTMLInputElement && e.target.closest(".lb-search")) searchBoard(e.target);
+    if (e.target instanceof HTMLInputElement && e.target.closest(".lb-search")) searchIn(e.target);
   });
   // Escape empties the box (in every browser, not just the ones that do it themselves). On a phone, the keyboard's
   // Search key puts the keyboard away so the players found can be seen.
@@ -2803,7 +2837,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (e.key === "Escape" && input.value) {
       e.preventDefault();
       input.value = "";
-      searchBoard(input);
+      searchIn(input);
     } else if (e.key === "Enter" && matchMedia("(pointer: coarse)").matches) input.blur();
   });
   // old: the board is an older one from the history, so its ratings are as they were on its day, not today's
@@ -5745,7 +5779,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   /* ---------- Claiming legacy runs ----------
      A name on the legacy boards (before May 2026) that isn't linked to anyone's Discord is its own player. Its panel
      asks Is this you?, and This is me sends a claim to the moderators (POST /api/claim, see "Claiming legacy runs" in
-     cloudflare/worker.js), who check that it's really them before they link the runs (under the form, Legacy runs to
+     cloudflare/worker.js), who check that it's really them before they link the runs (over the form, Legacy runs to
      check). Signed out, This is me signs them in first, and comes back to the same page with the name's panel open
      again (?claim=), for them to tap it. After that, the panel says the claim is waiting, or that it was turned
      down. Their own panel also points out legacy names like the ones they go by now (Were you … before May 2026?). */
@@ -5917,12 +5951,12 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     }
   });
 
-  /* Reviewers (REVIEWER_ROLES in cloudflare/wrangler.toml) see the top 10 runs waiting for a check under the form,
+  /* Reviewers (REVIEWER_ROLES in cloudflare/wrangler.toml) see the top 10 runs waiting for a check over the form,
      Runs to check: each with what approving it would do (its place on the course, and its player's place and rating
      in the player ratings), View run (its page, with its video and the rest of that), Approve (onto the board), and
      Turn down. Approve and Turn down ask first, in the run's row or on its page (reviewAsk): Yes sends it, and Cancel
      or Esc puts the buttons back. Old ?check=<id> links (the Verify buttons from before runs had pages) pick that run
-     out here and open its page. Everyone, reviewers too, sees every run under the form (Submitted runs). */
+     out here and open its page. Everyone, reviewers too, sees every run under it, over the form (Submitted runs). */
   let reviewRuns = [];
   let reviewAsk = null; // { id, approve, at }: the run whose buttons are asking, and when they started asking
   const checkParam = (() => { try { return new URLSearchParams(location.search).get("check") || ""; } catch (e) { return ""; } })();
@@ -6526,6 +6560,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   function renderReview(note) {
     const box = $("#sub-review");
     box.hidden = !(me && me.reviewer);
+    sentShown();
     if (box.hidden) return;
     // What approving it would do, as on its page (If approved now), once the boards are in
     const wouldDo = (r, c) => {
@@ -6558,17 +6593,22 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const picked = checkParam && !reviewScrolled && box.querySelector(".rev-run.picked");
     if (picked) { reviewScrolled = true; picked.scrollIntoView({ block: "center" }); }
   }
-  /* Submitted runs, under the form for everyone (ballkour.com/runs goes here): every run sent from the website, and
+  /* Submitted runs, over the form for everyone (ballkour.com/runs goes here): every run sent from the website, and
      every run from before it (see pastRuns), with where it is now and its course rating, 5 at first and then 20 more
      at a time. It sorts like a player's Runs (see sortRuns): newest first to start with, or by time (fastest first,
-     whatever the course), mistakes, or course rating, and pressing the sort that's on turns it around. The choice
-     holds until the page is left. Each opens its page (a middle click, in a new tab). Reviewers also see who checked
-     each one. It waits for every board to load, so it doesn't fill in bit by bit, and it's hidden until there's a run
-     to show. */
+     whatever the course), mistakes, or course rating, and pressing the sort that's on turns it around. Under that, a
+     box like a board's finds a player's runs by their in-game or Discord name (see found()), and the number by the
+     title counts the runs it finds. Typing only redraws the runs under it (see searchRuns), so the box keeps focus.
+     The sort and what's typed hold until the page is left. Each run opens its page (a middle click, in a new tab).
+     Reviewers also see who checked each one. It waits for every board to load, so it doesn't fill in bit by bit, and
+     it's hidden until there's a run to show. */
   let runsShown = 5;
   let runsSort = "date";
   let runsRev = false;
+  let runsQ = "";
   let runsReady = false;
+  // Runs to check and Submitted runs share the line over them, which goes while neither is there
+  function sentShown() { $("#runs").hidden = $("#sub-review").hidden && $("#sub-runs").hidden; }
   // A run on a list (x: as sentRuns has it): its course, player, time and mistakes, extra (what the list says about
   // it), where it is now, who sent it, and for reviewers, who checked it. It opens its page, when it has one.
   function runItemHtml(x, extra = "") {
@@ -6583,13 +6623,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       [sentBy(r.date, who && who.name), checked && esc(checked)].filter(Boolean).map((h) => `<span class="rev-meta">${h}</span>`).join("");
     return r.id ? `<li><a class="rev-run" href="/runs/${esc(r.id)}" data-run-open="${esc(r.id)}">${inner}</a></li>` : `<li><div class="rev-run">${inner}</div></li>`;
   }
-  function renderSentRuns() {
-    const box = $("#sub-runs");
-    if (!runsReady) return;
-    const all = sentRuns();
-    box.hidden = !all.length;
-    if (box.hidden) return;
-    const left = Math.max(0, all.length - runsShown);
+  // The runs it lists (all: from sentRuns), sorted: the ones the box finds, or all of them while it's empty
+  function sentRunsFound(all) {
     // What its time is worth on its course, like a run in a player's Runs (see coursePoints): against the course's
     // record today, so up to 1000, for one waiting for a check too (what it would be if it's approved). One that was
     // turned down or taken off, or is on a broken course, doesn't count for the ratings, so it has none (-1).
@@ -6601,14 +6636,86 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       const record = records[x.n];
       return record ? Math.min(1000, coursePoints(record, cleanRun(x.run))) : x.status === "pending" ? 1000 : -1;
     };
-    const list = sortRuns(all.map((x) => ({ x, r: cleanRun(x.run), day: sentWhen(x), order: sentWhen(x) ? 0 : 1, pts: ptsOf(x) })), runsSort, runsRev);
+    const q = fold(runsQ).trim();
+    const hits = q ? all.filter((x) => found(x.run, q)) : all;
+    return sortRuns(hits.map((x) => ({ x, r: cleanRun(x.run), day: sentWhen(x), order: sentWhen(x) ? 0 : 1, pts: ptsOf(x) })), runsSort, runsRev);
+  }
+  // The runs under the box (list: from sentRunsFound), with Show more and ↑ and ↓ under them (see placeJump), or that
+  // none match what's typed
+  function sentRunsRowsHtml(list) {
+    if (!list.length) return `<div class="sub-runs-rows"><p class="rev-empty">${esc(t("runs.noMatch", { query: runsQ.trim() }))}</p></div>`;
+    const left = Math.max(0, list.length - runsShown);
     const row = ({ x, pts }) => runItemHtml(x, pts < 0 ? ""
       : `<span class="stat pts" title="${esc(t("rt.coursePoints", { points: points(pts) }))}">${icon("star")}${esc(points(pts))}</span>`);
-    box.innerHTML = `<div class="sub-runs-head"><p class="rev-title">${icon("notes")}<span>${esc(t("runs.title"))}</span><span class="rev-count">${all.length.toLocaleString(htmlLang())}</span></p>` +
+    const jump = (way, label) => `<button type="button" data-runs-jump="${way}" aria-label="${esc(t(label))}" title="${esc(t(label))}">${icon("down")}</button>`;
+    return `<div class="sub-runs-rows"><ul class="rev-list">${list.slice(0, runsShown).map(row).join("")}</ul>` +
+      `<div class="sub-runs-foot"${left ? "" : " hidden"}>` +
+      (left ? `<button class="btn btn-sm rev-more" type="button" data-runs-more>${esc(t("rev.more", { count: Math.min(left, 20).toLocaleString(htmlLang()) }))}</button>` : "") +
+      `</div><div class="sub-runs-jump" hidden>${jump("up", "runs.toTop")}${jump("down", "runs.toEnd")}</div></div>`;
+  }
+  /* ↑ and ↓ under Submitted runs: while the list is longer than the screen (under the section bar), they're there, on
+     the right of Show more, or in a row of their own once every run is shown. Until that row is on screen, they stick
+     to the bottom of the screen (see .sub-runs-jump), so they're there all the way down the list, except while the
+     list is only just coming up from the bottom, where they'd be over its search. ↑ goes back to its top (its search
+     and sort), and ↓ to its end (Show more). Each is dimmed while it would go nowhere. */
+  let jumpQueued = false;
+  function placeJump() {
+    jumpQueued = false;
+    const box = $("#sub-runs");
+    const jump = $(".sub-runs-jump", box);
+    if (!jump || box.hidden || $("#runs").hidden) return;
+    const foot = $(".sub-runs-foot", box);
+    const bar = $("#sections").getBoundingClientRect().bottom;
+    const shown = box.getBoundingClientRect().height > innerHeight - bar - 16;
+    if (jump.hidden === shown) jump.hidden = !shown;
+    const footHidden = !shown && !$("[data-runs-more]", foot);
+    if (foot.hidden !== footHidden) foot.hidden = footHidden;
+    if (!shown) return;
+    const card = box.getBoundingClientRect();
+    jump.classList.toggle("away", $(".rev-list", box).getBoundingClientRect().top > innerHeight - 120);
+    const dim = (way, off) => {
+      const b = $(`[data-runs-jump="${way}"]`, jump);
+      if (b.getAttribute("aria-disabled") !== String(off)) b.setAttribute("aria-disabled", String(off));
+    };
+    dim("up", card.top >= bar - 1);
+    dim("down", card.bottom <= innerHeight + 1);
+  }
+  const queueJump = () => { if (!jumpQueued) { jumpQueued = true; requestAnimationFrame(placeJump); } };
+  addEventListener("scroll", queueJump, { passive: true });
+  addEventListener("resize", queueJump);
+  function renderSentRuns() {
+    const box = $("#sub-runs");
+    if (!runsReady) return;
+    const all = sentRuns();
+    box.hidden = !all.length;
+    sentShown();
+    if (box.hidden) return;
+    const list = sentRunsFound(all);
+    // Drawn again while they're typing (a run was checked, or the Discord names came in): the box keeps focus, and so
+    // do ↑ and ↓
+    const typing = document.activeElement === $(".lb-search input", box);
+    const jumping = box.contains(document.activeElement) && document.activeElement.dataset.runsJump;
+    box.innerHTML = `<div class="sub-runs-head"><p class="rev-title">${icon("notes")}<span>${esc(t("runs.title"))}</span><span class="rev-count">${list.length.toLocaleString(htmlLang())}</span></p>` +
       (all.length > 1 ? runSortHtml(runsSort, runsRev) : "") + `</div>` +
-      `<ul class="rev-list">${list.slice(0, runsShown).map(row).join("")}</ul>` +
-      (left ? `<button class="btn btn-sm rev-more" type="button" data-runs-more>${esc(t("rev.more", { count: Math.min(left, 20).toLocaleString(htmlLang()) }))}</button>` : "");
+      (all.length > 1 ? `<label class="lb-search">${icon("search")}<input type="search" value="${esc(runsQ)}" placeholder="${esc(t("lb.search"))}" ` +
+        `aria-label="${esc(t("runs.searchLabel"))}" autocomplete="off" spellcheck="false" enterkeyhint="search"></label>` : "") +
+      sentRunsRowsHtml(list);
     fitSorts(box);
+    placeJump();
+    if (typing) refocus($(".lb-search input", box));
+    if (jumping) $(`[data-runs-jump="${jumping}"]`, box).focus({ preventScroll: true });
+  }
+  // Typing in its box: only the runs under it are drawn again, and the number by the title
+  function searchRuns(input) {
+    const box = $("#sub-runs");
+    const rows = $(".sub-runs-rows", box);
+    if (!rows) return;
+    runsQ = input.value;
+    const list = sentRunsFound(sentRuns());
+    rows.outerHTML = sentRunsRowsHtml(list);
+    placeJump();
+    $(".rev-count", box).textContent = list.length.toLocaleString(htmlLang());
+    announce.textContent = fold(runsQ).trim() ? t("runs.found", { count: list.length.toLocaleString(htmlLang()) }) : "";
   }
   // Who checked a run: their Discord name, or null when it isn't known yet (the names are looked up once an hour)
   const checkerOf = (r) => (r.checkedBy ? PLAYERS.get(r.checkedBy) || (me && me.id === r.checkedBy ? me : null) : null);
@@ -6801,6 +6908,14 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       const again = $(`#sub-runs [data-pl-sort="${runsSort}"]`);
       if (again) again.focus();
       announce.textContent = t(SORTED[runsSort][runsRev ? 1 : 0]);
+      return;
+    }
+    // ↑ and ↓ (see placeJump): its top under the section bar, or its end at the bottom of the screen
+    const jump = e.target.closest("[data-runs-jump]");
+    if (jump) {
+      if (jump.getAttribute("aria-disabled") !== "true") {
+        $("#sub-runs").scrollIntoView({ block: jump.dataset.runsJump === "up" ? "start" : "end", behavior: reduced ? "auto" : "smooth" });
+      }
       return;
     }
     if (!e.target.closest("[data-runs-more]")) return;
@@ -7661,12 +7776,11 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     runBack = null;
     putAddressBack(back);
   }
-  // After a run's page or My profile closes. Back at the list, /runs stays until they scroll (it isn't in the section
-  // bar); anywhere else follows the page.
+  // After a run's page or My profile closes: the address follows the page again (back at the list, that's /runs)
   function putAddressBack(back) {
     try { history.replaceState(history.state, "", back); } catch (e) { /* address stays as it is */ }
-    addressHeld = /^\/runs(?:[?#]|$)/.test(back);
-    if (!addressHeld) queueSpy();
+    addressHeld = false;
+    queueSpy();
   }
   pl.addEventListener("close", leaveRun);
   pl.addEventListener("keydown", onReviewKey);
@@ -7728,8 +7842,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      link can be shared, reloaded and stepped through with Back. Scrolling updates the address too (see spy()).
      /leaderboards opens Gibraltar's top 10. */
   // route → section id. Discord stays /#discord, since /discord already goes straight to the server.
-  // runs is Submitted runs, under the form (or the form, while there are none)
-  const ROUTES = { courses: "courses", leaderboards: "leaderboards", submit: "submit", runs: "sub-runs", features: "features", faq: "faq", discord: "discord", "source-code": "source", translations: "translations", stats: "stats" };
+  // runs is Submitted runs (with Runs to check over it, for reviewers), over the form (or the form, while there are none)
+  const ROUTES = { courses: "courses", leaderboards: "leaderboards", submit: "submit", runs: "runs", features: "features", faq: "faq", discord: "discord", "source-code": "source", translations: "translations", stats: "stats" };
   const pathFor = (route) => (route === "discord" ? "/#discord" : "/" + route);
   const routeOf = (path) => {
     if (STATS_LINK.test(path)) return "stats"; // /stats/2026-11-05/week, … (see "Stats")
@@ -7769,7 +7883,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   function goTo(route, smooth) {
     if (route === "leaderboards" && !openCourse) { openCourse = 1; refreshCourse(course(1)); }
     clicked = sectionLinks.findIndex((a) => a.dataset.route === route);
-    // A place that isn't in the section bar (/runs) keeps its address until the visitor scrolls, like a board's link
+    // A place that isn't in the section bar keeps its address until the visitor scrolls, like a board's link
     if (clicked < 0) addressHeld = true;
     queueSpy();
     const root = document.documentElement;
@@ -7809,7 +7923,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     spyQueued = false;
     const line = sectionBar.getBoundingClientRect().bottom + 32;
     let i = -1;
-    sectionTargets.forEach((el, j) => { if (el && el.getBoundingClientRect().top <= line) i = j; });
+    // One that's hidden (Submitted runs, until the runs are in) has no place on the page, so it never counts
+    sectionTargets.forEach((el, j) => { if (el && el.getClientRects().length && el.getBoundingClientRect().top <= line) i = j; });
     // At the very bottom the last section counts, even though its top never reaches the line
     if (i >= 0 && innerHeight + scrollY >= document.documentElement.scrollHeight - 4) i = sectionTargets.length - 1;
     // A clicked link stays highlighted until the visitor scrolls on their own
