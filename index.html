@@ -1299,13 +1299,15 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .stats-month .chev { width: 16px; height: 16px; flex: none; color: var(--ink-3); transition: transform .2s ease; }
 .stats-month[aria-expanded="true"] .chev { transform: rotate(180deg); }
 .stats-month-menu { min-width: 100%; width: max-content; max-height: 340px; overflow-y: auto; overscroll-behavior: contain; display: grid; gap: 2px; }
-.stats-range { display: flex; flex-wrap: wrap; gap: 4px; padding: 7px; border-bottom: 1px solid var(--line); }
-/* Each button has its words for today and for another day in the same place, the other ones hidden, so it's the size
-   of the longer either way (see statRangeHtml). Under them are the dates the one picked covers. */
-.stats-range .lb-tab { display: grid; text-align: center; }
-.stats-range .lb-tab > span { grid-area: 1 / 1; }
-.stats-range-size { visibility: hidden; }
-.stats-range-dates { flex-basis: 100%; margin: 0; padding: 3px 11px 2px; font: 500 12px/1.3 var(--mono); color: var(--ink-3); }
+/* The days menu (see statRangeShow), with the dates it covers beside it, or under it where they don't fit */
+.stats-range { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 12px 18px; border-bottom: 1px solid var(--line); }
+.stats-range-wrap { margin-inline-start: 0; }
+.stats-range-btn .icon:not(.chev) { width: 15px; height: 15px; flex: none; color: var(--volt); }
+/* Every option's words, hidden, under the one picked, so the button is as wide as the longest and doesn't change */
+.stats-range-name { display: grid; text-align: start; }
+.stats-range-name > span { grid-area: 1 / 1; }
+.stats-range-name > [aria-hidden] { visibility: hidden; }
+.stats-range-dates { margin: 0; font: 500 12px/1.3 var(--mono); color: var(--ink-3); }
 .stats-range-since { display: block; }
 .stats-part { padding: 6px 18px 4px; }
 .stats-part:last-child { padding-bottom: 18px; }
@@ -6632,6 +6634,20 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     return { part, wrap, btn: $("button", wrap), menu: makeMenu(wrap, $("button", wrap), $("ul", wrap), 1, (m) => pickMonth(m, wrap)) };
   });
   let statMonths = ""; // the language and months the menus have, so they're only filled again when they change
+  /* The days menu at the top: Today, Last 7 days, … with today picked, and Day, 7 days, … with another day (see
+     statRangeName). Like the month menus, it's made once and put back each time Stats is drawn (see renderStats). */
+  const statRangeWrap = document.createElement("div");
+  statRangeWrap.className = "stats-month-wrap stats-range-wrap";
+  statRangeWrap.innerHTML = `<span class="sr-only" id="stats-range-label"></span>` +
+    `<button class="stats-month stats-range-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="stats-range-menu" aria-labelledby="stats-range-label stats-range-current">` +
+      `${icon("calendar")}<span class="stats-range-name"><span id="stats-range-current"></span></span>${icon("chev", "icon chev")}</button>` +
+    `<ul class="menu stats-month-menu" id="stats-range-menu" role="listbox" tabindex="-1" aria-labelledby="stats-range-label" hidden></ul>`;
+  const statRangePicker = makeMenu(statRangeWrap, $("button", statRangeWrap), $("ul", statRangeWrap), 1, (k) => {
+    if (k === statRange) return;
+    statRange = k;
+    statsPicked();
+  });
+  let statRangeFilled = ""; // the language, and whether today's picked, its options are in
   let visits = null;
   fetch("/api/visits").then((r) => (r.ok ? r.json() : null)).then((d) => {
     visits = d && Array.isArray(d.days) && d.days.length ? d : null;
@@ -6817,12 +6833,22 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   function statLabel(range, days, pick, today) {
     return today ? t(STAT_RANGES[range].today) : statDates(range, days, pick);
   }
-  // A button's words: Today, Last 7 days, … for today, and Day, 7 days, … for another day, over the other ones,
-  // hidden. So it's the same size either way, and nothing moves when a pick goes from today to another day or back.
-  function statRangeHtml(range, today) {
-    const r = STAT_RANGES[range];
-    return [today ? r.today : r.past, today ? r.past : r.today]
-      .map((key, i) => `<span${i ? ' class="stats-range-size" aria-hidden="true"' : ""}>${esc(t(key))}</span>`).join("");
+  // A range's words in the days menu: Today, Last 7 days, … for today, and Day, 7 days, … for another day
+  const statRangeName = (range, today) => t(STAT_RANGES[range][today ? "today" : "past"]);
+  // The days menu's options, and its button's words (sized to the longest of both sets, so nothing moves when a pick
+  // goes from today to another day or back)
+  function statRangeShow(today) {
+    if (statRangeFilled !== lang + today) {
+      statRangeFilled = lang + today;
+      $("#stats-range-label", statRangeWrap).textContent = t("stats.title");
+      const name = $(".stats-range-name", statRangeWrap);
+      name.innerHTML = `<span id="stats-range-current"></span>` + Object.keys(STAT_RANGES)
+        .flatMap((k) => [statRangeName(k, true), statRangeName(k, false)]).map((w) => `<span aria-hidden="true">${esc(w)}</span>`).join("");
+      statRangePicker.fill(Object.keys(STAT_RANGES).map((k) => `<li class="opt" role="option" id="stats-range-opt-${k}" data-value="${k}" aria-selected="false">` +
+        `<span class="opt-label">${esc(statRangeName(k, today))}</span>${CHECK}</li>`).join(""));
+    }
+    statRangePicker.select(statRange);
+    $("#stats-range-current", statRangeWrap).textContent = statRangeName(statRange, today);
   }
   function renderStats() {
     const box = $("#stats-body");
@@ -6863,8 +6889,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         `<div class="stats-bars" role="group" aria-label="${esc(t(key))}">${bars}</div>${step("next", days[pick + 1], "stats.nextDay")}</div>` +
         `<div class="stats-axis"><span>${esc(days[from])}</span><span>${esc(end === last ? t("visits.today") : days[end])}</span></div>`;
     };
-    let html = `<div class="stats-range" role="group" aria-label="${esc(t("stats.title"))}">` +
-      Object.keys(STAT_RANGES).map((k) => `<button class="lb-tab" type="button" data-stat-range="${k}" aria-pressed="${statRange === k}">${statRangeHtml(k, today)}</button>`).join("") +
+    statRangeShow(today);
+    let html = `<div class="stats-range"><span data-stat-range-menu></span>` +
       `<p class="stats-range-dates">${esc(statDates(statRange, days, pick))}` +
       // Under the dates, when they reach back to the first day with runs: the day runs started getting recorded
       (rs && rs.first && span[0] <= rs.first ? `<span class="stats-range-since">${esc(t("stats.recordedSince", { date: rs.first }))}</span>` : "") +
@@ -6928,9 +6954,12 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
           `</ul>` : "") +
         `<p class="rev-note">${esc(t("visits.note"))}${span[0] < since ? ` ${esc(t("stats.since", { date: since }))}` : ""}</p></div>`;
     }
-    // The month menus go back beside their headings, keeping focus where it was on one
-    const focused = statMonthPickers.find((p) => p.wrap.contains(document.activeElement));
+    // The days menu goes back at the top and the month menus beside their headings, keeping focus where it was on one
+    const pickers = [{ wrap: statRangeWrap, btn: $("button", statRangeWrap) }, ...statMonthPickers];
+    const focused = pickers.find((p) => p.wrap.contains(document.activeElement));
     box.innerHTML = html;
+    const rangeSlot = $("[data-stat-range-menu]", box);
+    if (rangeSlot) rangeSlot.replaceWith(statRangeWrap);
     statMonthPickers.forEach((p) => { const slot = $(`[data-stat-month="${p.part}"]`, box); if (slot) slot.replaceWith(p.wrap); });
     if (focused && focused.wrap.isConnected) focused.btn.focus({ preventScroll: true });
     renderStatList();
@@ -7000,15 +7029,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     }
     const bar = e.target.closest("[data-stat-day]");
     const step = e.target.closest("[data-stat-step]");
-    const range = e.target.closest("[data-stat-range]");
     if (bar) pickStat(bar.dataset.statDay, bar.closest("[data-stat-chart]").dataset.statChart, "bar");
     else if (step && !step.disabled) pickStat(step.dataset.statStep, step.closest("[data-stat-chart]").dataset.statChart, step.classList.contains("prev") ? "prev" : "next");
-    else if (range && range.dataset.statRange !== statRange) {
-      statRange = range.dataset.statRange;
-      statsPicked();
-      const again = $(`#stats-body [data-stat-range="${statRange}"]`);
-      if (again) again.focus();
-    }
   });
   $("#stats-body").addEventListener("keydown", (e) => {
     const bar = e.target.closest(".stats-bar");
