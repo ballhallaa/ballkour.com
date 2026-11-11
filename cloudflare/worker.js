@@ -387,8 +387,9 @@ async function buildPlayers(env, ctx, previous) {
                          false when that exact run was already in, sent before or on a board from before the form,
                          and then run has that one's id, or none for one from before; pending is true when it's a top
                          10 run that waits for a check, see "Saving a run, and checking top 10 runs") or { error },
-                         the error saying what to fix: login (not signed in), course, name, time, miss, video, rate
-                         (too many), off (not set up, or GitHub didn't take it) or bad
+                         the error saying what to fix: login (not signed in), course, name, time, miss, video (not a
+                         link, or none for a top 10 run, the only kind that needs one), rate (too many), off (not set
+                         up, or GitHub didn't take it) or bad
    GET /api/pending and POST /api/review are for checking top 10 runs (see below), GET /api/run is a run's numbers
    from when it was sent (see "Each run's page"), GET /api/comments is the comments on a run's YouTube video (see
    "YouTube comments"), POST /api/claim and /api/claim/review are for claiming legacy runs (see "Claiming legacy
@@ -581,7 +582,8 @@ async function memberOf(env, id, maxAge) {
    none is ever used twice, even after a run is deleted by hand. (The first few runs, from before, have random ids.) A run that would put its player on a course's top 10 (their new best, faster than the #10's) isn't put
    on the board straight away: it waits in runs.json's "pending" until a reviewer checks its video, on its page or at
    ballkour.com/submit, then goes on the board (Approve, into "runs") or into "declined" (Turn down), either way with
-   who checked it and when ("checkedBy" and "checkedAt"). Every other run goes on the board straight away. Turned-down
+   who checked it and when ("checkedBy" and "checkedAt"). So a top 10 run needs a video, and one without is turned
+   down ({ error: "video" }). Every other run goes on the board straight away, with or without one. Turned-down
    runs are kept so their page can still say what happened, and reviewers can look back over every run. Reviewers are
    everyone on the server with a role in REVIEWER_ROLES (wrangler.toml). Discord is asked right before every Approve or
    Turn down, so taking someone's role away takes their reviewing away too (and the page catches up within a minute). The leaderboard bot and the website's boards only read "runs" and
@@ -1103,7 +1105,8 @@ function runPost(info) {
       fields: [
         { name: "Sent by", value: `<@${run.discord}>`, inline: true },
         { name: "Player name", value: mdSafe(run.name), inline: true },
-        { name: "Video", value: `[Watch](${run.video})`, inline: true },
+        // Only top 10 runs need a video, so the rest can come without one
+        { name: "Video", value: run.video ? `[Watch](${run.video})` : "None", inline: true },
         ...fields,
       ],
       // The embed's footer: small grey text under everything else
@@ -1282,12 +1285,14 @@ async function submit(request, env, ctx) {
   const name = String(body.name ?? "").trim();
   const time = cleanTime(String(body.time ?? ""));
   const mistakes = Number(body.mistakes);
-  const video = cleanVideo(String(body.video ?? ""));
+  // Only a top 10 run needs a video (see below), but one that's there has to be a link
+  const rawVideo = String(body.video ?? "").trim();
+  const video = rawVideo ? cleanVideo(rawVideo) : "";
   if (!Number.isInteger(n) || n < 1 || n > 99) return answer(400, { error: "course" });
   if (!NAME_OK.test(name)) return answer(400, { error: "name" });
   if (!time) return answer(400, { error: "time" });
   if (!Number.isInteger(mistakes) || mistakes < 0 || mistakes > 9999) return answer(400, { error: "miss" });
-  if (!video) return answer(400, { error: "video" });
+  if (rawVideo && !video) return answer(400, { error: "video" });
   // Played in Assist Mode: it goes on the course's assisted board (see ofMode)
   const assisted = body.assisted === true;
 
@@ -1310,7 +1315,7 @@ async function submit(request, env, ctx) {
   const mine = assisted ? [] : [...board, ...historyRuns(files, n)].filter((r) => r.discord === user.id);
 
   const sentAt = stamp();
-  const run = { name: caps(name), discord: user.id, time, mistakes, date: sentAt.slice(0, 10), video, id: "", sentAt, ...(assisted ? { mode: ASSISTED } : {}) };
+  const run = { name: caps(name), discord: user.id, time, mistakes, date: sentAt.slice(0, 10), ...(video ? { video } : {}), id: "", sentAt, ...(assisted ? { mode: ASSISTED } : {}) };
   let before = null; // runs.json just before the run went in, for what it did (runStats)
   const saved = await editRuns(env, (data) => {
     const list = listIn(data.runs, n), waiting = listIn(data.pending, n);
@@ -1323,6 +1328,9 @@ async function submit(request, env, ctx) {
     const today = ["runs", "pending", "declined"].flatMap((k) => Object.values(data[k]).flat()).filter((r) => r && r.discord === run.discord && r.date === run.date).length;
     if (today >= 20) return { error: "rate", status: 429 };
     const { rank, newBest } = placeOf(run, [...board, ...ofMode(list, run)], removed);
+    // A top 10 run waits for a moderator to check its video, so it can't be sent without one (the form says so first:
+    // videoRank() in index.html)
+    if (rank <= 10 && newBest && !run.video) return { error: "video", status: 400 };
     before = structuredClone(data);
     // Its id: the next number, worked out again if runs.json changed under it (see editRuns), so two runs sent at
     // once can't get the same one

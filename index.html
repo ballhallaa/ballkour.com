@@ -1149,6 +1149,9 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .field-wide { grid-column: 1 / -1; }
 .field-label { font: 600 11.5px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
 .field-hint { font: 400 12.5px/1.4 var(--body); color: var(--ink-3); }
+/* Whether the run needs a video (see renderVideoNeed): gold when it does, like a top 10 run waiting for a check */
+.sub-need.needed { color: var(--gold); }
+.sub-need + .field-hint { margin-top: -3px; }
 /* Every field but the Assist Mode checkbox (.sub-check), which keeps its own size */
 .sub-form input:not([type="checkbox"]), .sub-form .sub-pick {
   width: 100%;
@@ -1360,6 +1363,7 @@ a.rev-run:hover, button.rev-run:hover { border-color: var(--line-hi); background
 .run-facts .stat .icon { width: 16px; height: 16px; }
 .run-when { font: 400 12.5px/1.3 var(--mono); color: var(--ink-3); }
 .run-video { margin: 14px 18px 0; }
+.run-novideo { margin: 14px 18px 0; font: 400 13px/1.4 var(--mono); color: var(--ink-3); }
 .run-counts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 14px 18px 0; }
 .run-counts:empty { display: none; }
 .run-frame { position: relative; aspect-ratio: 16 / 9; border: 1px solid var(--line-hi); border-radius: 12px; overflow: hidden; background: #000; }
@@ -1777,8 +1781,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         <div class="submit-head">
           <span class="lr-icon"><svg class="icon" aria-hidden="true"><use href="#i-upload"/></svg></span>
           <span class="lr-text">
-            <span class="lr-title" data-i18n="lb.submit.title">Submit a video of your run</span>
-            <span class="lr-sub" id="sub-intro" data-i18n="lb.submit.web">Send it here and it goes straight on the board, with your video for everyone to watch.</span>
+            <span class="lr-title" data-i18n="lb.submit.title">Submit your run</span>
+            <span class="lr-sub" id="sub-intro" data-i18n="lb.submit.web">Send it here and it goes straight on the board. Only top 10 runs need a video, since a moderator checks those first.</span>
           </span>
         </div>
         <div class="sub-signin" id="sub-signin" hidden>
@@ -1820,7 +1824,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
           </div>
           <div class="field field-wide">
             <label class="field-label" for="sub-video" data-i18n="sub.video">Video link</label>
-            <input id="sub-video" type="url" inputmode="url" placeholder="https://youtu.be/…" maxlength="300" autocomplete="off" spellcheck="false" required aria-describedby="sub-video-hint">
+            <input id="sub-video" type="url" inputmode="url" placeholder="https://youtu.be/…" maxlength="300" autocomplete="off" spellcheck="false" aria-describedby="sub-video-need sub-video-hint">
+            <span class="field-hint sub-need" id="sub-video-need" data-i18n="sub.videoWhen">Only needed for a top 10 run, since a moderator checks those first</span>
             <span class="field-hint" id="sub-video-hint" data-i18n="sub.videoHint">YouTube, Medal, Twitch, or any link we can watch</span>
           </div>
           <div class="field field-wide">
@@ -1833,7 +1838,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
           <p class="sub-status field-wide" id="sub-status" role="status"></p>
         </form>
         <div class="submit-alt">
-          <span class="lr-sub" id="sub-alt" data-i18n="lb.submit.how">Open a ticket on our Discord and share your video. Not in our server yet? Join us first!</span>
+          <span class="lr-sub" id="sub-alt" data-i18n="lb.submit.how">Open a ticket on our Discord and share your run, with a video if it makes the top 10. Not in our server yet? Join us first!</span>
           <span class="submit-actions">
             <a class="btn btn-sm" href="https://discord.gg/Skz6cg9rbR" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-discord"/></svg><span data-i18n="hero.discord">Join our Discord</span><span class="count" data-members-wrap hidden><span class="dot"></span><span data-members></span></span></a>
             <a class="btn btn-sm" href="https://discord.com/channels/1212553452283101245/1498944426901508106" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-discord"/></svg><span data-i18n="lb.submit.ticket">Open a ticket</span></a>
@@ -2157,6 +2162,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "sub.assisted": "Played in Assist Mode",
   "sub.assistedHint": "It goes on the course’s assisted board, with ratings of its own",
   "sub.assistedNone": "This course doesn’t have Assist Mode",
+  "sub.videoNeeded": "Needed: this run would put you #{rank}, and a moderator checks top 10 runs first",
+  "sub.videoOptional": "Optional: this run won’t go in the top 10",
   "sub.as": "Signed in as {name}",
   "sub.sending": "Sending your run…",
   "res.title": "Your run is up!",
@@ -2404,6 +2411,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "run.play": "Play the video",
   "run.open": "Open on {site}",
   "run.watch": "Watch the video",
+  "run.noVideo": "No video. Only top 10 runs need one.",
   "vid.comments": "YouTube comments",
   "vid.loading": "Loading the comments…",
   "vid.none": "No comments yet.",
@@ -2444,6 +2452,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "sub.err.time": "Enter your time as it shows on the finish screen, like 4:05.81.",
   "sub.err.miss": "Enter how many mistakes you made.",
   "sub.err.video": "Paste a link to your video, like https://youtu.be/…",
+  "sub.err.videoTop10": "This run would put you in the top 10, so it needs a video for a moderator to check. Paste a link to it, like https://youtu.be/…",
   "sub.err.login": "You’ve been signed out. Sign in with Discord again, then send your run.",
   "sub.err.rate": "You’ve sent a few runs in a row. Please wait a minute, then try again.",
   "sub.err.off": "Runs can’t be sent from the website right now. Please open a ticket on our Discord instead.",
@@ -2456,7 +2465,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "faq.valid.q": "What counts as a valid run?",
   "faq.valid.a": "Your run is only <fgFF4646FF>disqualified</fg> if you skip a checkpoint you haven't cleared yet this run. Going back or restarting checkpoints, skipping ahead to cleared checkpoints, and <fg00BEFFFF>spectating</fg> are fine. Leaving an uncleared checkpoint in <fgCB87FFFF>Freemode</fg> counts as skipping it. <fgFF4646FF>Disqualified</fg> runs don't count toward the top-10 leaderboard, <b>Lobby Top 3</b>, or <b>Lobby Stats</b>.",
   "faq.leaderboard.q": "How do I get on the leaderboard?",
-  "faq.leaderboard.a": "Finish a valid run and submit a video of it at ballkour.com. <b>All-Time Top 3</b> shows the leaderboard's 3 fastest runs. <b>Lobby Top 3</b> only lists the fastest valid runs finished in this lobby.",
+  "faq.leaderboard.a": "Finish a valid run and submit it at ballkour.com. Only top 10 runs need a video, since a moderator checks those first. <b>All-Time Top 3</b> shows the leaderboard's 3 fastest runs. <b>Lobby Top 3</b> only lists the fastest valid runs finished in this lobby.",
   "faq.timer.q": "When does my run's timer start?",
   "faq.timer.a": "When you leave the first checkpoint, not when you spawn.",
   "faq.mistake.q": "What counts as a mistake?",
@@ -5848,7 +5857,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      Players sign in with Discord, then the form under Submit a run posts to /api/submit on the Cloudflare Worker
      (cloudflare/worker.js). The run goes on the board straight away, saved under their Discord ID in runs.json, so
      nobody can send one as someone else. The Worker marks #submit with data-login="on" once it's set up. Until then,
-     a Discord ticket shows instead, and once it's on, the ticket goes away. */
+     a Discord ticket shows instead, and once it's on, the ticket goes away. Only a top 10 run needs a video (see
+     videoRank), and the video field says whether this one does as it's typed in. */
   const submitBox = $("#submit");
   const subForm = $("#sub-form");
   const subField = (id) => $("#sub-" + id);
@@ -5875,6 +5885,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const hint = $("#sub-assisted-hint");
     hint.dataset.i18n = off ? "sub.assistedNone" : "sub.assistedHint";
     hint.textContent = t(hint.dataset.i18n);
+    renderVideoNeed();
   }
   const loginOn = submitBox.dataset.login === "on";
   // Stats on Discord profiles are set up too (see "Stats on Discord profiles" in cloudflare/worker.js)
@@ -5914,6 +5925,35 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       const u = new URL(v);
       return u.protocol === "https:" && /\.[a-z]{2,}$/i.test(u.hostname) && v.length <= 300 && !/[\s"'<>`]/.test(v) ? u.href : "";
     } catch (e) { return ""; }
+  }
+  /* Only a top 10 run needs a video. One that would put its player in a course's top 10 (their new best, with fewer
+     than 10 other players faster) waits for a moderator to check its video before it goes up, and every other run
+     goes up straight away, with or without one. The Worker works it out the same way as the run's sent (placeOf() in
+     cloudflare/worker.js), and turns down a top 10 run without a video, so keep the two in step.
+     → the place the run in the form would take (1 to 10) when it needs a video, 0 when it doesn't, or null until
+     there's a course, a time, and mistakes to tell by. */
+  function videoRank() {
+    const c = me && subCourse ? course(Number(subCourse)) : null;
+    const time = cleanTime(subField("time").value), miss = subField("miss").value.trim();
+    if (!c || !time || !/^\d{1,4}$/.test(miss)) return null;
+    const assisted = subField("assisted").checked && !subField("assisted").disabled;
+    const run = { discord: me.id, time, miss: Number(miss) };
+    const { top, rest } = standingsOf(assisted ? assistedOf(c) : c);
+    const board = top.concat(rest), key = playerKey(run);
+    const mine = board.find((r) => playerKey(r) === key);
+    if (mine && byTime(run, mine) >= 0) return 0; // not their new best, so it doesn't change the board
+    const rank = 1 + board.filter((r) => playerKey(r) !== key && byTime(r, run) < 0).length;
+    return rank <= 10 ? rank : 0;
+  }
+  // The video field's line saying whether this run needs one (see videoRank): in gold when it does
+  function renderVideoNeed() {
+    const rank = videoRank();
+    const need = $("#sub-video-need");
+    const key = rank === null ? "sub.videoWhen" : rank ? "sub.videoNeeded" : "sub.videoOptional";
+    need.dataset.i18n = key;
+    need.textContent = t(key, { rank });
+    need.classList.toggle("needed", !!rank);
+    subField("video").required = !!rank;
   }
   // Signed out: the sign-in button. Signed in: who they are, and the form.
   function renderSubmit() {
@@ -7372,6 +7412,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   subForm.addEventListener("focusin", pickOpenCourse);
   subField("course").addEventListener("pointerdown", pickOpenCourse);
   subForm.addEventListener("input", (e) => e.target.removeAttribute("aria-invalid"));
+  // Whether it needs a video follows the time, the mistakes, and Assist Mode (the course: see setSubCourse). The time
+  // field's own listener, below, tidies it first.
+  subForm.addEventListener("input", renderVideoNeed);
   // The name goes into capitals as it's typed or pasted (special-font letters stay as they are, see caps()), and any
   // spaces come out, but not while an input method is still putting a word together, which would break it. caps()
   // keeps every letter the same length, so the cursor only moves back by the spaces taken out before it.
@@ -7650,6 +7693,14 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const r = subField("send").getBoundingClientRect();
     for (let i = 0; i < big; i++) setTimeout(() => launchBall(r.left + r.width / 2, r.top), i * 120);
   }
+  // What's wrong, for the field it names. A missing video is one a top 10 run needs (see videoRank); otherwise the
+  // video that's there isn't a link.
+  const errKey = (field) => (field === "video" && !subField("video").value.trim() ? "sub.err.videoTop10" : `sub.err.${field}`);
+  // Once a run's sent, its time, mistakes, and video go, ready for the next one (the course and name stay)
+  function clearRun() {
+    ["time", "miss", "video"].forEach((id) => { subField(id).value = ""; });
+    renderVideoNeed();
+  }
   let sending = false;
   subForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -7667,8 +7718,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       : !NAME_OK.test(run.name) ? "name"
       : !run.time ? "time"
       : !/^\d{1,4}$/.test(run.mistakes) ? "miss"
-      : !run.video ? "video" : "";
-    if (bad) return showStatus("err", esc(t(`sub.err.${bad}`)), bad);
+      // Only a top 10 run needs a video, but one that's there has to be a link
+      : (subField("video").value.trim() ? !run.video : videoRank()) ? "video" : "";
+    if (bad) return showStatus("err", esc(t(errKey(bad))), bad);
 
     const before = standing(run.course, me.id, assisted);
     sending = true;
@@ -7685,7 +7737,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       if (res.ok && out.ok && out.pending) {
         // A top 10 run waits for a check before it goes on the board. It shows what it'll do once it's on, or if
         // that can't be worked out, just that it's waiting.
-        ["time", "miss", "video"].forEach((id) => { subField(id).value = ""; });
+        clearRun();
         try { localStorage.setItem("ballkour-submit", JSON.stringify({ name: run.name })); } catch (err) { /* private mode */ }
         const sent = out.run || { ...run, mistakes: Number(run.mistakes), date: new Date().toISOString().slice(0, 10) };
         const after = standingWith(run.course, sent, me.id, assisted);
@@ -7699,7 +7751,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         }
         loadReview();
       } else if (res.ok && out.ok) {
-        ["time", "miss", "video"].forEach((id) => { subField(id).value = ""; });
+        clearRun();
         try { localStorage.setItem("ballkour-submit", JSON.stringify({ name: run.name })); } catch (err) { /* private mode */ }
         await reloadRuns();
         const after = standing(run.course, me.id, assisted);
@@ -7712,7 +7764,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       } else {
         const err = typeof out.error === "string" ? out.error : "";
         if (err === "login") signedIn(null);
-        showStatus("err", esc(t(FIELDS.includes(err) || ["login", "rate"].includes(err) ? `sub.err.${err}` : "sub.err.off")), FIELDS.includes(err) ? err : null);
+        showStatus("err", esc(t(FIELDS.includes(err) || ["login", "rate"].includes(err) ? errKey(err) : "sub.err.off")), FIELDS.includes(err) ? err : null);
       }
     } catch (err) {
       showStatus("err", esc(t("sub.err.net")));
@@ -7734,7 +7786,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      Verify buttons from before) open it too. The runs from before the website's form have a page too, with just Today
      (see pastRuns).
      The video plays on the page for YouTube, Twitch, Streamable, and Medal links, but nothing loads from those sites until
-     Play is pressed (the site never sends visitors to anyone else on its own). Other links get a button to the video. */
+     Play is pressed (the site never sends visitors to anyone else on its own). Other links get a button to the video,
+     and a run sent without one (only top 10 runs need one) says so. */
   const RUN_GROUPS = ["pending", "runs", "declined", "removed"];
   // The page of a run whose link someone opened (/runs/<id>, or an old /submit?check=<id>)
   const startRun = (/^\/runs\/([\w-]{1,16})\/?$/i.exec(location.pathname) || [])[1] || (/^[\w-]{1,16}$/.test(checkParam) ? checkParam : "");
@@ -7909,8 +7962,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (medal) return { site: "Medal", src: `https://medal.tv/games/${medal[1]}/clip/${medal[2]}` };
     return null;
   }
+  // A run's video on its page, or a line saying it has none (only top 10 runs need one: see videoRank)
   function videoHtml(url) {
-    if (!url) return "";
+    if (!url) return `<p class="run-novideo">${esc(t("run.noVideo"))}</p>`;
     const e = embedOf(url);
     if (!e) return `<div class="run-video"><a class="btn btn-sm" href="${esc(url)}" target="_blank" rel="noopener">${icon("play")}<span>${esc(t("run.watch"))}</span>${icon("out")}</a></div>`;
     return `<div class="run-video"><div class="run-frame" data-src="${esc(e.src)}">` +
