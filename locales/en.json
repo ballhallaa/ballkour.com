@@ -199,6 +199,8 @@
   "rt.empty": "No ratings yet. Set a time on any course to get rated.",
   "rt.tier": "Top {pct}%",
   "rt.courses": "{n} of {total} courses run",
+  "rt.sortedCourses": "Sorted by courses run, most first",
+  "rt.sortedCoursesFew": "Sorted by courses run, fewest first",
   "rt.how": "Every course is worth up to 1,000 points: the record gets all of them, and the further behind it a run is, the fewer it gets. Your rating is your average over every course that works, with 0 for any you haven’t run, so every new or faster run raises it. Be the first on a course and it’s all yours.",
   "rt.tiers": "Top % is where you place among all {count} rated players. On our Discord, it’s your role: everyone below Top 90% (Unassisted) is Rated (Unassisted), and anyone without a rating yet is Unrated (Unassisted).",
   "rt.counted": "Courses that count: {courses}. Broken courses don’t.",

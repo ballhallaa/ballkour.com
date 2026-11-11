@@ -200,6 +200,8 @@
   "rt.empty": "Nie ma jeszcze rankingów. Ustanów czas na dowolnej trasie, aby dostać ranking.",
   "rt.tier": "Top {pct}%",
   "rt.courses": "Przebyte trasy: {n} z {total}",
+  "rt.sortedCourses": "Posortowane według przebytych tras, od największej liczby",
+  "rt.sortedCoursesFew": "Posortowane według przebytych tras, od najmniejszej liczby",
   "rt.how": "Każda trasa jest warta do 1000 punktów: rekord dostaje wszystkie, a im dalej za nim jest przejście, tym mniej dostaje. Twój ranking to średnia ze wszystkich działających tras, z 0 za każdą, której jeszcze nie przeszedłeś, więc każde nowe lub szybsze przejście go podnosi. Bądź pierwszy na trasie, a wszystkie punkty są twoje.",
   "rt.tiers": "Top % pokazuje twoje miejsce wśród wszystkich graczy z rankingiem ({count}). Na naszym Discordzie to twoja rola: wszyscy poniżej Top 90% (Unassisted) mają rolę Rated (Unassisted), a ci, którzy jeszcze nie mają rankingu, mają Unrated (Unassisted).",
   "rt.counted": "Liczące się trasy: {courses}. Zepsute trasy się nie liczą.",

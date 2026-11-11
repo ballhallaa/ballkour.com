@@ -200,6 +200,8 @@
   "rt.empty": "Pas encore de score. Réalisez un temps sur n’importe quel parcours pour être classé.",
   "rt.tier": "Top {pct}%",
   "rt.courses": "Parcours joués : {n} sur {total}",
+  "rt.sortedCourses": "Trié par parcours joués, les plus nombreux d’abord",
+  "rt.sortedCoursesFew": "Trié par parcours joués, les moins nombreux d’abord",
   "rt.how": "Chaque parcours vaut jusqu’à 1 000 points : le record les obtient tous, et plus une partie en est loin, moins elle en reçoit. Votre score est votre moyenne sur tous les parcours qui fonctionnent, avec 0 pour ceux que vous n’avez pas joués, donc chaque partie nouvelle ou plus rapide le fait monter. Soyez le premier sur un parcours et tous les points sont à vous.",
   "rt.tiers": "Le top % indique votre place parmi les {count} joueurs classés. Sur notre Discord, c’est votre rôle : tous ceux en dessous du Top 90% (Unassisted) ont le rôle Rated (Unassisted), et ceux qui n’ont pas encore de score ont Unrated (Unassisted).",
   "rt.counted": "Parcours pris en compte : {courses}. Les parcours cassés ne comptent pas.",

@@ -200,6 +200,8 @@
   "rt.empty": "Ancora nessun punteggio. Fai un tempo su un percorso qualsiasi per ottenerne uno.",
   "rt.tier": "Top {pct}%",
   "rt.courses": "Percorsi completati: {n} su {total}",
+  "rt.sortedCourses": "Ordinato per percorsi completati, dal maggiore",
+  "rt.sortedCoursesFew": "Ordinato per percorsi completati, dal minore",
   "rt.how": "Ogni percorso vale fino a 1.000 punti: il record li prende tutti, e più una run è lontana dal record, meno ne riceve. Il tuo punteggio è la tua media su tutti i percorsi che funzionano, con 0 per quelli che non hai ancora fatto, quindi ogni run nuova o più veloce lo fa salire. Sii il primo su un percorso e tutti i punti sono tuoi.",
   "rt.tiers": "Il top % indica la tua posizione tra tutti i {count} giocatori con punteggio. Sul nostro Discord è il tuo ruolo: chi è sotto il Top 90% (Unassisted) ha il ruolo Rated (Unassisted), e chi non ha ancora un punteggio ha Unrated (Unassisted).",
   "rt.counted": "Percorsi che contano: {courses}. Quelli rotti non contano.",

@@ -200,6 +200,8 @@
   "rt.empty": "尚無積分。在任一關卡創造成績即可獲得積分。",
   "rt.tier": "Top {pct}%",
   "rt.courses": "已跑關卡：{n}/{total}",
+  "rt.sortedCourses": "依已跑關卡排序，最多的在前",
+  "rt.sortedCoursesFew": "依已跑關卡排序，最少的在前",
   "rt.how": "每個關卡最多值 1,000 分：紀錄拿到全部分數，成績離紀錄越遠，得分越少。你的積分是所有可用關卡的平均分，沒跑過的關卡記 0 分，所以每次新成績或更快的成績都會提高積分。成為某個關卡的第一人，所有分數都歸你。",
   "rt.tiers": "前 % 表示你在所有 {count} 名有積分的玩家中的位置。在我們的 Discord 上，這就是你的身分組：低於 Top 90% (Unassisted) 的所有人為「Rated (Unassisted)」，還沒有積分的人為「Unrated (Unassisted)」。",
   "rt.counted": "計入的關卡：{courses}。失效的關卡不計入。",
