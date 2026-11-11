@@ -888,6 +888,10 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 /* The form's Played in Assist Mode */
 .sub-check { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font: 600 14px/1.25 var(--body); color: var(--ink); cursor: pointer; }
 .sub-check input { flex: none; width: 16px; height: 16px; margin: 0; accent-color: var(--assist); cursor: pointer; }
+/* Grayed out for a course without Assist Mode (see setSubCourse) */
+.sub-check.off { color: var(--ink-3); cursor: not-allowed; }
+.sub-check.off input { cursor: not-allowed; }
+.sub-check.off .tag { opacity: .45; }
 .pl-runs { padding: 0 18px 14px 50px; }
 .pl-run-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 .pl-runs-count { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; margin: 0 0 6px; padding: 0 10px; font: 600 10.5px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
@@ -2063,8 +2067,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "lb.tab.assisted": "Assisted",
   "lb.assisted.title": "Runs played in Assist Mode",
   "lb.legacy.ratingNote": "Ratings: each player’s Legacy rating over every legacy board",
-  "lb.assisted.ratingNote": "Ratings: each player’s assisted rating over every course",
-  "lb.assisted.ratingThen": "Ratings: each player’s assisted rating over every course, as it was on {date}",
+  "lb.assisted.ratingNote": "Ratings: each player’s assisted rating over the courses with Assist Mode",
+  "lb.assisted.ratingThen": "Ratings: each player’s assisted rating over the courses with Assist Mode, as it was on {date}",
   "lb.tab.legacy": "Legacy",
   "lb.tab.global": "Global",
   "lb.legacy.title": "Leaderboard before 2026-04-29",
@@ -2122,6 +2126,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "rt.title": "Player ratings",
   "rt.assisted.title": "Ratings from runs played in Assist Mode",
   "rt.assisted.empty": "No assisted ratings yet. Send a run you played in Assist Mode to get one.",
+  "rt.assisted.how": "Only the courses with Assist Mode count, and each is worth up to 1,000 points: the record gets all of them, and the further behind it a run is, the fewer it gets. Your assisted rating is your average over the ones that work, with 0 for any you haven’t run, so every new or faster run raises it. Be the first on a course and it’s all yours.",
   "rt.assisted.tiers": "Top % is where you place among all {count} rated players. On our Discord, it’s your role: everyone below Top 90% (Assisted) is Rated (Assisted), and anyone without a rating yet is Unrated (Assisted).",
   "rt.legacy.title": "Ratings from the leaderboards before 2026-04-29",
   "rt.legacy.empty": "No legacy ratings yet.",
@@ -2147,6 +2152,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "sub.pick": "Pick a course",
   "sub.assisted": "Played in Assist Mode",
   "sub.assistedHint": "It goes on the course’s assisted board, with ratings of its own",
+  "sub.assistedNone": "This course doesn’t have Assist Mode",
   "sub.as": "Signed in as {name}",
   "sub.sending": "Sending your run…",
   "res.title": "Your run is up!",
@@ -2563,18 +2569,24 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   const boardHash = (c) => String(c.n);
   const courseOfHash = (hash) => { const m = /^#?(\d+)(?:-|$)/.exec(hash); return m ? course(Number(m[1])) || null : null; };
   const remakes = COURSES.filter((c) => c.remaker);
+  // Only the remakes have Assist Mode: it's part of their Workshop script (the game repo's src/engine)
+  const hasAssistMode = (c) => !!c.remaker;
   const classics = COURSES.filter((c) => !c.remaker);
   /* ---------- Assisted boards ----------
      Runs played in the game's Assist Mode ("mode": "assisted" in runs.json) go on assisted boards of their own: a tab
-     on each course's board (/leaderboards/6/assisted), with their own places and records, and their own rating, the
-     Player ratings' Assisted tab. The leaderboard bot posts them to their own channel on Discord, and gives out the
+     on the board of each course with Assist Mode (the remakes, see hasAssistMode: /leaderboards/1/assisted), with their
+     own places and records, and their own rating, the Player ratings' Assisted tab, over those courses alone (so it's
+     worth up to 1,000 like the others). The leaderboard bot posts them to their own channel on Discord, and gives out the
      same roles with "(Assisted)" after them. A course's assisted board is its assisted twin's, made with
      Object.create(c), so it has the course's number, name, flag, and whether it's broken, but runs of its own: none
      from the course's file (those are all regular runs), the assisted runs in runs.json (AMORE and AREMOVED), and the
      assisted boards posted (history.json's "assisted"). Everything that builds a board or the ratings takes either. */
   const TWINS = new Map();
   const assistedOf = (c) => (c.assisted ? c : TWINS.get(c.n) || TWINS.set(c.n, Object.create(c, { assisted: { value: true }, runs: { value: [] } })).get(c.n));
-  const ACOURSES = COURSES.map(assistedOf);
+  const ACOURSES = COURSES.filter(hasAssistMode).map(assistedOf);
+  // The tab a board can open on: no Assisted tab for a course without Assist Mode (an old /assisted link, say), which
+  // shows its Top 10 instead. The Player ratings' Assisted tab is always there.
+  const tabFor = (c, tab) => (tab === "assisted" && c !== RATINGS && !hasAssistMode(c) ? "top" : tab);
   const isAssistedRun = (r) => !!r && r.mode === "assisted";
   /* A course's legacy board (before 2026-04-29, see "Leaderboard history") is its legacy twin's, for the Legacy rating
      (the Player ratings' Legacy tab, and the ratings on the legacy boards): made like the assisted twin, its runs are
@@ -2830,7 +2842,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const v = viewOf(c);
     // A course without a legacy board shows its Top 10, but keeps the tab a /legacy link asked for until the
     // history arrives
-    const ids = ["top", "assisted", ...(h && h.legacy.length ? ["legacy"] : [])];
+    const ids = ["top", ...(hasAssistMode(c) ? ["assisted"] : []), ...(h && h.legacy.length ? ["legacy"] : [])];
     const on = ids.includes(v.tab) ? v.tab : "top";
     const panel = on === "legacy" ? legacyHtml(c, h.legacy) : on === "assisted" ? assistedHtml(c, v) : topHtml(c, v);
     return tabsHtml(c, ids, on, t("lb.toggle", { course: `${c.n} ${c.name}` }), panel);
@@ -3230,8 +3242,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // n: a course's number, or the Player ratings' (RATINGS.n)
   function showTab(n, tab) {
     const c = rowOf(n);
-    if (!c || viewOf(c).tab === tab) return;
-    viewOf(c).tab = tab;
+    if (!c || viewOf(c).tab === tabFor(c, tab)) return;
+    viewOf(c).tab = tabFor(c, tab);
     viewOf(c).at = -1; // each tab's own newest board
     refreshBoard(c, `.lb-tab[data-tab="${tab}"]`);
     if (openCourse === c.n) showLink("leaderboards", subPath("leaderboards")); // /leaderboards/3 (or /3/12), /leaderboards/3/assisted, or /leaderboards/3/legacy
@@ -3794,7 +3806,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const rest = r.players.slice(10);
     const courses = r.counted.map((c) => `<span class="nowrap">${c.n} ${flagName(c)}</span>`).join(esc(" · "));
     return meta + `<div class="lb-bar">${searchHtml(RATINGS)}</div>` + rowsHtml(RATINGS, top, rest, (p) => ratingRow(p, r)) +
-      `<p class="lb-foot"><span>${esc(t(r.legacy ? "rt.legacy.how" : r.global ? "rt.global.how" : "rt.how"))}</span><span>${esc(t(r.legacy ? "rt.legacy.tiers" : r.assisted ? "rt.assisted.tiers" : r.global ? "rt.global.tiers" : "rt.tiers", { count: r.players.length.toLocaleString(htmlLang()) }))}</span>` +
+      `<p class="lb-foot"><span>${esc(t(r.legacy ? "rt.legacy.how" : r.assisted ? "rt.assisted.how" : r.global ? "rt.global.how" : "rt.how"))}</span><span>${esc(t(r.legacy ? "rt.legacy.tiers" : r.assisted ? "rt.assisted.tiers" : r.global ? "rt.global.tiers" : "rt.tiers", { count: r.players.length.toLocaleString(htmlLang()) }))}</span>` +
       `<span>${esc(t(r.legacy ? "rt.legacy.counted" : "rt.counted", { courses: "\u0000" })).replace("\u0000", courses)}</span></p>` + mathHtml(r);
   }
   // The formulas under the board, with two runs on a 4:00.00 record as an example
@@ -4600,7 +4612,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (pl.open) pl.close();
     const before = openCourse;
     openCourse = c.n;
-    viewOf(c).tab = (spot && spot.tab) || tab;
+    viewOf(c).tab = tabFor(c, (spot && spot.tab) || tab);
     if (c === RATINGS) {
       const tab = viewOf(c).tab;
       boardMark = spot ? { n: c.n, key: spot.key, tab } : null;
@@ -5839,6 +5851,16 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     cur.classList.toggle("empty", !c);
     cur.innerHTML = c ? `<span class="opt-num">${c.n}</span><span class="opt-flag" aria-hidden="true">${c.flag}</span><span class="opt-label">${esc(c.name)}</span>` : esc(t("sub.pick"));
     if (c) subField("course").removeAttribute("aria-invalid");
+    // Assist Mode is part of the remakes' Workshop script (the game repo's src/engine), so only they have it. For any
+    // other course the checkbox is unticked and grayed out, and its hint says why. Before a course is picked, it's on.
+    const off = !!c && !hasAssistMode(c);
+    const box = subField("assisted");
+    if (off) box.checked = false;
+    box.disabled = off;
+    box.closest(".sub-check").classList.toggle("off", off);
+    const hint = $("#sub-assisted-hint");
+    hint.dataset.i18n = off ? "sub.assistedNone" : "sub.assistedHint";
+    hint.textContent = t(hint.dataset.i18n);
   }
   const loginOn = submitBox.dataset.login === "on";
   // Stats on Discord profiles are set up too (see "Stats on Discord profiles" in cloudflare/worker.js)
@@ -7626,7 +7648,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       video: cleanVideo(subField("video").value),
     };
     // Played in Assist Mode: it goes on the course's assisted board (see "Assisted boards")
-    const assisted = subField("assisted").checked;
+    const assisted = subField("assisted").checked && !subField("assisted").disabled;
     const bad = !COURSES.some((c) => c.n === run.course && !c.broken) ? "course"
       : !NAME_OK.test(run.name) ? "name"
       : !run.time ? "time"
@@ -8260,7 +8282,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   const startSub = subOf(location.pathname, location.hash);
   const startBoard = startRoute === "leaderboards" && startSub ? (startSub === RATINGS.n ? RATINGS : courseOfHash(startSub)) : null;
   if (startBoard && /^\/leaderboards\/[\w-]+\/legacy\/?$/i.test(location.pathname)) viewOf(startBoard).tab = "legacy";
-  if (startBoard && /^\/leaderboards\/[\w-]+\/assisted\/?$/i.test(location.pathname)) viewOf(startBoard).tab = "assisted";
+  if (startBoard && /^\/leaderboards\/[\w-]+\/assisted\/?$/i.test(location.pathname)) viewOf(startBoard).tab = tabFor(startBoard, "assisted");
   // The Global rating is only the Player ratings' tab
   if (startBoard === RATINGS && /^\/leaderboards\/[\w-]+\/global\/?$/i.test(location.pathname)) viewOf(startBoard).tab = "global";
   const startFaq = startRoute === "faq" && startSub ? faqOfLink(startSub) : null;

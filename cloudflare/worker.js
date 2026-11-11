@@ -1301,6 +1301,9 @@ async function submit(request, env, ctx) {
   // works. The form doesn't offer them, the same way.
   const info = courses.find((c) => c.n === n);
   if (info && info.broken && !info.remake) return answer(400, { error: "course" });
+  // Only the remakes have Assist Mode (it's part of their Workshop script), so an assisted run on any other course can't
+  // be real. The form grays the checkbox out for them.
+  if (assisted && !(info && info.remake)) return answer(400, { error: "assisted" });
   // An assisted run's board has none of the course file's runs (see ofMode)
   const board = assisted ? [] : fileRuns(file, file && files[file]);
   // Their runs from before the website's form are on the board, or on its old boards (none of them assisted)
@@ -2318,6 +2321,16 @@ const PREVIEWED = /^\/(?:runs|leaderboards|players|profile)\/./i;
 // My profile and a player's panel at their links since November 2026: /profile, and /profile/<number or name> (with
 // /runs for their Runs). DEEP_LINK (below) has the older /my-stats and /players/<…>, which keep working.
 const PROFILE_LINK = /^\/profile(?:\/[^/]{1,300}(?:\/runs)?)?\/?$/i;
+// /leaderboards/<n>/assisted for a course without Assist Mode (gameText: the game data, as JSON): only the remakes have
+// it, and the page has no Assisted tab for the others (see hasAssistMode in index.html)
+function noAssistedBoard(path, gameText) {
+  const m = /^\/leaderboards\/(\d+)(?:-[\w-]*)?\/assisted\/?$/i.exec(path);
+  if (!m) return false;
+  try {
+    const c = (JSON.parse(gameText).courses || []).find((x) => x.n === Number(m[1]));
+    return !!c && !c.remake;
+  } catch (e) { return false; }
+}
 const isPage = (path) => DEEP_LINK.test(path) || PROFILE_LINK.test(path);
 function previewOf(pathname, data, players) {
   if (!PREVIEWED.test(pathname) || !data || !data.files || !Array.isArray(data.courses)) return null;
@@ -2382,6 +2395,7 @@ function previewOf(pathname, data, players) {
     const c = data.courses.find((x) => x.n === n);
     if (!c) return null;
     if (assisted) {
+      if (!c.remake) return null; // no Assist Mode, so no assisted board: the link is a 404
       const board = boardOf(n, true);
       return { title: `${name(n)} · Assisted Top 10`, description: board.length ? `Played in Assist Mode: ${top3(board)}` : "No assisted times yet" };
     }
@@ -2455,6 +2469,7 @@ async function page(request, env, ctx) {
   headers.delete("If-Modified-Since");
   // /leaderboards/6 and /faq/pausing are the home page
   const url = new URL(request.url);
+  const asked = url.pathname;
   if (isPage(url.pathname)) url.pathname = "/";
   // Cloudflare's free plan allows 50 fetches per request. Refreshing the game data takes about 20 and the player names
   // one or two per player, so a page load only refreshes the names when the game data is fresh. Past the limit, the
@@ -2472,6 +2487,12 @@ async function page(request, env, ctx) {
   ]);
   const html = (res.headers.get("Content-Type") || "").includes("text/html");
   if (res.status === 404 && html) return notFound(res, lang);
+  // Only the remakes have Assist Mode (the game data's remake), so any other course's /assisted link is the page that
+  // isn't there, like a board that doesn't exist. Without the game data there's no telling, and the page shows its
+  // Top 10 instead.
+  if (gameData && noAssistedBoard(asked, gameData)) {
+    return notFound(await file(new Request(new URL(asked, url), { method: "GET", headers, redirect: "manual" }), env), lang);
+  }
   if (!res.ok || !html) return res;
   const on = loginOn(env);
   if (!widget && !gameData && !players && !lang && !on) return res;

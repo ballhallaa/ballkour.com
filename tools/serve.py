@@ -23,6 +23,12 @@ PAGES = re.compile(r"^/(?:(courses|leaderboards|submit|features|faq|source-code|
                    r"|stats(/\d{4}-\d{2}-\d{2})?(/day|/week|/3-months|/6-months|/12-months)?)/?$", re.I)
 
 
+# Only the remakes (remaker: in the page's course list) have Assist Mode, so another course's /assisted link is a 404,
+# like on ballkour.com (noAssistedBoard in cloudflare/worker.js)
+REMAKES = {int(n) for n in re.findall(r"\{ n: (\d+),[^\n]*\bremaker:", (ROOT / "index.html").read_text(encoding="utf-8"))}
+NO_ASSIST = re.compile(r"^/leaderboards/(\d+)(?:-[\w-]*)?/assisted/?$", re.I)
+
+
 # My profile and a player's panel at their links since November 2026 (/my-stats and /players/<…> before, in PAGES)
 PROFILE = re.compile(r"^/profile(/[^/]+(/runs)?)?/?$", re.I)
 
@@ -47,6 +53,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:  # offline: the page falls back to the runs written into it
                 self.send_error(503, f"ballkour.com can't be reached: {e}")
             return
+        m = NO_ASSIST.match(path)
+        if m and int(m.group(1)) not in REMAKES:
+            return self.send_error(404)
         if PAGES.match(path) or PROFILE.match(path):
             self.path = "/index.html"
         super().do_GET()
