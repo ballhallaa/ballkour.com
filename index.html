@@ -2156,6 +2156,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "rt.empty": "No ratings yet. Set a time on any course to get rated.",
   "rt.tier": "Top {pct}%",
   "rt.courses": "{n} of {total} courses run",
+  "rt.sortedCourses": "Sorted by courses run, most first",
+  "rt.sortedCoursesFew": "Sorted by courses run, fewest first",
   "rt.how": "Every course is worth up to 1,000 points: the record gets all of them, and the further behind it a run is, the fewer it gets. Your rating is your average over every course that works, with 0 for any you haven’t run, so every new or faster run raises it. Be the first on a course and it’s all yours.",
   "rt.tiers": "Top % is where you place among all {count} rated players. On our Discord, it’s your role: everyone below Top 90% (Unassisted) is Rated (Unassisted), and anyone without a rating yet is Unrated (Unassisted).",
   "rt.counted": "Courses that count: {courses}. Broken courses don’t.",
@@ -3074,7 +3076,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   const BOARD_SORTED = { ...SORTED, rating: ["lb.sortedRating", "lb.sortedRatingLow"] };
   // The arrow on the pressed sort button: up when the smallest comes first (fastest, fewest mistakes, oldest, lowest
   // rating), down when the biggest does. Pressing it again turns the sort, and the arrow, around.
-  const sortArrow = (k, rev) => `<span class="sort-dir${(k === "date" || k === "rating" ? rev : !rev) ? " up" : ""}" aria-hidden="true">${icon("chev")}</span>`;
+  const sortArrow = (k, rev) => `<span class="sort-dir${(k === "date" || k === "rating" || k === "courses" ? rev : !rev) ? " up" : ""}" aria-hidden="true">${icon("chev")}</span>`;
   const sortHint = (k, rev, said = SORTED) => ` title="${esc(t(said[k][rev ? 1 : 0]))}"`;
   // The bar above a board: its search (see "Searching a board") and picture (see "Board pictures") on the left, how
   // it's sorted on the right. legacy: a Legacy board, which has no Date (it's by time while Date is picked)
@@ -3281,6 +3283,14 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   }
   document.addEventListener("click", (e) => {
     const sort = e.target.closest(".lb-sort [data-sort]");
+    if (sort && sort.dataset.course === RATINGS.n) {
+      // The Player ratings' own sort (see ratingsSortHtml), turned around the same way
+      ratingsRev = ratingsSort === sort.dataset.sort ? !ratingsRev : false;
+      ratingsSort = sort.dataset.sort;
+      refreshBoard(RATINGS, `.lb-sort [data-sort="${ratingsSort}"]`);
+      announce.textContent = t(RT_SORTED[ratingsSort][ratingsRev ? 1 : 0]);
+      return;
+    }
     if (sort) {
       // The one that's on (Time on a Legacy board while Date is picked) turns around; another starts its own way
       const c = course(Number(sort.dataset.course));
@@ -3838,15 +3848,35 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const on = RATINGS_TABS.includes(tab) ? tab : "global";
     return tabsHtml(RATINGS, RATINGS_TABS, on, t("rt.title"), ratingsHtml(ratings(null, ratingsFor(on))), { top: "lb.tab.unassisted" });
   }
+  /* The Player ratings sort by rating (their places, highest first) or by courses run (most first, then by place).
+     Pressing the one that's on turns it around: lowest rating first, or fewest courses first (then by place). Places
+     stay each player's own, past the top 10 too, like a board sorted by mistakes. The choice holds for every tab
+     until the page is left, and the picture follows it (see "Ratings pictures"). */
+  let ratingsSort = "rating";
+  let ratingsRev = false;
+  const RT_SORTED = { rating: ["lb.sortedRating", "lb.sortedRatingLow"], courses: ["rt.sortedCourses", "rt.sortedCoursesFew"] };
+  function ratingsOrder(players) {
+    const list = players.slice();
+    if (ratingsSort === "courses") list.sort((a, b) => (ratingsRev ? a.courses - b.courses : b.courses - a.courses) || a.rank - b.rank);
+    else if (ratingsRev) list.reverse();
+    return list;
+  }
+  function ratingsSortHtml() {
+    const b = (key, ico, label) => `<button type="button" data-sort="${key}" data-course="${RATINGS.n}" aria-pressed="${ratingsSort === key}"${ratingsSort === key ? sortHint(key, ratingsRev, RT_SORTED) : ""}>` +
+      `${icon(ico)}<span>${esc(t(label))}</span>${ratingsSort === key ? sortArrow(key, ratingsRev) : ""}</button>`;
+    return `<div class="lb-sort" role="group" aria-label="${esc(t("lb.sortBy"))}"><span class="lb-sort-label" aria-hidden="true">${esc(t("lb.sortBy"))}</span>` +
+      `<span class="sort-btns">${b("rating", "star", "pl.rating") + b("courses", "map", "pl.courses")}</span></div>`;
+  }
   function ratingsHtml(r) {
     const meta = r.assisted ? `<div class="board-meta board-assisted"><span>${assistedTag()}<span>${esc(t("rt.assisted.title"))}</span></span></div>`
       : r.legacy ? `<div class="board-meta board-legacy"><span>${legacyTag()}<span>${esc(t("rt.legacy.title"))}</span></span></div>`
       : r.global ? `<div class="board-meta"><span>${esc(t("rt.global.title"))}</span></div>` : "";
     if (!r.players.length) return meta + `<p class="board-empty">${esc(t(r.assisted ? "rt.assisted.empty" : r.legacy ? "rt.legacy.empty" : "rt.empty"))}</p>`;
-    const top = r.players.slice(0, 10);
-    const rest = r.players.slice(10);
+    const sorted = ratingsOrder(r.players);
+    const top = sorted.slice(0, 10);
+    const rest = sorted.slice(10);
     const courses = r.counted.map((c) => `<span class="nowrap">${c.n} ${flagName(c)}</span>`).join(esc(" · "));
-    return meta + `<div class="lb-bar">${searchHtml(RATINGS)}<button class="lb-pic" type="button" data-course="${RATINGS.n}">${icon("image")}<span>${esc(t("pic.button"))}</span></button></div>` +
+    return meta + `<div class="lb-bar">${searchHtml(RATINGS)}<button class="lb-pic" type="button" data-course="${RATINGS.n}">${icon("image")}<span>${esc(t("pic.button"))}</span></button>${ratingsSortHtml()}</div>` +
       rowsHtml(RATINGS, top, rest, (p) => ratingRow(p, r)) +
       `<p class="lb-foot"><span>${esc(t(r.legacy ? "rt.legacy.how" : r.assisted ? "rt.assisted.how" : r.global ? "rt.global.how" : "rt.how"))}</span><span>${esc(t(r.legacy ? "rt.legacy.tiers" : r.assisted ? "rt.assisted.tiers" : r.global ? "rt.global.tiers" : "rt.tiers", { count: r.players.length.toLocaleString(htmlLang()) }))}</span>` +
       `<span>${esc(t(r.legacy ? "rt.legacy.counted" : "rt.counted", { courses: "\u0000" })).replace("\u0000", courses)}</span></p>` + mathHtml(r);
@@ -5351,7 +5381,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   function picRatings() {
     const tab = RATINGS_TABS.includes(viewOf(RATINGS).tab) ? viewOf(RATINGS).tab : "global";
     const r = ratings(null, ratingsFor(tab));
-    const players = r.players.slice(0, 10);
+    // The top 10 the board shows, sorted as it is (see ratingsOrder)
+    const players = ratingsOrder(r.players).slice(0, 10);
     return { tab, players, counted: r.counted.length, people: players.map((p) => (p.discord && PLAYERS.get(p.discord)) || null) };
   }
   // The ratings picture in a language (code), once its fonts and pictures have loaded
@@ -5454,7 +5485,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   function openRatingsPicture() {
     const d = picRatings();
     const name = t(RATINGS_PIC[d.tab].name);
-    const filename = `player-ratings-${slugOf(d.tab === "top" ? "unassisted" : d.tab)}.png`;
+    const sortName = ratingsSort === "courses" ? (ratingsRev ? "-fewest-courses" : "-by-courses") : ratingsRev ? "-lowest-first" : "";
+    const filename = `player-ratings-${slugOf(d.tab === "top" ? "unassisted" : d.tab)}${sortName}.png`;
     const alt = `${t("rt.title")} · ${name}: ` + d.players.map((p) => `${p.rank}. ${p.name} ${points(p.rating)}, ${tierLabel(p.tier)}, ${t("pl.courses")} ${p.courses}/${d.counted}`).join("; ");
     pictureWindow(esc(`${t("rt.title")} · ${name}`), (code) => drawRatingsPicture(d, code), filename, alt);
   }

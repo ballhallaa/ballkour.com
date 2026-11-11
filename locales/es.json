@@ -200,6 +200,8 @@
   "rt.empty": "Aún no hay puntuaciones. Haz un tiempo en cualquier recorrido para tener puntuación.",
   "rt.tier": "Top {pct}%",
   "rt.courses": "Recorridos hechos: {n} de {total}",
+  "rt.sortedCourses": "Ordenado por recorridos hechos, de más a menos",
+  "rt.sortedCoursesFew": "Ordenado por recorridos hechos, de menos a más",
   "rt.how": "Cada recorrido vale hasta 1000 puntos: el récord se lleva todos, y cuanto más lejos de él queda una carrera, menos recibe. Tu puntuación es tu media en todos los recorridos que funcionan, con 0 en los que no has hecho, así que cada carrera nueva o más rápida la sube. Sé el primero en un recorrido y todos los puntos son tuyos.",
   "rt.tiers": "El top % indica tu posición entre los {count} jugadores con puntuación. En nuestro Discord es tu rol: todos los que están por debajo del Top 90% (Unassisted) tienen el rol Rated (Unassisted), y quien aún no tiene puntuación tiene Unrated (Unassisted).",
   "rt.counted": "Recorridos que cuentan: {courses}. Los recorridos rotos no cuentan.",

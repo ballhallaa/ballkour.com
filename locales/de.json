@@ -200,6 +200,8 @@
   "rt.empty": "Noch keine Wertungen. Stell auf irgendeiner Strecke eine Zeit auf, um eine Wertung zu bekommen.",
   "rt.tier": "Top {pct}%",
   "rt.courses": "{n} von {total} Strecken gelaufen",
+  "rt.sortedCourses": "Nach gelaufenen Strecken sortiert, meiste zuerst",
+  "rt.sortedCoursesFew": "Nach gelaufenen Strecken sortiert, wenigste zuerst",
   "rt.how": "Jede Strecke ist bis zu 1.000 Punkte wert: Der Rekord bekommt alle, und je weiter ein Lauf dahinter liegt, desto weniger bekommt er. Deine Wertung ist dein Durchschnitt über alle funktionierenden Strecken, mit 0 für jede, die du noch nicht gelaufen bist. Jeder neue oder schnellere Lauf hebt sie also an. Sei der Erste auf einer Strecke, und alle Punkte gehören dir.",
   "rt.tiers": "Top % zeigt, wo du unter allen {count} gewerteten Spielern stehst. Auf unserem Discord ist das deine Rolle: Alle unter Top 90% (Unassisted) haben die Rolle Rated (Unassisted), und wer noch keine Wertung hat, hat Unrated (Unassisted).",
   "rt.counted": "Strecken, die zählen: {courses}. Kaputte Strecken zählen nicht.",

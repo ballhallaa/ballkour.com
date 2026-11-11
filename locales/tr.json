@@ -200,6 +200,8 @@
   "rt.empty": "Henüz puan yok. Puan almak için herhangi bir parkurda süre yap.",
   "rt.tier": "Top {pct}%",
   "rt.courses": "Koşulan parkurlar: {n}/{total}",
+  "rt.sortedCourses": "Koşulan parkurlara göre sıralı, en çok olan önce",
+  "rt.sortedCoursesFew": "Koşulan parkurlara göre sıralı, en az olan önce",
   "rt.how": "Her parkur 1.000 puana kadar değerlidir: rekor hepsini alır, bir koşu rekordan ne kadar gerideyse o kadar az puan alır. Puanın, çalışan tüm parkurlardaki ortalamandır ve henüz koşmadığın parkurlar 0 sayılır, yani her yeni veya daha hızlı koşu puanını yükseltir. Bir parkurda ilk sen ol, tüm puanlar senin.",
   "rt.tiers": "İlk %, puanı olan {count} oyuncu arasındaki yerini gösterir. Discord sunucumuzda bu senin rolündür: Top 90% (Unassisted) rolünün altındaki herkes Rated (Unassisted) rolünü, henüz puanı olmayanlar ise Unrated (Unassisted) rolünü alır.",
   "rt.counted": "Sayılan parkurlar: {courses}. Bozuk parkurlar sayılmaz.",

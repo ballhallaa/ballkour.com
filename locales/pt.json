@@ -200,6 +200,8 @@
   "rt.empty": "Ainda não há pontuações. Faça um tempo em qualquer percurso para ganhar pontuação.",
   "rt.tier": "Top {pct}%",
   "rt.courses": "Percursos feitos: {n} de {total}",
+  "rt.sortedCourses": "Ordenado por percursos feitos, do maior para o menor",
+  "rt.sortedCoursesFew": "Ordenado por percursos feitos, do menor para o maior",
   "rt.how": "Cada percurso vale até 1.000 pontos: o recorde leva todos, e quanto mais longe dele uma corrida fica, menos ela ganha. Sua pontuação é a sua média em todos os percursos que funcionam, com 0 nos que você ainda não fez, então cada corrida nova ou mais rápida aumenta ela. Seja o primeiro em um percurso e todos os pontos são seus.",
   "rt.tiers": "O top % mostra a sua posição entre todos os {count} jogadores com pontuação. No nosso Discord, é o seu cargo: todo mundo abaixo do Top 90% (Unassisted) fica com o cargo Rated (Unassisted), e quem ainda não tem pontuação fica com Unrated (Unassisted).",
   "rt.counted": "Percursos que contam: {courses}. Percursos quebrados não contam.",
