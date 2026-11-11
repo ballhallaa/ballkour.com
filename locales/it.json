@@ -510,7 +510,7 @@
   "faq.valid.q": "Cosa conta come partita valida?",
   "faq.valid.a": "La tua partita viene <fgFF4646FF>squalificata</fg> solo se salti un CP che non hai ancora superato in questa partita. Tornare indietro o ricominciare i CP, saltare avanti a CP già superati e <fg00BEFFFF>osservare</fg> sono permessi. Lasciare un CP non superato in <fgCB87FFFF>Modalità libera</fg> conta come saltarlo. Le partite <fgFF4646FF>squalificate</fg> non contano né per la classifica top 10, né per la <b>Top 3 della lobby</b>, né per <b>Lobby Stats</b>.",
   "faq.leaderboard.q": "Come entro in classifica?",
-  "faq.leaderboard.a": "Finisci una partita valida e inviala su ballkour.com. Solo le partite della top 10 hanno bisogno di un video come prova. La <b>Top 3 di sempre</b> mostra le 3 partite più veloci della classifica. La <b>Top 3 della lobby</b> mostra le partite valide più veloci finite in questa lobby.",
+  "faq.leaderboard.a": "Finisci una partita valida e inviala su ballkour.com. Solo le partite della top 10 hanno bisogno di un video come prova. La <b>Top 3 di sempre</b> mostra le 3 partite più veloci della classifica. La <b>Top 3 della lobby</b> mostra le partite valide più veloci finite in questa lobby. In <fgFF80C0FF>modalità assistita</fg>, la <fgFF80C0FF>Top 3 assistita</fg> sostituisce la <b>Top 3 di sempre</b>, e la <b>Top 3 della lobby</b> mostra le partite <fgFF80C0FF>assistite</fg>.",
   "faq.timer.q": "Quando parte il timer della mia partita?",
   "faq.timer.a": "Quando lasci il primo CP, non quando compari.",
   "faq.mistake.q": "Cosa conta come errore?",

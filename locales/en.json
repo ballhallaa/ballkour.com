@@ -510,7 +510,7 @@
   "faq.valid.q": "What counts as a valid run?",
   "faq.valid.a": "Your run is only <fgFF4646FF>disqualified</fg> if you skip a checkpoint you haven't cleared yet this run. Going back or restarting checkpoints, skipping ahead to cleared checkpoints, and <fg00BEFFFF>spectating</fg> are fine. Leaving an uncleared checkpoint in <fgCB87FFFF>Freemode</fg> counts as skipping it. <fgFF4646FF>Disqualified</fg> runs don't count toward the top-10 leaderboard, <b>Lobby Top 3</b>, or <b>Lobby Stats</b>.",
   "faq.leaderboard.q": "How do I get on the leaderboard?",
-  "faq.leaderboard.a": "Finish a valid run and submit it at ballkour.com. Only top 10 runs need a video for proof. <b>All-Time Top 3</b> shows the leaderboard's 3 fastest runs. <b>Lobby Top 3</b> lists the fastest valid runs finished in this lobby.",
+  "faq.leaderboard.a": "Finish a valid run and submit it at ballkour.com. Only top 10 runs need a video for proof. <b>All-Time Top 3</b> shows the leaderboard's 3 fastest runs. <b>Lobby Top 3</b> lists the fastest valid runs finished in this lobby. In <fgFF80C0FF>Assist Mode</fg>, <fgFF80C0FF>Assisted Top 3</fg> replaces <b>All-Time Top 3</b>, and <b>Lobby Top 3</b> lists <fgFF80C0FF>assisted</fg> runs.",
   "faq.timer.q": "When does my run's timer start?",
   "faq.timer.a": "When you leave the first checkpoint, not when you spawn.",
   "faq.mistake.q": "What counts as a mistake?",
