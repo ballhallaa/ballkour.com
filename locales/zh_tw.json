@@ -272,6 +272,7 @@
   "dcp.cancel": "取消",
   "dcp.cancelFail": "暫時無法取消。請一分鐘後再試。",
   "dcp.flaky": "注意：Discord 目前有個 bug，會不時把這類方塊從個人檔案上隱藏，所有應用程式都會這樣，不只是我們的。你的數據一直保存在 Discord 上，方塊會自己回來。",
+  "dcp.flakyShort": "Discord 的 bug：這類方塊會不時從個人檔案上消失，所有應用程式都會這樣。你的數據仍保存在 Discord 上。",
   "dcpi.title": "你的 Discord 個人檔案",
   "dcpi.lead": "你的前 %、積分和前 10 名次數會顯示在 Discord 個人檔案的「應用程式」下，任何打開你檔案的人都看得到。",
   "dcpi.lookTitle": "效果預覽",

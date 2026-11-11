@@ -272,6 +272,7 @@
   "dcp.cancel": "Annulla",
   "dcp.cancelFail": "Non è stato possibile annullare ora. Riprova tra un minuto.",
   "dcp.flaky": "Attenzione: al momento Discord ha un bug che ogni tanto nasconde i riquadri come questo dai profili, per tutte le app, non solo la nostra. Le tue statistiche restano su Discord per tutto il tempo e il riquadro torna da solo.",
+  "dcp.flakyShort": "Bug di Discord: i riquadri come questo a volte spariscono dai profili, per tutte le app. Le tue statistiche restano su Discord.",
   "dcpi.title": "Il tuo profilo Discord",
   "dcpi.lead": "Il tuo Top %, il tuo punteggio e le tue top 10 compaiono sotto App sul tuo profilo Discord, dove chiunque lo apra può vederli.",
   "dcpi.lookTitle": "Come appare",

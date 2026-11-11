@@ -272,6 +272,7 @@
   "dcp.cancel": "Cancelar",
   "dcp.cancelFail": "Não foi possível cancelar agora. Tente de novo em um minuto.",
   "dcp.flaky": "Atenção: o Discord está com um bug que, de vez em quando, esconde caixas como esta dos perfis, em todos os apps, não só no nosso. Suas estatísticas continuam no Discord o tempo todo, e a caixa volta sozinha.",
+  "dcp.flakyShort": "Bug do Discord: caixas como esta somem dos perfis de vez em quando, em todos os apps. Suas estatísticas continuam no Discord.",
   "dcpi.title": "Seu perfil do Discord",
   "dcpi.lead": "Seu Top %, sua pontuação e seus top 10 aparecem em Apps no seu perfil do Discord, onde qualquer pessoa que o abrir pode vê-los.",
   "dcpi.lookTitle": "Como fica",

@@ -272,6 +272,7 @@
   "dcp.cancel": "Cancelar",
   "dcp.cancelFail": "No se pudo cancelar ahora mismo. Inténtalo de nuevo en un minuto.",
   "dcp.flaky": "Aviso: ahora mismo Discord tiene un error que, de vez en cuando, oculta recuadros como este en los perfiles, en todas las apps, no solo en la nuestra. Tus estadísticas siguen en Discord todo el tiempo y el recuadro vuelve solo.",
+  "dcp.flakyShort": "Error de Discord: recuadros como este desaparecen a veces de los perfiles, en todas las apps. Tus estadísticas siguen en Discord.",
   "dcpi.title": "Tu perfil de Discord",
   "dcpi.lead": "Tu Top %, tu puntuación y tus top 10 aparecen en Aplicaciones, en tu perfil de Discord, donde cualquiera que lo abra puede verlos.",
   "dcpi.lookTitle": "Cómo se ve",

@@ -272,6 +272,7 @@
   "dcp.cancel": "Anuluj",
   "dcp.cancelFail": "Nie udało się teraz anulować. Spróbuj ponownie za minutę.",
   "dcp.flaky": "Uwaga: Discord ma teraz błąd, przez który ramki takie jak ta co jakiś czas znikają z profili, we wszystkich aplikacjach, nie tylko w naszej. Twoje statystyki cały czas zostają na Discordzie, a ramka wraca sama.",
+  "dcp.flakyShort": "Błąd Discorda: ramki takie jak ta co jakiś czas znikają z profili, we wszystkich aplikacjach. Twoje statystyki zostają na Discordzie.",
   "dcpi.title": "Twój profil Discord",
   "dcpi.lead": "Twoje Top %, ranking i miejsca w top 10 pojawiają się w sekcji Aplikacje na twoim profilu Discord, gdzie każdy, kto go otworzy, może je zobaczyć.",
   "dcpi.lookTitle": "Jak to wygląda",

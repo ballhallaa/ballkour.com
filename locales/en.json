@@ -272,6 +272,7 @@
   "dcp.cancel": "Cancel",
   "dcp.cancelFail": "Couldn’t cancel just now. Try again in a minute.",
   "dcp.flaky": "Heads up: Discord has a bug right now that hides boxes like this from profiles now and then, for every app, not just ours. Your stats stay on Discord the whole time, and the box comes back on its own.",
+  "dcp.flakyShort": "Discord bug: boxes like this vanish from profiles now and then, for every app. Your stats stay on Discord.",
   "dcpi.title": "Your Discord profile",
   "dcpi.lead": "Your Top %, rating, and top 10s go under Apps on your Discord profile, where anyone who opens it can see them.",
   "dcpi.lookTitle": "How it looks",
