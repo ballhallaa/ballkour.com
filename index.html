@@ -882,6 +882,8 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .lb-tab[data-tab="assisted"][aria-selected="true"] { background: rgba(255, 128, 192, .12); box-shadow: inset 0 0 0 1px rgba(255, 128, 192, .4); }
 /* And the Legacy tab in the Legacy chip's grey */
 .lb-tab[data-tab="legacy"][aria-selected="true"] { background: rgba(167, 182, 176, .12); box-shadow: inset 0 0 0 1px rgba(167, 182, 176, .4); }
+/* And an Unassisted tab (a remake's regular board, the Player ratings' Unassisted) in the Unassisted chip's orange */
+.lb-tab[data-unassisted][aria-selected="true"] { background: rgba(230, 151, 0, .12); box-shadow: inset 0 0 0 1px rgba(230, 151, 0, .4); }
 .board-assisted > span, .board-unassisted > span, .board-legacy > span { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
 /* Their link and their stats on Discord, under their name and above the tabs (see playerHtml) */
 .pl-account { padding-top: 14px; }
@@ -890,9 +892,11 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-modes { display: flex; flex-wrap: wrap; gap: 4px; padding: 14px 18px 0; }
 .pl-modes .lb-tab[data-pl-mode="assisted"][aria-pressed="true"] { background: rgba(255, 128, 192, .12); box-shadow: inset 0 0 0 1px rgba(255, 128, 192, .4); }
 .pl-modes .lb-tab[data-pl-mode="legacy"][aria-pressed="true"] { background: rgba(167, 182, 176, .12); box-shadow: inset 0 0 0 1px rgba(167, 182, 176, .4); }
+.pl-modes .lb-tab[data-pl-mode=""][aria-pressed="true"] { background: rgba(230, 151, 0, .12); box-shadow: inset 0 0 0 1px rgba(230, 151, 0, .4); }
 /* Submitted runs' All, Unassisted, and Assisted, beside its box */
 .runs-mode { display: inline-flex; flex-wrap: wrap; gap: 4px; }
 .runs-mode .lb-tab[data-runs-mode="assisted"][aria-pressed="true"] { background: rgba(255, 128, 192, .12); box-shadow: inset 0 0 0 1px rgba(255, 128, 192, .4); }
+.runs-mode .lb-tab[data-runs-mode="regular"][aria-pressed="true"] { background: rgba(230, 151, 0, .12); box-shadow: inset 0 0 0 1px rgba(230, 151, 0, .4); }
 /* The form's Played in Assist Mode */
 .sub-check { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font: 600 14px/1.25 var(--body); color: var(--ink); cursor: pointer; }
 .sub-check input { flex: none; width: 16px; height: 16px; margin: 0; accent-color: var(--assist); cursor: pointer; }
@@ -2876,9 +2880,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     // A remake's regular board is its Unassisted tab, beside Assisted, like the Player ratings'
     return tabsHtml(c, ids, on, t("lb.toggle", { course: `${c.n} ${c.name}` }), panel, hasAssistMode(c) ? { top: "lb.tab.unassisted" } : {});
   }
-  // A board's tabs (ids, each named "lb.tab.<id>" unless names says), with on picked, over the picked one's panel
+  // A board's tabs (ids, each named "lb.tab.<id>" unless names says), with on picked, over the picked one's panel. One
+  // named Unassisted is orange while it's picked (data-unassisted), like its chip.
   function tabsHtml(row, ids, on, label, panel, names = {}) {
-    const tab = (id) => `<button class="lb-tab" type="button" role="tab" id="lbt-${row.n}-${id}" data-course="${row.n}" data-tab="${id}" aria-selected="${on === id}" aria-controls="lbp-${row.n}" tabindex="${on === id ? 0 : -1}">${esc(t(names[id] || `lb.tab.${id}`))}</button>`;
+    const tab = (id) => `<button class="lb-tab" type="button" role="tab" id="lbt-${row.n}-${id}" data-course="${row.n}" data-tab="${id}"${names[id] === "lb.tab.unassisted" ? " data-unassisted" : ""} aria-selected="${on === id}" aria-controls="lbp-${row.n}" tabindex="${on === id ? 0 : -1}">${esc(t(names[id] || `lb.tab.${id}`))}</button>`;
     return `<div class="lb-tabs" role="tablist" aria-label="${esc(label)}">${ids.map(tab).join("")}</div>` +
       `<div role="tabpanel" id="lbp-${row.n}" aria-labelledby="lbt-${row.n}-${on}">${panel}</div>`;
   }
