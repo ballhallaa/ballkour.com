@@ -1063,7 +1063,7 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .pf-input::-webkit-search-cancel-button { display: none; }
 .pf-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; list-style: none; margin: 0; padding: 6px 0; }
 .pf-list:empty { display: none; }
-.pf .run { grid-template-columns: 26px minmax(0, 1fr) 78px 64px; padding: 8px 16px; cursor: pointer; }
+.pf .run { grid-template-columns: 26px minmax(0, 1fr) auto auto; padding: 8px 16px; cursor: pointer; }
 .pf .run .stat { justify-content: space-between; }
 .pf .stat.time .icon { color: var(--gold); }
 .pf .stat.miss .icon { color: var(--ink-3); }
@@ -1075,15 +1075,18 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 @media (pointer: coarse) { .pf-foot { display: none; } }
 @media (max-width: 520px) {
   .pf { width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; border: 0; border-radius: 0; }
-  .pf .run { grid-template-columns: 22px minmax(0, 1fr) 66px 50px; gap: 0 8px; padding: 8px 12px; }
+  .pf .run { grid-template-columns: 22px minmax(0, 1fr) auto auto; gap: 0 8px; padding: 8px 12px; }
   .pf .run-line { flex-wrap: wrap; gap: 3px 7px; }
 }
 /* Player ratings: a row like a course's, its board with each player's rating, courses run and Top % tier */
 .rt-flag { display: grid; place-items: center; color: var(--gold); }
 .rt-flag .icon { width: 20px; height: 20px; }
-/* Fixed columns, so the icons line up whatever the numbers' widths: up to 1,000 points and 99/99 courses */
-.rt-board .run { grid-template-columns: 26px minmax(0, 1fr) 78px 64px; }
+/* Each row's rating and courses run are as wide as the widest on the board (--pts and --ran characters, from
+   ratingCols()), so the icons line up and sit close to their numbers. 20px is the icon and its gap. */
+.rt-board .run { grid-template-columns: 26px minmax(0, 1fr) auto auto; }
 .rt-board .run .stat { justify-content: space-between; }
+.rt-board .stat.time, .pf .stat.time { min-width: calc(20px + var(--pts, 4) * 1ch); }
+.rt-board .stat.miss, .pf .stat.miss { min-width: calc(20px + var(--ran, 5) * 1ch); }
 .rt-board .stat.time .icon { color: var(--gold); }
 .rt-board .stat.miss .icon { color: var(--ink-3); }
 .tag-tier { flex: none; height: 17px; padding: 0 5px; font-size: 9.5px; letter-spacing: .04em; color: var(--arc); background: rgba(51, 198, 255, .1); border: 1px solid rgba(51, 198, 255, .32); }
@@ -1101,7 +1104,7 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .submit .lr-sub { font: 400 14px/1.45 var(--body); }
 @media (max-width: 480px) {
   .run, .course-board .run { grid-template-columns: 22px minmax(0, 1fr) auto 40px; gap: 0 8px; padding: 8px 12px; }
-  .rt-board .run { grid-template-columns: 22px minmax(0, 1fr) 66px 50px; }
+  .rt-board .run { grid-template-columns: 22px minmax(0, 1fr) auto auto; }
   /* The date goes on its own line under the rating, so the rating and what the run adds to it fit under the time and
      mistakes, and the names keep their room */
   .run-date { flex-direction: column; align-items: flex-end; gap: 3px; }
@@ -3573,13 +3576,23 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       `<button class="rec" type="button" data-course="${RATINGS.n}" aria-expanded="${open}" aria-controls="board-ratings" aria-label="${esc(t("rt.title"))}">${body}${icon("chev", "icon chev")}</button></div>` +
       `<div class="course-board rt-board" id="board-ratings"${open ? "" : " hidden"}>${open ? ratingsHtml(r) : ""}</div></li>`;
   }
+  // How many characters the widest rating and courses run take, so the two columns are just wide enough for them
+  // (--pts and --ran in the CSS)
+  function ratingCols(r) {
+    if (!r.colStyle) {
+      const total = r.counted.length;
+      const widest = (text) => Math.max(1, ...r.players.map((p) => text(p).length));
+      r.colStyle = ` style="--pts: ${widest((p) => points(p.rating))}; --ran: ${widest((p) => `${p.courses}/${total}`)}"`;
+    }
+    return r.colStyle;
+  }
   function ratingRow(p, r) {
     const total = r.counted.length;
     const ran = t("rt.courses", { n: p.courses, total });
     const breakdown = r.counted.filter((c) => c.n in p.points).map((c) => `${c.n} · ${c.name}: ${points(p.points[c.n])}`).join("\n");
     const tier = p.tier ? `<span class="tag tag-tier${p.tier <= 5 ? " elite" : ""}">${esc(t("rt.tier", { pct: p.tier.toLocaleString(htmlLang()) }))}</span>` : "";
     const mark = !!boardMark && boardMark.n === RATINGS.n && boardMark.key === p.key;
-    return `<li class="run${p.rank <= 3 ? " p" + p.rank : ""}${mark ? " mark" : ""}" data-k="${esc(p.key)}">` +
+    return `<li class="run${p.rank <= 3 ? " p" + p.rank : ""}${mark ? " mark" : ""}" data-k="${esc(p.key)}"${ratingCols(r)}>` +
       `<span class="run-rank">${p.rank}</span>` +
       `<span class="run-who"><span class="run-line">${nameButton(p.key, p.name)}${tier}</span></span>` +
       `<span class="stat time" title="${esc(breakdown)}">${icon("star")}<span class="v">${esc(points(p.rating))}</span></span>` +
@@ -4216,7 +4229,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     // Read out as "BALLMYBLOVED, ball シ, #1 of 16, Rating 182, Top 10%, 2 of 11 courses run"
     const label = [x.name, dc && dc.name, ...(p ? [t("res.of", { rank: p.rank, total: r.players.length }), `${t("pl.rating")} ${points(p.rating)}`, tier, ran] : [unrated])]
       .filter(Boolean).join(", ");
-    return `<li class="run${p && p.rank <= 3 ? " p" + p.rank : ""}${i === pfActive ? " active" : ""}" role="option" id="pf-opt-${i}" aria-selected="${i === pfActive}" aria-label="${esc(label)}">` +
+    return `<li class="run${p && p.rank <= 3 ? " p" + p.rank : ""}${i === pfActive ? " active" : ""}" role="option" id="pf-opt-${i}" aria-selected="${i === pfActive}" aria-label="${esc(label)}"${ratingCols(r)}>` +
       `<span class="run-rank">${p ? p.rank : "–"}</span>` +
       `<span class="run-who"><span class="run-line"><span class="run-name">${esc(caps(x.name))}</span>` +
         (tier ? `<span class="tag tag-tier${p.tier <= 5 ? " elite" : ""}">${esc(tier)}</span>` : "") + `</span></span>` +
