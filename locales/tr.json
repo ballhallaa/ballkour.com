@@ -189,7 +189,7 @@
   "rt.legacy.counted": "Sayılan eski tablolar: {courses}.",
   "rt.global.title": "Yardımsız ve yardımlı puanların toplamı",
   "rt.global.how": "Global puanın, yardımsız puanınla yardımlı puanının toplamıdır, yani en fazla 2.000 eder. Eski puanlar buna sayılmaz, çünkü tabloları artık değişmiyor.",
-  "rt.global.tiers": "İlk %, puanı olan {count} oyuncu arasındaki yerini gösterir. Discord sunucumuzda bu senin rolündür: Top 90% (Global) rolünün altındaki herkes Rated (Global) rolünü, henüz puanı olmayanlar ise Unrated (Global) rolünü alır. En iyi 10 oyuncu ayrıca Top 10 (Global) rolünü alır.",
+  "rt.global.tiers": "İlk %, puanı olan {count} oyuncu arasındaki yerini gösterir. Discord sunucumuzda bu senin rolündür: Top 90% (Global) rolünün altındaki herkes Rated (Global) rolünü, henüz puanı olmayanlar ise Unrated (Global) rolünü alır. En iyi 10 oyuncu ayrıca Top 10 Rating (Global) rolünü alır.",
   "rt.meta": "Tüm parkurlar tek bir puanda",
   "rt.none": "Henüz puan yok",
   "rt.empty": "Henüz puan yok. Puan almak için herhangi bir parkurda süre yap.",

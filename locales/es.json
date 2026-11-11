@@ -189,7 +189,7 @@
   "rt.legacy.counted": "Clasificaciones anteriores que cuentan: {courses}.",
   "rt.global.title": "Puntuaciones sin asistencia y asistidas sumadas",
   "rt.global.how": "Tu puntuación global es tu puntuación sin asistencia más tu puntuación asistida, así que vale hasta 2000. Las puntuaciones anteriores no cuentan, porque sus clasificaciones ya no cambian.",
-  "rt.global.tiers": "El top % indica tu posición entre los {count} jugadores con puntuación. En nuestro Discord es tu rol: todos los que están por debajo del Top 90% (Global) tienen el rol Rated (Global), y quien aún no tiene puntuación tiene Unrated (Global). Los 10 mejores jugadores también reciben Top 10 (Global).",
+  "rt.global.tiers": "El top % indica tu posición entre los {count} jugadores con puntuación. En nuestro Discord es tu rol: todos los que están por debajo del Top 90% (Global) tienen el rol Rated (Global), y quien aún no tiene puntuación tiene Unrated (Global). Los 10 mejores jugadores también reciben Top 10 Rating (Global).",
   "rt.meta": "Todos los recorridos en una sola puntuación",
   "rt.none": "Aún no hay puntuaciones",
   "rt.empty": "Aún no hay puntuaciones. Haz un tiempo en cualquier recorrido para tener puntuación.",

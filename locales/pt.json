@@ -189,7 +189,7 @@
   "rt.legacy.counted": "Classificações antigas que contam: {courses}.",
   "rt.global.title": "Pontuações sem assistência e assistidas somadas",
   "rt.global.how": "A sua pontuação global é a sua pontuação sem assistência mais a sua pontuação assistida, então vale até 2.000. As pontuações antigas não contam, porque as classificações delas não mudam mais.",
-  "rt.global.tiers": "O top % mostra a sua posição entre todos os {count} jogadores com pontuação. No nosso Discord, é o seu cargo: todo mundo abaixo do Top 90% (Global) fica com o cargo Rated (Global), e quem ainda não tem pontuação fica com Unrated (Global). Os 10 melhores jogadores também ganham Top 10 (Global).",
+  "rt.global.tiers": "O top % mostra a sua posição entre todos os {count} jogadores com pontuação. No nosso Discord, é o seu cargo: todo mundo abaixo do Top 90% (Global) fica com o cargo Rated (Global), e quem ainda não tem pontuação fica com Unrated (Global). Os 10 melhores jogadores também ganham Top 10 Rating (Global).",
   "rt.meta": "Todos os percursos em uma só pontuação",
   "rt.none": "Ainda sem pontuações",
   "rt.empty": "Ainda não há pontuações. Faça um tempo em qualquer percurso para ganhar pontuação.",
