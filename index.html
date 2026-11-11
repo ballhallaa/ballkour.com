@@ -368,7 +368,9 @@ main:focus { outline: none; }
 .sections-find, .sections-me { flex: none; width: 38px; height: 33px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--ink-2); cursor: pointer; transition: color .15s, background-color .15s; }
 .sections-find:hover, .sections-me:hover { color: var(--volt); background: var(--glass-hi); }
 .sections-find:focus-visible, .sections-me:focus-visible { outline-offset: -2px; }
-/* My profile in the arc blue, like its icon in Features (and still blue under the pointer) */
+/* Find a player in green, like every search icon (and still green under the pointer); My profile in the arc blue, like
+   its icon in Features */
+.sections-find, .sections-find:hover { color: var(--volt); }
 .sections-me, .sections-me:hover { color: var(--arc); }
 .sections a[aria-current="true"] { color: var(--ink); background: rgba(0, 230, 151, .12); box-shadow: inset 0 0 0 1px rgba(0, 230, 151, .35); }
 /* On a phone there's only room for a link or two beside the icons, so the links fold into a menu instead. Its button
@@ -728,8 +730,7 @@ a.stat:hover .play { color: var(--volt); }
 .lb-sort button[aria-pressed="true"] { color: var(--ink); background: rgba(0, 230, 151, .1); border-color: rgba(0, 230, 151, .35); }
 /* Find a player on a board by their in-game or Discord name: first in the bar, taking the room the buttons leave */
 .lb-search { position: relative; flex: 1 1 170px; min-width: 0; display: flex; align-items: center; }
-.lb-search .icon { position: absolute; inset-inline-start: 9px; width: 13px; height: 13px; color: var(--ink-3); pointer-events: none; transition: color .15s; }
-.lb-search:focus-within .icon { color: var(--volt); }
+.lb-search .icon { position: absolute; inset-inline-start: 9px; width: 13px; height: 13px; color: var(--volt); pointer-events: none; }
 .lb-search input { width: 100%; height: 26px; padding-inline: 28px 8px; border: 1px solid var(--line); border-radius: 7px; background: rgba(0, 0, 0, .25); color: var(--ink); font: 500 13px/1 var(--body); -webkit-appearance: none; appearance: none; transition: border-color .15s; }
 .lb-search input::-webkit-search-decoration { -webkit-appearance: none; }
 /* The clear button keeps its room even while the box is empty, which cut off the end of the longer hints */
