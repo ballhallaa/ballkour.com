@@ -1,5 +1,6 @@
 {
   "a11y.skip": "Aller au contenu",
+  "lang.label": "Langue",
   "hero.tagline": "Parcours de parkour avec Bouldozer pour Overwatch",
   "hero.codes": "Choisir un parcours",
   "hero.discord": "Rejoignez notre Discord",
@@ -14,7 +15,6 @@
   "src.title": "Code source",
   "tr.title": "Traductions",
   "stats.title": "Statistiques",
-  "lang.label": "Langue",
   "find.open": "Trouver un joueur",
   "steps.start": "Lancez la partie.",
   "steps.luck": "Bonne chance !",

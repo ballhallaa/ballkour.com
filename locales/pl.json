@@ -1,5 +1,6 @@
 {
   "a11y.skip": "Przejdź do treści",
+  "lang.label": "Język",
   "hero.tagline": "Trasy parkourowe dla Wrecking Balla w Overwatch",
   "hero.codes": "Wybierz trasę",
   "hero.discord": "Dołącz do naszego Discorda",
@@ -14,7 +15,6 @@
   "src.title": "Kod źródłowy",
   "tr.title": "Tłumaczenia",
   "stats.title": "Statystyki",
-  "lang.label": "Język",
   "find.open": "Znajdź gracza",
   "steps.start": "Rozpocznij mecz.",
   "steps.luck": "Powodzenia!",

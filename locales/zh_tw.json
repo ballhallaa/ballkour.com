@@ -1,5 +1,6 @@
 {
   "a11y.skip": "跳到主要內容",
+  "lang.label": "語言",
   "hero.tagline": "鬥陣特攻破壞球跑酷關卡",
   "hero.codes": "選擇關卡",
   "hero.discord": "加入我們的 Discord",
@@ -14,7 +15,6 @@
   "src.title": "原始碼",
   "tr.title": "翻譯",
   "stats.title": "統計",
-  "lang.label": "語言",
   "find.open": "尋找玩家",
   "steps.start": "開始對戰。",
   "steps.luck": "祝你好運！",

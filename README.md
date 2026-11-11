@@ -32,7 +32,7 @@ Links can go deeper, and the address shows them while a board or answer is open:
 The older `#6-dorado` and `#pause` forms still work too.
 
 A link to a run, a board, or a player shows its own preview when it's pasted on Discord (or anywhere else that reads a page's `og:` tags), instead of the site's: the run's player, time, course, and where it is now ("COLDSKIN · 4:05.81 on 1 🇬🇮 Watchpoint: Gibraltar", "#2 of 15 on the board · 2 mistakes · 2026-08-26"), a board's top 3, or a player's place, rating, and Top %. The Worker works them out as it serves the page (`previewOf()` in `cloudflare/worker.js`), in English like Ballkyrie's posts.
-- **A language:** `ballkour.com/?lang=ja` opens the page in Japanese; it works with any of the links above. Picking a language, with the language button at the end of the section bar, puts it in the address.
+- **A language:** `ballkour.com/?lang=ja` opens the page in Japanese; it works with any of the links above. Picking a language, with the language button at the top right (by Reduce motion), puts it in the address.
 
 ## Reduce motion
 

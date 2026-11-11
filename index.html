@@ -137,10 +137,12 @@ main:focus { outline: none; }
 #balls { z-index: 20; }
 .page { position: relative; z-index: 1; }
 
-/* ---------- Reduce motion ---------- */
-/* A square button at the top right, lined up with the panels. An icon only: its name is in aria-label and in the
-   tooltip on hover. (My profile, Find a player and the language are at the end of the section bar.) */
-.topbar { max-width: var(--col); margin: 0 auto; padding-block: 14px 0; display: flex; justify-content: flex-end; }
+/* ---------- Reduce motion and the language picker ---------- */
+/* Two square buttons at the top right, lined up with the panels: Reduce motion, then the language. Icons only, so no
+   language's longer words get cut off; their names are in aria-label and in the tooltip on hover. (My profile and Find
+   a player are at the end of the section bar.) The page picks the language from the browser, so the button is rarely
+   needed, and the section bar keeps its room for the sections. */
+.topbar { max-width: var(--col); margin: 0 auto; padding-block: 14px 0; display: flex; justify-content: flex-end; gap: 8px; }
 .top-btn {
   width: 38px;
   height: 38px;
@@ -156,7 +158,7 @@ main:focus { outline: none; }
   cursor: pointer;
   transition: border-color .15s ease;
 }
-.top-btn:hover { border-color: var(--volt); }
+.top-btn:hover, .top-btn[aria-expanded="true"] { border-color: var(--volt); }
 /* Reduce motion is on: lit up in green, over the button's own glass */
 .motion-btn[aria-pressed="true"] { border-color: var(--volt); background-image: linear-gradient(rgba(0, 230, 151, .14), rgba(0, 230, 151, .14)); }
 .motion-btn[aria-pressed="true"] .icon { color: var(--volt); }
@@ -200,9 +202,10 @@ main:focus { outline: none; }
 .menu-group { padding: 10px 10px 4px; font: 600 10.5px/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
 .menu-group:first-child { padding-top: 6px; }
 
-/* Languages: a two-column grid that drops down over the page from the section bar's right end, under the language
-   button, so nothing below moves when it opens. It goes with the bar when the bar sticks to the top. */
-.lang-menu { top: calc(100% + 9px); right: -1px; width: 244px; max-width: calc(100% + 2px); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; }
+/* Languages: a two-column grid that drops down over the page from the language button at the top right, lined up
+   with its right edge, so nothing below moves when it opens */
+.lang-wrap { position: relative; }
+.lang-menu { width: 244px; max-width: calc(100vw - 32px); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; }
 
 /* ---------- Hero ---------- */
 .hero {
@@ -350,16 +353,15 @@ main:focus { outline: none; }
   transition: color .15s, background-color .15s, box-shadow .15s;
 }
 .sections a:hover { color: var(--ink); background: var(--glass-hi); }
-/* The links scroll; My profile, Find a player and the language stay at the right end. Icons only, so no language's
-   longer words get cut off; their names are in aria-label and in the tooltip on hover. */
+/* The links scroll; My profile and Find a player stay at the right end. Icons only, so no language's longer words get
+   cut off; their names are in aria-label and in the tooltip on hover. */
 .sections { display: flex; align-items: center; gap: 4px; }
 .sections-scroll { position: relative; flex: 1; min-width: 0; }
 /* A line between the links and the icons */
 .sections-scroll::after { content: ""; position: absolute; top: 7px; bottom: 7px; right: -3px; width: 1px; background: var(--line); }
-.sections-find, .sections-me, .sections-lang { flex: none; width: 38px; height: 33px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--ink-2); cursor: pointer; transition: color .15s, background-color .15s; }
-.sections-find:hover, .sections-me:hover, .sections-lang:hover, .sections-lang[aria-expanded="true"] { color: var(--volt); background: var(--glass-hi); }
-.sections-find:focus-visible, .sections-me:focus-visible, .sections-lang:focus-visible { outline-offset: -2px; }
-.lang-wrap { display: contents; }
+.sections-find, .sections-me { flex: none; width: 38px; height: 33px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--ink-2); cursor: pointer; transition: color .15s, background-color .15s; }
+.sections-find:hover, .sections-me:hover { color: var(--volt); background: var(--glass-hi); }
+.sections-find:focus-visible, .sections-me:focus-visible { outline-offset: -2px; }
 .sections a[aria-current="true"] { color: var(--ink); background: rgba(0, 230, 151, .12); box-shadow: inset 0 0 0 1px rgba(0, 230, 151, .35); }
 /* On a phone there's only room for a link or two beside the icons, so the links fold into a menu instead. Its button
    says which section is on screen, and the menu drops down over the page from the bar's left end, like the
@@ -1702,8 +1704,15 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
 <div class="page">
   <a class="skip" href="#main" data-i18n="a11y.skip">Skip to content</a>
   <div class="topbar">
-    <!-- Reduce motion (see "Reduce motion") -->
+    <!-- Reduce motion (see "Reduce motion") and the language -->
     <button class="top-btn motion-btn" id="motion-btn" type="button" aria-pressed="false" data-i18n-aria="motion.label" aria-label="Reduce motion"><svg class="icon" aria-hidden="true"><use href="#i-pause"/></svg></button>
+    <div class="lang-wrap" id="lang-wrap">
+      <button class="top-btn" id="lang-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="lang-menu">
+        <svg class="icon" aria-hidden="true"><use href="#i-langs"/></svg>
+        <span class="sr-only"><span data-i18n="lang.label">Language</span> <span id="lang-current">English</span></span>
+      </button>
+      <ul class="menu lang-menu" id="lang-menu" role="listbox" tabindex="-1" hidden></ul>
+    </div>
   </div>
 
   <header class="hero">
@@ -1744,17 +1753,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     <button class="sections-more left" type="button" data-dir="-1" tabindex="-1" aria-hidden="true"><svg class="icon"><use href="#i-dots"/></svg></button>
     <button class="sections-more right" type="button" data-dir="1" tabindex="-1" aria-hidden="true"><svg class="icon"><use href="#i-dots"/></svg></button>
     </div>
-    <!-- My profile (when signing in is on, see "My profile"), Find a player (see "Finding a player") and the language,
-         from anywhere on the page -->
+    <!-- My profile (when signing in is on, see "My profile") and Find a player (see "Finding a player"), from anywhere
+         on the page -->
     <button class="sections-me" id="sections-me" type="button" data-my-stats hidden><svg class="icon" aria-hidden="true"><use href="#i-user"/></svg></button>
     <button class="sections-find" type="button" data-find data-i18n-aria="find.open" aria-label="Find a player"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg></button>
-    <div class="lang-wrap" id="lang-wrap">
-      <button class="sections-lang" id="lang-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="lang-menu">
-        <svg class="icon" aria-hidden="true"><use href="#i-langs"/></svg>
-        <span class="sr-only"><span data-i18n="lang.label">Language</span> <span id="lang-current">English</span></span>
-      </button>
-      <ul class="menu lang-menu" id="lang-menu" role="listbox" tabindex="-1" hidden></ul>
-    </div>
   </nav>
 
   <main class="column" id="main" tabindex="-1">

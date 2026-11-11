@@ -1,5 +1,6 @@
 {
   "a11y.skip": "本文へスキップ",
+  "lang.label": "言語",
   "hero.tagline": "Overwatchのレッキング・ボール用パルクールコース",
   "hero.codes": "コースを選ぶ",
   "hero.discord": "Discordに参加",
@@ -14,7 +15,6 @@
   "src.title": "ソースコード",
   "tr.title": "翻訳",
   "stats.title": "統計",
-  "lang.label": "言語",
   "find.open": "プレイヤーを探す",
   "steps.start": "マッチを開始しましょう。",
   "steps.luck": "幸運を祈ります！",
