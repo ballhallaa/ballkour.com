@@ -189,7 +189,7 @@
   "rt.legacy.counted": "Frühere Listen, die zählen: {courses}.",
   "rt.global.title": "Wertungen ohne Assistenz und assistierte Wertungen zusammengezählt",
   "rt.global.how": "Deine globale Wertung ist deine Wertung ohne Assistenz plus deine assistierte Wertung, also bis zu 2.000 wert. Frühere Wertungen zählen nicht dazu, da sich ihre Listen nicht mehr ändern.",
-  "rt.global.tiers": "Top % zeigt, wo du unter allen {count} gewerteten Spielern stehst. Auf unserem Discord ist das deine Rolle: Alle unter Top 90% (Global) haben die Rolle Rated (Global), und wer noch keine Wertung hat, hat Unrated (Global). Die 10 besten Spieler bekommen außerdem Top 10 (Global).",
+  "rt.global.tiers": "Top % zeigt, wo du unter allen {count} gewerteten Spielern stehst. Auf unserem Discord ist das deine Rolle: Alle unter Top 90% (Global) haben die Rolle Rated (Global), und wer noch keine Wertung hat, hat Unrated (Global). Die 10 besten Spieler bekommen außerdem Top 10 Rating (Global).",
   "rt.meta": "Alle Strecken in einer Wertung",
   "rt.none": "Noch keine Wertungen",
   "rt.empty": "Noch keine Wertungen. Stell auf irgendeiner Strecke eine Zeit auf, um eine Wertung zu bekommen.",

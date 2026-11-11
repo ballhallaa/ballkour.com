@@ -189,7 +189,7 @@
   "rt.legacy.counted": "计入的旧榜：{courses}。",
   "rt.global.title": "无辅助积分与辅助积分之和",
   "rt.global.how": "你的全局积分是无辅助积分加上辅助积分，最高 2,000。旧榜积分不计入，因为旧榜已不再变化。",
-  "rt.global.tiers": "前 % 表示你在所有 {count} 名有积分的玩家中的位置。在我们的 Discord 上，这就是你的身份组：低于 Top 90% (Global) 的所有人为“Rated (Global)”，还没有积分的人为“Unrated (Global)”。前 10 名玩家还会获得“Top 10 (Global)”。",
+  "rt.global.tiers": "前 % 表示你在所有 {count} 名有积分的玩家中的位置。在我们的 Discord 上，这就是你的身份组：低于 Top 90% (Global) 的所有人为“Rated (Global)”，还没有积分的人为“Unrated (Global)”。前 10 名玩家还会获得“Top 10 Rating (Global)”。",
   "rt.meta": "所有关卡合为一个积分",
   "rt.none": "暂无积分",
   "rt.empty": "暂无积分。在任意关卡创造成绩即可获得积分。",

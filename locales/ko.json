@@ -189,7 +189,7 @@
   "rt.legacy.counted": "반영되는 이전 기록 순위표: {courses}.",
   "rt.global.title": "어시스트 없음과 어시스트 레이팅의 합",
   "rt.global.how": "글로벌 레이팅은 어시스트 없음 레이팅과 어시스트 레이팅을 더한 값이라 최대 2,000입니다. 이전 기록 레이팅은 순위표가 더 이상 바뀌지 않으므로 포함되지 않습니다.",
-  "rt.global.tiers": "상위 %는 레이팅이 있는 플레이어 {count}명 중 내 위치입니다. Discord에서는 이것이 역할이 됩니다. Top 90% (Global) 아래의 모든 사람은 ‘Rated (Global)’, 아직 레이팅이 없는 사람은 ‘Unrated (Global)’ 역할입니다. 상위 10명은 ‘Top 10 (Global)’도 받습니다.",
+  "rt.global.tiers": "상위 %는 레이팅이 있는 플레이어 {count}명 중 내 위치입니다. Discord에서는 이것이 역할이 됩니다. Top 90% (Global) 아래의 모든 사람은 ‘Rated (Global)’, 아직 레이팅이 없는 사람은 ‘Unrated (Global)’ 역할입니다. 상위 10명은 ‘Top 10 Rating (Global)’도 받습니다.",
   "rt.meta": "모든 코스를 하나의 레이팅으로",
   "rt.none": "아직 레이팅 없음",
   "rt.empty": "아직 레이팅이 없습니다. 아무 코스에서나 기록을 세우면 레이팅을 받습니다.",

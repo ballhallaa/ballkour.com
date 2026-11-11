@@ -189,7 +189,7 @@
   "rt.legacy.counted": "計入的舊榜：{courses}。",
   "rt.global.title": "無輔助積分與輔助積分之和",
   "rt.global.how": "你的全域積分是無輔助積分加上輔助積分，最高 2,000。舊榜積分不計入，因為舊榜已不再變動。",
-  "rt.global.tiers": "前 % 表示你在所有 {count} 名有積分的玩家中的位置。在我們的 Discord 上，這就是你的身分組：低於 Top 90% (Global) 的所有人為「Rated (Global)」，還沒有積分的人為「Unrated (Global)」。前 10 名玩家還會獲得「Top 10 (Global)」。",
+  "rt.global.tiers": "前 % 表示你在所有 {count} 名有積分的玩家中的位置。在我們的 Discord 上，這就是你的身分組：低於 Top 90% (Global) 的所有人為「Rated (Global)」，還沒有積分的人為「Unrated (Global)」。前 10 名玩家還會獲得「Top 10 Rating (Global)」。",
   "rt.meta": "所有關卡合為一個積分",
   "rt.none": "尚無積分",
   "rt.empty": "尚無積分。在任一關卡創造成績即可獲得積分。",

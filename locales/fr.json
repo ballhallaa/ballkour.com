@@ -189,7 +189,7 @@
   "rt.legacy.counted": "Anciens classements pris en compte : {courses}.",
   "rt.global.title": "Scores sans assistance et assistés additionnés",
   "rt.global.how": "Votre score global est votre score sans assistance plus votre score assisté, il vaut donc jusqu’à 2 000. Les anciens scores n’y comptent pas, car leurs classements ne changent plus.",
-  "rt.global.tiers": "Le top % indique votre place parmi les {count} joueurs classés. Sur notre Discord, c’est votre rôle : tous ceux en dessous du Top 90% (Global) ont le rôle Rated (Global), et ceux qui n’ont pas encore de score ont Unrated (Global). Les 10 meilleurs joueurs ont aussi Top 10 (Global).",
+  "rt.global.tiers": "Le top % indique votre place parmi les {count} joueurs classés. Sur notre Discord, c’est votre rôle : tous ceux en dessous du Top 90% (Global) ont le rôle Rated (Global), et ceux qui n’ont pas encore de score ont Unrated (Global). Les 10 meilleurs joueurs ont aussi Top 10 Rating (Global).",
   "rt.meta": "Tous les parcours en un seul score",
   "rt.none": "Pas encore de score",
   "rt.empty": "Pas encore de score. Réalisez un temps sur n’importe quel parcours pour être classé.",
