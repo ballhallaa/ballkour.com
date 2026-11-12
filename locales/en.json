@@ -181,6 +181,8 @@
   "find.none": "No players match “{query}”",
   "find.unrated": "Not rated",
   "find.keys": "↑ ↓ to pick, Enter to see their stats. Press / anywhere on the site to open this.",
+  "find.toTop": "To the top of the list",
+  "find.toEnd": "To the end of the list",
   "rt.group": "Every course",
   "rt.assisted.title": "Ratings from runs played in Assist Mode",
   "rt.assisted.empty": "No assisted ratings yet. Send a run you played in Assist Mode to get one.",
