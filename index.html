@@ -4471,7 +4471,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const view = runs ? "runs" : "courses";
     if (key.startsWith("d:") || all.some((x) => x.key === key)) { openPlayer(key, 0, view); return; }
     const name = key.slice(2);
-    const them = all.filter((x) => sameName(x.name, name));
+    // Each player once (a rated player can be under Legacy too)
+    const them = [...new Map(all.filter((x) => sameName(x.name, name)).map((x) => [x.key, x])).values()];
     if (them.length === 1) { openPlayer(them[0].key, 0, view); return; }
     putAddressBack("/" + location.search); // the link names nobody's panel, so it doesn't stay in the address
     openFinder();
@@ -4586,8 +4587,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   /* ---------- Finding a player ----------
      Find a player (the box at the top, the magnifier in the section bar, the box by Courses, or the / key anywhere)
      lists everyone who has run a course: the rated players by place, with their Top %, Discord, rating and courses
-     run, then everyone else with runs only on broken courses by name, and last, under a Legacy heading, the players
-     with runs only before 2026-04-29, by their place in the Legacy rating, with its Top %, rating and courses run.
+     run, then everyone else with runs only on broken courses by name, and last, under a Legacy heading, everyone with
+     runs before 2026-04-29 (rated players a second time), by their place in the Legacy rating, with its Top %, rating
+     and courses run.
      Typing narrows it by in-game or Discord name, the same way a board's search does, with names that start with it
      first (the Legacy players still last). The arrow keys and Enter, or a click, pick one, and their panel opens (see
      "A player's runs"). */
@@ -4615,6 +4617,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     COURSES.forEach((c) => (HISTORY[c.n] ? HISTORY[c.n].legacy : []).forEach((run) => add(run, true)));
     const byName = (a, b) => fold(a.name).localeCompare(fold(b.name));
     others.sort(byName);
+    // Rated players with a Legacy rating too (their legacy runs linked to their Discord) are also listed under Legacy,
+    // by the name on their legacy runs, so its places run without gaps, like the Legacy rating's board
+    lr.players.forEach((p) => { if (r.players.some((q) => q.key === p.key)) legacy.push({ key: p.key, name: p.name, discord: p.discord, p, legacy: true }); });
     // By their place in the Legacy rating (then by name), and anyone without one after them
     legacy.sort((a, b) => (a.p ? a.p.rank : Infinity) - (b.p ? b.p.rank : Infinity) || byName(a, b));
     return { all: rated.concat(others, legacy), r, lr };
