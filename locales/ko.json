@@ -182,6 +182,8 @@
   "find.none": "“{query}”와 일치하는 플레이어가 없습니다",
   "find.unrated": "레이팅 없음",
   "find.keys": "↑ ↓로 고르고 Enter로 기록을 봅니다. 사이트 어디서든 /를 누르면 이 창이 열립니다.",
+  "find.toTop": "목록 맨 위로",
+  "find.toEnd": "목록 맨 아래로",
   "rt.group": "모든 코스",
   "rt.assisted.title": "어시스트 모드로 플레이한 기록의 레이팅",
   "rt.assisted.empty": "아직 어시스트 레이팅이 없습니다. 어시스트 모드로 플레이한 기록을 보내면 레이팅을 받습니다.",
