@@ -163,7 +163,10 @@ main:focus { outline: none; }
   cursor: pointer;
   transition: border-color .15s ease;
 }
-.top-btn:hover, .top-btn[aria-expanded="true"] { border-color: var(--volt); }
+.top-btn[aria-expanded="true"] { border-color: var(--volt); }
+/* Every :hover look is only for a mouse (hover: hover). A phone counts a tap as hovering over what was tapped and
+   everything around it, so a course's whole card lit up for a moment when one of its board's buttons was tapped. */
+@media (hover: hover) { .top-btn:hover { border-color: var(--volt); } }
 /* Reduce motion is on: lit up in green, over the button's own glass */
 .motion-btn[aria-pressed="true"] { border-color: var(--volt); background-image: linear-gradient(rgba(0, 230, 151, .14), rgba(0, 230, 151, .14)); }
 .motion-btn[aria-pressed="true"] .icon { color: var(--volt); }
@@ -291,9 +294,9 @@ main:focus { outline: none; }
   cursor: pointer;
   transition: transform .15s ease, border-color .15s ease, background-color .15s ease;
 }
-.btn:hover { transform: translateY(-1px); border-color: rgba(196, 255, 232, .42); background-color: rgba(16, 30, 25, .8); }
+@media (hover: hover) { .btn:hover { transform: translateY(-1px); border-color: rgba(196, 255, 232, .42); background-color: rgba(16, 30, 25, .8); } }
 .btn-primary { background: var(--volt); border-color: var(--volt); color: var(--on-volt); box-shadow: 0 10px 30px -8px rgba(0, 230, 151, .55); }
-.btn-primary:hover { background-color: var(--volt-hi); border-color: var(--volt-hi); }
+@media (hover: hover) { .btn-primary:hover { background-color: var(--volt-hi); border-color: var(--volt-hi); } }
 .btn-sm { min-height: 36px; padding: 0 12px; border-radius: 10px; font-size: 14.5px; }
 .btn .count { display: inline-flex; align-items: center; gap: 6px; font: 500 13px/1 var(--mono); color: var(--ink-2); }
 /* On the green buttons the count goes dark so it reads on mint */
@@ -340,7 +343,7 @@ main:focus { outline: none; }
   cursor: pointer;
   transition: color .15s;
 }
-.sections-more:hover { color: var(--volt); }
+@media (hover: hover) { .sections-more:hover { color: var(--volt); } }
 .sections-more .icon { width: 20px; height: 20px; }
 .sections-more { background: none; }
 .sections-more.right { right: 0; justify-content: flex-end; }
@@ -357,7 +360,7 @@ main:focus { outline: none; }
   white-space: nowrap;
   transition: color .15s, background-color .15s, box-shadow .15s;
 }
-.sections a:hover { color: var(--ink); background: var(--glass-hi); }
+@media (hover: hover) { .sections a:hover { color: var(--ink); background: var(--glass-hi); } }
 /* The links scroll; Find a player and My profile stay at the right end, with My profile last, where an account
    usually is. Icons only, so no language's longer words get cut off; their names are in aria-label and in the tooltip
    on hover. */
@@ -366,12 +369,14 @@ main:focus { outline: none; }
 /* A line between the links and the icons */
 .sections-scroll::after { content: ""; position: absolute; top: 7px; bottom: 7px; right: -3px; width: 1px; background: var(--line); }
 .sections-find, .sections-me { flex: none; width: 38px; height: 33px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--ink-2); cursor: pointer; transition: color .15s, background-color .15s; }
-.sections-find:hover, .sections-me:hover { color: var(--volt); background: var(--glass-hi); }
+@media (hover: hover) { .sections-find:hover, .sections-me:hover { color: var(--volt); background: var(--glass-hi); } }
 .sections-find:focus-visible, .sections-me:focus-visible { outline-offset: -2px; }
 /* Find a player in green, like every search icon (and still green under the pointer); My profile in the arc blue, like
    its icon in Features */
-.sections-find, .sections-find:hover { color: var(--volt); }
-.sections-me, .sections-me:hover { color: var(--arc); }
+.sections-find { color: var(--volt); }
+@media (hover: hover) { .sections-find:hover { color: var(--volt); } }
+.sections-me { color: var(--arc); }
+@media (hover: hover) { .sections-me:hover { color: var(--arc); } }
 .sections a[aria-current="true"] { color: var(--ink); background: rgba(0, 230, 151, .12); box-shadow: inset 0 0 0 1px rgba(0, 230, 151, .35); }
 /* On a phone there's only room for a link or two beside the icons, so the links fold into a menu instead. Its button
    says which section is on screen, and the menu drops down over the page from the bar's left end. */
@@ -395,7 +400,8 @@ main:focus { outline: none; }
     cursor: pointer;
     transition: background-color .15s;
   }
-  .sections-pick:hover, .sections-pick[aria-expanded="true"] { background: rgba(0, 230, 151, .2); }
+  .sections-pick[aria-expanded="true"] { background: rgba(0, 230, 151, .2); }
+  @media (hover: hover) { .sections-pick:hover { background: rgba(0, 230, 151, .2); } }
   .sections-pick:focus-visible { outline-offset: -2px; }
   .sections-pick-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
   .sections-pick .icon { width: 16px; height: 16px; color: var(--ink-2); transition: transform .15s; }
@@ -442,7 +448,7 @@ main:focus { outline: none; }
 .find-btn > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .find-btn .icon { width: 15px; height: 15px; color: var(--volt); }
 .find-btn kbd { flex: none; min-width: 22px; padding: 0 6px; border: 1px solid var(--line-hi); border-bottom-width: 2px; border-radius: 6px; font: 600 12px/18px var(--mono); text-align: center; color: var(--ink-2); }
-.find-btn:hover { border-color: var(--volt); color: var(--ink-2); }
+@media (hover: hover) { .find-btn:hover { border-color: var(--volt); color: var(--ink-2); } }
 @media (pointer: coarse) { .find-btn kbd { display: none; } }
 .panel-body { padding: 16px 18px 18px; }
 .panel-text { margin: 0; max-width: 62ch; font: 400 15.5px/1.55 var(--body); color: var(--ink-2); }
@@ -516,7 +522,7 @@ main:focus { outline: none; }
 .ramp i { width: 38px; height: 3px; border-radius: 2px; background: linear-gradient(90deg, var(--volt), var(--ember), var(--coral)); }
 .course-list { list-style: none; margin: 0; padding: 0; }
 .course { display: grid; grid-template-columns: 22px 26px minmax(0, 1fr) auto; align-items: center; gap: 8px 10px; padding: 8px 18px; }
-.course:hover { background: var(--glass-hi); }
+@media (hover: hover) { .course:hover { background: var(--glass-hi); } }
 .num { font: 600 13px/1 var(--mono); color: var(--ink-3); text-align: right; font-variant-numeric: tabular-nums; }
 .flag { font: 400 20px/1 var(--emoji); text-align: center; }
 .course-info { min-width: 0; }
@@ -550,7 +556,7 @@ main:focus { outline: none; }
   cursor: pointer;
   transition: border-color .15s, background-color .15s, color .15s, transform .1s;
 }
-.code:hover { border-color: var(--volt); color: var(--volt-hi); }
+@media (hover: hover) { .code:hover { border-color: var(--volt); color: var(--volt-hi); } }
 .code:active { transform: scale(.97); }
 .code-kind { font: 600 10px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
 .code.beta .code-kind { color: var(--ember); }
@@ -559,7 +565,7 @@ main:focus { outline: none; }
 .code.broken { border-style: dashed; background: none; color: var(--ink-3); }
 .code.broken .code-kind { color: var(--coral); }
 .code.broken s { text-decoration-color: var(--coral); text-decoration-thickness: 2px; }
-.code.broken:hover { border-color: var(--coral); color: var(--ink-2); }
+@media (hover: hover) { .code.broken:hover { border-color: var(--coral); color: var(--ink-2); } }
 .code.copied { border-style: solid; background: var(--volt); border-color: var(--volt); color: var(--on-volt); }
 .code.copied .code-kind, .code.copied .icon { color: var(--on-volt); }
 .code.copied .i-copy { display: none; }
@@ -583,7 +589,8 @@ main:focus { outline: none; }
   cursor: pointer;
   transition: border-color .15s, color .15s;
 }
-.rec:hover, .rec[aria-expanded="true"] { border-color: var(--volt); color: var(--ink); }
+.rec[aria-expanded="true"] { border-color: var(--volt); color: var(--ink); }
+@media (hover: hover) { .rec:hover { border-color: var(--volt); color: var(--ink); } }
 .rec .icon { width: 14px; height: 14px; }
 .rec .i-trophy { color: var(--gold); }
 .rec-time { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
@@ -624,8 +631,8 @@ main:focus { outline: none; }
 .run .stat { justify-content: flex-end; font: 600 14.5px/1 var(--mono); color: var(--ink-2); }
 a.stat { text-decoration: none; border-radius: 6px; }
 a.stat .play { width: 11px; height: 11px; color: var(--ink-3); transition: color .15s; }
-a.stat:hover .v { text-decoration: underline; text-underline-offset: 3px; }
-a.stat:hover .play { color: var(--volt); }
+@media (hover: hover) { a.stat:hover .v { text-decoration: underline; text-underline-offset: 3px; } }
+@media (hover: hover) { a.stat:hover .play { color: var(--volt); } }
 .run.p1, .run.p2, .run.p3 { --tier: var(--gold); background: linear-gradient(90deg, color-mix(in srgb, var(--tier) 13%, transparent), transparent 75%); }
 .run.p2 { --tier: var(--silver); }
 .run.p3 { --tier: var(--bronze); }
@@ -648,7 +655,7 @@ a.stat:hover .play { color: var(--volt); }
   cursor: pointer;
   transition: color .15s, background-color .15s, box-shadow .15s;
 }
-.lb-tab:hover { color: var(--ink); background: var(--glass-hi); }
+@media (hover: hover) { .lb-tab:hover { color: var(--ink); background: var(--glass-hi); } }
 .lb-tab[aria-selected="true"], .lb-tab[aria-pressed="true"] { color: var(--ink); background: rgba(0, 230, 151, .12); box-shadow: inset 0 0 0 1px rgba(0, 230, 151, .35); }
 .lb-hist { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 11px 12px 4px; }
 .lb-hist-head { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; font: 500 11.5px/1.3 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
@@ -668,7 +675,7 @@ a.stat:hover .play { color: var(--volt); }
   cursor: pointer;
   transition: border-color .15s, color .15s;
 }
-.lb-step:hover:not(:disabled) { border-color: var(--volt); color: var(--ink); }
+@media (hover: hover) { .lb-step:hover:not(:disabled) { border-color: var(--volt); color: var(--ink); } }
 .lb-step:disabled { opacity: .35; cursor: default; }
 .lb-step .icon { width: 15px; height: 15px; }
 .lb-step.prev .icon { transform: rotate(90deg); }
@@ -677,8 +684,8 @@ a.stat:hover .play { color: var(--volt); }
 .lb-tick { flex: 1 1 0; min-width: 0; height: 100%; display: grid; place-items: center; padding: 0; border: 0; border-radius: 4px; background: none; cursor: pointer; }
 .lb-tick::before { content: ""; width: 100%; max-width: 9px; height: 10px; border-radius: 2px; background: var(--line-hi); transition: height .15s, background-color .15s; }
 .lb-tick.wr::before { background: rgba(255, 213, 79, .6); }
-.lb-tick:hover::before { height: 15px; background: var(--ink-3); }
-.lb-tick.wr:hover::before { background: var(--gold); }
+@media (hover: hover) { .lb-tick:hover::before { height: 15px; background: var(--ink-3); } }
+@media (hover: hover) { .lb-tick.wr:hover::before { background: var(--gold); } }
 .lb-ticks .lb-tick[aria-current="true"]::before { height: 22px; background: var(--volt); box-shadow: 0 0 10px rgba(0, 230, 151, .55); }
 .lb-tick:focus-visible { outline-offset: -1px; }
 .lb-congrats {
@@ -726,7 +733,7 @@ a.stat:hover .play { color: var(--volt); }
 .lb-sort button[data-sort="miss"] .icon { color: var(--coral); }
 .lb-sort button[data-sort="rating"] .icon { color: var(--gold); }
 .lb-sort button[data-sort="date"] .icon { color: var(--arc); }
-.lb-sort button:hover, .lb-pic:hover { color: var(--ink); border-color: var(--line-hi); }
+@media (hover: hover) { .lb-sort button:hover, .lb-pic:hover { color: var(--ink); border-color: var(--line-hi); } }
 .lb-sort button[aria-pressed="true"] { color: var(--ink); background: rgba(0, 230, 151, .1); border-color: rgba(0, 230, 151, .35); }
 /* Find a player on a board by their in-game or Discord name: first in the bar, taking the room the buttons leave */
 .lb-search { position: relative; flex: 1 1 170px; min-width: 0; display: flex; align-items: center; }
@@ -736,7 +743,7 @@ a.stat:hover .play { color: var(--volt); }
 /* The clear button keeps its room even while the box is empty, which cut off the end of the longer hints */
 .lb-search input:placeholder-shown::-webkit-search-cancel-button { display: none; }
 .lb-search input::placeholder { color: var(--ink-3); opacity: 1; }
-.lb-search input:hover { border-color: var(--line-hi); }
+@media (hover: hover) { .lb-search input:hover { border-color: var(--line-hi); } }
 .lb-search input:focus-visible { outline: 2px solid var(--volt); outline-offset: 1px; border-color: var(--volt); }
 /* Phones zoom in on a field with text under 16px. At that size, the longest hint ("Nombre del jugador o de Discord")
    needs 262px, so the box gets a little more, on a line of its own when Picture would squeeze it */
@@ -764,7 +771,7 @@ a.stat:hover .play { color: var(--volt); }
 /* Past the top 10: everyone else who has run the course (or is rated), behind a "Show all" row */
 .board-rest { border-top: 1px dashed var(--line); padding-top: 6px; }
 .lb-more { width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 0; border-top: 1px solid var(--line); background: none; font: 500 13px/1.3 var(--mono); color: var(--ink-2); text-align: left; cursor: pointer; transition: background-color .15s, color .15s; }
-.lb-more:hover { background: var(--glass-hi); color: var(--ink); }
+@media (hover: hover) { .lb-more:hover { background: var(--glass-hi); color: var(--ink); } }
 .lb-more:focus-visible { outline-offset: -3px; border-radius: 6px; }
 .lb-more span { flex: 1; min-width: 0; }
 .lb-more .chev { width: 15px; height: 15px; flex: none; color: var(--ink-3); transition: transform .2s ease; }
@@ -772,7 +779,8 @@ a.stat:hover .play { color: var(--volt); }
 /* Names on the boards open the player's runs */
 /* The padding (taken back by the margin) leaves room for the underline, which the cut-off "…" would hide otherwise */
 button.run-name { max-width: 100%; margin-block: -3px; padding: 3px 0; border: 0; background: none; text-align: left; cursor: pointer; }
-button.run-name:hover, button.run-name:focus-visible { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+button.run-name:focus-visible { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+@media (hover: hover) { button.run-name:hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; } }
 /* A player's runs: a panel on the right, the whole width on phones */
 .pl {
   position: fixed;
@@ -809,7 +817,7 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-dc .run-pfp { width: 18px; height: 18px; }
 /* A Discord name that opens their profile on Discord (dcLink()): only as wide as the name, underlined on hover */
 .dc-link { width: fit-content; max-width: 100%; text-decoration: none; }
-.dc-link:hover > span { text-decoration: underline; text-underline-offset: 3px; }
+@media (hover: hover) { .dc-link:hover > span { text-decoration: underline; text-underline-offset: 3px; } }
 .dc-link:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; border-radius: 4px; }
 .pl-bot { display: inline-flex; align-items: center; gap: 5px; vertical-align: bottom; font-weight: 600; color: #b9befc; white-space: nowrap; }
 .pl-bot .run-pfp { width: 18px; height: 18px; }
@@ -817,7 +825,7 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-me { margin-top: 7px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; }
 .pl-me .pl-dc { margin-top: 0; }
 .pl-close { flex: none; width: 36px; height: 36px; display: grid; place-items: center; padding: 0; border: 1px solid var(--line-hi); border-radius: 10px; background: rgba(255, 255, 255, .03); color: var(--ink-2); cursor: pointer; transition: border-color .15s, color .15s; }
-.pl-close:hover { border-color: var(--volt); color: var(--ink); }
+@media (hover: hover) { .pl-close:hover { border-color: var(--volt); color: var(--ink); } }
 /* Rating, Place and Top % on top, Courses and Runs under them (two by two on a phone, Runs across the bottom) */
 .pl-stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; padding: 14px 18px 16px; }
 .pl-stats > .pl-stat { grid-column: span 2; }
@@ -831,8 +839,8 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-stat-go { display: block; width: 100%; text-align: left; text-decoration: none; cursor: pointer; transition: border-color .15s, background-color .15s; }
 .pl-stat-go .pl-stat-label { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
 .pl-stat-arrow { flex: none; width: 12px; height: 12px; transform: rotate(-90deg); color: var(--ink-3); transition: color .15s; }
-.pl-stat-go:hover { border-color: rgba(196, 255, 232, .42); background: var(--glass-hi); }
-.pl-stat-go:hover .pl-stat-arrow { color: var(--volt); }
+@media (hover: hover) { .pl-stat-go:hover { border-color: rgba(196, 255, 232, .42); background: var(--glass-hi); } }
+@media (hover: hover) { .pl-stat-go:hover .pl-stat-arrow { color: var(--volt); } }
 .pl-stat-go:focus-visible { outline-offset: 2px; }
 @media (max-width: 480px) {
   .pl-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -855,7 +863,7 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .lb-sort button .sort-dir .icon { width: 11px; height: 11px; color: currentColor; transition: transform .15s; }
 .lb-sort button .sort-dir.up .icon { transform: rotate(180deg); }
 .pl-back { display: inline-flex; align-items: center; gap: 4px; margin: -4px 0; padding: 4px 0; border: 0; background: none; font: 500 13px/1.3 var(--mono); color: var(--volt); cursor: pointer; }
-.pl-back:hover { text-decoration: underline; text-underline-offset: 3px; }
+@media (hover: hover) { .pl-back:hover { text-decoration: underline; text-underline-offset: 3px; } }
 .pl-back .icon { width: 13px; height: 13px; transform: rotate(90deg); }
 .pl-all .pl-run-list { gap: 0; }
 .pl-all .pl-run { grid-template-areas: "course course course" "time miss tags" "meta meta meta"; row-gap: 5px; padding: 10px 18px; border-top: 1px solid var(--line); border-radius: 0; }
@@ -870,7 +878,7 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-course-btn .num { grid-area: num; }
 .pl-course-btn .flag { grid-area: flag; }
 .pl-course-btn .chev { grid-area: chev; }
-.pl-course-btn:hover { background: var(--glass-hi); }
+@media (hover: hover) { .pl-course-btn:hover { background: var(--glass-hi); } }
 .pl-course-btn:focus-visible { outline-offset: -3px; border-radius: 6px; }
 .pl-course-name { grid-area: name; min-width: 0; font: 600 15px/1.25 var(--body); color: var(--ink); }
 .pl-course-best { grid-area: best; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; font: 600 12.5px/1.25 var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); }
@@ -943,7 +951,7 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-url-text { color: var(--ink); font-weight: 500; overflow-wrap: anywhere; }
 .pl-url-form .pl-claim-text { flex-basis: 100%; }
 .pl-url-field { flex: 1 1 100%; min-width: 0; height: 40px; display: flex; align-items: center; border: 1px solid var(--line-hi); border-radius: 10px; background: rgba(0, 0, 0, .3); transition: border-color .15s; }
-.pl-url-field:hover { border-color: rgba(196, 255, 232, .42); }
+@media (hover: hover) { .pl-url-field:hover { border-color: rgba(196, 255, 232, .42); } }
 .pl-url-field:focus-within { outline: 2px solid var(--volt); outline-offset: 1px; border-color: var(--volt); }
 .pl-url-pre { flex: none; padding-left: 12px; font: 400 14.5px/1 var(--body); color: var(--ink-3); white-space: nowrap; }
 .pl-url-field input { flex: 1; min-width: 6ch; height: 100%; padding: 0 12px 0 1px; border: 0; background: none; color: var(--ink); font: 500 14.5px/1 var(--body); outline: none; }
@@ -1026,7 +1034,7 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-perks .f-icon { width: 34px; height: 34px; }
 .pl-perks .f-icon .icon { width: 17px; height: 17px; }
 .pl-perk-link { color: var(--volt); text-decoration: underline; text-underline-offset: 3px; }
-.pl-perk-link:hover { color: var(--volt-hi); }
+@media (hover: hover) { .pl-perk-link:hover { color: var(--volt-hi); } }
 .pl-shares { list-style: none; margin: 12px 0 0; padding: 0; border: 1px solid var(--line); border-radius: 12px; background: rgba(255, 255, 255, .025); font: 500 15px/1.4 var(--body); }
 .pl-shares li { display: flex; align-items: flex-start; gap: 11px; padding: 11px 14px; }
 .pl-shares li + li { border-top: 1px solid var(--line); }
@@ -1043,7 +1051,7 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .pl-signin-go .btn { text-decoration: none; }
 .pl-signin-go .btn-discord { flex: 1; }
 .pl-board { display: inline-flex; align-items: center; gap: 4px; margin: 8px 10px 0; font: 500 13px/1.3 var(--mono); color: var(--volt); text-decoration: none; }
-.pl-board:hover { text-decoration: underline; text-underline-offset: 3px; }
+@media (hover: hover) { .pl-board:hover { text-decoration: underline; text-underline-offset: 3px; } }
 .pl-board .icon { width: 13px; height: 13px; transform: rotate(-90deg); }
 /* A board's picture: a window with the picture, and Save, Copy and Share under it */
 .pic { width: min(880px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 32px); margin: auto; padding: 0 0 16px; border: 1px solid var(--line-hi); border-radius: var(--r); background: #08100d; color: var(--ink); overflow-y: auto; box-shadow: 0 30px 80px rgba(0, 0, 0, .6); }
@@ -1086,7 +1094,7 @@ button.run-name:hover, button.run-name:focus-visible { text-decoration: underlin
 .vid-list { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 14px; }
 .vid-c-head { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
 .vid-c-name { font: 600 14px/1.3 var(--body); color: var(--ink); text-decoration: none; overflow-wrap: anywhere; }
-a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
+@media (hover: hover) { a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; } }
 .vid-c-date { font: 400 12px/1.2 var(--mono); color: var(--ink-3); }
 .vid-c-text { margin: 4px 0 0; font: 400 14.5px/1.5 var(--body); color: var(--ink-2); white-space: pre-line; overflow-wrap: anywhere; }
 .vid-c-meta { margin: 6px 0 0; display: flex; flex-wrap: wrap; gap: 4px 16px; font: 500 12px/1.2 var(--mono); color: var(--ink-3); }
@@ -1202,7 +1210,8 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
   .sub-course-menu { position: static; max-height: none; margin-top: 6px; grid-template-columns: minmax(0, 1fr); }
 }
 .sub-form input::placeholder { color: var(--ink-3); opacity: 1; }
-.sub-form input:not([type="checkbox"]):hover, .sub-form .sub-pick:hover, .sub-pick[aria-expanded="true"] { border-color: rgba(196, 255, 232, .42); }
+.sub-pick[aria-expanded="true"] { border-color: rgba(196, 255, 232, .42); }
+@media (hover: hover) { .sub-form input:not([type="checkbox"]):hover, .sub-form .sub-pick:hover { border-color: rgba(196, 255, 232, .42); } }
 .sub-form input:focus-visible, .sub-form .sub-pick:focus-visible { outline: 2px solid var(--volt); outline-offset: 1px; border-color: var(--volt); }
 .sub-form [aria-invalid="true"] { border-color: var(--coral); }
 #sub-time, #sub-miss { font-family: var(--mono); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
@@ -1223,7 +1232,7 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .rev-dc { justify-self: start; max-width: 100%; display: inline-flex; align-items: center; gap: 6px; font: 600 13px/1.2 var(--body); color: #b9befc; text-decoration: none; }
 .rev-dc > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rev-dc .icon { flex: none; width: 12px; height: 12px; opacity: .7; }
-.rev-dc:hover > span { text-decoration: underline; text-underline-offset: 3px; }
+@media (hover: hover) { .rev-dc:hover > span { text-decoration: underline; text-underline-offset: 3px; } }
 .rev-dc:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; border-radius: 4px; }
 /* A claim's legacy runs, one per line: the course (like Submitted runs names it), then the time */
 .rev-legacy { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
@@ -1253,7 +1262,7 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .rev-q { flex-basis: 100%; font: 600 14.5px/1.35 var(--body); color: var(--ink); }
 .rev-ask .btn[disabled] { opacity: .6; cursor: progress; transform: none; }
 .btn-warn { background: var(--coral); border-color: var(--coral); color: #2a0800; }
-.btn-warn:hover { background-color: #ff8a74; border-color: #ff8a74; }
+@media (hover: hover) { .btn-warn:hover { background-color: #ff8a74; border-color: #ff8a74; } }
 /* Submitted runs, over the form for everyone: every run sent from the website, newest first, each opening its page */
 .sub-runs { padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255, 255, 255, .02); }
 .sub-runs .rev-title .icon { color: var(--volt); }
@@ -1264,7 +1273,7 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .sub-runs-find { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
 .runs-range-wrap { position: relative; flex: none; margin-inline-start: auto; }
 .runs-range { display: flex; align-items: center; gap: 6px; height: 26px; padding: 0 6px 0 8px; border: 1px solid var(--line); border-radius: 7px; background: rgba(0, 0, 0, .25); color: var(--ink); font: 500 13px/1 var(--body); white-space: nowrap; cursor: pointer; transition: border-color .15s; }
-.runs-range:hover { border-color: var(--line-hi); }
+@media (hover: hover) { .runs-range:hover { border-color: var(--line-hi); } }
 .runs-range[aria-expanded="true"] { border-color: var(--volt); }
 .runs-range:focus-visible { outline: 2px solid var(--volt); outline-offset: 1px; }
 .runs-range .icon { width: 13px; height: 13px; flex: none; color: var(--ink-3); }
@@ -1288,10 +1297,10 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .sub-runs-jump { position: sticky; bottom: 16px; z-index: 1; height: 0; display: flex; justify-content: flex-end; align-items: flex-end; gap: 6px; transition: opacity .15s, visibility .15s; }
 .sub-runs-jump.away { opacity: 0; visibility: hidden; }
 .sub-runs-jump button { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 1px solid var(--line-hi); border-radius: 10px; background: var(--glass); -webkit-backdrop-filter: blur(16px) saturate(1.2); backdrop-filter: blur(16px) saturate(1.2); box-shadow: 0 10px 24px -14px rgba(0, 0, 0, .9); color: var(--ink-2); cursor: pointer; transition: color .15s, border-color .15s, opacity .15s; }
-.sub-runs-jump button:hover { color: var(--ink); border-color: var(--volt); }
+@media (hover: hover) { .sub-runs-jump button:hover { color: var(--ink); border-color: var(--volt); } }
 .sub-runs-jump button:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; }
 .sub-runs-jump button[aria-disabled="true"] { opacity: .4; cursor: default; }
-.sub-runs-jump button[aria-disabled="true"]:hover { color: var(--ink-2); border-color: var(--line-hi); }
+@media (hover: hover) { .sub-runs-jump button[aria-disabled="true"]:hover { color: var(--ink-2); border-color: var(--line-hi); } }
 .sub-runs-jump .icon { width: 16px; height: 16px; }
 .sub-runs-jump [data-runs-jump="up"] .icon { transform: rotate(180deg); }
 /* Stats, at the very bottom: which days (a day, or the 7 or 30 days or 3, 6, or 12 months up to it), then Runs and Page views, each with a
@@ -1303,7 +1312,8 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .stats-head .src-group { padding: 0; }
 .stats-month-wrap { position: relative; margin-inline-start: auto; }
 .stats-month { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 8px 0 11px; border: 1px solid var(--line-hi); border-radius: 9px; background: rgba(0, 0, 0, .25); color: var(--ink); font: 500 14px/1 var(--body); cursor: pointer; transition: border-color .15s; }
-.stats-month:hover, .stats-month[aria-expanded="true"] { border-color: var(--volt); }
+.stats-month[aria-expanded="true"] { border-color: var(--volt); }
+@media (hover: hover) { .stats-month:hover { border-color: var(--volt); } }
 .stats-month .chev { width: 16px; height: 16px; flex: none; color: var(--ink-3); transition: transform .2s ease; }
 .stats-month[aria-expanded="true"] .chev { transform: rotate(180deg); }
 .stats-month-menu { min-width: 100%; width: max-content; max-height: 340px; overflow-y: auto; overscroll-behavior: contain; display: grid; gap: 2px; }
@@ -1325,7 +1335,7 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .stats-bars { display: flex; align-items: stretch; gap: 3px; height: 64px; }
 .stats-bar { flex: 1; min-width: 0; display: flex; align-items: flex-end; padding: 0; border: 0; border-radius: 3px 3px 0 0; background: none; cursor: pointer; }
 .stats-bar > span { width: 100%; border-radius: 3px 3px 0 0; background: rgba(0, 230, 151, .35); transition: background-color .15s; }
-.stats-bar:hover > span { background: rgba(0, 230, 151, .6); }
+@media (hover: hover) { .stats-bar:hover > span { background: rgba(0, 230, 151, .6); } }
 .stats-bar[aria-pressed="true"] { background: rgba(0, 230, 151, .08); }
 .stats-bar[aria-pressed="true"] > span { background: var(--volt); }
 .stats-bar:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; }
@@ -1337,14 +1347,14 @@ a.vid-c-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .stats-rows { list-style: none; margin: 14px -8px 0; padding: 0; }
 .stats-row { width: 100%; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 16px; padding: 2px 8px; border: 0; border-radius: 6px; background: none; font: 500 14px/1.35 var(--body); color: var(--ink-2); text-align: left; cursor: pointer; transition: background-color .15s, color .15s; }
 .stats-row { text-decoration: none; }
-.stats-row:hover { background: var(--glass-hi); color: var(--ink); }
+@media (hover: hover) { .stats-row:hover { background: var(--glass-hi); color: var(--ink); } }
 div.stats-row { cursor: default; }
-div.stats-row:hover { background: none; color: var(--ink-2); }
+@media (hover: hover) { div.stats-row:hover { background: none; color: var(--ink-2); } }
 .stats-row-value { margin-inline-start: auto; display: inline-flex; align-items: baseline; gap: 6px; text-align: right; }
 .stats-row .num { white-space: nowrap; font: 600 13px/1.35 var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); }
 .stats-row .course-cell { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; align-items: baseline; gap: 0 6px; font: 600 13px/1.35 var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); }
 .stats-row-arrow { flex: none; align-self: center; width: 11px; height: 11px; transform: rotate(-90deg); color: var(--ink-3); transition: color .15s; }
-.stats-row:hover .stats-row-arrow { color: var(--volt); }
+@media (hover: hover) { .stats-row:hover .stats-row-arrow { color: var(--volt); } }
 /* Most viewed: the same rows, with People and Views in two columns under their names. Every row (and the names over
    the columns) lays itself out on the list's own columns (subgrid), so the numbers line up however wide they or the
    names in that language are. */
@@ -1365,7 +1375,7 @@ div.stats-row:hover { background: none; color: var(--ink-2); }
 @media (max-width: 600px) { .stats-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 a.rev-run, button.rev-run { color: inherit; text-decoration: none; transition: border-color .15s, background-color .15s; }
 button.rev-run { width: 100%; font: inherit; text-align: left; cursor: pointer; }
-a.rev-run:hover, button.rev-run:hover { border-color: var(--line-hi); background: var(--glass-hi); }
+@media (hover: hover) { a.rev-run:hover, button.rev-run:hover { border-color: var(--line-hi); background: var(--glass-hi); } }
 .rev-more { margin-top: 8px; }
 .nowrap { white-space: nowrap; }
 /* A run's status: on the board, waiting for a check, turned down, taken off, or not its player's best */
@@ -1391,12 +1401,12 @@ a.rev-run:hover, button.rev-run:hover { border-color: var(--line-hi); background
 .run-play { position: absolute; inset: 0; width: 100%; display: grid; place-content: center; justify-items: center; gap: 9px; padding: 16px; border: 0; background: radial-gradient(120% 90% at 50% 40%, rgba(0, 230, 151, .1), transparent 60%), #050a08; color: var(--ink); text-align: center; cursor: pointer; }
 .run-play-btn { width: 58px; height: 58px; display: grid; place-items: center; border-radius: 50%; background: var(--volt); color: var(--on-volt); box-shadow: 0 10px 30px -8px rgba(0, 230, 151, .55); transition: transform .15s ease; }
 .run-play-btn .icon { width: 24px; height: 24px; margin-inline-start: 3px; }
-.run-play:hover .run-play-btn { transform: scale(1.06); }
+@media (hover: hover) { .run-play:hover .run-play-btn { transform: scale(1.06); } }
 .run-play:focus-visible { outline: 2px solid var(--volt); outline-offset: -3px; }
 .run-play-label { font: 600 15.5px/1.2 var(--body); }
 .run-out { margin-top: 8px; display: flex; justify-content: flex-end; }
 .run-out a { display: inline-flex; align-items: center; gap: 5px; font: 500 13px/1 var(--mono); color: var(--ink-3); text-decoration: underline; text-underline-offset: 3px; }
-.run-out a:hover { color: var(--ink); }
+@media (hover: hover) { .run-out a:hover { color: var(--ink); } }
 .run-out .icon { width: 13px; height: 13px; }
 .sub-review.run-check { margin: 16px 18px 0; }
 .run-check .rev-note:first-child { margin-top: 0; }
@@ -1405,7 +1415,7 @@ a.rev-run:hover, button.rev-run:hover { border-color: var(--line-hi); background
 .run-stats { margin: 16px 18px 0; padding-top: 16px; border-top: 1px solid var(--line); }
 .run-tabs { display: inline-flex; flex-wrap: wrap; gap: 3px; padding: 3px; border: 1px solid var(--line-hi); border-radius: 10px; background: rgba(0, 0, 0, .25); }
 .run-tab { height: 30px; padding: 0 12px; border: 0; border-radius: 7px; background: none; font: 600 13px/1 var(--mono); color: var(--ink-2); cursor: pointer; }
-.run-tab:hover { color: var(--ink); }
+@media (hover: hover) { .run-tab:hover { color: var(--ink); } }
 .run-tab[aria-pressed="true"] { background: var(--volt); color: var(--on-volt); }
 .run-stats-title { margin: 0; font: 600 12px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink); }
 .run-note { margin: 10px 0 0; font: 400 13.5px/1.45 var(--body); color: var(--ink-2); }
@@ -1419,7 +1429,7 @@ a.rev-run:hover, button.rev-run:hover { border-color: var(--line-hi); background
 .sub-signin { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 0 18px 16px; }
 .sub-signin .field-hint { flex: 1 1 220px; }
 .btn-discord { background: #5865f2; border-color: #5865f2; color: #fff; box-shadow: 0 10px 30px -10px rgba(88, 101, 242, .7); }
-.btn-discord:hover { background-color: #6d78f5; border-color: #6d78f5; }
+@media (hover: hover) { .btn-discord:hover { background-color: #6d78f5; border-color: #6d78f5; } }
 .sub-me { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; font: 500 14.5px/1.3 var(--body); color: var(--ink-2); }
 /* Their name takes the line; on a narrow screen My profile and Sign out move under it, together */
 .sub-me #sub-me-name { flex: 1 1 150px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1427,10 +1437,10 @@ a.rev-run:hover, button.rev-run:hover { border-color: var(--line-hi); background
 .sub-me .run-pfp { width: 22px; height: 22px; }
 .sub-me-actions { margin-inline-start: auto; flex: none; display: inline-flex; align-items: center; gap: 10px; }
 .sub-mine { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 9px; border: 1px solid var(--line-hi); border-radius: 8px; background: rgba(255, 255, 255, .03); font: 600 13px/1 var(--mono); color: var(--ink); cursor: pointer; transition: border-color .15s; }
-.sub-mine:hover { border-color: var(--volt); }
+@media (hover: hover) { .sub-mine:hover { border-color: var(--volt); } }
 .sub-mine .icon { width: 14px; height: 14px; color: #b9befc; }
 .sub-logout, .pl-signout { flex: none; padding: 4px 2px; border: 0; background: none; font: 500 13px/1 var(--mono); color: var(--ink-3); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
-.sub-logout:hover, .pl-signout:hover { color: var(--ink); }
+@media (hover: hover) { .sub-logout:hover, .pl-signout:hover { color: var(--ink); } }
 .sub-send[disabled] { opacity: .6; cursor: progress; transform: none; }
 .sub-status { margin: 0; display: flex; gap: 9px; align-items: flex-start; padding: 9px 11px; border: 1px solid var(--line); border-radius: 9px; font: 500 14.5px/1.45 var(--body); color: var(--ink-2); }
 .sub-status:empty { display: none; }
@@ -1486,21 +1496,21 @@ a.rev-run:hover, button.rev-run:hover { border-color: var(--line-hi); background
 /* Game / Website: an h3, so its default margins are cleared; padding keeps it centered between the rows */
 .src-group { margin: 0; padding: 18px 18px 4px; }
 .link-row + .src-group { border-top: 1px solid var(--line); }
-.link-row:hover { background: var(--glass-hi); }
+@media (hover: hover) { .link-row:hover { background: var(--glass-hi); } }
 .lr-icon { width: 38px; height: 38px; flex: none; display: grid; place-items: center; border-radius: 10px; background: rgba(0, 230, 151, .12); color: var(--volt); }
 .lr-text { flex: 1; min-width: 0; }
 .lr-title { display: block; font: 600 16.5px/1.25 var(--body); }
 .lr-sub { display: block; margin-top: 3px; overflow-wrap: anywhere; font: 400 12.5px/1.4 var(--mono); color: var(--ink-2); }
 .lr-arrow { width: 18px; height: 18px; flex: none; color: var(--ink-3); transition: transform .15s, color .15s; }
-.link-row:hover .lr-arrow { color: var(--volt); transform: translate(2px, -2px); }
+@media (hover: hover) { .link-row:hover .lr-arrow { color: var(--volt); transform: translate(2px, -2px); } }
 /* Release notes: the row opens every release, and each version chip opens its own */
 .rel-row { position: relative; }
 .rel-row .stretch { color: inherit; text-decoration: none; }
 .rel-row .stretch::after { content: ""; position: absolute; inset: 0; }
 .rel-row .stretch:focus-visible { outline: none; }
 .rel-row .stretch:focus-visible::after { outline: 2px solid var(--volt); outline-offset: -3px; border-radius: 4px; }
-.rel-row:has(.rel:hover) { background: none; }
-.rel-row:has(.rel:hover) .lr-arrow { color: var(--ink-3); transform: none; }
+@media (hover: hover) { .rel-row:has(.rel:hover) { background: none; } }
+@media (hover: hover) { .rel-row:has(.rel:hover) .lr-arrow { color: var(--ink-3); transform: none; } }
 .rels { margin-top: 7px; display: flex; flex-wrap: wrap; gap: 6px; }
 .rel {
   position: relative;
@@ -1519,10 +1529,10 @@ a.rev-run:hover, button.rev-run:hover { border-color: var(--line-hi); background
   white-space: nowrap;
   transition: border-color .15s, color .15s;
 }
-.rel:hover { border-color: var(--volt); color: var(--volt-hi); }
+@media (hover: hover) { .rel:hover { border-color: var(--volt); color: var(--volt-hi); } }
 .rel.beta .code-kind { color: var(--ember); }
 .rel .icon { width: 12px; height: 12px; color: var(--ink-3); transition: color .15s; }
-.rel:hover .icon { color: var(--volt); }
+@media (hover: hover) { .rel:hover .icon { color: var(--volt); } }
 
 /* Features */
 .features { list-style: none; margin: 0; padding: 8px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 6px; }
@@ -1538,7 +1548,7 @@ a.rev-run:hover, button.rev-run:hover { border-color: var(--line-hi); background
 .qa + .qa { border-top: 1px solid var(--line); }
 .qa summary { display: flex; align-items: center; gap: 12px; padding: 13px 18px; list-style: none; font: 600 15.5px/1.35 var(--body); color: var(--ink); cursor: pointer; transition: background-color .15s; }
 .qa summary::-webkit-details-marker { display: none; }
-.qa summary:hover { background: var(--glass-hi); }
+@media (hover: hover) { .qa summary:hover { background: var(--glass-hi); } }
 .qa summary:focus-visible { outline-offset: -3px; border-radius: 6px; }
 .qa-q { flex: 1; min-width: 0; }
 .qa summary .chev { width: 16px; height: 16px; flex: none; color: var(--ink-3); transition: transform .2s ease, color .2s ease; }
@@ -1560,7 +1570,7 @@ a.rev-run:hover, button.rev-run:hover { border-color: var(--line-hi); background
 .faq-rest { border-top: 1px solid var(--line); }
 .faq-rest[hidden] { border-top: 0; }
 .faq-toggle { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 18px; border: 0; border-top: 1px solid var(--line); background: none; font: 500 13.5px/1.3 var(--mono); color: var(--ink-2); text-align: left; cursor: pointer; transition: background-color .15s, color .15s; }
-.faq-toggle:hover { background: var(--glass-hi); color: var(--ink); }
+@media (hover: hover) { .faq-toggle:hover { background: var(--glass-hi); color: var(--ink); } }
 .faq-toggle:focus-visible { outline-offset: -3px; border-radius: 6px; }
 .faq-toggle span { flex: 1; min-width: 0; }
 .faq-toggle .chev { width: 16px; height: 16px; flex: none; color: var(--ink-3); transition: transform .2s ease; }
@@ -1589,7 +1599,7 @@ a.rev-run:hover, button.rev-run:hover { border-color: var(--line-hi); background
   transition: background-color .15s, color .15s;
 }
 .voice-more summary::-webkit-details-marker { display: none; }
-.voice-more summary:hover { background: var(--glass-hi); color: var(--ink); }
+@media (hover: hover) { .voice-more summary:hover { background: var(--glass-hi); color: var(--ink); } }
 .voice-more summary .icon { width: 15px; height: 15px; color: var(--volt); }
 .voice-more summary .chev { width: 14px; height: 14px; color: var(--ink-3); transition: transform .2s ease; }
 .voice-more[open] summary .chev { transform: rotate(180deg); }
@@ -1597,7 +1607,7 @@ a.rev-run:hover, button.rev-run:hover { border-color: var(--line-hi); background
 .join { margin-top: 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
 .dc-how { margin: 12px 0 0; max-width: 62ch; font: 400 13.5px/1.5 var(--body); color: var(--ink-3); }
 .dc-how a { color: var(--volt); text-decoration: underline; text-underline-offset: 3px; }
-.dc-how a:hover { color: var(--volt-hi); }
+@media (hover: hover) { .dc-how a:hover { color: var(--volt-hi); } }
 .link-copy {
   display: inline-flex;
   align-items: center;
@@ -1612,7 +1622,7 @@ a.rev-run:hover, button.rev-run:hover { border-color: var(--line-hi); background
   cursor: pointer;
   transition: border-color .15s, color .15s, transform .1s;
 }
-.link-copy:hover { border-color: var(--volt); color: var(--ink); }
+@media (hover: hover) { .link-copy:hover { border-color: var(--volt); color: var(--ink); } }
 .link-copy:active { transform: scale(.97); }
 .link-copy .icon { width: 14px; height: 14px; color: var(--ink-3); }
 .link-copy .i-check { display: none; }
@@ -1623,14 +1633,14 @@ a.rev-run:hover, button.rev-run:hover { border-color: var(--line-hi); background
 /* Translations */
 .langs { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .langs button { padding: 5px 10px; border: 1px solid var(--line); border-radius: 8px; background: rgba(255, 255, 255, .025); color: var(--ink-2); font: 500 14px/1.2 var(--body); cursor: pointer; transition: border-color .15s, color .15s, background-color .15s; }
-.langs button:hover { border-color: var(--line-hi); color: var(--ink); }
+@media (hover: hover) { .langs button:hover { border-color: var(--line-hi); color: var(--ink); } }
 .langs button[aria-pressed="true"] { border-color: var(--volt); background: rgba(0, 230, 151, .1); color: var(--ink); }
 
 /* Footer */
 .foot { max-width: var(--col); margin: 0 auto; padding-block: 8px 44px; text-align: center; font: 400 13.5px/1.5 var(--body); color: var(--ink-3); }
 .foot p { margin: 0 auto; max-width: 60ch; }
 .foot p a { color: inherit; text-decoration: underline; text-decoration-color: rgba(118, 134, 127, .55); text-underline-offset: 3px; transition: color .15s, text-decoration-color .15s; }
-.foot p a:hover { color: var(--ink); text-decoration-color: currentColor; }
+@media (hover: hover) { .foot p a:hover { color: var(--ink); text-decoration-color: currentColor; } }
 .contact { margin-bottom: 16px; padding-bottom: 18px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; }
 .contact-q { flex-basis: 100%; margin-bottom: 2px; font: 500 14.5px/1.3 var(--body); color: var(--ink-2); }
 a.link-copy { text-decoration: none; }
@@ -1638,10 +1648,11 @@ a.link-copy { text-decoration: none; }
 /* The Discord name and the email: a copy button, joined to a link that opens it */
 .split { display: inline-flex; }
 .split > .link-copy { position: relative; }
-.split > .link-copy:hover, .split > .link-copy.copied { z-index: 1; }
+.split > .link-copy.copied { z-index: 1; }
+@media (hover: hover) { .split > .link-copy:hover { z-index: 1; } }
 .split > :first-child { border-radius: 9px 0 0 9px; }
 .split > :last-child { margin-left: -1px; padding: 0 9px; border-radius: 0 9px 9px 0; }
-.link-copy:hover .ext { color: var(--volt); transform: translate(1px, -1px); }
+@media (hover: hover) { .link-copy:hover .ext { color: var(--volt); transform: translate(1px, -1px); } }
 /* Blurring glass over a moving canvas is costly on phones: use solid glass there */
 @media (max-width: 700px), (pointer: coarse) {
   .panel, .btn, .top-btn, .sections { -webkit-backdrop-filter: none; backdrop-filter: none; }
