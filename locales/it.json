@@ -182,6 +182,8 @@
   "find.none": "Nessun giocatore corrisponde a «{query}»",
   "find.unrated": "Senza punteggio",
   "find.keys": "↑ ↓ per scegliere, Invio per vedere le statistiche. Premi / ovunque sul sito per aprire questa ricerca.",
+  "find.toTop": "Vai all’inizio della lista",
+  "find.toEnd": "Vai alla fine della lista",
   "rt.group": "Tutti i percorsi",
   "rt.assisted.title": "Punteggi dalle run giocate in modalità assistita",
   "rt.assisted.empty": "Ancora nessun punteggio assistito. Invia una run giocata in modalità assistita per ottenerne uno.",

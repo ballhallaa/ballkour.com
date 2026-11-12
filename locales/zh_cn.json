@@ -182,6 +182,8 @@
   "find.none": "没有与“{query}”匹配的玩家",
   "find.unrated": "无积分",
   "find.keys": "↑ ↓ 选择，Enter 查看数据。在网站任意位置按 / 即可打开。",
+  "find.toTop": "回到列表顶部",
+  "find.toEnd": "前往列表末尾",
   "rt.group": "所有关卡",
   "rt.assisted.title": "来自辅助模式成绩的积分",
   "rt.assisted.empty": "暂无辅助积分。提交一个在辅助模式中跑出的成绩即可获得积分。",

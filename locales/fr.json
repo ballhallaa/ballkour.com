@@ -182,6 +182,8 @@
   "find.none": "Aucun joueur ne correspond à « {query} »",
   "find.unrated": "Non classé",
   "find.keys": "↑ ↓ pour choisir, Entrée pour voir ses stats. Appuyez sur / n’importe où sur le site pour ouvrir ceci.",
+  "find.toTop": "Aller en haut de la liste",
+  "find.toEnd": "Aller à la fin de la liste",
   "rt.group": "Tous les parcours",
   "rt.assisted.title": "Scores des parties jouées en mode assisté",
   "rt.assisted.empty": "Pas encore de score assisté. Envoyez une partie jouée en mode assisté pour en obtenir un.",

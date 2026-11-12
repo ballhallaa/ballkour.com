@@ -182,6 +182,8 @@
   "find.none": "Keine Spieler passen zu „{query}“",
   "find.unrated": "Ohne Wertung",
   "find.keys": "↑ ↓ zum Auswählen, Enter für die Stats. Drück überall auf der Seite /, um das hier zu öffnen.",
+  "find.toTop": "Zum Anfang der Liste",
+  "find.toEnd": "Zum Ende der Liste",
   "rt.group": "Alle Strecken",
   "rt.assisted.title": "Wertungen aus Läufen im Assistenzmodus",
   "rt.assisted.empty": "Noch keine assistierten Wertungen. Schick einen Lauf aus dem Assistenzmodus, um eine zu bekommen.",

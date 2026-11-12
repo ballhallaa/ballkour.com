@@ -182,6 +182,8 @@
   "find.none": "“{query}” ile eşleşen oyuncu yok",
   "find.unrated": "Puansız",
   "find.keys": "Seçmek için ↑ ↓, istatistikleri görmek için Enter. Bunu açmak için sitenin herhangi bir yerinde / tuşuna bas.",
+  "find.toTop": "Listenin başına",
+  "find.toEnd": "Listenin sonuna",
   "rt.group": "Tüm parkurlar",
   "rt.assisted.title": "Yardım modunda oynanan koşulardan puanlar",
   "rt.assisted.empty": "Henüz yardımlı puan yok. Puan almak için yardım modunda oynadığın bir koşuyu gönder.",

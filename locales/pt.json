@@ -182,6 +182,8 @@
   "find.none": "Nenhum jogador corresponde a “{query}”",
   "find.unrated": "Sem pontuação",
   "find.keys": "↑ ↓ para escolher, Enter para ver as estatísticas. Aperte / em qualquer lugar do site para abrir isto.",
+  "find.toTop": "Ir para o início da lista",
+  "find.toEnd": "Ir para o fim da lista",
   "rt.group": "Todos os percursos",
   "rt.assisted.title": "Pontuações de corridas jogadas no modo assistido",
   "rt.assisted.empty": "Ainda não há pontuações assistidas. Envie uma corrida jogada no modo assistido para ganhar uma.",

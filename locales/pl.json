@@ -182,6 +182,8 @@
   "find.none": "Żaden gracz nie pasuje do „{query}”",
   "find.unrated": "Bez rankingu",
   "find.keys": "↑ ↓, aby wybrać, Enter, aby zobaczyć statystyki. Naciśnij / w dowolnym miejscu strony, aby to otworzyć.",
+  "find.toTop": "Na początek listy",
+  "find.toEnd": "Na koniec listy",
   "rt.group": "Wszystkie trasy",
   "rt.assisted.title": "Rankingi z przejść w trybie wspomaganym",
   "rt.assisted.empty": "Nie ma jeszcze wspomaganych rankingów. Wyślij przejście z trybu wspomaganego, aby dostać ranking.",
