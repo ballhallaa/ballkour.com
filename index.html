@@ -1124,6 +1124,16 @@ button.run-name:focus-visible { text-decoration: underline; text-decoration-thic
 .pf .run-name { color: var(--ink); }
 .pf .pf-unrated { grid-column: 3 / 5; justify-content: flex-end; font: 500 12.5px/1.2 var(--mono); color: var(--ink-3); }
 .pf .run.active { background-color: var(--glass-hi); box-shadow: inset 2px 0 0 var(--volt); }
+/* The Player ratings' tabs under the box, each with how many players it lists, in their tab's colors */
+.pf-views { flex: none; display: flex; flex-wrap: wrap; gap: 4px; padding: 7px 10px; border-bottom: 1px solid var(--line); }
+.pf-views .lb-tab { white-space: nowrap; }
+.pf-views .lb-tab[data-pf-view="top"][aria-pressed="true"] { background: rgba(230, 151, 0, .12); box-shadow: inset 0 0 0 1px rgba(230, 151, 0, .4); }
+.pf-views .lb-tab[data-pf-view="assisted"][aria-pressed="true"] { background: rgba(255, 128, 192, .12); box-shadow: inset 0 0 0 1px rgba(255, 128, 192, .4); }
+.pf-views .lb-tab[data-pf-view="legacy"][aria-pressed="true"] { background: rgba(167, 182, 176, .12); box-shadow: inset 0 0 0 1px rgba(167, 182, 176, .4); }
+.pf-count { margin-left: 7px; font: 500 12px/1 var(--mono); color: var(--ink-3); }
+/* ↑ and ↓ over the list's bottom right, left of its scrollbar, like Submitted runs' (see placeFinderJump) */
+.pf-list.jumps { padding-bottom: 58px; }
+.pf-jump { flex: none; position: relative; z-index: 1; height: 0; display: flex; justify-content: flex-end; align-items: flex-end; gap: 6px; padding-right: 22px; transform: translateY(-12px); }
 .pf-group { display: flex; align-items: center; gap: 8px; margin-top: 6px; padding: 12px 16px 6px; border-top: 1px solid var(--line); font: 500 12px/1.3 var(--mono); color: var(--ink-3); }
 .pf-group:first-child { margin-top: 0; padding-top: 6px; border-top: 0; }
 .pf-group .tag { flex: none; }
@@ -1134,6 +1144,10 @@ button.run-name:focus-visible { text-decoration: underline; text-decoration-thic
   .pf { width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; border: 0; border-radius: 0; }
   .pf .run { grid-template-columns: 22px minmax(0, 1fr) auto auto; gap: 0 8px; padding: 8px 12px; }
   .pf .run-line { flex-wrap: wrap; gap: 3px 7px; }
+  /* Narrower buttons, so all four fit on one line */
+  .pf-views { gap: 2px; padding: 7px 8px; }
+  .pf-views .lb-tab { padding: 6px 8px; }
+  .pf-count { margin-left: 5px; }
 }
 /* Player ratings: a row like a course's, its board with each player's rating, courses run and Top % tier */
 .rt-flag { display: grid; place-items: center; color: var(--gold); }
@@ -1299,13 +1313,13 @@ button.run-name:focus-visible { text-decoration: underline; text-decoration-thic
 .sub-runs-foot .rev-more { margin-top: 0; }
 .sub-runs-jump { position: sticky; bottom: 16px; z-index: 1; height: 0; display: flex; justify-content: flex-end; align-items: flex-end; gap: 6px; transition: opacity .15s, visibility .15s; }
 .sub-runs-jump.away { opacity: 0; visibility: hidden; }
-.sub-runs-jump button { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 1px solid var(--line-hi); border-radius: 10px; background: var(--glass); -webkit-backdrop-filter: blur(16px) saturate(1.2); backdrop-filter: blur(16px) saturate(1.2); box-shadow: 0 10px 24px -14px rgba(0, 0, 0, .9); color: var(--ink-2); cursor: pointer; transition: color .15s, border-color .15s, opacity .15s; }
-@media (hover: hover) { .sub-runs-jump button:hover { color: var(--ink); border-color: var(--volt); } }
-.sub-runs-jump button:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; }
-.sub-runs-jump button[aria-disabled="true"] { opacity: .4; cursor: default; }
-@media (hover: hover) { .sub-runs-jump button[aria-disabled="true"]:hover { color: var(--ink-2); border-color: var(--line-hi); } }
-.sub-runs-jump .icon { width: 16px; height: 16px; }
-.sub-runs-jump [data-runs-jump="up"] .icon { transform: rotate(180deg); }
+.sub-runs-jump button, .pf-jump button { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 1px solid var(--line-hi); border-radius: 10px; background: var(--glass); -webkit-backdrop-filter: blur(16px) saturate(1.2); backdrop-filter: blur(16px) saturate(1.2); box-shadow: 0 10px 24px -14px rgba(0, 0, 0, .9); color: var(--ink-2); cursor: pointer; transition: color .15s, border-color .15s, opacity .15s; }
+@media (hover: hover) { .sub-runs-jump button:hover, .pf-jump button:hover { color: var(--ink); border-color: var(--volt); } }
+.sub-runs-jump button:focus-visible, .pf-jump button:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; }
+.sub-runs-jump button[aria-disabled="true"], .pf-jump button[aria-disabled="true"] { opacity: .4; cursor: default; }
+@media (hover: hover) { .sub-runs-jump button[aria-disabled="true"]:hover, .pf-jump button[aria-disabled="true"]:hover { color: var(--ink-2); border-color: var(--line-hi); } }
+.sub-runs-jump .icon, .pf-jump .icon { width: 16px; height: 16px; }
+.sub-runs-jump [data-runs-jump="up"] .icon, .pf-jump [data-pf-jump="up"] .icon { transform: rotate(180deg); }
 /* Stats, at the very bottom: which days (a day, or the 7 or 30 days or 3, 6, or 12 months up to it), then Runs and Page views, each with a
    bar for every day that picks it, and its numbers for those days */
 /* Runs' and Page views' headings, each with the month menu at its end, so it's there on a phone without going back up
@@ -2164,6 +2178,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "find.none": "No players match “{query}”",
   "find.unrated": "Not rated",
   "find.keys": "↑ ↓ to pick, Enter to see their stats. Press / anywhere on the site to open this.",
+  "find.toTop": "To the top of the list",
+  "find.toEnd": "To the end of the list",
   "rt.group": "Every course",
   "rt.title": "Player ratings",
   "rt.assisted.title": "Ratings from runs played in Assist Mode",
@@ -4467,14 +4483,18 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       openFinder();
       return;
     }
-    const { all } = everyone();
+    const { views } = everyone();
+    const all = RATINGS_TABS.flatMap((v) => views[v]);
     const view = runs ? "runs" : "courses";
     if (key.startsWith("d:") || all.some((x) => x.key === key)) { openPlayer(key, 0, view); return; }
     const name = key.slice(2);
-    // Each player once (a rated player can be under Legacy too)
+    // Each player once (they can be on several buttons)
     const them = [...new Map(all.filter((x) => sameName(x.name, name)).map((x) => [x.key, x])).values()];
     if (them.length === 1) { openPlayer(them[0].key, 0, view); return; }
     putAddressBack("/" + location.search); // the link names nobody's panel, so it doesn't stay in the address
+    // On Global, which has everyone with runs since 2026-04-29, unless they're all only on Legacy
+    const onGlobal = (x) => views.global.some((g) => g.key === x.key);
+    pfView = them.length && !them.some(onGlobal) ? "legacy" : "global";
     openFinder();
     pfInput().value = name;
     renderFinder();
@@ -4586,62 +4606,62 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
 
   /* ---------- Finding a player ----------
      Find a player (the box at the top, the magnifier in the section bar, the box by Courses, or the / key anywhere)
-     lists everyone who has run a course: the rated players by place, with their Top %, Discord, rating and courses
-     run, then everyone else with runs only on broken courses by name, and last, under a Legacy heading, everyone with
-     runs before 2026-04-29 (rated players a second time), by their place in the Legacy rating, with its Top %, rating
-     and courses run.
+     lists the players of one rating, picked with the buttons under its box like the Player ratings' tabs: by place,
+     with their Top %, Discord, rating and courses run, under the rating's line. Global (the first) has everyone else
+     with runs since 2026-04-29 after them, and Legacy everyone else with runs before it (see everyone).
      Typing narrows it by in-game or Discord name, the same way a board's search does, with names that start with it
-     first (the Legacy players still last). The arrow keys and Enter, or a click, pick one, and their panel opens (see
-     "A player's runs"). */
+     first, and each button counts who's left on its side. The arrow keys and Enter, or a click, pick one, and their
+     panel opens (see "A player's runs"). */
   const pf = $("#pf");
   let pfList = [];
   let pfActive = 0;
+  // "global" or "legacy": the side it lists, kept until the page reloads
+  let pfView = "global";
   const pfInput = () => $("#pf-input");
+  // Its buttons are the Player ratings' tabs (RATINGS_TABS), named like a player's panel's (PL_MODES), whose
+  // Unassisted is "" where the tab's is "top"
+  const pfMode = (view) => (view === "top" ? "" : view);
+  // Each button's list (views), each rating's players by place: Global's then everyone else with runs since
+  // 2026-04-29 (so only on broken courses) by name, and Legacy's everyone else with legacy runs (only on broken
+  // legacy boards) by name. Someone can be on Global and Legacy both: on the legacy boards a name without a Discord ID
+  // is its own player, and a rated player with linked legacy runs is listed by the name on them. sets: the ratings.
   function everyone() {
-    const r = ratings();
-    const lr = ratings(null, "legacy");
-    const rated = r.players.map((p) => ({ key: p.key, name: p.name, discord: p.discord, p }));
-    const seen = new Set(rated.map((x) => x.key));
-    const others = [], legacy = [];
-    // Unrated: runs only on broken courses, or else only on the legacy boards (where a name without a Discord ID is
-    // its own player, so someone can be listed twice: rated, and Legacy), with their Legacy rating
-    const legacyOfKey = new Map(lr.players.map((p) => [p.key, p]));
-    const add = (run, old) => {
+    const sets = Object.fromEntries(RATINGS_TABS.map((v) => [v, ratings(null, ratingsFor(v))]));
+    const views = Object.fromEntries(RATINGS_TABS.map((v) => [v, sets[v].players.map((p) => ({ key: p.key, name: p.name, discord: p.discord, p, view: v }))]));
+    const unrated = { global: [], legacy: [] };
+    const seen = { global: new Set(views.global.map((x) => x.key)), legacy: new Set(views.legacy.map((x) => x.key)) };
+    const add = (run, v) => {
       const key = playerKey(run);
-      if (seen.has(key)) return;
-      seen.add(key);
-      (old ? legacy : others).push({ key, name: run.name, discord: run.discord || "", p: (old && legacyOfKey.get(key)) || null, legacy: old });
+      if (seen[v].has(key)) return;
+      seen[v].add(key);
+      unrated[v].push({ key, name: run.name, discord: run.discord || "", p: null, view: v });
     };
-    // Players with only assisted runs too (see "Assisted boards")
-    COURSES.concat(ACOURSES).forEach((c) => { const { top, rest } = standingsOf(c); top.concat(rest).forEach((run) => add(run, false)); });
-    COURSES.forEach((c) => (HISTORY[c.n] ? HISTORY[c.n].legacy : []).forEach((run) => add(run, true)));
+    COURSES.concat(ACOURSES).forEach((c) => { const { top, rest } = standingsOf(c); top.concat(rest).forEach((run) => add(run, "global")); });
+    COURSES.forEach((c) => (HISTORY[c.n] ? HISTORY[c.n].legacy : []).forEach((run) => add(run, "legacy")));
     const byName = (a, b) => fold(a.name).localeCompare(fold(b.name));
-    others.sort(byName);
-    // Rated players with a Legacy rating too (their legacy runs linked to their Discord) are also listed under Legacy,
-    // by the name on their legacy runs, so its places run without gaps, like the Legacy rating's board
-    lr.players.forEach((p) => { if (r.players.some((q) => q.key === p.key)) legacy.push({ key: p.key, name: p.name, discord: p.discord, p, legacy: true }); });
-    // By their place in the Legacy rating (then by name), and anyone without one after them
-    legacy.sort((a, b) => (a.p ? a.p.rank : Infinity) - (b.p ? b.p.rank : Infinity) || byName(a, b));
-    return { all: rated.concat(others, legacy), r, lr };
+    ["global", "legacy"].forEach((v) => { views[v] = views[v].concat(unrated[v].sort(byName)); });
+    return { views, sets };
   }
-  // The rating and courses columns' widths (see ratingCols), over both ratings, so the Legacy rows line up with the rest
-  function finderCols(r, lr) {
+  // The rating and courses columns' widths (see ratingCols), over every rating, so they stay put from button to button
+  function finderCols(sets) {
+    const all = Object.values(sets);
     const widest = (set, text) => Math.max(1, ...set.players.map((p) => text(p).length));
-    const pts = Math.max(...[r, lr].map((set) => widest(set, (p) => points(p.rating))));
-    const ran = Math.max(...[r, lr].map((set) => widest(set, (p) => `${p.courses}/${set.counted.length}`)));
+    const pts = Math.max(...all.map((set) => widest(set, (p) => points(p.rating))));
+    const ran = Math.max(...all.map((set) => widest(set, (p) => `${p.courses}/${set.counted.length}`)));
     return ` style="--pts: ${pts}; --ran: ${ran}"`;
   }
-  // r: the rating x's p is from (the Legacy one for a Legacy player). cols: from finderCols
+  // r: the rating x's p is from (its button's). cols: from finderCols
   function finderOption(x, i, r, cols) {
     const p = x.p;
     const total = r.counted.length;
     const dc = x.discord && PLAYERS.get(x.discord);
     const ran = p ? t("rt.courses", { n: p.courses, total }) : "";
     const tier = p && p.tier ? t("rt.tier", { pct: p.tier.toLocaleString(htmlLang()) }) : "";
-    const unrated = t(x.legacy ? "pl.legacy" : "find.unrated");
-    // Read out as "BALLMYBLOVED, ball シ, #1 of 16, Rating 182, Top 10%, 2 of 11 courses run", with "Legacy" first for
-    // a Legacy player's place and rating
-    const label = [x.name, dc && dc.name, ...(p ? [x.legacy && unrated, t("res.of", { rank: p.rank, total: r.players.length }), `${t("pl.rating")} ${points(p.rating)}`, tier, ran] : [unrated])]
+    const unrated = t(x.view === "legacy" ? "pl.legacy" : "find.unrated");
+    // Read out as "BALLMYBLOVED, ball シ, #1 of 16, Rating 182, Top 10%, 2 of 11 courses run", with the rating's name
+    // first for any but Global ("Assisted, #1 of 3, …")
+    const which = x.view !== "global" && t(PL_MODES[pfMode(x.view)]);
+    const label = [x.name, dc && dc.name, ...(p ? [which, t("res.of", { rank: p.rank, total: r.players.length }), `${t("pl.rating")} ${points(p.rating)}`, tier, ran] : [unrated])]
       .filter(Boolean).join(", ");
     return `<li class="run${p && p.rank <= 3 ? " p" + p.rank : ""}${i === pfActive ? " active" : ""}" role="option" id="pf-opt-${i}" aria-selected="${i === pfActive}" aria-label="${esc(label)}"${cols}>` +
       `<span class="run-rank">${p ? p.rank : "–"}</span>` +
@@ -4649,33 +4669,40 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         (tier ? `<span class="tag tag-tier${p.tier <= 5 ? " elite" : ""}">${esc(tier)}</span>` : "") + `</span></span>` +
       (p ? `<span class="stat time">${icon("star")}<span class="v">${esc(points(p.rating))}</span></span>` +
           `<span class="stat miss">${icon("map")}<span>${p.courses}/${total}</span></span>`
-        : `<span class="stat pf-unrated">${x.legacy ? `<span class="tag tag-legacy">${esc(unrated)}</span>` : esc(unrated)}</span>`) +
+        : `<span class="stat pf-unrated">${x.view === "legacy" ? `<span class="tag tag-legacy">${esc(unrated)}</span>` : esc(unrated)}</span>`) +
       dcHtml(x, false) + `</li>`;
   }
   // The list, for what's typed so far
   function renderFinder() {
     const input = pfInput();
     if (!input) return;
-    const { all, r, lr } = everyone();
+    const { views, sets } = everyone();
     const q = fold(input.value).trim();
-    let list = all;
-    if (q) {
-      const starts = (x) => { const dc = x.discord && PLAYERS.get(x.discord); return fold(x.name).startsWith(q) || (!!dc && fold(dc.name).startsWith(q)); };
-      const hits = all.filter((x) => found(x, q));
-      // Names that start with it first, the Legacy players still last
-      const order = (part) => part.filter(starts).concat(part.filter((x) => !starts(x)));
-      list = order(hits.filter((x) => !x.legacy)).concat(order(hits.filter((x) => x.legacy)));
-    }
+    const starts = (x) => { const dc = x.discord && PLAYERS.get(x.discord); return fold(x.name).startsWith(q) || (!!dc && fold(dc.name).startsWith(q)); };
+    // Names that start with it first
+    const narrow = (all) => { if (!q) return all; const hits = all.filter((x) => found(x, q)); return hits.filter(starts).concat(hits.filter((x) => !starts(x))); };
+    const shown = Object.fromEntries(RATINGS_TABS.map((v) => [v, narrow(views[v])]));
+    const list = shown[pfView];
+    $$("[data-pf-view]", pf).forEach((b) => {
+      const v = b.dataset.pfView;
+      b.setAttribute("aria-pressed", String(v === pfView));
+      b.querySelector(".pf-count").textContent = shown[v].length.toLocaleString(htmlLang());
+    });
     pfList = list;
     pfActive = Math.min(pfActive, Math.max(0, list.length - 1));
-    const cols = finderCols(r, lr);
-    // The Legacy heading, over the first Legacy player (each one's own label says Legacy, so it isn't read out)
-    const heading = `<li class="pf-group" role="presentation" aria-hidden="true">${legacyTag()}<span>${esc(t("rt.legacy.title"))}</span></li>`;
-    $("#pf-list").innerHTML = list.map((x, i) => (x.legacy && (i === 0 || !list[i - 1].legacy) ? heading : "") + finderOption(x, i, x.legacy && x.p ? lr : r, cols)).join("");
+    const cols = finderCols(sets);
+    // The rating's line, as over its tab of the Player ratings (each player's own label names the rating, so it isn't
+    // read out)
+    const tag = { top: unassistedTag, assisted: assistedTag, legacy: legacyTag }[pfView];
+    const line = { global: "rt.global.title", top: "lb.unassisted.title", assisted: "rt.assisted.title", legacy: "rt.legacy.title" }[pfView];
+    const heading = `<li class="pf-group" role="presentation" aria-hidden="true">${tag ? tag() : ""}<span>${esc(t(line))}</span></li>`;
+    $("#pf-list").innerHTML = list.length ? heading + list.map((x, i) => finderOption(x, i, sets[pfView], cols)).join("") : "";
     const empty = $("#pf-empty");
     empty.hidden = list.length > 0;
-    empty.textContent = q ? t("find.none", { query: input.value.trim() }) : t("rt.empty");
+    empty.textContent = q ? t("find.none", { query: input.value.trim() })
+      : t({ assisted: "rt.assisted.empty", legacy: "rt.legacy.empty" }[pfView] || "rt.empty");
     if (list.length) input.setAttribute("aria-activedescendant", `pf-opt-${pfActive}`); else input.removeAttribute("aria-activedescendant");
+    if (pf.open) placeFinderJump();
     announce.textContent = q ? t("lb.found", { count: list.length.toLocaleString(htmlLang()) }) : "";
   }
   function pickActive(i, scroll) {
@@ -4692,19 +4719,46 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       `<input class="pf-input" id="pf-input" type="search" role="combobox" aria-expanded="true" aria-controls="pf-list" aria-autocomplete="list" ` +
         `aria-label="${esc(t("find.label"))}" placeholder="${esc(t("lb.search"))}" autocomplete="off" spellcheck="false" enterkeyhint="go">` +
       `<button class="pl-close" type="button" data-pf-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button></div>` +
-      `<ul class="pf-list" id="pf-list" role="listbox" aria-label="${esc(t("find.open"))}"></ul><p class="pf-empty" id="pf-empty" hidden></p>` +
+      `<div class="pf-views" role="group" aria-label="${esc(t("find.open"))}">` +
+        RATINGS_TABS.map((v) => `<button class="lb-tab" type="button" data-pf-view="${v}" aria-pressed="false">${esc(t(PL_MODES[pfMode(v)]))}<span class="pf-count"></span></button>`).join("") +
+      `</div>` +
+      `<ul class="pf-list" id="pf-list" role="listbox" aria-label="${esc(t("find.open"))}"></ul>` +
+      `<div class="pf-jump" hidden>${[["up", "find.toTop"], ["down", "find.toEnd"]].map(([way, label]) =>
+        `<button type="button" data-pf-jump="${way}" aria-label="${esc(t(label))}" title="${esc(t(label))}">${icon("down")}</button>`).join("")}</div>` +
+      `<p class="pf-empty" id="pf-empty" hidden></p>` +
       `<p class="pf-foot">${esc(t("find.keys"))}</p>`;
     pfActive = 0;
     renderFinder();
     pf.showModal();
+    placeFinderJump();
     pfInput().focus();
   }
-  // Their panel opens in its place; closing it goes back to wherever Find a player was opened from
+  /* ↑ and ↓ over the list (like Submitted runs', see placeJump): there while it's longer than its window, each dimmed
+     while it would go nowhere. ↑ picks the first player and ↓ the last, and the list scrolls to them, so Enter opens
+     the one in view. */
+  function placeFinderJump() {
+    const list = $("#pf-list");
+    const jump = $(".pf-jump", pf);
+    if (!list || !jump) return;
+    const over = list.scrollHeight > list.clientHeight + 1;
+    if (jump.hidden === over) jump.hidden = !over;
+    // Room under the last player, so they scroll clear of the buttons
+    list.classList.toggle("jumps", over);
+    if (!over) return;
+    const dim = (way, off) => $(`[data-pf-jump="${way}"]`, jump).setAttribute("aria-disabled", String(off));
+    dim("up", list.scrollTop <= 1);
+    dim("down", list.scrollTop + list.clientHeight >= list.scrollHeight - 1);
+  }
+  // Scrolling doesn't bubble, so it's caught on the way down
+  pf.addEventListener("scroll", (e) => { if (e.target.id === "pf-list") placeFinderJump(); }, { capture: true, passive: true });
+  addEventListener("resize", () => { if (pf.open) placeFinderJump(); });
+  // Their panel opens in its place, on the runs of the rating they were picked from (or the first kind they have, when
+  // they're not rated); closing it goes back to wherever Find a player was opened from
   function pickPlayer(i) {
     const x = pfList[i];
     if (!x) return;
     pf.close();
-    openPlayer(x.key, 0);
+    openPlayer(x.key, 0, "courses", x.p ? pfMode(x.view) : null);
   }
   document.addEventListener("click", (e) => { if (e.target.closest("[data-find]")) openFinder(); });
   // "/" anywhere opens it, except while typing in a box or with a window already open
@@ -4727,6 +4781,28 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   pf.addEventListener("pointermove", (e) => { const o = e.target.closest("#pf-list > .run"); if (o) pickActive(Number(o.id.slice(7)), false); });
   pf.addEventListener("click", (e) => {
     if (e.target.closest("[data-pf-close]")) { pf.close(); return; }
+    // ↑ and ↓ (see placeFinderJump); the box keeps the keys
+    const jump = e.target.closest("[data-pf-jump]");
+    if (jump) {
+      if (jump.getAttribute("aria-disabled") !== "true") {
+        const up = jump.dataset.pfJump === "up";
+        pickActive(up ? 0 : pfList.length - 1, false);
+        const list = $("#pf-list");
+        list.scrollTo({ top: up ? 0 : list.scrollHeight, behavior: reduced ? "auto" : "smooth" });
+      }
+      pfInput().focus();
+      return;
+    }
+    // A rating's button: the list starts over at the top, and the box keeps the keys
+    const view = e.target.closest("[data-pf-view]");
+    if (view) {
+      pfView = view.dataset.pfView;
+      pfActive = 0;
+      renderFinder();
+      $("#pf-list").scrollTop = 0;
+      pfInput().focus();
+      return;
+    }
     const o = e.target.closest("#pf-list > .run");
     if (o) { pickPlayer(Number(o.id.slice(7))); return; }
     // A click on the dimmed page around it closes it

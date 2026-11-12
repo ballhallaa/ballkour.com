@@ -169,7 +169,7 @@ The remakes' in-game top 10s are part of the game, so they only change with a re
 
 ### Claiming legacy runs
 
-The legacy boards (before May 2026) have runs under just an in-game name, with no Discord ID. On the site, each of those names is its own player: no Discord name or picture by it, nothing in anyone's My profile, and someone who still plays can show up twice in Find a player (rated, and again as Legacy).
+The legacy boards (before May 2026) have runs under just an in-game name, with no Discord ID. On the site, each of those names is its own player: no Discord name or picture by it, nothing in anyone's My profile, and someone who still plays can show up twice in Find a player (on Global, and again on Legacy).
 
 Players can claim them. A legacy name's panel (click it on a legacy board) asks **Is this you?**, and **This is me** sends a claim to the moderators. Signed out, it signs them in with Discord first and comes back to the same page with that panel open again (`?claim=`, the name in URL-safe base64), so they can tap it there. After that, the panel says the claim is waiting for a moderator, or that it was turned down. A player's own panel (My profile) also points out legacy names that match a name they go by now: "Were you DVD before May 2026?"
 
