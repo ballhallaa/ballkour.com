@@ -4779,9 +4779,12 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     else if (e.key === "Escape" && e.target.value) { e.preventDefault(); e.target.value = ""; pfActive = 0; renderFinder(); }
   });
   pf.addEventListener("pointermove", (e) => { const o = e.target.closest("#pf-list > .run"); if (o) pickActive(Number(o.id.slice(7)), false); });
+  // After a tap on one of its buttons, the box gets the keys back, but not on a touch screen, where that would bring
+  // up the keyboard and cover the list
+  function finderKeys() { if (!matchMedia("(pointer: coarse)").matches) pfInput().focus(); }
   pf.addEventListener("click", (e) => {
     if (e.target.closest("[data-pf-close]")) { pf.close(); return; }
-    // ↑ and ↓ (see placeFinderJump); the box keeps the keys
+    // ↑ and ↓ (see placeFinderJump); the box keeps the keys (see finderKeys)
     const jump = e.target.closest("[data-pf-jump]");
     if (jump) {
       if (jump.getAttribute("aria-disabled") !== "true") {
@@ -4790,17 +4793,17 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         const list = $("#pf-list");
         list.scrollTo({ top: up ? 0 : list.scrollHeight, behavior: reduced ? "auto" : "smooth" });
       }
-      pfInput().focus();
+      finderKeys();
       return;
     }
-    // A rating's button: the list starts over at the top, and the box keeps the keys
+    // A rating's button: the list starts over at the top, and the box keeps the keys (see finderKeys)
     const view = e.target.closest("[data-pf-view]");
     if (view) {
       pfView = view.dataset.pfView;
       pfActive = 0;
       renderFinder();
       $("#pf-list").scrollTop = 0;
-      pfInput().focus();
+      finderKeys();
       return;
     }
     const o = e.target.closest("#pf-list > .run");
