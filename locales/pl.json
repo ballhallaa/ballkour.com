@@ -136,6 +136,8 @@
   "lb.boardOf": "Tabela {n} z {total}",
   "lb.prev": "Poprzednia tabela",
   "lb.next": "Następna tabela",
+  "lb.toTop": "Na początek tabeli",
+  "lb.toEnd": "Na koniec tabeli",
   "lb.newRecord": "Nowy rekord",
   "lb.new": "Nowy",
   "lb.thisRun": "To przejście",

@@ -135,6 +135,8 @@
   "lb.boardOf": "Board {n} of {total}",
   "lb.prev": "Previous board",
   "lb.next": "Next board",
+  "lb.toTop": "To the top of the board",
+  "lb.toEnd": "To the end of the board",
   "lb.newRecord": "New record",
   "lb.new": "New",
   "lb.thisRun": "This run",

@@ -136,6 +136,8 @@
   "lb.boardOf": "第 {n} 版，共 {total} 版",
   "lb.prev": "上一版",
   "lb.next": "下一版",
+  "lb.toTop": "回到排行榜頂端",
+  "lb.toEnd": "前往排行榜末端",
   "lb.newRecord": "新紀錄",
   "lb.new": "新",
   "lb.thisRun": "這個成績",

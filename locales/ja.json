@@ -136,6 +136,8 @@
   "lb.boardOf": "{total}件中{n}件目",
   "lb.prev": "前のランキング",
   "lb.next": "次のランキング",
+  "lb.toTop": "ランキングの先頭へ",
+  "lb.toEnd": "ランキングの最後へ",
   "lb.newRecord": "新記録",
   "lb.new": "NEW",
   "lb.thisRun": "この記録",

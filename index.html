@@ -604,9 +604,18 @@ main:focus { outline: none; }
   border: 1px solid var(--line);
   border-radius: 10px;
   background: rgba(0, 0, 0, .28);
+  /* Clipped without being a box that scrolls, so ↑ and ↓ can stick to the bottom of the screen (see .board-jump) */
   overflow: hidden;
+  overflow: clip;
+  scroll-margin-bottom: 16px;
   animation: pop .16s ease-out;
 }
+/* ↑ (to its course) and ↓ (to its end) under an open board, while it's longer than the screen, like Submitted
+   runs' (see placeBoardJump): they ride along at the bottom of the screen until its end is on it, and then rest
+   in their own row under Show all */
+.board-jump { position: sticky; bottom: 16px; z-index: 1; height: 0; margin-top: 46px; display: flex; justify-content: flex-end; align-items: flex-end; gap: 6px; padding-right: 10px; transition: opacity .15s, visibility .15s; }
+.course-board.jumps { padding-bottom: 10px; }
+.board-jump.away { opacity: 0; visibility: hidden; }
 .course-board .board-meta { padding: 10px 12px 2px; }
 .course-board .board { padding: 2px 0 6px; }
 .course-board .run { padding: 7px 12px; }
@@ -1313,13 +1322,13 @@ button.run-name:focus-visible { text-decoration: underline; text-decoration-thic
 .sub-runs-foot .rev-more { margin-top: 0; }
 .sub-runs-jump { position: sticky; bottom: 16px; z-index: 1; height: 0; display: flex; justify-content: flex-end; align-items: flex-end; gap: 6px; transition: opacity .15s, visibility .15s; }
 .sub-runs-jump.away { opacity: 0; visibility: hidden; }
-.sub-runs-jump button, .pf-jump button { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 1px solid var(--line-hi); border-radius: 10px; background: var(--glass); -webkit-backdrop-filter: blur(16px) saturate(1.2); backdrop-filter: blur(16px) saturate(1.2); box-shadow: 0 10px 24px -14px rgba(0, 0, 0, .9); color: var(--ink-2); cursor: pointer; transition: color .15s, border-color .15s, opacity .15s; }
-@media (hover: hover) { .sub-runs-jump button:hover, .pf-jump button:hover { color: var(--ink); border-color: var(--volt); } }
-.sub-runs-jump button:focus-visible, .pf-jump button:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; }
-.sub-runs-jump button[aria-disabled="true"], .pf-jump button[aria-disabled="true"] { opacity: .4; cursor: default; }
-@media (hover: hover) { .sub-runs-jump button[aria-disabled="true"]:hover, .pf-jump button[aria-disabled="true"]:hover { color: var(--ink-2); border-color: var(--line-hi); } }
-.sub-runs-jump .icon, .pf-jump .icon { width: 16px; height: 16px; }
-.sub-runs-jump [data-runs-jump="up"] .icon, .pf-jump [data-pf-jump="up"] .icon { transform: rotate(180deg); }
+.sub-runs-jump button, .pf-jump button, .board-jump button { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 1px solid var(--line-hi); border-radius: 10px; background: var(--glass); -webkit-backdrop-filter: blur(16px) saturate(1.2); backdrop-filter: blur(16px) saturate(1.2); box-shadow: 0 10px 24px -14px rgba(0, 0, 0, .9); color: var(--ink-2); cursor: pointer; transition: color .15s, border-color .15s, opacity .15s; }
+@media (hover: hover) { .sub-runs-jump button:hover, .pf-jump button:hover, .board-jump button:hover { color: var(--ink); border-color: var(--volt); } }
+.sub-runs-jump button:focus-visible, .pf-jump button:focus-visible, .board-jump button:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; }
+.sub-runs-jump button[aria-disabled="true"], .pf-jump button[aria-disabled="true"], .board-jump button[aria-disabled="true"] { opacity: .4; cursor: default; }
+@media (hover: hover) { .sub-runs-jump button[aria-disabled="true"]:hover, .pf-jump button[aria-disabled="true"]:hover, .board-jump button[aria-disabled="true"]:hover { color: var(--ink-2); border-color: var(--line-hi); } }
+.sub-runs-jump .icon, .pf-jump .icon, .board-jump .icon { width: 16px; height: 16px; }
+.sub-runs-jump [data-runs-jump="up"] .icon, .pf-jump [data-pf-jump="up"] .icon, .board-jump [data-board-jump="up"] .icon { transform: rotate(180deg); }
 /* Stats, at the very bottom: which days (a day, or the 7 or 30 days or 3, 6, or 12 months up to it), then Runs and Page views, each with a
    bar for every day that picks it, and its numbers for those days */
 /* Runs' and Page views' headings, each with the month menu at its end, so it's there on a phone without going back up
@@ -2132,6 +2141,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "lb.boardOf": "Board {n} of {total}",
   "lb.prev": "Previous board",
   "lb.next": "Next board",
+  "lb.toTop": "To the top of the board",
+  "lb.toEnd": "To the end of the board",
   "lb.newRecord": "New record",
   "lb.new": "New",
   "lb.thisRun": "This run",
@@ -3255,6 +3266,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (drawn) fitSorts(drawn);
     const back = spot && document.querySelector(`#course-${c.n} ${spot}`);
     if (back) refocus(back);
+    placeBoardJump();
   }
   function refreshCourse(c) {
     if (!c) return;
@@ -3303,9 +3315,58 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       box.innerHTML = boardHtml(c);
       fitSorts(box);
     });
+    placeBoardJump();
     const f = focusSel && box.querySelector(focusSel);
     if (f) refocus(f);
   }
+  /* ↑ and ↓ under the open board (see .board-jump): while it's longer than the screen (under the section bar),
+     they're there, sticking to the bottom of the screen until they reach their own row under its end, except while
+     the board is only just coming up from the bottom. ↑ goes back to its course (its name, codes, and tabs), and ↓
+     to its end (Show all). Each is dimmed while it would go nowhere. They're one pair, moved into whichever board
+     is open each time it's drawn, so they keep their place and their dimming. */
+  const boardJump = document.createElement("div");
+  boardJump.className = "board-jump";
+  boardJump.hidden = true;
+  let boardJumpQueued = false;
+  function placeBoardJump() {
+    boardJumpQueued = false;
+    const box = openCourse ? document.getElementById(`board-${openCourse}`) : null;
+    if (!box || box.hidden) { boardJump.remove(); return; }
+    // Moved in after each redraw, with its labels in the page's language
+    if (boardJump.parentElement !== box) {
+      boardJump.innerHTML = [["up", "lb.toTop"], ["down", "lb.toEnd"]].map(([way, label]) =>
+        `<button type="button" data-board-jump="${way}" aria-label="${esc(t(label))}" title="${esc(t(label))}">${icon("down")}</button>`).join("");
+      box.append(boardJump);
+    }
+    const bar = $("#sections").getBoundingClientRect().bottom;
+    const card = box.getBoundingClientRect();
+    const shown = card.height > innerHeight - bar - 16;
+    if (boardJump.hidden === shown) boardJump.hidden = !shown;
+    box.classList.toggle("jumps", shown);
+    if (!shown) return;
+    boardJump.classList.toggle("away", card.top > innerHeight - 120);
+    const dim = (way, off) => {
+      const b = $(`[data-board-jump="${way}"]`, boardJump);
+      if (b.getAttribute("aria-disabled") !== String(off)) b.setAttribute("aria-disabled", String(off));
+    };
+    // ↑ puts its course under the section bar (see .course's scroll-margin-top)
+    const row = box.closest(".course");
+    const margin = parseFloat(getComputedStyle(row).scrollMarginTop) || 0;
+    dim("up", row.getBoundingClientRect().top >= Math.min(bar, margin) - 1);
+    dim("down", card.bottom <= innerHeight + 1);
+  }
+  const queueBoardJump = () => { if (!boardJumpQueued) { boardJumpQueued = true; requestAnimationFrame(placeBoardJump); } };
+  addEventListener("scroll", queueBoardJump, { passive: true });
+  addEventListener("resize", queueBoardJump);
+  // A board grows and shrinks without being drawn again too (Show all, its box), and others above it open and close
+  if (window.ResizeObserver) new ResizeObserver(queueBoardJump).observe($("#leaderboards"));
+  document.addEventListener("click", (e) => {
+    const jump = e.target.closest("[data-board-jump]");
+    if (!jump || jump.getAttribute("aria-disabled") === "true") return;
+    const box = jump.closest(".course-board");
+    const up = jump.dataset.boardJump === "up";
+    (up ? box.closest(".course") : box).scrollIntoView({ block: up ? "start" : "end", behavior: reduced ? "auto" : "smooth" });
+  });
   function showBoard(n, at, from) {
     const c = course(n);
     // The assisted board's history, while its tab is open
@@ -3404,6 +3465,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     html += `</ul></div><div class="group"><div class="by"><h3 class="by-title">${esc(t("rt.group"))}</h3></div><ul class="course-list">${ratingsRow()}</ul></div>`;
     $("#leaderboards").innerHTML = html;
     fitSorts($("#leaderboards"));
+    placeBoardJump();
   }
 
   document.addEventListener("click", (e) => {
