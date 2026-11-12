@@ -76,9 +76,10 @@ enabled = true
 
 # On the hour and half past, the stats on players' Discord profiles catch up with the boards. At :15 and :45, players
 # with runs but no number for their link get one (see "Players' own links" in worker.js, whose NUMBERS_CRON has to be
-# the same as the second one here).
+# the same as the second one here). At 00:00 UTC, the leaderboard bot's daily run starts (BOT_CRON in worker.js, the
+# same as the third one here).
 [triggers]
-crons = ["*/30 * * * *", "15,45 * * * *"]
+crons = ["*/30 * * * *", "15,45 * * * *", "0 0 * * *"]
 
 # A test copy on workers.dev, with no route: npx wrangler deploy --env test
 [env.test]

@@ -141,7 +141,8 @@ const githubHeaders = (env) => ({
 /* The GitHub App that saves runs sent from the website to the game repo, as itself (ballkour.com's bot, not a person).
    It only saves to the leaderboard-data branch (see dataBranch), which has no pull request rule. Secrets: GITHUB_APP_ID and
    GITHUB_APP_PRIVATE_KEY (the .pem GitHub hands out, as it is). The app needs Contents: Read and write, and to be
-   installed on the game repo. A token is made each time one's needed (each lasts an hour), so none is kept. */
+   installed on the game repo. With Actions: Read and write too, it starts the leaderboard bot's daily run (see
+   startDailyBot). A token is made each time one's needed (each lasts an hour), so none is kept. */
 const appOn = (env) => !!(env.GITHUB_APP_ID && env.GITHUB_APP_PRIVATE_KEY);
 // GitHub's keys are PKCS#1 ("BEGIN RSA PRIVATE KEY"), and Web Crypto only reads PKCS#8, which wraps one
 function pkcs8(pem) {
@@ -1627,6 +1628,24 @@ function dumpLinks(data) {
 }
 // The cron that hands out the numbers (wrangler.toml): keep the two the same
 const NUMBERS_CRON = "15,45 * * * *";
+/* The leaderboard bot's daily run (leaderboard-daily.yml on the game repo's main branch), started at 00:00 UTC by the
+   third cron in wrangler.toml. GitHub's own schedule for it started hours late (06:17 ran at 14:30 to 16:30), as GitHub
+   only runs schedules when it has room, and Cloudflare's crons run on time. It needs the GitHub App (see appOn) with
+   Actions: Read and write. */
+const BOT_CRON = "0 0 * * *";
+const DAILY_BOT = "leaderboard-daily.yml";
+async function startDailyBot(env) {
+  if (!appOn(env)) throw new Error("no GitHub App set up (GITHUB_APP_ID and GITHUB_APP_PRIVATE_KEY)");
+  const r = await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/${DAILY_BOT}/dispatches`, {
+    method: "POST",
+    headers: { "User-Agent": "ballkour.com", Accept: "application/vnd.github+json", Authorization: `Bearer ${await appToken(env)}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ ref: "main" }),
+    signal: AbortSignal.timeout(10000),
+  });
+  // 403: the app doesn't have Actions: Read and write. 422: the workflow can't be started from outside (no workflow_dispatch)
+  if (r.status !== 204) throw new Error(`GitHub said ${r.status} ${(await r.text()).slice(0, 200)}`);
+  console.log(`daily bot: started ${DAILY_BOT}`);
+}
 const editLinks = (env, edit) => editData(env, LINKS_FILE, loadLinks, dumpLinks, edit);
 // The players in links.json, from the game data (none when it can't be read)
 function linksIn(files) {
@@ -2632,10 +2651,14 @@ export default {
   },
   // The crons in wrangler.toml. On the hour and half past: the stats on players' Discord profiles catch up with the
   // boards. At :15 and :45: new players get their numbers (see "Players' own links"). Apart, so each has Cloudflare's
-  // limit on calls to itself.
+  // limit on calls to itself. At 00:00 UTC: the leaderboard bot's daily run (see startDailyBot).
   async scheduled(controller, env, ctx) {
     if (controller.cron === NUMBERS_CRON) {
       await numberPlayers(env, ctx).catch((e) => console.error(`numbers: ${(e && e.message) || e}`));
+      return;
+    }
+    if (controller.cron === BOT_CRON) {
+      await startDailyBot(env).catch((e) => console.error(`daily bot: ${(e && e.message) || e}`));
       return;
     }
     await updateProfiles(env, ctx).catch((e) => console.error(`profiles: ${(e && e.message) || e}`));
