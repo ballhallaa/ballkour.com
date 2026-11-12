@@ -536,7 +536,7 @@
   "faq.grayed.q": "为什么有些操作显示为<fg808080FF>灰色</fg>？",
   "faq.grayed.a": "因为现在无法使用：第一个CP时的<b>上一个CP</b>，最后一个CP时的<b>下一个CP</b>，以及没有可<fg00BEFFFF>观战</fg>玩家时的<fg00BEFFFF>观战</fg>操作。观战玩家时，<b>重新跟随</b>需要<b>自由视角</b>。<b>准星所指玩家</b>需要<b>自由视角</b>。",
   "faq.scorecard.q": "成绩表显示什么？",
-  "faq.scorecard.a": "每位玩家的CP、时间和失误，先按进度，再按速度排序。最上方是正在跑图的玩家，然后是被<fgFF4646FF>取消资格</fg>但仍在跑图的玩家，显示为<fgFF4646FF>红色</fg>；<fgCB87FFFF>自由模式</fg>中的玩家显示为<fgCB87FFFF>紫色</fg>；<fg00BEFFFF>观战</fg>中的玩家显示为<fg00BEFFFF>蓝色</fg>；在大厅的玩家显示为<fg808080FF>灰色</fg>。<fgFF4646FF>取消资格</fg>的成绩标有<fgFF4646FF>×</fg>。",
+  "faq.scorecard.a": "每位玩家的CP、时间和失误，先按进度，再按速度排序。最上方是正在跑图的玩家，然后是被<fgFF4646FF>取消资格</fg>但仍在跑图的玩家，显示为<fgFF4646FF>红色</fg>；<fgFF80C0FF>辅助模式</fg>中的玩家显示为<fgFF80C0FF>粉色</fg>；<fgCB87FFFF>自由模式</fg>中的玩家显示为<fgCB87FFFF>紫色</fg>；<fg00BEFFFF>观战</fg>中的玩家显示为<fg00BEFFFF>蓝色</fg>；在大厅的玩家显示为<fg808080FF>灰色</fg>。<fgFF4646FF>取消资格</fg>的成绩标有<fgFF4646FF>×</fg>，用过<fgFF80C0FF>辅助模式</fg>的成绩标有<fgFF80C0FF>•</fg>，跳关到达CP的玩家标有<fgFF4646FF>»</fg>，离开该CP后会变成<fgFF4646FF>×</fg>。",
   "faq.shield.q": "什么是<fg00BEFFFF>护盾弹跳</fg>？",
   "faq.shield.a": "自适应护盾（<kbd>技能2</kbd>）会把你向上、向前弹起。速度越快，弹起的高度越低。每次离开CP时可以用一次（仅限允许的CP），在<fgCB87FFFF>自由模式</fg>下可以随便用。",
   "faq.hints.q": "提示的颜色是什么意思？",
