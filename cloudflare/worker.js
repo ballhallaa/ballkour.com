@@ -2031,20 +2031,20 @@ async function profileOff(request, env) {
    How many times the site was opened in a browser, and by how many people, for Page views in Stats at the bottom of
    the page. The page asks /api/me once each time someone opens it, so each of those is a page view. It's the site's
    own request, which ad blockers don't stop, and bots that only fetch the page never make it. Views are kept by
-   section (the page's address up to its first /: /leaderboards, /runs, …), never by player or run, and so are the
-   people in each section (since November 2026; days before have none).
+   section (the page's address up to its first /: /leaderboards, /runs, …), never by player or run. People are only
+   counted for the whole site, not each section.
    People: each visitor is a code made from their IP address, their browser, and a random key that's made new each day
    and deleted at the end of it, so a code only says "the same visitor as earlier today", never who. Only today's
    codes are kept, and past days keep just their counts (for a little over a year).
    They're kept in a Durable Object: PageViews below, a small SQLite database the Worker owns (PAGE_VIEWS in
    wrangler.toml), which a deploy sets up on its own. Without it, nothing is counted.
-     GET /api/visits   → { since, days: [{ day, views, people, sections: { home: [views, people], … } }, …] }: since
-                       is the first day shown (see FIRST_VIEW_DAY), and days every day kept and at least the last 30,
-                       oldest first (0 and no sections for a day nobody came, or from before since). A section's people
-                       is null on a day from before they were counted. The copy served is at most a minute old. */
-// The first day shown. Views were first counted on 2026-11-09, but each section's people only from partway through
-// it, so most sections had none that day beside the day's 29 people. That day is still kept (until it's over a year
-// old, like the rest), just never shown.
+     GET /api/visits   → { since, days: [{ day, views, people, sections: { home: views, … } }, …] }: since is the
+                       first day shown (see FIRST_VIEW_DAY), and days every day kept and at least the last 30, oldest
+                       first (0 and no sections for a day nobody came, or from before since). The copy served is at
+                       most a minute old. */
+// The first day shown. Views were first counted on 2026-11-09, and each section's people (counted until November
+// 2026) only from partway through it, so that day was hidden. It's still kept (until it's over a year old, like the
+// rest), just never shown.
 const FIRST_VIEW_DAY = "2026-11-10";
 const VIEW_SECTIONS = ["courses", "leaderboards", "submit", "runs", "players", "stats", "my-stats", "features", "faq", "source-code", "translations"];
 const today = () => new Date().toISOString().slice(0, 10);
@@ -2053,12 +2053,14 @@ export class PageViews extends DurableObject {
     super(ctx, env);
     const sql = ctx.storage.sql;
     sql.exec("CREATE TABLE IF NOT EXISTS days (day TEXT PRIMARY KEY, views INTEGER NOT NULL, people INTEGER NOT NULL)");
-    sql.exec("CREATE TABLE IF NOT EXISTS sections (day TEXT NOT NULL, section TEXT NOT NULL, views INTEGER NOT NULL, people INTEGER, PRIMARY KEY (day, section))");
-    // Each section's people came later, in November 2026: a database from before gets the column, with no people
-    // (null) on the days it already has, so they're never shown as fewer than there were
-    try { sql.exec("SELECT people FROM sections LIMIT 0"); } catch (e) { sql.exec("ALTER TABLE sections ADD COLUMN people INTEGER"); }
+    sql.exec("CREATE TABLE IF NOT EXISTS sections (day TEXT NOT NULL, section TEXT NOT NULL, views INTEGER NOT NULL, PRIMARY KEY (day, section))");
+    // Each section's people were counted for a while in November 2026, with the sections each of today's codes had
+    // been in: both go from a database from then
+    let hadPeople = true;
+    try { sql.exec("SELECT people FROM sections LIMIT 0"); } catch (e) { hadPeople = false; }
+    if (hadPeople) sql.exec("ALTER TABLE sections DROP COLUMN people");
+    sql.exec("DROP TABLE IF EXISTS seen_in");
     sql.exec("CREATE TABLE IF NOT EXISTS seen (who TEXT PRIMARY KEY)"); // today's visitors' codes
-    sql.exec("CREATE TABLE IF NOT EXISTS seen_in (who TEXT NOT NULL, section TEXT NOT NULL, PRIMARY KEY (who, section))"); // and the sections they've been in
     sql.exec("CREATE TABLE IF NOT EXISTS daykey (day TEXT PRIMARY KEY, key TEXT NOT NULL)"); // today's key
   }
   // A page view in a section, by a visitor (their IP address and browser, which aren't kept)
@@ -2071,7 +2073,6 @@ export class PageViews extends DurableObject {
       key = crypto.randomUUID();
       sql.exec("DELETE FROM daykey");
       sql.exec("DELETE FROM seen");
-      sql.exec("DELETE FROM seen_in");
       sql.exec("INSERT INTO daykey (day, key) VALUES (?, ?)", day, key);
       const old = new Date(Date.now() - 400 * 864e5).toISOString().slice(0, 10);
       sql.exec("DELETE FROM days WHERE day < ?", old);
@@ -2080,12 +2081,10 @@ export class PageViews extends DurableObject {
     const who = b64url(new Uint8Array(await crypto.subtle.digest("SHA-256", utf8.encode(`${key}|${visitor}`))));
     const fresh = sql.exec("INSERT OR IGNORE INTO seen (who) VALUES (?)", who).rowsWritten > 0 ? 1 : 0;
     sql.exec("INSERT INTO days (day, views, people) VALUES (?, 1, ?) ON CONFLICT (day) DO UPDATE SET views = views + 1, people = people + ?", day, fresh, fresh);
-    // A section's people stay null all day on the day they started being counted, if it had views before then
-    const here = sql.exec("INSERT OR IGNORE INTO seen_in (who, section) VALUES (?, ?)", who, section).rowsWritten > 0 ? 1 : 0;
-    sql.exec("INSERT INTO sections (day, section, views, people) VALUES (?, ?, 1, ?) ON CONFLICT (day, section) DO UPDATE SET views = views + 1, people = people + ?", day, section, here, here);
+    sql.exec("INSERT INTO sections (day, section, views) VALUES (?, ?, 1) ON CONFLICT (day, section) DO UPDATE SET views = views + 1", day, section);
   }
-  // Every day kept, and at least the last 30, oldest first (a day nobody came is 0), each with its sections' views and
-  // people (see /api/visits)
+  // Every day kept, and at least the last 30, oldest first (a day nobody came is 0), each with its sections' views (see
+  // /api/visits)
   history() {
     const sql = this.ctx.storage.sql;
     const last = today();
@@ -2095,9 +2094,9 @@ export class PageViews extends DurableObject {
     const shown = from > FIRST_VIEW_DAY ? from : FIRST_VIEW_DAY;
     const got = new Map(sql.exec("SELECT day, views, people FROM days WHERE day >= ?", shown).toArray().map((r) => [r.day, r]));
     const sections = new Map();
-    sql.exec("SELECT day, section, views, people FROM sections WHERE day >= ?", shown).toArray().forEach((r) => {
+    sql.exec("SELECT day, section, views FROM sections WHERE day >= ?", shown).toArray().forEach((r) => {
       if (!sections.has(r.day)) sections.set(r.day, {});
-      sections.get(r.day)[r.section] = [r.views, r.people ?? null];
+      sections.get(r.day)[r.section] = r.views;
     });
     const days = [];
     for (let at = Date.parse(`${from}T00:00:00Z`); ; at += 864e5) {
