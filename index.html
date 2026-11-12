@@ -1124,6 +1124,9 @@ button.run-name:focus-visible { text-decoration: underline; text-decoration-thic
 .pf .run-name { color: var(--ink); }
 .pf .pf-unrated { grid-column: 3 / 5; justify-content: flex-end; font: 500 12.5px/1.2 var(--mono); color: var(--ink-3); }
 .pf .run.active { background-color: var(--glass-hi); box-shadow: inset 2px 0 0 var(--volt); }
+.pf-group { display: flex; align-items: center; gap: 8px; margin-top: 6px; padding: 12px 16px 6px; border-top: 1px solid var(--line); font: 500 12px/1.3 var(--mono); color: var(--ink-3); }
+.pf-group:first-child { margin-top: 0; padding-top: 6px; border-top: 0; }
+.pf-group .tag { flex: none; }
 .pf-empty { margin: 0; padding: 18px 16px; font: 400 15px/1.5 var(--body); color: var(--ink-2); }
 .pf-foot { flex: none; margin: 0; padding: 8px 16px; border-top: 1px solid var(--line); font: 400 12px/1.4 var(--mono); color: var(--ink-3); }
 @media (pointer: coarse) { .pf-foot { display: none; } }
@@ -4583,43 +4586,59 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   /* ---------- Finding a player ----------
      Find a player (the box at the top, the magnifier in the section bar, the box by Courses, or the / key anywhere)
      lists everyone who has run a course: the rated players by place, with their Top %, Discord, rating and courses
-     run, then everyone else (runs only on broken courses, or only before 2026-04-29) by name. Typing narrows it by
-     in-game or Discord name, the same way a board's search does, with names that start with it first. The arrow keys
-     and Enter, or a click, pick one, and their panel opens (see "A player's runs"). */
+     run, then everyone else with runs only on broken courses by name, and last, under a Legacy heading, the players
+     with runs only before 2026-04-29, by their place in the Legacy rating, with its Top %, rating and courses run.
+     Typing narrows it by in-game or Discord name, the same way a board's search does, with names that start with it
+     first (the Legacy players still last). The arrow keys and Enter, or a click, pick one, and their panel opens (see
+     "A player's runs"). */
   const pf = $("#pf");
   let pfList = [];
   let pfActive = 0;
   const pfInput = () => $("#pf-input");
   function everyone() {
     const r = ratings();
+    const lr = ratings(null, "legacy");
     const rated = r.players.map((p) => ({ key: p.key, name: p.name, discord: p.discord, p }));
     const seen = new Set(rated.map((x) => x.key));
-    const others = [];
+    const others = [], legacy = [];
     // Unrated: runs only on broken courses, or else only on the legacy boards (where a name without a Discord ID is
-    // its own player, so someone can be listed twice: rated, and Legacy)
-    const add = (run, legacy) => {
+    // its own player, so someone can be listed twice: rated, and Legacy), with their Legacy rating
+    const legacyOfKey = new Map(lr.players.map((p) => [p.key, p]));
+    const add = (run, old) => {
       const key = playerKey(run);
       if (seen.has(key)) return;
       seen.add(key);
-      others.push({ key, name: run.name, discord: run.discord || "", p: null, legacy });
+      (old ? legacy : others).push({ key, name: run.name, discord: run.discord || "", p: (old && legacyOfKey.get(key)) || null, legacy: old });
     };
     // Players with only assisted runs too (see "Assisted boards")
     COURSES.concat(ACOURSES).forEach((c) => { const { top, rest } = standingsOf(c); top.concat(rest).forEach((run) => add(run, false)); });
     COURSES.forEach((c) => (HISTORY[c.n] ? HISTORY[c.n].legacy : []).forEach((run) => add(run, true)));
-    others.sort((a, b) => fold(a.name).localeCompare(fold(b.name)));
-    return { all: rated.concat(others), r };
+    const byName = (a, b) => fold(a.name).localeCompare(fold(b.name));
+    others.sort(byName);
+    // By their place in the Legacy rating (then by name), and anyone without one after them
+    legacy.sort((a, b) => (a.p ? a.p.rank : Infinity) - (b.p ? b.p.rank : Infinity) || byName(a, b));
+    return { all: rated.concat(others, legacy), r, lr };
   }
-  function finderOption(x, i, r) {
+  // The rating and courses columns' widths (see ratingCols), over both ratings, so the Legacy rows line up with the rest
+  function finderCols(r, lr) {
+    const widest = (set, text) => Math.max(1, ...set.players.map((p) => text(p).length));
+    const pts = Math.max(...[r, lr].map((set) => widest(set, (p) => points(p.rating))));
+    const ran = Math.max(...[r, lr].map((set) => widest(set, (p) => `${p.courses}/${set.counted.length}`)));
+    return ` style="--pts: ${pts}; --ran: ${ran}"`;
+  }
+  // r: the rating x's p is from (the Legacy one for a Legacy player). cols: from finderCols
+  function finderOption(x, i, r, cols) {
     const p = x.p;
     const total = r.counted.length;
     const dc = x.discord && PLAYERS.get(x.discord);
     const ran = p ? t("rt.courses", { n: p.courses, total }) : "";
     const tier = p && p.tier ? t("rt.tier", { pct: p.tier.toLocaleString(htmlLang()) }) : "";
     const unrated = t(x.legacy ? "pl.legacy" : "find.unrated");
-    // Read out as "BALLMYBLOVED, ball シ, #1 of 16, Rating 182, Top 10%, 2 of 11 courses run"
-    const label = [x.name, dc && dc.name, ...(p ? [t("res.of", { rank: p.rank, total: r.players.length }), `${t("pl.rating")} ${points(p.rating)}`, tier, ran] : [unrated])]
+    // Read out as "BALLMYBLOVED, ball シ, #1 of 16, Rating 182, Top 10%, 2 of 11 courses run", with "Legacy" first for
+    // a Legacy player's place and rating
+    const label = [x.name, dc && dc.name, ...(p ? [x.legacy && unrated, t("res.of", { rank: p.rank, total: r.players.length }), `${t("pl.rating")} ${points(p.rating)}`, tier, ran] : [unrated])]
       .filter(Boolean).join(", ");
-    return `<li class="run${p && p.rank <= 3 ? " p" + p.rank : ""}${i === pfActive ? " active" : ""}" role="option" id="pf-opt-${i}" aria-selected="${i === pfActive}" aria-label="${esc(label)}"${ratingCols(r)}>` +
+    return `<li class="run${p && p.rank <= 3 ? " p" + p.rank : ""}${i === pfActive ? " active" : ""}" role="option" id="pf-opt-${i}" aria-selected="${i === pfActive}" aria-label="${esc(label)}"${cols}>` +
       `<span class="run-rank">${p ? p.rank : "–"}</span>` +
       `<span class="run-who"><span class="run-line"><span class="run-name">${esc(caps(x.name))}</span>` +
         (tier ? `<span class="tag tag-tier${p.tier <= 5 ? " elite" : ""}">${esc(tier)}</span>` : "") + `</span></span>` +
@@ -4632,17 +4651,22 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   function renderFinder() {
     const input = pfInput();
     if (!input) return;
-    const { all, r } = everyone();
+    const { all, r, lr } = everyone();
     const q = fold(input.value).trim();
     let list = all;
     if (q) {
       const starts = (x) => { const dc = x.discord && PLAYERS.get(x.discord); return fold(x.name).startsWith(q) || (!!dc && fold(dc.name).startsWith(q)); };
       const hits = all.filter((x) => found(x, q));
-      list = hits.filter(starts).concat(hits.filter((x) => !starts(x)));
+      // Names that start with it first, the Legacy players still last
+      const order = (part) => part.filter(starts).concat(part.filter((x) => !starts(x)));
+      list = order(hits.filter((x) => !x.legacy)).concat(order(hits.filter((x) => x.legacy)));
     }
     pfList = list;
     pfActive = Math.min(pfActive, Math.max(0, list.length - 1));
-    $("#pf-list").innerHTML = list.map((x, i) => finderOption(x, i, r)).join("");
+    const cols = finderCols(r, lr);
+    // The Legacy heading, over the first Legacy player (each one's own label says Legacy, so it isn't read out)
+    const heading = `<li class="pf-group" role="presentation" aria-hidden="true">${legacyTag()}<span>${esc(t("rt.legacy.title"))}</span></li>`;
+    $("#pf-list").innerHTML = list.map((x, i) => (x.legacy && (i === 0 || !list[i - 1].legacy) ? heading : "") + finderOption(x, i, x.legacy && x.p ? lr : r, cols)).join("");
     const empty = $("#pf-empty");
     empty.hidden = list.length > 0;
     empty.textContent = q ? t("find.none", { query: input.value.trim() }) : t("rt.empty");
