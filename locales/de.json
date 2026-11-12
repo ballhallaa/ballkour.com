@@ -136,6 +136,8 @@
   "lb.boardOf": "Stand {n} von {total}",
   "lb.prev": "Vorheriger Stand",
   "lb.next": "Nächster Stand",
+  "lb.toTop": "Zum Anfang der Bestenliste",
+  "lb.toEnd": "Zum Ende der Bestenliste",
   "lb.newRecord": "Neuer Rekord",
   "lb.new": "Neu",
   "lb.thisRun": "Dieser Lauf",

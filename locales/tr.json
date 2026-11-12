@@ -136,6 +136,8 @@
   "lb.boardOf": "Tablo {n}/{total}",
   "lb.prev": "Önceki tablo",
   "lb.next": "Sonraki tablo",
+  "lb.toTop": "Tablonun başına",
+  "lb.toEnd": "Tablonun sonuna",
   "lb.newRecord": "Yeni rekor",
   "lb.new": "Yeni",
   "lb.thisRun": "Bu koşu",

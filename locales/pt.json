@@ -136,6 +136,8 @@
   "lb.boardOf": "Classificação {n} de {total}",
   "lb.prev": "Classificação anterior",
   "lb.next": "Próxima classificação",
+  "lb.toTop": "Ir para o início da classificação",
+  "lb.toEnd": "Ir para o fim da classificação",
   "lb.newRecord": "Novo recorde",
   "lb.new": "Novo",
   "lb.thisRun": "Esta corrida",
