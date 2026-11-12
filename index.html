@@ -1355,13 +1355,12 @@ div.stats-row { cursor: default; }
 .stats-row .course-cell { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; align-items: baseline; gap: 0 6px; font: 600 13px/1.35 var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); }
 .stats-row-arrow { flex: none; align-self: center; width: 11px; height: 11px; transform: rotate(-90deg); color: var(--ink-3); transition: color .15s; }
 @media (hover: hover) { .stats-row:hover .stats-row-arrow { color: var(--volt); } }
-/* Most viewed: the same rows, with People and Views in two columns under their names. Every row (and the names over
-   the columns) lays itself out on the list's own columns (subgrid), so the numbers line up however wide they or the
-   names in that language are. */
-.stats-cols { display: grid; grid-template-columns: minmax(0, 1fr) auto auto 11px; column-gap: 16px; }
+/* Most viewed: the same rows, with Views in a column under its name. Every row (and the names over the columns) lays
+   itself out on the list's own columns (subgrid), so the numbers line up however wide they or the names in that
+   language are. */
+.stats-cols { display: grid; grid-template-columns: minmax(0, 1fr) auto 11px; column-gap: 16px; }
 .stats-cols > li, .stats-cols .stats-row { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: baseline; }
 .stats-cols .num { text-align: right; }
-.stats-row .num.soft { font-weight: 500; color: var(--ink-2); }
 .stats-cols-head { padding: 0 8px 6px; font: 600 10.5px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
 .stats-cols-head > span + span { text-align: right; }
 /* A list in the panel: its name with the number it explains, and its runs or players. A run's page or a player's
@@ -6582,11 +6581,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      it. Days are UTC days.
      Page views come from the Worker, which counts them (see "Page views" in cloudflare/worker.js), as the page opens,
      so they're in before anyone scrolls down to them:
-       GET /api/visits → { since: "YYYY-MM-DD", days: [{ day, views, people, sections: { home: [views, people], … } }, …] }
+       GET /api/visits → { since: "YYYY-MM-DD", days: [{ day, views, people, sections: { home: views, … } }, …] }
      oldest first. since is the first day counted: days picked from before it show "—", and a line says since when.
-     A section's people is null on days from before they were counted (the Worker shows none of those days now: see
-     FIRST_VIEW_DAY in cloudflare/worker.js): it shows "—" when any of the days picked has views for it but no people,
-     rather than adding up only some of the days next to all of their views.
      Each person counts once a day, so over a week someone who came on three days counts three times.
      The runs' numbers are worked out here, from the same files as the boards (see runStatsNow). */
   const STATS_LINK = /^\/stats(?:\/(\d{4}-\d{2}-\d{2}))?(?:\/(day|week|3-months|6-months|12-months))?\/?$/i;
@@ -6679,12 +6675,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   fetch("/api/visits").then((r) => (r.ok ? r.json() : null)).then((d) => {
     visits = d && Array.isArray(d.days) && d.days.length ? d : null;
     // Before November 2026, a player's panel was /players/<…> and My profile /my-stats: both are Profiles now, like
-    // /profile links. A day's people there are unknown (null) when either's are.
+    // /profile links
     if (visits) visits.days.forEach(({ sections: s }) => ["players", "my-stats"].forEach((k) => {
-      if (!s || !Array.isArray(s[k])) return;
-      const [views, people] = s[k];
-      const [v0, p0] = s.profile || [0, 0];
-      s.profile = [v0 + (Number(views) || 0), people === null || p0 === null ? null : p0 + (Number(people) || 0)];
+      if (!s || s[k] === undefined) return;
+      s.profile = (Number(s.profile) || 0) + (Number(s[k]) || 0);
       delete s[k];
     }));
     renderStats();
@@ -6953,18 +6947,12 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (visits) {
       const byDay = new Map(visits.days.map((d) => [d.day, d]));
       const v = (d) => byDay.get(d) || { views: 0, people: 0, sections: {} };
-      // Each section over the days picked, most viewed first. People: once a day each, added up, or unknown (missing)
-      // when a day with views for it has no people
+      // Each section's views over the days picked, most viewed first
       const sections = new Map();
-      span.forEach((d) => Object.entries(v(d).sections || {}).forEach(([key, x]) => {
-        const [views, people] = Array.isArray(x) ? x : [0, null];
-        const s = sections.get(key) || { views: 0, people: 0, missing: false };
-        s.views += Number(views) || 0;
-        if (people !== null && people !== undefined) s.people += Number(people) || 0;
-        else if (Number(views)) s.missing = true;
-        sections.set(key, s);
+      span.forEach((d) => Object.entries(v(d).sections || {}).forEach(([key, views]) => {
+        sections.set(key, (sections.get(key) || 0) + (Number(views) || 0));
       }));
-      const top = [...sections].filter(([, x]) => x.views > 0).sort((a, b) => b[1].views - a[1].views || b[1].people - a[1].people).slice(0, 6);
+      const top = [...sections].filter(([, views]) => views > 0).sort((a, b) => b[1] - a[1]).slice(0, 6);
       const sum = (k) => span.reduce((a, d) => a + (Number(v(d)[k]) || 0), 0);
       // Days from before page views were counted have none to show, rather than 0
       const since = DAY.test(visits.since || "") ? visits.since : visits.days[0].day;
@@ -6972,12 +6960,12 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       html += head("visits.title", "views") + `<div class="stats-part">` +
         `<div class="stats-tiles">${tile("stats.people", before ? "—" : n(sum("people")), "user")}${tile("stats.views", before ? "—" : n(sum("views")), "eye")}</div>` +
         chart("views", "stats.viewsChart", (d) => Number(v(d).views) || 0, (d) => t("visits.day", { date: d, views: n(v(d).views), people: n(v(d).people) })) +
-        // Most viewed: People and Views in columns under their names. Each number also says which it is, for screen
-        // readers, which read the row as one link.
+        // Most viewed: Views in a column under its name. Each number also says what it is, for screen readers, which
+        // read the row as one link.
         (top.length ? `<ul class="stats-rows stats-cols" aria-label="${esc(t("visits.top"))}">` +
-          `<li class="stats-cols-head" aria-hidden="true"><span>${esc(t("visits.top"))}</span><span>${esc(t("stats.people"))}</span><span>${esc(t("stats.views"))}</span></li>` +
-          top.map(([key, x]) => statSectionRow(key, `<span class="num soft"><span class="sr-only">${esc(t("stats.people"))} </span>${x.missing ? "—" : esc(n(x.people))}</span>` +
-            `<span class="num"><span class="sr-only">${esc(t("stats.views"))} </span>${esc(n(x.views))}</span>`)).join("") +
+          `<li class="stats-cols-head" aria-hidden="true"><span>${esc(t("visits.top"))}</span><span>${esc(t("stats.views"))}</span></li>` +
+          top.map(([key, views]) => statSectionRow(key,
+            `<span class="num"><span class="sr-only">${esc(t("stats.views"))} </span>${esc(n(views))}</span>`)).join("") +
           `</ul>` : "") +
         `<p class="rev-note">${esc(t("visits.note"))}${span[0] < since ? ` ${esc(t("stats.since", { date: since }))}` : ""}</p></div>`;
     }
