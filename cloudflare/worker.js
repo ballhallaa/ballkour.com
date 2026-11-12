@@ -1765,8 +1765,8 @@ async function setLink(request, env, ctx) {
    after its number. Changing a name only needs a deploy: Discord gets the new names, and everyone's profile shows
    them straight away. Server owners can also use them for
    linked roles (Server Settings → Linked Roles), like "Top 10s: at least 1". The numbers are the same as the site's
-   and the leaderboard bot's: Top 10s, Podiums and Records count every course's board, broken ones too, like the
-   bot's Top 10 role, and Courses run counts the courses in the ratings they've run, unassisted or assisted.
+   and the leaderboard bot's: Top 10s, Podiums and Records count every course's board, broken ones too, and Courses
+   run counts the courses in the ratings they've run, unassisted or assisted.
      GET  /api/profile      Discord's sign-in page, also asking to update their connection, then back to the page
                             (to=…, or their own panel), signed in and with their stats on their profile. It's also
                             the app's Linked Roles Verification URL in the Developer Portal.
