@@ -3246,28 +3246,34 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     }
     changed.add(c);
   }
+  // Draws a list again (draw: puts the new one in box, list: its selector there): rows that are on both (li[data-k])
+  // slide from where they were to where they are now, and new ones fade in
+  function slideRows(box, list, draw) {
+    const offsets = () => {
+      const ol = box.querySelector(list);
+      const m = new Map();
+      if (ol) $$("li[data-k]", ol).forEach((li) => m.set(li.dataset.k, li.getBoundingClientRect().top - ol.getBoundingClientRect().top));
+      return m;
+    };
+    const before = reduced ? null : offsets();
+    draw();
+    if (!before || !before.size || !box.querySelector(list)) return;
+    const after = offsets();
+    $$(`${list} li[data-k]`, box).forEach((li) => {
+      const was = before.get(li.dataset.k);
+      const now = after.get(li.dataset.k);
+      if (was === undefined) li.animate([{ opacity: 0, transform: "translateX(-10px)" }, { opacity: 1, transform: "none" }], { duration: 260, easing: "ease-out" });
+      else if (Math.abs(was - now) > 1) li.animate([{ transform: `translateY(${was - now}px)` }, { transform: "none" }], { duration: 340, easing: "cubic-bezier(.2, .8, .2, 1)" });
+    });
+  }
   // Redraws just an open board; rows that are on both boards slide to their new rank, new ones fade in
   function refreshBoard(c, focusSel) {
     const box = document.getElementById(`board-${c.n}`);
     if (!box || box.hidden) return;
-    const offsets = (root) => {
-      const ol = root.querySelector(".board");
-      const m = new Map();
-      if (ol) $$(".run[data-k]", ol).forEach((li) => m.set(li.dataset.k, li.getBoundingClientRect().top - ol.getBoundingClientRect().top));
-      return m;
-    };
-    const before = reduced ? null : offsets(box);
-    box.innerHTML = boardHtml(c);
-    fitSorts(box);
-    if (before && before.size && box.querySelector(".board")) {
-      const after = offsets(box);
-      $$(".run[data-k]", box).forEach((li) => {
-        const was = before.get(li.dataset.k);
-        const now = after.get(li.dataset.k);
-        if (was === undefined) li.animate([{ opacity: 0, transform: "translateX(-10px)" }, { opacity: 1, transform: "none" }], { duration: 260, easing: "ease-out" });
-        else if (Math.abs(was - now) > 1) li.animate([{ transform: `translateY(${was - now}px)` }, { transform: "none" }], { duration: 340, easing: "cubic-bezier(.2, .8, .2, 1)" });
-      });
-    }
+    slideRows(box, ".board", () => {
+      box.innerHTML = boardHtml(c);
+      fitSorts(box);
+    });
     const f = focusSel && box.querySelector(focusSel);
     if (f) refocus(f);
   }
@@ -7246,7 +7252,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (!b || b.dataset.runsMode === runsMode) return;
     runsMode = b.dataset.runsMode;
     $$("[data-runs-mode]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
-    redrawRuns();
+    redrawRuns(true);
   });
   let runsReady = false;
   /* The menu beside its box: All time, or the days of Stats' buttons, up to today. They're UTC days, sent by when
@@ -7265,7 +7271,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (k === runsRange) return;
     runsRange = k;
     runsRangeShow();
-    redrawRuns();
+    redrawRuns(true);
   }, placeRunsRange);
   /* The Courses panel clips what's past its edges (see #courses), so under a short list (none for the days picked)
      the menu opens upward when it doesn't fit under the button and does over it (but not under the section bar), and
@@ -7311,7 +7317,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       `<b class="rev-name">${esc(r.name)}</b><span class="rev-line"><span class="stat time">${icon("bolt")}${esc(r.time)}</span><span class="stat miss">${icon("skull")}${esc(r.mistakes)}</span>` +
       `${extra}${x.status ? statusTag(x) : ""}</span>` +
       [sentBy(r.date, who && who.name), checked && esc(checked)].filter(Boolean).map((h) => `<span class="rev-meta">${h}</span>`).join("");
-    return r.id ? `<li><a class="rev-run" href="/runs/${esc(r.id)}" data-run-open="${esc(r.id)}">${inner}</a></li>` : `<li><div class="rev-run">${inner}</div></li>`;
+    // Its key, so it can slide to its new place when the list is sorted again (see slideRows)
+    const k = ` data-k="${esc(r.id || [x.n, x.assisted ? "a" : "", r.name, r.time, r.date].join("|"))}"`;
+    return r.id ? `<li${k}><a class="rev-run" href="/runs/${esc(r.id)}" data-run-open="${esc(r.id)}">${inner}</a></li>` : `<li${k}><div class="rev-run">${inner}</div></li>`;
   }
   // The runs it lists (all: from sentRuns), sorted: the ones the box finds (all of them while it's empty) that were
   // sent in the days picked
@@ -7381,7 +7389,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   const queueJump = () => { if (!jumpQueued) { jumpQueued = true; requestAnimationFrame(placeJump); } };
   addEventListener("scroll", queueJump, { passive: true });
   addEventListener("resize", queueJump);
-  function renderSentRuns() {
+  // slide: its runs slide to their new places (see slideRows), as when it's sorted again
+  function renderSentRuns(slide) {
     const box = $("#sub-runs");
     if (!runsReady) return;
     const all = sentRuns();
@@ -7394,11 +7403,13 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const typing = document.activeElement === $(".lb-search input", box);
     const jumping = box.contains(document.activeElement) && document.activeElement.dataset.runsJump;
     const picking = runsRangeWrap.contains(document.activeElement) && document.activeElement;
-    box.innerHTML = `<div class="sub-runs-head"><p class="rev-title">${icon("notes")}<span>${esc(t("runs.title"))}</span><span class="rev-count">${list.length.toLocaleString(htmlLang())}</span></p>` +
+    const draw = () => { box.innerHTML = `<div class="sub-runs-head"><p class="rev-title">${icon("notes")}<span>${esc(t("runs.title"))}</span><span class="rev-count">${list.length.toLocaleString(htmlLang())}</span></p>` +
       (all.length > 1 ? runSortHtml(runsSort, runsRev) : "") + `</div>` +
       (all.length > 1 ? `<div class="sub-runs-find"><label class="lb-search">${icon("search")}<input type="search" value="${esc(runsQ)}" placeholder="${esc(t("lb.search"))}" ` +
         `aria-label="${esc(t("runs.searchLabel"))}" autocomplete="off" spellcheck="false" enterkeyhint="search"></label><span data-runs-range></span>${runsModeHtml()}</div>` : "") +
-      sentRunsRowsHtml(list);
+      sentRunsRowsHtml(list); };
+    if (slide) slideRows(box, ".rev-list", draw);
+    else draw();
     const slot = $("[data-runs-range]", box);
     if (slot) { runsRangeShow(); slot.replaceWith(runsRangeWrap); }
     fitSorts(box);
@@ -7407,17 +7418,20 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (jumping) $(`[data-runs-jump="${jumping}"]`, box).focus({ preventScroll: true });
     if (picking && slot) picking.focus({ preventScroll: true });
   }
-  // Typing in its box, or picking days beside it: only the runs under them are drawn again, and the number by the title
+  // Typing in its box, or picking days or All, Unassisted, or Assisted beside it: only the runs under them are drawn
+  // again, and the number by the title. Picking slides the runs to their new places (see slideRows); typing doesn't,
+  // like a board's box.
   function searchRuns(input) {
     runsQ = input.value;
     redrawRuns();
   }
-  function redrawRuns() {
+  function redrawRuns(slide) {
     const box = $("#sub-runs");
-    const rows = $(".sub-runs-rows", box);
-    if (!rows) return;
+    if (!$(".sub-runs-rows", box)) return;
     const list = sentRunsFound(sentRuns());
-    rows.outerHTML = sentRunsRowsHtml(list);
+    const draw = () => { $(".sub-runs-rows", box).outerHTML = sentRunsRowsHtml(list); };
+    if (slide) slideRows(box, ".rev-list", draw);
+    else draw();
     placeJump();
     $(".rev-count", box).textContent = list.length.toLocaleString(htmlLang());
     announce.textContent = fold(runsQ).trim() || runsRange || runsMode ? t("runs.found", { count: list.length.toLocaleString(htmlLang()) }) : "";
@@ -7609,7 +7623,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       if (!SORTED[sort.dataset.plSort]) return;
       runsRev = runsSort === sort.dataset.plSort ? !runsRev : false;
       runsSort = sort.dataset.plSort;
-      renderSentRuns();
+      renderSentRuns(true);
       const again = $(`#sub-runs [data-pl-sort="${runsSort}"]`);
       if (again) again.focus();
       announce.textContent = t(SORTED[runsSort][runsRev ? 1 : 0]);
