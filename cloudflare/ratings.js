@@ -18,7 +18,10 @@
 export const TIERS = [0.1, 1, 5, 10, 25, 50, 75, 90];
 
 const seconds = (t) => t.split(":").reduce((sum, part) => sum * 60 + Number(part), 0);
-const byTime = (a, b) => seconds(a.time) - seconds(b.time) || a.mistakes - b.mistakes;
+// What breaks a tie on time: a run's mistakes, or for a run played in Assist Mode, which has none, its time on the
+// ground ("ground", in whole hundredths of a second). Each board only has one kind.
+export const score = (r) => (Number.isInteger(r.ground) ? r.ground : r.mistakes);
+const byTime = (a, b) => seconds(a.time) - seconds(b.time) || score(a) - score(b);
 
 // A player is their Discord ID, or for a run without one, its in-game name
 export const playerKey = (r) => (r.discord ? "d:" + r.discord : "n:" + r.name.toUpperCase());
@@ -135,10 +138,11 @@ function parseOpy(text) {
   }
   return rows.filter(Boolean).slice(0, 10);
 }
-// A run as in the classic courses' files → a clean run, or null
+// A run as in the classic courses' files, or an assisted one with its ground time (see score) → a clean run, or null
 function cleanRun(r) {
-  if (!r || typeof r.name !== "string" || !r.name.trim() || !TIME.test(r.time) || !Number.isInteger(r.mistakes) || r.mistakes < 0) return null;
-  return { name: r.name.trim(), discord: DISCORD_ID.test(r.discord) ? r.discord : "", time: r.time, mistakes: r.mistakes, date: isoDate(r.date) };
+  if (!r || typeof r.name !== "string" || !r.name.trim() || !TIME.test(r.time) || !Number.isInteger(score(r)) || score(r) < 0) return null;
+  const tie = Number.isInteger(r.ground) ? { ground: r.ground } : { mistakes: r.mistakes };
+  return { name: r.name.trim(), discord: DISCORD_ID.test(r.discord) ? r.discord : "", time: r.time, ...tie, date: isoDate(r.date) };
 }
 // A removed run: its player (name, and Discord ID if it has one) and time are enough to find it
 function cleanRemoved(r) {
