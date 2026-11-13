@@ -3990,7 +3990,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const meta = r.assisted ? `<div class="board-meta board-assisted"><span>${assistedTag()}<span>${esc(t("rt.assisted.title"))}</span></span></div>`
       : r.legacy ? `<div class="board-meta board-legacy"><span>${legacyTag()}<span>${esc(t("rt.legacy.title"))}</span></span></div>`
       : r.global ? `<div class="board-meta"><span>${esc(t("rt.global.title"))}</span></div>` : "";
-    if (!r.players.length) return meta + `<p class="board-empty">${esc(t(r.assisted ? "rt.assisted.empty" : r.legacy ? "rt.legacy.empty" : "rt.empty"))}</p>`;
+    // With nobody rated yet (the Assisted tab, before its first run), the formulas still show how a rating is worked out
+    if (!r.players.length) return meta + `<p class="board-empty">${esc(t(r.assisted ? "rt.assisted.empty" : r.legacy ? "rt.legacy.empty" : "rt.empty"))}</p>` + mathHtml(r);
     const sorted = ratingsOrder(r.players);
     const top = sorted.slice(0, 10);
     const rest = sorted.slice(10);
