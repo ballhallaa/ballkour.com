@@ -15,15 +15,15 @@
 <meta property="og:title" content="Ballkour">
 <meta property="og:description" content="Wrecking Ball parkour courses for Overwatch. Grab a course code, run through every checkpoint, and get your time on the leaderboard!">
 <meta property="og:url" content="https://ballkour.com/">
-<meta property="og:image" content="https://ballkour.com/assets/og.jpg?v=3">
+<meta property="og:image" content="https://ballkour.com/assets/og.jpg?v=4">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:alt" content="The Ballkour hamster logo next to the Ballkour wordmark on a neon speed-line background">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png?v=2">
-<link rel="icon" type="image/png" sizes="192x192" href="/assets/icon-192.png?v=2">
-<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=2">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png?v=3">
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/icon-192.png?v=3">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=3">
 <!-- Fonts are served from ballkour.com (assets/fonts, Open Font License): no Google request, so the page draws
      straight away everywhere, Google never sees visitors, and it works where Google is blocked. The wordmark font
      (Exo 2) is preloaded so the title doesn't flash in a fallback font first. -->
@@ -1770,7 +1770,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
 
   <header class="hero">
     <button class="badge" id="badge" type="button" data-i18n-aria="badge.label" aria-label="Give the hamster a boost">
-      <img src="/assets/logo.webp?v=2" width="560" height="560" data-i18n-alt="logo.alt" alt="Ballkour logo: a hamster in goggles riding a black and orange ball">
+      <img src="/assets/logo.webp?v=3" width="560" height="560" data-i18n-alt="logo.alt" alt="Ballkour logo: a hamster in goggles riding a black and orange ball">
     </button>
     <h1 class="wordmark"><span class="wm-ball">Ball</span><span class="wm-kour">kour</span></h1>
     <p class="tagline" data-i18n="hero.tagline">Wrecking Ball parkour courses for Overwatch</p>
@@ -4415,7 +4415,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // Ballkyrie's picture, or the site's logo when the Worker doesn't have it
   const botPic = () => {
     const bot = botId && PLAYERS.get(botId);
-    return bot && /^https:\/\/cdn\.discordapp\.com\//.test(bot.avatar) ? bot.avatar : "/assets/logo.webp?v=2";
+    return bot && /^https:\/\/cdn\.discordapp\.com\//.test(bot.avatar) ? bot.avatar : "/assets/logo.webp?v=3";
   };
   // The steps' little pictures of where to click, drawn the way Discord shows them. Continue with Discord and Authorize
   // stand in for their own words, so screen readers read those. Steps 4 to 6's are the server name, Linked Roles, the
@@ -4427,7 +4427,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     return html
       .replace("{continue}", `<span class="dcp-ui dcp-ui-btn">${icon("discord")}${esc(t("signin.continue"))}</span>`)
       .replace("{authorize}", `<span class="dcp-ui dcp-ui-btn">${esc(t("dcpi.authorize"))}</span>`)
-      .replace("{server}", pic(`<img src="/assets/logo.webp?v=2" alt="" width="16" height="16">Ballkour${icon("chev")}`))
+      .replace("{server}", pic(`<img src="/assets/logo.webp?v=3" alt="" width="16" height="16">Ballkour${icon("chev")}`))
       .replace("{linkedRoles}", pic(`${linkSvg}${esc(t("dcpi.linkedRoles"))}`))
       .replace("{role}", pic(`<span class="dcp-ui-role">${linkSvg}</span>Discord Profile App`))
       .replace("{bot}", pic(`<img src="${esc(botPic())}" alt="" width="16" height="16">Ballkyrie<span class="dcp-ui-app" lang="en">APP</span>${icon("chev", "icon dcp-ui-next")}`))
@@ -5163,7 +5163,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       '600 15px "JetBrains Mono"', '400 13.5px "JetBrains Mono"', `40px ${EMOJI}`,
     ], c.flag, code);
     const people = d.runs.map((r) => (r.discord && PLAYERS.get(r.discord)) || null);
-    const [logo, ...pfps] = await Promise.all([loadImg("/assets/logo.webp?v=2"), ...people.map((p) => (p && /^https:\/\/cdn\.discordapp\.com\//.test(p.avatar) ? loadImg(p.avatar, true) : null))]);
+    const [logo, ...pfps] = await Promise.all([loadImg("/assets/logo.webp?v=3"), ...people.map((p) => (p && /^https:\/\/cdn\.discordapp\.com\//.test(p.avatar) ? loadImg(p.avatar, true) : null))]);
     return inLang(code, () => paintPicture(c, d, logo, people, pfps));
   }
   function paintPicture(c, d, logo, people, pfps) {
@@ -5398,7 +5398,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       '600 15px "JetBrains Mono"', '600 12px "JetBrains Mono"', '400 13.5px "JetBrains Mono"', `22px ${EMOJI}`,
     ], d.rows.map((x) => x.c.flag).join(""), code);
     const avatar = d.dc && /^https:\/\/cdn\.discordapp\.com\//.test(d.dc.avatar) ? d.dc.avatar : "";
-    const [logo, pfp] = await Promise.all([loadImg("/assets/logo.webp?v=2"), avatar ? loadImg(avatar, true) : null]);
+    const [logo, pfp] = await Promise.all([loadImg("/assets/logo.webp?v=3"), avatar ? loadImg(avatar, true) : null]);
     return inLang(code, () => paintPlayerPicture(d, logo, pfp));
   }
   function paintPlayerPicture(d, logo, pfp) {
@@ -5596,7 +5596,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       'italic 800 54px "Barlow Condensed"', '700 25px Barlow', '600 16px Barlow', '700 23px "JetBrains Mono"',
       '600 15px "JetBrains Mono"', '400 13.5px "JetBrains Mono"',
     ], "", code);
-    const [logo, ...pfps] = await Promise.all([loadImg("/assets/logo.webp?v=2"), ...d.people.map((p) => (p && /^https:\/\/cdn\.discordapp\.com\//.test(p.avatar) ? loadImg(p.avatar, true) : null))]);
+    const [logo, ...pfps] = await Promise.all([loadImg("/assets/logo.webp?v=3"), ...d.people.map((p) => (p && /^https:\/\/cdn\.discordapp\.com\//.test(p.avatar) ? loadImg(p.avatar, true) : null))]);
     return inLang(code, () => paintRatingsPicture(d, logo, pfps));
   }
   function paintRatingsPicture(d, logo, pfps) {
@@ -6483,7 +6483,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         `<p class="pl-lead">${esc(t(mine ? "signin.forMine" : claiming ? "signin.forClaim" : "signin.forSubmit", named))}</p></div>` +
         `<button class="pl-close" type="button" data-pl-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button></div>` +
       `<div class="pl-signin">` +
-        `<div class="pl-link" aria-hidden="true"><img src="/assets/logo.webp?v=2" alt="" width="60" height="60">` +
+        `<div class="pl-link" aria-hidden="true"><img src="/assets/logo.webp?v=3" alt="" width="60" height="60">` +
           `<span class="pl-link-path"><span class="pl-link-ok">${icon("check")}</span></span>` +
           `<span class="pl-link-dc">${icon("discord")}</span></div>` +
         part("signin.whyTitle", `<p>${esc(t("signin.why"))}</p><p>${esc(t("signin.perks"))}</p>` +
