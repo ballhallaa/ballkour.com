@@ -629,6 +629,8 @@ main:focus { outline: none; }
 .run-who { grid-area: who; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .run .stat.time { grid-area: time; }
 .run .stat.miss { grid-area: miss; }
+/* An assisted run's ground time ("1:05.20") needs more room than mistakes */
+.run.g { grid-template-columns: 26px minmax(0, 1fr) auto 82px; }
 .run-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 16px/1.2 var(--body); letter-spacing: .03em; color: var(--ink-2); }
 .run-date { grid-area: date; justify-self: end; display: flex; align-items: center; gap: 10px; margin-top: 3px; font: 400 11.5px/1.2 var(--mono); color: var(--ink-3); }
 /* A rating beside a run's date: the player's over every course on a board, the course's in a player's panel */
@@ -943,6 +945,7 @@ button.run-name:focus-visible { text-decoration: underline; text-decoration-thic
 .pl-run .stat { font: 600 14px/1 var(--mono); color: var(--ink-2); }
 .pl-run .stat.time { grid-area: time; }
 .pl-run .stat.miss { grid-area: miss; }
+.pl-run.g { grid-template-columns: auto 82px minmax(0, 1fr); }
 .pl-run-tags { grid-area: tags; justify-self: end; display: flex; gap: 5px; }
 .pl-run-meta { grid-area: meta; display: flex; align-items: center; gap: 10px; font: 400 11.5px/1.2 var(--mono); color: var(--ink-3); }
 .pl-run.best { background: rgba(0, 230, 151, .06); box-shadow: inset 2px 0 0 var(--volt); }
@@ -1243,7 +1246,7 @@ button.run-name:focus-visible { text-decoration: underline; text-decoration-thic
 @media (hover: hover) { .sub-form input:not([type="checkbox"]):hover, .sub-form .sub-pick:hover { border-color: rgba(196, 255, 232, .42); } }
 .sub-form input:focus-visible, .sub-form .sub-pick:focus-visible { outline: 2px solid var(--volt); outline-offset: 1px; border-color: var(--volt); }
 .sub-form [aria-invalid="true"] { border-color: var(--coral); }
-#sub-time, #sub-miss { font-family: var(--mono); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+#sub-time, #sub-miss, #sub-ground { font-family: var(--mono); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
 .sub-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px 14px; }
 /* Over the form (ballkour.com/runs): Runs to check for reviewers, then Submitted runs for everyone, under a line like
    the form's. It's hidden while neither is there. */
@@ -1710,6 +1713,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     <symbol id="i-party" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.8 11.3 2 22l10.7-3.79"/><path d="M4 3h.01"/><path d="M22 8h.01"/><path d="M15 2h.01"/><path d="M22 20h.01"/><path d="m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10"/><path d="m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11-.11.7-.72 1.22-1.43 1.22H17"/><path d="m11 2 .33.82c.34.86-.2 1.82-1.11 1.98-.7.11-1.22.72-1.22 1.43V7"/><path d="M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2Z"/></g></symbol>
     <symbol id="i-bolt" viewBox="0 0 24 24"><path fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></symbol>
     <symbol id="i-skull" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12.5 17-.5-1-.5 1h1z"/><path d="M15 22a1 1 0 0 0 1-1v-1a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20v1a1 1 0 0 0 1 1z"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="12" r="1"/></g></symbol>
+    <symbol id="i-ground" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17V3"/><path d="m6 11 6 6 6-6"/><path d="M19 21H5"/></g></symbol>
     <symbol id="i-anchor" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/></g></symbol>
     <symbol id="i-skip" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4l10 8-10 8z"/><path d="M19 5v14"/></g></symbol>
     <symbol id="i-bulb" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></g></symbol>
@@ -1879,6 +1883,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
           <div class="field">
             <label class="field-label" for="sub-miss" data-i18n="sub.miss">Mistakes</label>
             <input id="sub-miss" type="number" inputmode="numeric" min="0" max="9999" step="1" placeholder="0" required>
+          </div>
+          <div class="field" hidden>
+            <label class="field-label" for="sub-ground" data-i18n="sub.ground">Ground time</label>
+            <input id="sub-ground" inputmode="numeric" placeholder="12.34" maxlength="8" autocomplete="off" spellcheck="false">
           </div>
           <div class="field field-wide">
             <label class="field-label" for="sub-video" data-i18n="sub.video">Video link</label>
@@ -2107,6 +2115,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "foot.overwatch": "Overwatch",
   "hero.members": "{count} members",
   "unit.mistakes": "{count} mistakes",
+  "unit.ground": "{time} on the ground",
   "course.by": "Courses by {creator}",
   "course.remaker": "Remaker: {remaker}",
   "course.number": "Course {n}",
@@ -2166,6 +2175,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "pic.lang": "Picture’s language",
   "pic.player": "Picture of {player}’s stats",
   "pic.fewest": "Fewest mistakes",
+  "pic.leastGround": "Least ground time",
   "pic.legacyTop": "Legacy Top 10",
   "pic.assistedTop": "Assisted Top 10",
   "pic.unassistedTop": "Unassisted Top 10",
@@ -2177,10 +2187,13 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "pic.asOf": "As of {date}",
   "lb.sort.time": "Time",
   "lb.sort.miss": "Mistakes",
+  "lb.sort.ground": "Ground time",
   "lb.sortedTime": "Sorted by time",
   "lb.sortedMiss": "Sorted by mistakes, fewest first",
   "lb.sortedTimeSlow": "Sorted by time, slowest first",
   "lb.sortedMissMost": "Sorted by mistakes, most first",
+  "lb.sortedGround": "Sorted by ground time, least first",
+  "lb.sortedGroundMost": "Sorted by ground time, most first",
   "lb.sortedRating": "Sorted by rating, highest first",
   "lb.sortedRatingLow": "Sorted by rating, lowest first",
   "lb.fewer": "Show the top 10 only",
@@ -2236,6 +2249,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "res.first": "Your first run on this course",
   "res.faster": "{delta} faster than your old best ({time})",
   "res.sameTimeFewer": "Same time as your old best ({time}), but fewer mistakes",
+  "res.sameTimeLessGround": "Same time as your old best ({time}), but less ground time",
   "res.since": "{span} since your old best on {date}",
   "res.sinceSameDay": "On the same day as your old best",
   "res.course": "Course rating",
@@ -2260,6 +2274,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "res.slowerNote":"Only your best run on each course counts toward your place and rating. Here’s this run on its own:",
   "res.slowerBy": "{delta} slower than your best ({time})",
   "res.sameTimeMore": "Same time as your best ({time}), but more mistakes",
+  "res.sameTimeMoreGround": "Same time as your best ({time}), but more ground time",
   "rt.rated": "Rated",
   "lb.submittedOn": "Submitted on {date}",
   "lb.submittedBy": "Submitted on {date} by {name}",
@@ -2505,6 +2520,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "run.first": "Their first run on this course",
   "run.faster": "{delta} faster than their old best ({time})",
   "run.sameTimeFewer": "Same time as their old best ({time}), but fewer mistakes",
+  "run.sameTimeLessGround": "Same time as their old best ({time}), but less ground time",
   "run.since": "{span} since their old best on {date}",
   "run.sinceSameDay": "On the same day as their old best",
   "run.isRecord": "It’s the record on {course}.",
@@ -2513,12 +2529,14 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "run.alone": "This run on its own",
   "run.slowerBy": "{delta} slower than their best ({time})",
   "run.sameTimeMore": "Same time as their best ({time}), but more mistakes",
+  "run.sameTimeMoreGround": "Same time as their best ({time}), but more ground time",
   "run.slowerNow": "Their best on {course} is {time} now (#{rank}), so this run doesn’t count toward their place or rating. Only each player’s best run counts.",
   "run.missing": "There’s no run at this link. It may have been taken off the boards, or part of the link is missing.",
   "sub.err.course": "Pick the course you ran.",
   "sub.err.name": "Enter your name as it shows in Overwatch, without commas or quotes.",
   "sub.err.time": "Enter your time as it shows on the finish screen, like 4:05.81.",
   "sub.err.miss": "Enter how many mistakes you made.",
+  "sub.err.ground": "Enter your ground time from the finish screen, like 12.34.",
   "sub.err.video": "Paste a link to your video, like https://youtu.be/…",
   "sub.err.videoTop10": "This run would put you in the top 10, so it needs a video for a moderator to check. Paste a link to it, like https://youtu.be/…",
   "sub.err.login": "You’ve been signed out. Sign in with Discord again, then send your run.",
@@ -2985,6 +3003,31 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const pfp = /^https:\/\/cdn\.discordapp\.com\//.test(p.avatar) ? `<img class="run-pfp" src="${esc(p.avatar)}" alt="" width="16" height="16" loading="lazy" decoding="async">` : "";
     return `<span class="run-dc">${pfp}<span>${esc(p.name)}</span></span>`;
   }
+  /* ---------- Ground time ----------
+     A run played in Assist Mode has no mistakes: the game times how long it's on the ground where landing would be one,
+     and that breaks ties on its board instead. runs.json has it as "ground", in whole hundredths of a second, and a
+     cleaned run (see cleanRun) as ground and as miss, so everything that sorts or matches runs by their mistakes
+     works the same on an assisted board. It's written like a time ("12.34", "1:05.20"), beside an arrow down onto
+     the ground where mistakes have their skull. */
+  const isGround = (r) => Number.isInteger(r.ground);
+  function groundText(cs) {
+    const m = Math.floor(cs / 6000), s = ((cs % 6000) / 100).toFixed(2);
+    return m ? `${m}:${s.padStart(5, "0")}` : s;
+  }
+  // A ground time as typed ("12.34", "1:05.20") → whole hundredths, or null
+  function groundFrom(v) {
+    const m = /^(?:(\d{1,2}):)?(\d{1,2})\.(\d{2})$/.exec(String(v).trim());
+    if (!m || (m[1] && Number(m[2]) > 59)) return null;
+    return (Number(m[1] || 0) * 60 + Number(m[2])) * 100 + Number(m[3]);
+  }
+  // A run's mistakes or ground time, as it was sent (mistakes, ground) or cleaned (miss, see cleanRun)
+  const runMiss = (run) => (isGround(run) ? run.ground : Number.isInteger(run.miss) ? run.miss : Number(run.mistakes));
+  // Its mistakes, or its ground time, as it's shown (missText), read out (missLabel), and on a board (missHtml: sr, read
+  // out after it too)
+  const missText = (r) => (isGround(r) ? groundText(r.ground) : String(runMiss(r)));
+  const missLabel = (r) => (isGround(r) ? t("unit.ground", { time: groundText(r.ground) }) : t("unit.mistakes", { count: runMiss(r) }));
+  const missHtml = (r, sr = false) => `<span class="stat miss" title="${esc(missLabel(r))}">${icon(isGround(r) ? "ground" : "skull")}<span>${esc(missText(r))}</span>` +
+    `${sr ? `<span class="sr-only"> ${esc(missLabel(r))}</span>` : ""}</span>`;
   // A name on a board: opens the player's runs (see "A player's runs")
   const nameButton = (key, name) => `<button class="run-name" type="button" data-player="${esc(key)}" title="${esc(t("lb.playerOpen", { player: name }))}">${esc(caps(name))}</button>`;
   // A run on a board. ratingOf: each player's rating over every course and what the run adds to it (see
@@ -3000,12 +3043,11 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const split = legacy ? /^(.*?)(\.--)?$/.exec(r.time) : null;
     const shown = split ? esc(split[1]) + (split[2] ? `<span class="na">.--</span>` : "") : esc(r.time);
     const time = `${icon("bolt")}<span class="v">${shown}</span>`;
-    return `<li class="run${place >= 0 && place < 3 ? " p" + (place + 1) : ""}${isNew ? " fresh" : ""}${mark ? " mark" : ""}" data-k="${esc(r.name)}">` +
+    return `<li class="run${place >= 0 && place < 3 ? " p" + (place + 1) : ""}${isNew ? " fresh" : ""}${mark ? " mark" : ""}${isGround(r) ? " g" : ""}" data-k="${esc(r.name)}">` +
       `<span class="run-rank">${i + 1}</span>` +
       `<span class="run-who"><span class="run-line">${nameButton(playerKey(r), r.name)}${isNew ? `<span class="tag tag-new">${esc(t("lb.new"))}</span>` : ""}` +
         `${mark ? `<span class="tag tag-this">${esc(t("lb.thisRun"))}</span>` : ""}</span></span>` +
-      timeLink(r, time) +
-      `<span class="stat miss" title="${esc(t("unit.mistakes", { count: r.miss }))}">${icon("skull")}${esc(r.miss)}<span class="sr-only"> ${esc(t("unit.mistakes", { count: r.miss }))}</span></span>` +
+      timeLink(r, time) + missHtml(r, true) +
       (r.date || rating !== undefined ? `<span class="run-date">` +
         (rating !== undefined ? `<span class="run-pts" title="${esc(ratingTitle)}">${icon("star")}${esc(points(rating.rating) + gainText(rating.gain))}</span>` : "") +
         `${r.date ? `<span title="${esc(t("lb.submittedOn", { date: formatDate(r.date) }))}">${esc(formatDate(r.date))}</span>` : ""}</span>` : "") +
@@ -3018,7 +3060,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   function timeLink(r, time, n) {
     if (!r.video) return `<span class="stat time">${time}</span>`;
     return `<a class="stat time" href="${esc(r.video)}" target="_blank" rel="noopener" title="${esc(t("lb.watch", { time: r.time, player: r.name }))}" ` +
-      `data-watch="${n || ""}" data-player-name="${esc(r.name)}" data-run-time="${esc(r.time)}" data-run-miss="${esc(r.miss)}">${time}${icon("play", "play")}</a>`;
+      `data-watch="${n || ""}" data-player-name="${esc(r.name)}" data-run-time="${esc(r.time)}" data-run-miss="${esc(r.miss)}"${isGround(r) ? ` data-run-ground="${r.ground}"` : ""}>${time}${icon("play", "play")}</a>`;
   }
   /* ---------- Searching a board ----------
      Every board (and the Player ratings) has a box that finds players by their in-game or Discord name, anywhere on
@@ -3110,7 +3152,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // either is picked.
   let boardSort = "time";
   let boardRev = false;
-  const byMistakes = (a, b) => a.miss - b.miss || toSeconds(a.time) - toSeconds(b.time);
+  // Ground times (see "Ground time") come after mistakes, on a list with both (a player's runs on Global)
+  const byMistakes = (a, b) => isGround(a) - isGround(b) || a.miss - b.miss || toSeconds(a.time) - toSeconds(b.time);
   const runDay = (r) => { const d = formatDate(r.date); return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : ""; };
   const byNewest = (a, b) => runDay(b).localeCompare(runDay(a)) || toSeconds(a.time) - toSeconds(b.time);
   // Each sort's order, then turned around. null is the leaderboard's own (by time, fastest first). ratingOf: the
@@ -3119,7 +3162,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const rt = (r) => { const x = ratingOf && ratingOf.get(playerKey(r)); return x ? x.rating : -1; };
     return {
       time: [null, (a, b) => byTime(b, a)],
-      miss: [byMistakes, (a, b) => b.miss - a.miss || toSeconds(a.time) - toSeconds(b.time)],
+      miss: [byMistakes, (a, b) => isGround(a) - isGround(b) || b.miss - a.miss || toSeconds(a.time) - toSeconds(b.time)],
       rating: [(a, b) => rt(b) - rt(a) || toSeconds(a.time) - toSeconds(b.time),
         (a, b) => (rt(a) < 0) - (rt(b) < 0) || rt(a) - rt(b) || toSeconds(a.time) - toSeconds(b.time)],
       date: [byNewest, (a, b) => !runDay(a) - !runDay(b) || runDay(a).localeCompare(runDay(b)) || toSeconds(a.time) - toSeconds(b.time)],
@@ -3133,19 +3176,25 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   const SORTED = { time: ["lb.sortedTime", "lb.sortedTimeSlow"], miss: ["lb.sortedMiss", "lb.sortedMissMost"],
     date: ["pl.sortedDate", "pl.sortedDateOld"], rating: ["pl.sortedRating", "pl.sortedRatingLow"] };
   const BOARD_SORTED = { ...SORTED, rating: ["lb.sortedRating", "lb.sortedRatingLow"] };
+  // And on an assisted board, or a list of assisted runs, where Mistakes is Ground time (see "Ground time")
+  const GROUND_SORTED = { ...SORTED, miss: ["lb.sortedGround", "lb.sortedGroundMost"] };
+  const BOARD_GROUND_SORTED = { ...BOARD_SORTED, miss: GROUND_SORTED.miss };
   // The arrow on the pressed sort button: up when the smallest comes first (fastest, fewest mistakes, oldest, lowest
   // rating), down when the biggest does. Pressing it again turns the sort, and the arrow, around.
   const sortArrow = (k, rev) => `<span class="sort-dir${(k === "date" || k === "rating" || k === "courses" ? rev : !rev) ? " up" : ""}" aria-hidden="true">${icon("chev")}</span>`;
   const sortHint = (k, rev, said = SORTED) => ` title="${esc(t(said[k][rev ? 1 : 0]))}"`;
+  // What a list's sort says now, to read out once it's picked: its pressed button's hint (in box), which says ground
+  // time where it's sorted by that (see "Ground time"), or else key's
+  const sortedNow = (box, key) => { const b = $(`${box} [data-pl-sort][aria-pressed="true"]`); return b && b.title ? b.title : t(key); };
   // The bar above a board: its search (see "Searching a board") and picture (see "Board pictures") on the left, how
   // it's sorted on the right. legacy: a Legacy board, which has no Date (it's by time while Date is picked)
   function sortHtml(c, legacy) {
     const [on, rev] = boardSortOf(legacy);
-    const b = (key, ico, label) => `<button type="button" data-sort="${key}" data-course="${c.n}" aria-pressed="${on === key}"${on === key ? sortHint(key, rev, BOARD_SORTED) : ""}>` +
+    const b = (key, ico, label) => `<button type="button" data-sort="${key}" data-course="${c.n}" aria-pressed="${on === key}"${on === key ? sortHint(key, rev, c.assisted ? BOARD_GROUND_SORTED : BOARD_SORTED) : ""}>` +
       `${icon(ico)}<span>${esc(t(label))}</span>${on === key ? sortArrow(key, rev) : ""}</button>`;
     return `<div class="lb-bar">${searchHtml(c)}<button class="lb-pic" type="button" data-course="${c.n}">${icon("image")}<span>${esc(t("pic.button"))}</span></button>` +
       `<div class="lb-sort" role="group" aria-label="${esc(t("lb.sortBy"))}"><span class="lb-sort-label" aria-hidden="true">${esc(t("lb.sortBy"))}</span>` +
-      `<span class="sort-btns">${b("time", "bolt", "lb.sort.time") + b("miss", "skull", "lb.sort.miss") + b("rating", "star", "pl.rating") +
+      `<span class="sort-btns">${b("time", "bolt", "lb.sort.time") + (c.assisted ? b("miss", "ground", "lb.sort.ground") : b("miss", "skull", "lb.sort.miss")) + b("rating", "star", "pl.rating") +
       (legacy ? "" : b("date", "calendar", "pl.sort.date"))}</span></div></div>`;
   }
   /* A sort bar, a board's or one over a player's runs (see runSortHtml), has its buttons in a row beside "Sort by"
@@ -3413,7 +3462,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       boardRev = on === sort.dataset.sort ? !rev : false;
       boardSort = sort.dataset.sort;
       refreshBoard(c, `.lb-sort [data-sort="${boardSort}"]`);
-      announce.textContent = t(BOARD_SORTED[boardSort][boardRev ? 1 : 0]);
+      announce.textContent = t((viewOf(c).tab === "assisted" ? BOARD_GROUND_SORTED : BOARD_SORTED)[boardSort][boardRev ? 1 : 0]);
       return;
     }
     const more = e.target.closest(".lb-more");
@@ -3624,15 +3673,18 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   };
   const toSeconds = (t) => t.replace(".--", "").split(":").reduce((sum, part) => sum * 60 + Number(part), 0);
   // A run from a .json file → { name, discord, time, miss, date, video }, or null if it's malformed. Legacy runs were
-  // timed to the second ("4:30.--") and have no date or video.
+  // timed to the second ("4:30.--") and have no date or video. An assisted run has its ground time instead of mistakes,
+  // as ground and as miss (see "Ground time").
   function cleanRun(r, legacy) {
-    if (!r || typeof r.name !== "string" || !r.name.trim() || !Number.isInteger(r.mistakes) || r.mistakes < 0) return null;
+    const miss = isGround(r || {}) ? r.ground : r && r.mistakes;
+    if (!r || typeof r.name !== "string" || !r.name.trim() || !Number.isInteger(miss) || miss < 0) return null;
     if (!(legacy ? /^(\d{1,2}:)?\d{1,2}:\d{2}(\.--)?$/ : /^(\d{1,2}:)?\d{1,2}:\d{2}\.\d{2}$/).test(r.time)) return null;
     return {
       name: r.name.trim(),
       discord: typeof r.discord === "string" && /^\d{17,20}$/.test(r.discord) ? r.discord : "",
       time: r.time,
-      miss: r.mistakes,
+      miss,
+      ...(isGround(r) ? { ground: r.ground } : {}),
       date: !legacy && typeof r.date === "string" ? r.date : "",
       // When a run sent from the website was sent, to the second (runs.json's), for how long after its player's old
       // best a run came (see spanBetween)
@@ -4131,10 +4183,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const time = `${icon("bolt")}<span class="v">${esc(r.time)}</span>`;
     const pts = record && !legacy ? coursePoints(record, r) : null;
     const date = r.date ? formatDate(r.date) : "";
-    return `<li class="pl-run${isBest ? " best" : ""}">` +
+    return `<li class="pl-run${isBest ? " best" : ""}${isGround(r) ? " g" : ""}">` +
       (c ? `<span class="pl-run-course"><span class="pl-run-num">${c.n}</span> ${flagName(c)}${tagged ? ` ${assistedTag()}` : ""}${c.broken ? ` <span class="tag tag-broken">${esc(t("code.broken"))}</span>` : ""}</span>` : "") +
-      timeLink(r, time, c && c.n) +
-      `<span class="stat miss" title="${esc(t("unit.mistakes", { count: r.miss }))}">${icon("skull")}${esc(r.miss)}</span>` +
+      timeLink(r, time, c && c.n) + missHtml(r) +
       `<span class="pl-run-tags">${isBest ? `<span class="tag tag-latest">${esc(t("pl.best"))}</span>` : ""}${legacy ? `<span class="tag tag-legacy">${esc(t("pl.legacy"))}</span>` : ""}</span>` +
       `<span class="pl-run-meta">` +
         (pts !== null ? coursePtsHtml(pts, isBest ? gain : null) : "") +
@@ -4281,7 +4332,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const summary = best
       ? `<span class="pl-course-best"><span class="pl-place">${esc(t("res.of", { rank: at + 1, total }))}</span>` +
         `<span class="stat time">${icon("bolt")}<span class="v">${esc(best.time)}</span></span>` +
-        `<span class="stat miss" title="${esc(t("unit.mistakes", { count: best.miss }))}">${icon("skull")}${esc(best.miss)}<span class="sr-only"> ${esc(t("unit.mistakes", { count: best.miss }))}</span></span>` +
+        missHtml(best, true) +
         (record ? coursePtsHtml(coursePoints(record, best), gain) : "") +
         (best.date ? `<span class="pl-course-date" title="${esc(t("lb.submittedOn", { date: formatDate(best.date) }))}">${esc(formatDate(best.date))}</span>` : "") + `</span>`
       : `<span class="pl-course-best">${esc(legacy.length ? t("pl.legacyBest", { time: legacy.slice().sort(byTime)[0].time }) : t("pl.notRun"))}</span>`;
@@ -4328,7 +4379,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const back = rev && sort === "date";
     list.sort((a, b) => a.order - b.order || (back ? a.day.localeCompare(b.day) : b.day.localeCompare(a.day)));
     const by = (rev
-      ? { time: (a, b) => byTime(b.r, a.r), miss: (a, b) => b.r.miss - a.r.miss || toSeconds(a.r.time) - toSeconds(b.r.time), rating: (a, b) => (a.pts < 0) - (b.pts < 0) || a.pts - b.pts }
+      ? { time: (a, b) => byTime(b.r, a.r), miss: (a, b) => isGround(a.r) - isGround(b.r) || b.r.miss - a.r.miss || toSeconds(a.r.time) - toSeconds(b.r.time), rating: (a, b) => (a.pts < 0) - (b.pts < 0) || a.pts - b.pts }
       : { time: (a, b) => byTime(a.r, b.r), miss: (a, b) => byMistakes(a.r, b.r), rating: (a, b) => b.pts - a.pts })[sort];
     if (by) list.sort(by);
     return list;
@@ -4336,11 +4387,13 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // The sort over a list of a player's runs, like a board's: on and rev, how it's sorted now. keys: the sorts it has,
   // of RUN_SORTS (each one's icon and name), in that order.
   const RUN_SORTS = { time: ["bolt", "lb.sort.time"], miss: ["skull", "lb.sort.miss"], rating: ["star", "pl.rating"], date: ["calendar", "pl.sort.date"] };
-  function runSortHtml(on, rev, keys = Object.keys(RUN_SORTS)) {
-    const b = (key, [ico, label]) => `<button type="button" data-pl-sort="${key}" aria-pressed="${on === key}"${on === key ? sortHint(key, rev) : ""}>` +
+  // ground: a list of assisted runs, sorted by their ground time instead of mistakes (see "Ground time")
+  function runSortHtml(on, rev, keys = Object.keys(RUN_SORTS), ground = false) {
+    const sorts = ground ? { ...RUN_SORTS, miss: ["ground", "lb.sort.ground"] } : RUN_SORTS;
+    const b = (key, [ico, label]) => `<button type="button" data-pl-sort="${key}" aria-pressed="${on === key}"${on === key ? sortHint(key, rev, ground ? GROUND_SORTED : SORTED) : ""}>` +
       `${icon(ico)}<span>${esc(t(label))}</span>${on === key ? sortArrow(key, rev) : ""}</button>`;
     return `<div class="lb-sort pl-sort" role="group" aria-label="${esc(t("lb.sortBy"))}"><span class="lb-sort-label" aria-hidden="true">${esc(t("lb.sortBy"))}</span>` +
-      `<span class="sort-btns">${keys.map((k) => b(k, RUN_SORTS[k])).join("")}</span></div>`;
+      `<span class="sort-btns">${keys.map((k) => b(k, sorts[k])).join("")}</span></div>`;
   }
   // Runs, in their panel: every run the tile counts on one list, each under its course, sorted by plSort (see sortRuns)
   function allRunsHtml(rows) {
@@ -4348,7 +4401,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     return `<div class="pl-all">` +
       `<div class="pl-all-head"><button class="pl-back" type="button" data-pl-back>${icon("chev")}<span>${esc(t("pl.back"))}</span></button>` +
       `<p class="pl-runs-count"><span>${esc(t("pl.allRuns"))}</span><b>${esc(localNum(list.length))}</b></p>` +
-      runSortHtml(plSort, plRev) + `</div>` +
+      // A list of assisted runs alone (Assisted's) is sorted by their ground time instead of mistakes
+      runSortHtml(plSort, plRev, undefined, rows.length > 0 && rows.every((x) => x.c.assisted)) + `</div>` +
       `<ol class="pl-run-list">${list.map((x) => x.html).join("")}</ol></div>`;
   }
   // The runs under a course in a player's panel (row: see plRows), sorted by plCourseSort (see sortRuns), with how
@@ -4360,7 +4414,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const keys = Object.keys(RUN_SORTS).filter((k) => (k === "rating" ? items.some((x) => x.pts >= 0) : k === "date" ? items.some((x) => x.day) : true));
     const [on, rev] = keys.includes(plCourseSort) ? [plCourseSort, plCourseRev] : ["time", false];
     const list = sortRuns(items, on, rev);
-    return `<div class="pl-runs-head">${runsCountHtml(list.length)}${list.length > 1 ? runSortHtml(on, rev, keys) : ""}</div>` +
+    return `<div class="pl-runs-head">${runsCountHtml(list.length)}${list.length > 1 ? runSortHtml(on, rev, keys, !!row.c.assisted) : ""}</div>` +
       `<ol class="pl-run-list">${list.map((x) => x.html).join("")}</ol>`;
   }
   /* Their own panel: their stats on their Discord profile (see "Stats on Discord profiles" in cloudflare/worker.js),
@@ -4652,14 +4706,14 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         plCourseRev = on === sort.dataset.plSort ? !(on === plCourseSort && plCourseRev) : false;
         plCourseSort = sort.dataset.plSort;
         renderPlayer(`#${runs.id} [data-pl-sort="${plCourseSort}"]`);
-        announce.textContent = t(SORTED[plCourseSort][plCourseRev ? 1 : 0]);
+        announce.textContent = sortedNow(`#${runs.id}`, SORTED[plCourseSort][plCourseRev ? 1 : 0]);
         return;
       }
       // The one that's on turns around; another starts its own way
       plRev = plSort === sort.dataset.plSort ? !plRev : false;
       plSort = sort.dataset.plSort;
       renderPlayer(`[data-pl-sort="${plSort}"]`);
-      announce.textContent = t(SORTED[plSort][plRev ? 1 : 0]);
+      announce.textContent = sortedNow(".pl-all", SORTED[plSort][plRev ? 1 : 0]);
       return;
     }
     // Global, Unassisted, Assisted, or Legacy: the panel shows those runs instead, with the same button in focus
@@ -4974,6 +5028,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   const PIC_ICONS = {
     bolt: { fill: true, paths: ["M13 2 3 14h9l-1 8 10-12h-9l1-8z"] },
     star: { fill: true, paths: ["M11.53 2.3a.53.53 0 0 1 .94 0l2.31 4.68a2.12 2.12 0 0 0 1.6 1.16l5.16.75a.53.53 0 0 1 .3.91l-3.74 3.64a2.12 2.12 0 0 0-.61 1.88l.88 5.14a.53.53 0 0 1-.77.56l-4.62-2.43a2.12 2.12 0 0 0-1.97 0L6.4 21.01a.53.53 0 0 1-.77-.56l.88-5.14a2.12 2.12 0 0 0-.61-1.88L2.16 9.8a.53.53 0 0 1 .3-.91l5.16-.75a2.12 2.12 0 0 0 1.6-1.16z"] },
+    ground: { paths: ["M12 17V3", "m6 11 6 6 6-6", "M19 21H5"] },
     skull: { paths: ["m12.5 17-.5-1-.5 1h1z", "M15 22a1 1 0 0 0 1-1v-1a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20v1a1 1 0 0 0 1 1z"], dots: [[15, 12], [9, 12]] },
     map: { paths: ["M14.1 5.55a2 2 0 0 0 1.8 0l3.65-1.83A1 1 0 0 1 21 4.62v12.76a1 1 0 0 1-.55.9l-4.55 2.27a2 2 0 0 1-1.8 0l-4.2-2.1a2 2 0 0 0-1.8 0l-3.65 1.83A1 1 0 0 1 3 19.38V6.62a1 1 0 0 1 .55-.9L8.1 3.45a2 2 0 0 1 1.8 0z", "M15 5.76v15", "M9 3.24v15"] },
     notes: { paths: ["M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", "M14 2v4a2 2 0 0 0 2 2h4", "M10 13H8", "M16 17H8", "M16 13h-2"] },
@@ -5209,7 +5264,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const titleW = picTitle(ctx, c.name.toUpperCase(), PIC.pad + flagW, titleY, chip ? W - 2 * PIC.pad - PIC.head - 24 - flagW - chipW - 16 : 0);
     if (chip) picChip(ctx, chip, PIC.pad + flagW + titleW + 16, titleY, chipW, unassisted ? "230,151,0" : undefined);
     const line = (parts, cy) => picLine(ctx, parts, cy, W - 2 * PIC.pad - PIC.head - 24);
-    const sorted = d.byMiss ? up(t("pic.fewest")) : "";
+    const sorted = d.byMiss ? up(t(d.assisted ? "pic.leastGround" : "pic.fewest")) : "";
     // Top 10, which board it is, then its date, like the bar over the board. An assisted board's and a remake's regular
     // board's say Top 10, as their ASSISTED or UNASSISTED chip is right above it (their alt text still says Assisted
     // Top 10 or Unassisted Top 10)
@@ -5254,12 +5309,13 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       // Mistakes, then the time, from the right
       picFont(ctx, '700 20px "JetBrains Mono", monospace');
       if (r) {
-        const mw = ctx.measureText(String(r.miss)).width;
-        picText(ctx, String(r.miss), right, y1, "#a7b6b0", "right");
-        picIcon(ctx, "skull", right - mw - 7 - 19, y1, 19, "#ff6a4f");
+        const mw = ctx.measureText(missText(r)).width;
+        picText(ctx, missText(r), right, y1, "#a7b6b0", "right");
+        picIcon(ctx, isGround(r) ? "ground" : "skull", right - mw - 7 - 19, y1, 19, "#ff6a4f");
       }
       picFont(ctx, '700 23px "JetBrains Mono", monospace');
-      const timeRight = right - 66 - 12;
+      // An assisted board's ground times ("1:05.20") are wider than mistakes
+      const timeRight = right - (d.assisted ? 110 : 66) - 12;
       const time = r ? r.time : "-:--.--";
       const legacyTail = r && /\.--$/.test(time);
       let tw;
@@ -5395,8 +5451,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   }
   function openPicture(c) {
     const d = picBoard(c);
-    const filename = `${c.n}-${slugOf(c.name)}${d.legacy ? "-legacy" : `${d.assisted ? "-assisted" : ""}${d.board ? `-board-${d.board}` : ""}`}${d.byMiss ? "-by-mistakes" : ""}.png`;
-    const alt = `${c.name} · ${t(d.legacy ? "pic.legacyTop" : d.assisted ? "pic.assistedTop" : hasAssistMode(c) ? "pic.unassistedTop" : "lb.tab.top")}: ` + d.runs.map((r, i) => `${i + 1}. ${r.name} ${r.time}, ${t("unit.mistakes", { count: r.miss })}`).join("; ");
+    const filename = `${c.n}-${slugOf(c.name)}${d.legacy ? "-legacy" : `${d.assisted ? "-assisted" : ""}${d.board ? `-board-${d.board}` : ""}`}${d.byMiss ? (d.assisted ? "-by-ground-time" : "-by-mistakes") : ""}.png`;
+    const alt = `${c.name} · ${t(d.legacy ? "pic.legacyTop" : d.assisted ? "pic.assistedTop" : hasAssistMode(c) ? "pic.unassistedTop" : "lb.tab.top")}: ` + d.runs.map((r, i) => `${i + 1}. ${r.name} ${r.time}, ${missLabel(r)}`).join("; ");
     pictureWindow(esc(t("pic.title", { n: c.n, course: "\u0000" })).replace("\u0000", flagName(c)), (code) => drawPicture(c, d, code), filename, alt);
   }
 
@@ -5560,9 +5616,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
           tx += picText(ctx, run.time.slice(0, -3), tx, y2, "#ecf6f2");
           tx += picText(ctx, ".--", tx, y2, "#76867f");
         } else tx += picText(ctx, run.time, tx, y2, "#ecf6f2");
-        picIcon(ctx, "skull", tx + 16, y2, 17, "#ff6a4f");
+        picIcon(ctx, isGround(run) ? "ground" : "skull", tx + 16, y2, 17, "#ff6a4f");
         picFont(ctx, '700 17px "JetBrains Mono", monospace');
-        leftEnd = tx + 16 + 17 + 5 + picText(ctx, String(run.miss), tx + 16 + 17 + 5, y2, "#a7b6b0");
+        leftEnd = tx + 16 + 17 + 5 + picText(ctx, missText(run), tx + 16 + 17 + 5, y2, "#a7b6b0");
       }
       const date = best ? formatDate(best.date) : "";
       const num = best && record ? points(coursePoints(record, best)) + gainText(gain) : "";
@@ -5592,7 +5648,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const filename = `${slugOf(d.name) || slugOf(linkOf(key)) || "player"}-stats.png`;
     const alt = `${d.name}: ` + (d.p ? `${t("pl.rating")} ${points(d.p.rating)}, ${t("res.of", { rank: d.p.rank, total: d.total })}, ${tierLabel(d.p.tier)}` : t("find.unrated")) +
       `, ${t("pl.courses")} ${d.p ? d.p.courses : 0}/${d.counted}, ${t("pl.runs")} ${localNum(d.runs)}. ` +
-      d.rows.filter((x) => x.best).map(({ c, at, best, total, tagged }) => `${c.n}. ${c.name}${tagged ? ` (${t("lb.tab.assisted")})` : ""}: ${best.time}, ${t("unit.mistakes", { count: best.miss })}, ${t("res.of", { rank: at + 1, total })}`).join("; ");
+      d.rows.filter((x) => x.best).map(({ c, at, best, total, tagged }) => `${c.n}. ${c.name}${tagged ? ` (${t("lb.tab.assisted")})` : ""}: ${best.time}, ${missLabel(best)}, ${t("res.of", { rank: at + 1, total })}`).join("; ");
     pictureWindow(esc(t("pic.player", { player: d.name })), (code) => drawPlayerPicture(d, code), filename, alt);
   }
   /* ---------- Ratings pictures ----------
@@ -6319,7 +6375,19 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const hint = $("#sub-assisted-hint");
     hint.dataset.i18n = off ? "sub.assistedNone" : "sub.assistedHint";
     hint.textContent = t(hint.dataset.i18n);
+    renderScoreField();
     renderVideoNeed();
+  }
+  // A run played in Assist Mode has a ground time instead of mistakes (see "Ground time"), so while the box is ticked,
+  // the Mistakes field makes way for Ground time
+  function renderScoreField() {
+    const ground = subField("assisted").checked && !subField("assisted").disabled;
+    [["miss", !ground], ["ground", ground]].forEach(([id, on]) => {
+      const el = subField(id);
+      el.closest(".field").hidden = !on;
+      el.required = on;
+      if (!on) el.removeAttribute("aria-invalid");
+    });
   }
   const loginOn = submitBox.dataset.login === "on";
   // Stats on Discord profiles are set up too (see "Stats on Discord profiles" in cloudflare/worker.js)
@@ -6365,14 +6433,16 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      goes up straight away, with or without one. The Worker works it out the same way as the run's sent (placeOf() in
      cloudflare/worker.js), and turns down a top 10 run without a video, so keep the two in step.
      → the place the run in the form would take (1 to 10) when it needs a video, 0 when it doesn't, or null until
-     there's a course and a time to tell by. Mistakes only break ties, so until they're typed in it goes by 0, like
-     the field's placeholder. */
+     there's a course and a time to tell by. Mistakes (or the ground time) only break ties, so until they're typed in
+     it goes by none. */
   function videoRank() {
     const c = me && subCourse ? course(Number(subCourse)) : null;
-    const time = cleanTime(subField("time").value), miss = subField("miss").value.trim() || "0";
-    if (!c || !time || !/^\d{1,4}$/.test(miss)) return null;
     const assisted = subField("assisted").checked && !subField("assisted").disabled;
-    const run = { discord: me.id, time, miss: Number(miss) };
+    const typed = subField(assisted ? "ground" : "miss").value.trim();
+    const time = cleanTime(subField("time").value);
+    const miss = !typed ? 0 : assisted ? groundFrom(typed) : /^\d{1,4}$/.test(typed) ? Number(typed) : null;
+    if (!c || !time || miss === null) return null;
+    const run = { discord: me.id, time, miss };
     const { top, rest } = standingsOf(assisted ? assistedOf(c) : c);
     const board = top.concat(rest), key = playerKey(run);
     const mine = board.find((r) => playerKey(r) === key);
@@ -7281,7 +7351,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       return { when: range, value: statNum(list.length), rows: list.map((x) => runItemHtml(x)) };
     };
     // A board's run with its page, or as itself when it has none
-    const item = (r, n) => rs.entryOf(n, r) || { run: { name: r.name, discord: r.discord, time: r.time, mistakes: r.miss, date: r.date || "", id: "" }, n, group: "past", status: "" };
+    const item = (r, n) => rs.entryOf(n, r) || { run: { name: r.name, discord: r.discord, time: r.time, ...(isGround(r) ? { ground: r.ground } : { mistakes: r.miss }), date: r.date || "", id: "" }, n, group: "past", status: "" };
     if (kind === "sent") return sent(() => true);
     if (kind === "busiest") {
       // The course with the most runs sent (the lower number when two have as many), as under Runs
@@ -7406,7 +7476,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       const who = r.discord && PLAYERS.get(r.discord);
       return `<li class="rev-run${r.id === checkParam ? " picked" : ""}" id="rev-${esc(r.id)}">` +
         `<span class="rev-course">${esc(`${r.course} `)}${c ? flagName(c) : esc(r.courseName)}${isAssistedRun(r) ? ` ${assistedTag()}` : ""}</span>` +
-        `<b class="rev-name">${esc(r.name)}</b><span class="rev-line"><span class="stat time">${icon("bolt")}${esc(r.time)}</span><span class="stat miss">${icon("skull")}${esc(r.mistakes)}</span>` +
+        `<b class="rev-name">${esc(r.name)}</b><span class="rev-line"><span class="stat time">${icon("bolt")}${esc(r.time)}</span>${missHtml(r)}` +
         `<span class="tag tag-wr rev-would">${wouldTag(r, wouldDo(r, c))}</span></span>` +
         `<span class="rev-meta">${sentBy(r.date, who && who.name)}</span>` +
         `<span class="rev-actions" data-id="${esc(r.id)}">${reviewActions(r)}</span></li>`;
@@ -7507,7 +7577,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const checker = me && me.reviewer && checkerOf(r);
     const checked = checker ? t(x.group === "declined" ? "rev.declinedBy" : "rev.approvedBy", { name: checker.name }) : "";
     const inner = `<span class="rev-course">${esc(`${x.n} `)}${flagName(c)}${x.assisted ? ` ${assistedTag()}` : ""}</span>` +
-      `<b class="rev-name">${esc(r.name)}</b><span class="rev-line"><span class="stat time">${icon("bolt")}${esc(r.time)}</span><span class="stat miss">${icon("skull")}${esc(r.mistakes)}</span>` +
+      `<b class="rev-name">${esc(r.name)}</b><span class="rev-line"><span class="stat time">${icon("bolt")}${esc(r.time)}</span>${missHtml(r)}` +
       `${extra}${x.status ? statusTag(x) : ""}</span>` +
       [sentBy(r.date, who && who.name), checked && esc(checked)].filter(Boolean).map((h) => `<span class="rev-meta">${h}</span>`).join("");
     // Its key, so it can slide to its new place when the list is sorted again (see slideRows)
@@ -7597,7 +7667,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const jumping = box.contains(document.activeElement) && document.activeElement.dataset.runsJump;
     const picking = runsRangeWrap.contains(document.activeElement) && document.activeElement;
     const draw = () => { box.innerHTML = `<div class="sub-runs-head"><p class="rev-title">${icon("notes")}<span>${esc(t("runs.title"))}</span><span class="rev-count">${list.length.toLocaleString(htmlLang())}</span></p>` +
-      (all.length > 1 ? runSortHtml(runsSort, runsRev) : "") + `</div>` +
+      (all.length > 1 ? runSortHtml(runsSort, runsRev, undefined, runsMode === "assisted") : "") + `</div>` +
       (all.length > 1 ? `<div class="sub-runs-find"><label class="lb-search">${icon("search")}<input type="search" value="${esc(runsQ)}" placeholder="${esc(t("lb.search"))}" ` +
         `aria-label="${esc(t("runs.searchLabel"))}" autocomplete="off" spellcheck="false" enterkeyhint="search"></label><span data-runs-range></span>${runsModeHtml()}</div>` : "") +
       sentRunsRowsHtml(list); };
@@ -7819,7 +7889,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       renderSentRuns(true);
       const again = $(`#sub-runs [data-pl-sort="${runsSort}"]`);
       if (again) again.focus();
-      announce.textContent = t(SORTED[runsSort][runsRev ? 1 : 0]);
+      announce.textContent = sortedNow("#sub-runs", SORTED[runsSort][runsRev ? 1 : 0]);
       return;
     }
     // ↑ and ↓ (see placeJump): its top under the section bar, or its end at the bottom of the screen
@@ -7866,6 +7936,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   subForm.addEventListener("input", (e) => e.target.removeAttribute("aria-invalid"));
   // Whether it needs a video follows the time, the mistakes, and Assist Mode (the course: see setSubCourse). The time
   // field's own listener, below, tidies it first.
+  subForm.addEventListener("input", (e) => { if (e.target === subField("assisted")) renderScoreField(); });
   subForm.addEventListener("input", renderVideoNeed);
   // The name goes into capitals as it's typed or pasted (special-font letters stay as they are, see caps()), and any
   // spaces come out, but not while an input method is still putting a word together, which would break it. caps()
@@ -7882,7 +7953,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   nameField.addEventListener("input", (e) => { if (!e.isComposing) tidyName(); });
   nameField.addEventListener("compositionend", tidyName);
   // The time's : and . fill themselves in from the right as the digits are typed, like a stopwatch: 40581 is 4:05.81,
-  // and 1234567 is 1:23:45.67. Typing or pasting them yourself works too, since only the digits are kept.
+  // and 1234567 is 1:23:45.67. Typing or pasting them yourself works too, since only the digits are kept. The ground
+  // time's do the same (1234 is 12.34), up to 99:59.99.
   function timeFromDigits(d) {
     if (d.length <= 2) return d;
     const cc = d.slice(-2), rest = d.slice(0, -2);
@@ -7891,16 +7963,18 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (mins.length <= 2) return `${Number(mins)}:${ss}.${cc}`;
     return `${Number(mins.slice(0, -2))}:${mins.slice(-2)}:${ss}.${cc}`;
   }
-  subField("time").addEventListener("input", (e) => {
+  const stopwatch = (digits) => (e) => {
     const el = e.target;
     const atEnd = el.selectionStart === el.value.length;
-    const formatted = timeFromDigits(el.value.replace(/\D/g, "").replace(/^0+(?=\d{5})/, "").slice(0, 7));
+    const formatted = timeFromDigits(el.value.replace(/\D/g, "").replace(/^0+(?=\d{5})/, "").slice(0, digits));
     if (formatted === el.value) return;
     el.value = formatted;
     if (atEnd) el.setSelectionRange(formatted.length, formatted.length);
-  });
+  };
+  subField("time").addEventListener("input", stopwatch(7));
+  subField("ground").addEventListener("input", stopwatch(6));
 
-  const FIELDS = ["course", "name", "time", "miss", "video"];
+  const FIELDS = ["course", "name", "time", "miss", "ground", "video"];
   function showStatus(kind, html, field) {
     subStatus.className = `sub-status field-wide ${kind}`;
     subStatus.innerHTML = `${icon(kind === "ok" ? "check" : kind === "err" ? "help" : "upload")}<span>${html}</span>`;
@@ -8017,7 +8091,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // How a run compares with its player's best (best: that run's time), for one that isn't their best: slower, or the
   // same time with more mistakes (more mistakes lose a tie). they: someone else's run, on its page ("their best").
   const slowerThan = (run, best, they) => (run.time === best
-    ? t(they ? "run.sameTimeMore" : "res.sameTimeMore", { time: best })
+    ? t(`${they ? "run" : "res"}.sameTimeMore${isGround(run) ? "Ground" : ""}`, { time: best })
     : t(they ? "run.slowerBy" : "res.slowerBy", { delta: gap(toSeconds(run.time) - toSeconds(best)), time: best }));
   // ▲3 in mint, ▼3 in coral, or a New chip
   function deltaHtml(change, text) {
@@ -8032,8 +8106,6 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // A place on a course's board, of how many players are on it ("#2 of 15"), like a run's post on Discord, or just
   // "#2" without how many (the Worker's stats from before it kept that)
   const placeOf = (place, total) => (total ? t("res.of", { rank: place, total }) : `#${place}`);
-  // A run's mistakes, as it was sent (mistakes) or cleaned (miss, see cleanRun)
-  const runMiss = (run) => (Number.isInteger(run.miss) ? run.miss : Number(run.mistakes));
   /* A player's best on a course before a run (s.old: its time, see statsFrom), with its mistakes and date, like the
      Worker's bestBefore for the run's post: their run with that time among the course's runs that count (see
      countedRuns), the one with the fewest mistakes on a tie, and the copy from runs.json when there's one, which knows
@@ -8092,18 +8164,19 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       : withDate(they ? "run.since" : "res.since", { span: span.text, date: formatDate(old.date) });
     // A new best with the same time as the old one has fewer mistakes, since they break ties
     const faster = !s.old ? t(they ? "run.first" : "res.first")
-      : s.old === run.time ? t(they ? "run.sameTimeFewer" : "res.sameTimeFewer", { time: s.old })
+      : s.old === run.time ? t(`${they ? "run" : "res"}.${isGround(run) ? "sameTimeLessGround" : "sameTimeFewer"}`, { time: s.old })
       : t(they ? "run.faster" : "res.faster", { delta: gap(toSeconds(s.old) - toSeconds(run.time)), time: s.old });
     // The course, which goes to its board
     let html = `<div class="res-rows">` + resRow({ html: boardLink(c, assisted, "") },
       (s.was && s.was !== s.place ? was(`#${s.was}`) : "") + esc(`${placeOf(s.place, s.players)} · ${run.time}`),
       deltaHtml(s.was ? s.was - s.place : null, String(s.was - s.place)),
       esc(faster) + (since ? `<span class="res-since">${since}</span>` : ""));
-    // Its mistakes, after their old best's when they changed: fewer is better, so going down is mint
+    // Its mistakes (or ground time), after their old best's when they changed: fewer is better, so going down is mint
     const oldMiss = old ? old.miss : null;
+    const shown = (v) => (assisted ? groundText(v) : localNum(v));
     const missDelta = oldMiss === null || oldMiss === miss ? ""
-      : `<span class="res-delta ${oldMiss > miss ? "up" : "down"}">${oldMiss > miss ? "▼" : "▲"} ${esc(localNum(Math.abs(oldMiss - miss)))}</span>`;
-    html += resRow(t("lb.sort.miss"), (missDelta ? was(esc(localNum(oldMiss))) : "") + esc(localNum(miss)), missDelta);
+      : `<span class="res-delta ${oldMiss > miss ? "up" : "down"}">${oldMiss > miss ? "▼" : "▲"} ${esc(shown(Math.abs(oldMiss - miss)))}</span>`;
+    html += resRow(t(assisted ? "lb.sort.ground" : "lb.sort.miss"), (missDelta ? was(esc(shown(oldMiss))) : "") + esc(shown(miss)), missDelta);
     // The course rating, then the overall ratings (a course that's broken right now counts for neither)
     if (s.points) {
       const [from, to] = s.points;
@@ -8145,14 +8218,14 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   }
   // Whether a run that's just been sent (as the Worker answered with it) is its player's best on the course now
   // (after: see standing). A run with the same time but more mistakes isn't.
-  const isBest = (after, run) => !!after.best && after.best.time === run.time && after.best.miss === Number(run.mistakes);
+  const isBest = (after, run) => !!after.best && after.best.time === run.time && after.best.miss === runMiss(run);
   // A run that was sent before (the same time and mistakes, so the Worker didn't save it again), as its page has it
   // ({ run, n, group, status }, see sentRun): by its id, or one from before the website's form (the Worker answers with
   // no id for those) by its player, time, and mistakes. null when runs.json doesn't have it yet.
   function earlierRun(n, run) {
     if (run.id) return sentRun(run.id);
     const r = cleanRun(run);
-    return (r && pastRuns().find((y) => y.n === n && playerKey(y.run) === playerKey(r) && y.run.time === r.time && y.run.mistakes === r.miss)) || null;
+    return (r && pastRuns().find((y) => y.n === n && playerKey(y.run) === playerKey(r) && y.run.time === r.time && runMiss(y.run) === r.miss)) || null;
   }
   // Where that one is now: "up", "slower" or "pending" (see runStatus; a run that's taken off is moved out of "runs",
   // so the Worker never finds it to say it was sent before). Without it, it's worked out from the board: a run that
@@ -8210,28 +8283,32 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // What's wrong, for the field it names. A missing video is one a top 10 run needs (see videoRank); otherwise the
   // video that's there isn't a link.
   const errKey = (field) => (field === "video" && !subField("video").value.trim() ? "sub.err.videoTop10" : `sub.err.${field}`);
-  // Once a run's sent, its time, mistakes, and video go, ready for the next one (the course and name stay)
+  // Once a run's sent, its time, mistakes or ground time, and video go, ready for the next one (the course and name
+  // stay)
   function clearRun() {
-    ["time", "miss", "video"].forEach((id) => { subField(id).value = ""; });
+    ["time", "miss", "ground", "video"].forEach((id) => { subField(id).value = ""; });
     renderVideoNeed();
   }
   let sending = false;
   subForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (sending || !me) return;
+    // Played in Assist Mode: it goes on the course's assisted board (see "Assisted boards"), with its ground time
+    // instead of mistakes (see "Ground time")
+    const assisted = subField("assisted").checked && !subField("assisted").disabled;
+    const miss = subField("miss").value.trim();
     const run = {
       course: Number(subCourse),
       name: noSpaces(caps(subField("name").value)),
       time: cleanTime(subField("time").value),
-      mistakes: subField("miss").value.trim(),
+      ...(assisted ? { ground: groundFrom(subField("ground").value) } : { mistakes: /^\d{1,4}$/.test(miss) ? Number(miss) : null }),
       video: cleanVideo(subField("video").value),
     };
-    // Played in Assist Mode: it goes on the course's assisted board (see "Assisted boards")
-    const assisted = subField("assisted").checked && !subField("assisted").disabled;
     const bad = !COURSES.some((c) => c.n === run.course && !c.broken) ? "course"
       : !NAME_OK.test(run.name) ? "name"
       : !run.time ? "time"
-      : !/^\d{1,4}$/.test(run.mistakes) ? "miss"
+      : assisted && run.ground === null ? "ground"
+      : !assisted && run.mistakes === null ? "miss"
       // Only a top 10 run needs a video, but one that's there has to be a link
       : (subField("video").value.trim() ? !run.video : videoRank()) ? "video" : "";
     if (bad) return showStatus("err", esc(t(errKey(bad))), bad);
@@ -8245,7 +8322,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       const res = await fetch("/api/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...run, mistakes: Number(run.mistakes), ...(assisted ? { assisted: true } : {}) }),
+        body: JSON.stringify({ ...run, ...(assisted ? { assisted: true } : {}) }),
       });
       const out = await res.json().catch(() => ({}));
       if (res.ok && out.ok && out.pending) {
@@ -8253,7 +8330,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         // that can't be worked out, just that it's waiting.
         clearRun();
         try { localStorage.setItem("ballkour-submit", JSON.stringify({ name: run.name })); } catch (err) { /* private mode */ }
-        const sent = out.run || { ...run, mistakes: Number(run.mistakes), date: new Date().toISOString().slice(0, 10) };
+        const sent = out.run || { ...run, date: new Date().toISOString().slice(0, 10) };
         const after = standingWith(run.course, sent, me.id, assisted);
         subStatus.className = "sub-status field-wide ok res held";
         if (after && isBest(after, sent)) {
@@ -8269,7 +8346,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         try { localStorage.setItem("ballkour-submit", JSON.stringify({ name: run.name })); } catch (err) { /* private mode */ }
         await reloadRuns();
         const after = standing(run.course, me.id, assisted);
-        const sent = out.run || { ...run, mistakes: Number(run.mistakes) };
+        const sent = out.run || run;
         const earlier = out.saved === false ? earlierRun(run.course, sent) : null;
         const again = out.saved === false ? againStatus(sent, after, earlier) : "";
         subStatus.className = `sub-status field-wide ok res${again === "pending" ? " held" : ""}`;
@@ -8513,15 +8590,14 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const box = a.closest(".course-board, .pl-runs");
     const at = box && /-[al]?(\d+)$/.exec(box.id);
     const c = course(Number(a.dataset.watch || (at ? at[1] : 0)));
-    const { playerName: name, runTime: time, runMiss: miss } = a.dataset;
+    const { playerName: name, runTime: time, runMiss: miss, runGround: ground } = a.dataset;
     const label = t("lb.watch", { time, player: name });
     vid.setAttribute("aria-label", label);
     vid.innerHTML = `<div class="vid-head"><div class="pl-who">` +
         (c ? `<p class="pl-eyebrow">${icon("play")}<a class="nowrap" href="/leaderboards/${c.n}" data-board="${c.n}">${esc(`${c.n} `)}${flagName(c)}</a></p>` : "") +
         `<div class="vid-line"><h2 class="pl-name is-name">${esc(caps(name))}</h2>` +
           `<span class="vid-stats"><span class="stat time">${icon("bolt")}<span>${esc(time)}</span></span>` +
-          `<span class="stat miss" title="${esc(t("unit.mistakes", { count: Number(miss) }))}">${icon("skull")}<span>${esc(miss)}</span>` +
-            `<span class="sr-only"> ${esc(t("unit.mistakes", { count: Number(miss) }))}</span></span></span></div></div>` +
+          missHtml(ground ? { ground: Number(ground) } : { miss: Number(miss) }, true) + `</span></div></div>` +
         `<button class="pl-close" type="button" data-vid-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button></div>` +
       `<div class="run-frame"></div>` +
       `<p class="run-out"><a href="${esc(a.href)}" target="_blank" rel="noopener">${esc(t("run.open", { site: e.site }))}${icon("out")}</a></p>` +
@@ -8608,7 +8684,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         `<h2 class="pl-name is-name" id="pl-name"><button class="run-name" type="button" data-run-player="${esc(playerKey(run))}" title="${esc(t("lb.playerOpen", { player: run.name }))}">${esc(caps(run.name))}</button></h2>` +
         `<div class="run-tags" id="run-tags"></div></div>${close}</div>` +
       `<div class="run-facts"><span class="stat time">${icon("bolt")}<span>${esc(run.time)}</span></span>` +
-        `<span class="stat miss">${icon("skull")}<span>${esc(run.miss)}</span></span>` +
+        missHtml(run) +
         (run.date ? `<span class="run-when">${withDate("lb.submittedOn", { date: formatDate(run.date) })}</span>` : "") + `</div>` +
       videoHtml(run.video) +
       `<div class="run-counts" id="run-counts"></div>` +

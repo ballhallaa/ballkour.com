@@ -54,7 +54,7 @@
    so /code/game/issues goes to the game's issues. Everything else is the site's own files, which Cloudflare serves from its copy of this repo. */
 
 import { DurableObject } from "cloudflare:workers";
-import { loadCourses, rate, combine, standings, playerKey } from "./ratings.js";
+import { loadCourses, rate, combine, standings, playerKey, score } from "./ratings.js";
 
 const GUILD_ID = "1212553452283101245";
 // Where players open a ticket on our Discord (the site's ticket button links to it too)
@@ -385,11 +385,14 @@ async function buildPlayers(env, ctx, previous) {
                          up, and who's signed in (profile: whether their stats are on their Discord profile, and role:
                          whether they have the Discord Profile App role it needs, see "Stats on Discord profiles")
      POST /api/logout
-     POST /api/submit    { course, name, time, mistakes, video } → { ok: true, run, saved, pending, rank } (saved is
+     POST /api/submit    { course, name, time, mistakes, video }, or for a run played in Assist Mode { course, name,
+                         time, ground, video, assisted: true } (ground: its time on the ground in whole hundredths of
+                         a second, which it has instead of mistakes, see groundText)
+                         → { ok: true, run, saved, pending, rank } (saved is
                          false when that exact run was already in, sent before or on a board from before the form,
                          and then run has that one's id, or none for one from before; pending is true when it's a top
                          10 run that waits for a check, see "Saving a run, and checking top 10 runs") or { error },
-                         the error saying what to fix: login (not signed in), course, name, time, miss, video (not a
+                         the error saying what to fix: login (not signed in), course, name, time, miss, ground, video (not a
                          link, or none for a top 10 run, the only kind that needs one), rate (too many), off (not set
                          up, or GitHub didn't take it) or bad
    GET /api/pending and POST /api/review are for checking top 10 runs (see below), GET /api/run is a run's numbers
@@ -609,7 +612,16 @@ async function isReviewer(env, user, maxAge = 0) {
 }
 const runKey = (r) => (r.discord ? "d:" + r.discord : "n:" + String(r.name).toUpperCase());
 const sameRunAs = (a, b) => a.time === b.time && (a.discord && b.discord ? a.discord === b.discord : String(a.name).toUpperCase() === String(b.name).toUpperCase());
-const runByTime = (a, b) => toSeconds(a.time) - toSeconds(b.time) || a.mistakes - b.mistakes;
+const runByTime = (a, b) => toSeconds(a.time) - toSeconds(b.time) || score(a) - score(b);
+// A run played in Assist Mode has a ground time (score() in ratings.js) instead of mistakes, written like a time, the
+// way the game and the site show it: "12.34", or "1:05.20"
+const isGround = (r) => !!r && Number.isInteger(r.ground);
+function groundText(cs) {
+  const m = Math.floor(cs / 6000), s = ((cs % 6000) / 100).toFixed(2);
+  return m ? `${m}:${s.padStart(5, "0")}` : s;
+}
+// How much a ground time changed: "−1.20s", "+0.35s", or "Same"
+const groundChange = (cs) => (cs ? `${cs < 0 ? "−" : "+"}${gapText(Math.abs(cs) / 100)}` : "Same");
 // The runs in a course's own file (its .opy top 10, or its .json), from the cached game data
 function fileRuns(file, body) {
   if (!file || typeof body !== "string") return [];
@@ -832,9 +844,9 @@ function onScale(stats) {
 //     top10s, podiums, records, scale, alone }
 // place and was are their place on the course with and before the run (was is null on their first run there),
 // players how many players are on the course's board with it (what was kept before there was players has none), best
-// and old their best time there with and before it, and bestMiss the mistakes on that best (it isn't the run when its
-// time or mistakes aren't the run's: a tie on time goes to fewer mistakes). points (the course rating), rating, rank
-// (their place in the ratings) and
+// and old their best time there with and before it, and bestMiss the mistakes on that best, or its ground time on an
+// assisted board (it isn't the run when its time or mistakes aren't the run's: a tie on time goes to fewer). points
+// (the course rating), rating, rank (their place in the ratings) and
 // tier are [before, with] (before null when they weren't rated yet, the pair null when the course isn't rated), of is
 // how many players are rated, courses [before, with] the rated courses they've run out of counted, and top10s,
 // podiums and records [before, with] over every course. global is their Top % in the Global rating [before, with],
@@ -880,7 +892,7 @@ function runStats(game, before, run, n) {
     was: b.at >= 0 ? b.at + 1 : null,
     players: a.board.length,
     best: a.best ? a.best.time : null,
-    bestMiss: a.best ? a.best.mistakes : null,
+    bestMiss: a.best ? score(a.best) : null,
     old: b.best ? b.best.time : null,
     record: a.at === 0 && (!b.board[0] || runByTime(a.best, b.board[0]) < 0),
     points: pair((p) => round(p.points[n])),
@@ -964,15 +976,16 @@ function spanText(from, to) {
   if (first < 0) return exact ? "Less than a second" : "Less than a day";
   return units.slice(first, first + 2).filter(([count]) => count).map(([count, unit]) => `${count} ${unit}${count === 1 ? "" : "s"}`).join(", ");
 }
-// The player's best run on the course just before this one (the run stats.old is the time of), with its mistakes and
+// The player's best run on the course just before this one (the run stats.old is the time of), with its mistakes (or
+// ground time) and
 // when it was sent: from runs.json as it was (before), or from the course's file and old boards (mine), which only
 // have its day. null on their first run there, or without stats.
 function bestBefore({ n, run, before, mine }, stats) {
   if (!stats || !stats.old) return null;
   const sent = before ? ofMode(before.runs[n], run) : [];
-  const same = [...sent, ...(mine || [])].filter((r) => r && r.discord === run.discord && r.time === stats.old && Number.isInteger(r.mistakes));
-  // A tie on time goes to fewer mistakes, as on the boards
-  return same.sort((a, b) => a.mistakes - b.mistakes)[0] || { time: stats.old };
+  const same = [...sent, ...(mine || [])].filter((r) => r && r.discord === run.discord && r.time === stats.old && Number.isInteger(score(r)));
+  // A tie on time goes to fewer mistakes (or less ground time), as on the boards
+  return same.sort((a, b) => score(a) - score(b))[0] || { time: stats.old };
 }
 /* The run's post in the run submissions channel. Its title says what the run is, and opens its page:
      New record submission by NAME!    their best on the course, and #1 there
@@ -981,8 +994,8 @@ function bestBefore({ n, run, before, mine }, stats) {
      New personal best by NAME!        their best, past the top 10 (or their first run there)
      New submission by NAME!           not their best
    Under it: the course, who sent it, their in-game name and the video, then three blocks side by side. New personal
-   best is the run: its time, mistakes, course rating, the place it takes on the course, the player's rating, place and
-   Top % in the player ratings with it, the courses they've run and their Top 10s, Podiums and Records when it changes
+   best is the run: its time, mistakes (or ground time), course rating, the place it takes on the course, the player's
+   rating, place and Top % in the player ratings with it, the courses they've run and their Top 10s, Podiums and Records when it changes
    them, and its date. Under the blocks, New role names the roles on our Discord it gives them, once it's on the board. Old personal best is the same for their best on the course
    before it, with their place, rating, place and Top % in the ratings as they were. Comparison is what changed between
    the two, and how long after the old one it came. On their first run on a course there's just the run, with what it
@@ -1005,7 +1018,7 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pendin
   const scope = isAssisted(run) ? "Assisted" : "Unassisted";
   // Whether it's their best on the course: by its numbers, which read the boards the way the site does, or else by
   // where it placed
-  const best = stats ? s.best === run.time && s.bestMiss === run.mistakes : !!newBest;
+  const best = stats ? s.best === run.time && s.bestMiss === score(run) : !!newBest;
   const place = (best && s.place) || rank;
   const old = bestBefore({ n, run, before, mine }, stats);
   const down = !!checked && !checked.approve;
@@ -1048,7 +1061,7 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pendin
   // The same rows in the same order in every block, so they line up side by side
   const about = (r, d, first) => [
     `Time: ${r.time}`,
-    Number.isInteger(r.mistakes) && `Mistakes: ${r.mistakes}`,
+    isGround(r) ? `Ground time: ${groundText(r.ground)}` : Number.isInteger(r.mistakes) && `Mistakes: ${r.mistakes}`,
     num(d.points) && `Course rating: ${d.points}`,
     num(d.place) && `Course rank: #${d.place}${s.players ? ` of ${s.players}` : ""}`,
     num(d.rating) && `${scope} rating: ${d.rating}${first && gain ? ` (${changeText(gain)})` : ""}`,
@@ -1071,7 +1084,8 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pendin
           name: "Comparison",
           value: [
             saved ? `Time ${saved > 0 ? "saved" : "behind"}: ${gapText(saved)}` : "Time: Same",
-            Number.isInteger(old.mistakes) && `Mistakes: ${changeText(run.mistakes - old.mistakes)}`,
+            isGround(old) ? `Ground time: ${groundChange(run.ground - old.ground)}`
+              : Number.isInteger(old.mistakes) && `Mistakes: ${changeText(run.mistakes - old.mistakes)}`,
             both(now.points, was.points) && `Course rating: ${changeText(now.points - was.points)}`,
             both(now.place, was.place) && `Course rank: ${movedText(was.place, now.place)}`,
             both(now.rating, was.rating) && `${scope} rating: ${changeText(now.rating - was.rating)}`,
@@ -1312,17 +1326,19 @@ async function submit(request, env, ctx) {
   const n = Number(body.course);
   const name = String(body.name ?? "").trim();
   const time = cleanTime(String(body.time ?? ""));
-  const mistakes = Number(body.mistakes);
+  // Played in Assist Mode: it goes on the course's assisted board (see ofMode), with its ground time instead of
+  // mistakes (whole hundredths, under 100 minutes)
+  const assisted = body.assisted === true;
+  const mistakes = Number(body.mistakes), ground = Number(body.ground);
   // Only a top 10 run needs a video (see below), but one that's there has to be a link
   const rawVideo = String(body.video ?? "").trim();
   const video = rawVideo ? cleanVideo(rawVideo) : "";
   if (!Number.isInteger(n) || n < 1 || n > 99) return answer(400, { error: "course" });
   if (!NAME_OK.test(name)) return answer(400, { error: "name" });
   if (!time) return answer(400, { error: "time" });
-  if (!Number.isInteger(mistakes) || mistakes < 0 || mistakes > 9999) return answer(400, { error: "miss" });
+  if (assisted && (!Number.isInteger(ground) || ground < 0 || ground >= 600000)) return answer(400, { error: "ground" });
+  if (!assisted && (!Number.isInteger(mistakes) || mistakes < 0 || mistakes > 9999)) return answer(400, { error: "miss" });
   if (rawVideo && !video) return answer(400, { error: "video" });
-  // Played in Assist Mode: it goes on the course's assisted board (see ofMode)
-  const assisted = body.assisted === true;
 
   // The course has to have a board. Without the game data (GitHub down, and no copy kept here), there's no telling which
   // courses there are, so nothing is saved: the form says to open a ticket instead.
@@ -1343,7 +1359,7 @@ async function submit(request, env, ctx) {
   const mine = assisted ? [] : [...board, ...historyRuns(files, n)].filter((r) => r.discord === user.id);
 
   const sentAt = stamp();
-  const run = { name: caps(name), discord: user.id, time, mistakes, date: sentAt.slice(0, 10), ...(video ? { video } : {}), id: "", sentAt, ...(assisted ? { mode: ASSISTED } : {}) };
+  const run = { name: caps(name), discord: user.id, time, ...(assisted ? { ground } : { mistakes }), date: sentAt.slice(0, 10), ...(video ? { video } : {}), id: "", sentAt, ...(assisted ? { mode: ASSISTED } : {}) };
   let before = null; // runs.json just before the run went in, for what it did (runStats)
   const saved = await editRuns(env, (data) => {
     const list = listIn(data.runs, n), waiting = listIn(data.pending, n);
@@ -1351,7 +1367,7 @@ async function submit(request, env, ctx) {
     // id (a turned-down run can be sent again, with a new video, say, and so can one that's taken off)
     const removed = ofMode(data.removed[n], run);
     const old = mine.filter((r) => !removed.some((x) => sameRunAs(x, r)));
-    const same = [...ofMode(list, run), ...ofMode(waiting, run), ...old].find((r) => r && r.discord === run.discord && r.time === run.time && r.mistakes === run.mistakes);
+    const same = [...ofMode(list, run), ...ofMode(waiting, run), ...old].find((r) => r && r.discord === run.discord && r.time === run.time && score(r) === score(run));
     if (same) return { skip: true, id: same.id };
     const today = ["runs", "pending", "declined"].flatMap((k) => Object.values(data[k]).flat()).filter((r) => r && r.discord === run.discord && r.date === run.date).length;
     if (today >= 20) return { error: "rate", status: 429 };
@@ -2361,7 +2377,7 @@ async function comments(request, env, ctx) {
 /* ---------- Link previews ----------
    A link to a run, a board, or a player, pasted on Discord (or anywhere else that reads a page's og: tags), shows its
    own title and a line about it instead of the site's: "COLDSKIN · 4:05.81 on Watchpoint: Gibraltar" and "#2 of 12 on
-   the board · 2 mistakes · 2026-08-26". They're worked out from the game data as the page is served, in English like
+   the board · 2 mistakes · 2026-08-26" (an assisted run's says "12.34 on the ground" there). They're worked out from the game data as the page is served, in English like
    Ballkyrie's posts, and the page itself is the same as ever. */
 // A run from before the website's form has an id made from its course and video (or its player, time, and mistakes,
 // when it has none), the same as pastId() in index.html: keep the two in step
@@ -2371,6 +2387,7 @@ function pastId(n, key) {
   return `${n}-${h.toString(36)}`;
 }
 const mistakesText = (n) => `${n} mistake${n === 1 ? "" : "s"}`;
+const missText = (r) => (isGround(r) ? `${groundText(r.ground)} on the ground` : mistakesText(r.mistakes));
 const ratingText = (r) => `⭐ ${Math.round(r)}`; // no separator: a rating only reaches 1000 (see points() in index.html)
 // The addresses that have a preview of their own
 const PREVIEWED = /^\/(?:runs|leaderboards|players|profile)\/./i;
@@ -2423,7 +2440,7 @@ function previewOf(pathname, data, players) {
     }
     if (!run) return null;
     const board = boardOf(n, isAssisted(run));
-    const at = board.findIndex((r) => playerKey(r) === playerKey(run) && r.time === run.time && r.mistakes === run.mistakes);
+    const at = board.findIndex((r) => playerKey(r) === playerKey(run) && r.time === run.time && score(r) === score(run));
     const best = board.find((r) => playerKey(r) === playerKey(run));
     const where = group === "pending" ? "Waiting for a moderator to check it"
       : group === "declined" ? "Turned down"
@@ -2432,7 +2449,7 @@ function previewOf(pathname, data, players) {
       : best ? `Their best there is ${best.time}` : "Taken off the board";
     return {
       title: `${caps(run.name)} · ${run.time} on ${name(n)}${isAssisted(run) ? " (Assisted)" : ""}`,
-      description: [where, mistakesText(run.mistakes), run.date || ""].filter(Boolean).join(" · "),
+      description: [where, missText(run), run.date || ""].filter(Boolean).join(" · "),
     };
   }
   // A board: the top 3 on it (the newest board, an older one from its history, the legacy one, or the assisted one),

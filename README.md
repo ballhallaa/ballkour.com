@@ -292,6 +292,8 @@ Each course's board ranks every run in its file and in `"runs"` in `leaderboards
 }
 ```
 
+A run played in Assist Mode has `"mode": "assisted"`, and `"ground"` instead of `"mistakes"`: how long it was on the ground where landing would be a mistake, in whole hundredths of a second (`1234` is 12.34 seconds). It breaks ties on its course's assisted board the way mistakes do on the others. The site and Ballkyrie show it like a time (12.34, 1:05.20), with an arrow down onto the ground where mistakes have their skull. The form's Mistakes field turns into Ground time while Played in Assist Mode is ticked.
+
 A run from an old board also only shows if it's slower than today's #10, since a faster one must have been taken off.
 
 Runs sent from the website also have an `id` (for their page: numbers in the order they're saved, from 1, counted by `"lastId"` in `runs.json` so none is used twice) and `sentAt`, and `runs.json` keeps two more groups that are on no board: `"pending"` (waiting for a check) and `"declined"` (turned down). Moving a run's whole line to `"removed"` keeps its page working, and the page says it was taken off.
