@@ -721,6 +721,9 @@ a.stat .play { width: 11px; height: 11px; color: var(--ink-3); transition: color
 .tag-this { flex: none; height: 17px; padding: 0 5px; font-size: 9.5px; color: var(--on-volt); background: var(--volt); border: 1px solid var(--volt); }
 .stat .na { color: var(--ink-3); }
 .lb-foot { margin: 0; display: grid; gap: 3px; padding: 9px 12px 11px; border-top: 1px solid var(--line); font: 400 12.5px/1.45 var(--body); word-spacing: .12em; color: var(--ink-3); }
+/* A button in a line of text that looks like a link (the "16 rated players" under a rating, see tiersHtml) */
+.text-link { display: inline; padding: 0; border: 0; background: none; font: inherit; word-spacing: inherit; color: var(--volt); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+@media (hover: hover) { .text-link:hover { color: var(--volt-hi); } }
 /* Sort by time, mistakes, rating, or date, above a board */
 .lb-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; padding: 8px 12px 2px; }
 /* Its buttons in a row beside "Sort by", or where they don't fit on one line (.two, see fitSorts: on phones, and in the
@@ -2196,15 +2199,15 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "rt.assisted.title": "Ratings from runs played in Assist Mode",
   "rt.assisted.empty": "No assisted ratings yet. Send a run you played in Assist Mode to get one.",
   "rt.assisted.how": "Only the courses with Assist Mode count, and each is worth up to 1,000 points: the record gets all of them, and the further behind it a run is, the fewer it gets. Your assisted rating is your average over the ones that work, with 0 for any you haven’t run, so every new or faster run raises it. Be the first on a course and it’s all yours.",
-  "rt.assisted.tiers": "Top % is where you place among all {count} rated players. On our Discord, you also get a role. Everyone below Top 90% (Assisted) is Rated (Assisted), and anyone without a rating yet is Unrated (Assisted). The 10 best players get Top 10 Rating (Assisted) too.",
+  "rt.assisted.tiers": "Top % is where you place among all <a>{count} rated players</a>. On our Discord, you also get a role. Everyone below Top 90% (Assisted) is Rated (Assisted), and anyone without a rating yet is Unrated (Assisted). The 10 best players get Top 10 Rating (Assisted) too.",
   "rt.legacy.title": "Ratings from the leaderboards before 2026-04-29",
   "rt.legacy.empty": "No legacy ratings yet.",
   "rt.legacy.how": "Every course’s legacy board is worth up to 1,000 points: its record gets all of them, and the further behind it a run is, the fewer it gets. Your Legacy rating is your average over every legacy board, with 0 for any you’re not on. Those boards don’t change anymore, and their times were only to the second.",
-  "rt.legacy.tiers": "Top % is where you place among all {count} players on the legacy boards. On our Discord, you also get a role once your legacy runs are linked to you. Everyone below Top 90% (Legacy) is Rated (Legacy). The 10 best players get Legacy Top 10 Rating too.",
+  "rt.legacy.tiers": "Top % is where you place among all <a>{count} players on the legacy boards</a>. On our Discord, you also get a role once your legacy runs are linked to you. Everyone below Top 90% (Legacy) is Rated (Legacy). The 10 best players get Legacy Top 10 Rating too.",
   "rt.legacy.counted": "Legacy boards that count: {courses}.",
   "rt.global.title": "Unassisted and assisted ratings, assisted at half",
   "rt.global.how": "To get your global rating, add up your unassisted course ratings and half of each assisted course rating, then divide by the number of courses that work. A course you haven’t run adds 0, and an assisted record adds half as much as an unassisted one. Legacy ratings don’t count toward it, as their boards don’t change anymore.",
-  "rt.global.tiers": "Top % is where you place among all {count} rated players. On our Discord, you also get a role. Everyone below Top 90% (Global) is Rated (Global), and anyone without a rating yet is Unrated (Global). The 10 best players get Top 10 Rating (Global) too.",
+  "rt.global.tiers": "Top % is where you place among all <a>{count} rated players</a>. On our Discord, you also get a role. Everyone below Top 90% (Global) is Rated (Global), and anyone without a rating yet is Unrated (Global). The 10 best players get Top 10 Rating (Global) too.",
   "rt.meta": "All courses in one rating",
   "rt.none": "No ratings yet",
   "rt.empty": "No ratings yet. Set a time on any course to get rated.",
@@ -2213,7 +2216,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "rt.sortedCourses": "Sorted by courses run, most first",
   "rt.sortedCoursesFew": "Sorted by courses run, fewest first",
   "rt.how": "Every course is worth up to 1,000 points: the record gets all of them, and the further behind it a run is, the fewer it gets. Your rating is your average over every course that works, with 0 for any you haven’t run, so every new or faster run raises it. Be the first on a course and it’s all yours.",
-  "rt.tiers": "Top % is where you place among all {count} rated players. On our Discord, you also get a role. Everyone below Top 90% (Unassisted) is Rated (Unassisted), and anyone without a rating yet is Unrated (Unassisted). The 10 best players get Top 10 Rating (Unassisted) too.",
+  "rt.tiers": "Top % is where you place among all <a>{count} rated players</a>. On our Discord, you also get a role. Everyone below Top 90% (Unassisted) is Rated (Unassisted), and anyone without a rating yet is Unrated (Unassisted). The 10 best players get Top 10 Rating (Unassisted) too.",
   "rt.counted": "Courses that count: {courses}. Broken courses don’t.",
   "rt.mathTitle": "The formulas",
   "rt.mathCourse": "Course rating = 1,000 × [ln(1 + (e − 1) × record ÷ your time)]²",
@@ -3998,8 +4001,17 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const courses = r.counted.map((c) => `<span class="nowrap">${c.n} ${flagName(c)}</span>`).join(esc(" · "));
     return meta + `<div class="lb-bar">${searchHtml(RATINGS)}<button class="lb-pic" type="button" data-course="${RATINGS.n}">${icon("image")}<span>${esc(t("pic.button"))}</span></button>${ratingsSortHtml()}</div>` +
       rowsHtml(RATINGS, top, rest, (p) => ratingRow(p, r)) +
-      `<p class="lb-foot"><span>${esc(t(r.legacy ? "rt.legacy.how" : r.assisted ? "rt.assisted.how" : r.global ? "rt.global.how" : "rt.how"))}</span><span>${esc(t(r.legacy ? "rt.legacy.tiers" : r.assisted ? "rt.assisted.tiers" : r.global ? "rt.global.tiers" : "rt.tiers", { count: r.players.length.toLocaleString(htmlLang()) }))}</span>` +
+      `<p class="lb-foot"><span>${esc(t(r.legacy ? "rt.legacy.how" : r.assisted ? "rt.assisted.how" : r.global ? "rt.global.how" : "rt.how"))}</span><span>${tiersHtml(r)}</span>` +
       `<span>${esc(t(r.legacy ? "rt.legacy.counted" : "rt.counted", { courses: "\u0000" })).replace("\u0000", courses)}</span></p>` + mathHtml(r);
+  }
+  // "Top % is where you place among all 16 rated players", with "16 rated players" (between <a> and </a>) opening Find
+  // a player on this rating's button, to see them all
+  function tiersHtml(r) {
+    const key = r.legacy ? "rt.legacy.tiers" : r.assisted ? "rt.assisted.tiers" : r.global ? "rt.global.tiers" : "rt.tiers";
+    const view = r.legacy ? "legacy" : r.assisted ? "assisted" : r.global ? "global" : "top";
+    const [before, link, after = ""] = t(key, { count: r.players.length.toLocaleString(htmlLang()) }).split(/<\/?a>/);
+    if (link === undefined) return esc(before);
+    return esc(before) + `<button class="text-link" type="button" data-find="${view}">${esc(link)}</button>` + esc(after);
   }
   // The formulas under the board, with two runs on a 4:00.00 record as an example
   function mathHtml(r) {
@@ -4828,7 +4840,13 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     pf.close();
     openPlayer(x.key, 0, "courses", x.p ? pfMode(x.view) : null);
   }
-  document.addEventListener("click", (e) => { if (e.target.closest("[data-find]")) openFinder(); });
+  // data-find="legacy" (say) opens it on that rating's button
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-find]");
+    if (!b) return;
+    if (RATINGS_TABS.includes(b.dataset.find)) pfView = b.dataset.find;
+    openFinder();
+  });
   // "/" anywhere opens it, except while typing in a box or with a window already open
   document.addEventListener("keydown", (e) => {
     if (e.key !== "/" || e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented) return;
