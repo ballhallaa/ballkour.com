@@ -636,7 +636,7 @@ main:focus { outline: none; }
 /* A rating beside a run's date: the player's over every course on a board, the course's in a player's panel */
 .run-pts { display: inline-flex; align-items: center; gap: 4px; color: var(--ink-2); }
 .run-pts .icon { width: 12px; height: 12px; color: var(--gold); }
-.run-dc { grid-area: dc; min-width: 0; display: flex; align-items: center; gap: 6px; margin-top: 3px; font: 600 13px/1.2 var(--body); color: #b9befc; }
+.run-dc { grid-area: dc; min-width: 0; display: flex; align-items: center; gap: 6px; margin-top: 3px; font: 600 14px/1.2 var(--body); color: #b9befc; }
 .run-dc > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .run-pfp { width: 16px; height: 16px; flex: none; border-radius: 50%; object-fit: cover; background: var(--line); }
 .run .stat { justify-content: flex-end; font: 600 14.5px/1 var(--mono); color: var(--ink-2); }
@@ -740,7 +740,7 @@ a.stat .play { width: 11px; height: 11px; color: var(--ink-3); transition: color
 .lb-sort.stack .lb-sort-label { width: auto; margin: 0; }
 /* "Sort by" on two lines, ending right by the buttons */
 .lb-sort-label { width: min-content; margin-inline-end: 4px; font: 500 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; text-align: end; word-break: keep-all; color: var(--ink-3); }
-.lb-sort button, .lb-pic { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 9px; border: 1px solid var(--line); border-radius: 7px; background: none; color: var(--ink-2); font: 600 12.5px/1 var(--body); cursor: pointer; transition: color .15s, border-color .15s, background-color .15s; }
+.lb-sort button, .lb-pic { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 9px; border: 1px solid var(--line); border-radius: 7px; background: none; color: var(--ink-2); font: 600 14px/1 var(--body); cursor: pointer; transition: color .15s, border-color .15s, background-color .15s; }
 .lb-sort button .icon, .lb-pic .icon { width: 13px; height: 13px; }
 .lb-pic .icon { color: var(--arc); }
 .lb-sort button[data-sort="time"] .icon { color: var(--volt); }
@@ -752,7 +752,7 @@ a.stat .play { width: 11px; height: 11px; color: var(--ink-3); transition: color
 /* Find a player on a board by their in-game or Discord name: first in the bar, taking the room the buttons leave */
 .lb-search { position: relative; flex: 1 1 170px; min-width: 0; display: flex; align-items: center; }
 .lb-search .icon { position: absolute; inset-inline-start: 9px; width: 13px; height: 13px; color: var(--volt); pointer-events: none; }
-.lb-search input { width: 100%; height: 26px; padding-inline: 28px 8px; border: 1px solid var(--line); border-radius: 7px; background: rgba(0, 0, 0, .25); color: var(--ink); font: 500 13px/1 var(--body); -webkit-appearance: none; appearance: none; transition: border-color .15s; }
+.lb-search input { width: 100%; height: 26px; padding-inline: 28px 8px; border: 1px solid var(--line); border-radius: 7px; background: rgba(0, 0, 0, .25); color: var(--ink); font: 500 14px/1 var(--body); -webkit-appearance: none; appearance: none; transition: border-color .15s; }
 .lb-search input::-webkit-search-decoration { -webkit-appearance: none; }
 /* The clear button keeps its room even while the box is empty, which cut off the end of the longer hints */
 .lb-search input:placeholder-shown::-webkit-search-cancel-button { display: none; }
@@ -881,7 +881,7 @@ button.run-name:focus-visible { text-decoration: underline; text-decoration-thic
 .pl-back .icon { width: 13px; height: 13px; transform: rotate(90deg); }
 .pl-all .pl-run-list { gap: 0; }
 .pl-all .pl-run { grid-template-areas: "course course course" "time miss tags" "meta meta meta"; row-gap: 5px; padding: 10px 18px; border-top: 1px solid var(--line); border-radius: 0; }
-.pl-run-course { grid-area: course; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 13.5px/1.3 var(--body); color: var(--ink); }
+.pl-run-course { grid-area: course; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 14px/1.3 var(--body); color: var(--ink); }
 .pl-run-course .tag-broken { vertical-align: 1px; }
 .pl-run-num { font: 600 12.5px/1 var(--mono); color: var(--ink-3); }
 .pl-courses { list-style: none; margin: 0; padding: 0; }
@@ -1261,7 +1261,7 @@ button.run-name:focus-visible { text-decoration: underline; text-decoration-thic
 /* Legacy runs to check, under the runs. Who claimed them: their Discord, like under a name on the boards, which opens
    their Discord profile */
 .rev-title-next { margin-top: 16px; }
-.rev-dc { justify-self: start; max-width: 100%; display: inline-flex; align-items: center; gap: 6px; font: 600 13px/1.2 var(--body); color: #b9befc; text-decoration: none; }
+.rev-dc { justify-self: start; max-width: 100%; display: inline-flex; align-items: center; gap: 6px; font: 600 14px/1.2 var(--body); color: #b9befc; text-decoration: none; }
 .rev-dc > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rev-dc .icon { flex: none; width: 12px; height: 12px; opacity: .7; }
 @media (hover: hover) { .rev-dc:hover > span { text-decoration: underline; text-underline-offset: 3px; } }
@@ -1304,7 +1304,7 @@ button.run-name:focus-visible { text-decoration: underline; text-decoration-thic
    runs were sent in (see runsRangePicker), which goes under the box when they don't fit side by side */
 .sub-runs-find { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
 .runs-range-wrap { position: relative; flex: none; margin-inline-start: auto; }
-.runs-range { display: flex; align-items: center; gap: 6px; height: 26px; padding: 0 6px 0 8px; border: 1px solid var(--line); border-radius: 7px; background: rgba(0, 0, 0, .25); color: var(--ink); font: 500 13px/1 var(--body); white-space: nowrap; cursor: pointer; transition: border-color .15s; }
+.runs-range { display: flex; align-items: center; gap: 6px; height: 26px; padding: 0 6px 0 8px; border: 1px solid var(--line); border-radius: 7px; background: rgba(0, 0, 0, .25); color: var(--ink); font: 500 14px/1 var(--body); white-space: nowrap; cursor: pointer; transition: border-color .15s; }
 @media (hover: hover) { .runs-range:hover { border-color: var(--line-hi); } }
 .runs-range[aria-expanded="true"] { border-color: var(--volt); }
 .runs-range:focus-visible { outline: 2px solid var(--volt); outline-offset: 1px; }
