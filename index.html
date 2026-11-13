@@ -122,6 +122,10 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
+/* Small bold text: Barlow's i and j have only about a pixel between the dot and the stem, and on Linux (hinted) the
+   dot runs into it, so "Ground time" reads "Ground tlme". Semibold does it at every size up to about 18px, and
+   medium below 14.5px and from 16.5px to 18px. So small text that isn't all caps is medium at 14.5px to 16px, or
+   regular, which keeps its dot from 12.5px up. */
 img { max-width: 100%; }
 p, .lr-sub { text-wrap: pretty; }
 /* Korean wraps between words, not inside them */
@@ -132,7 +136,7 @@ button { font: inherit; color: inherit; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 /* Skip link: hidden until a keyboard user tabs to it */
 .skip { position: absolute; top: 10px; left: 50%; z-index: 30; padding: 9px 16px; border-radius: 10px; transform: translate(-50%, calc(-100% - 20px));
-  background: var(--volt); color: var(--on-volt); font: 600 15px/1.2 var(--body); text-decoration: none; transition: transform .15s ease; }
+  background: var(--volt); color: var(--on-volt); font: 500 15px/1.2 var(--body); text-decoration: none; transition: transform .15s ease; }
 .skip:focus { transform: translate(-50%, 0); }
 main:focus { outline: none; }
 .icon { width: 18px; height: 18px; flex: none; }
@@ -195,7 +199,7 @@ main:focus { outline: none; }
   padding: 9px 10px;
   border-radius: 9px;
   color: var(--ink-2);
-  font: 500 14px/1.2 var(--body);
+  font: 500 14.5px/1.2 var(--body);
   text-align: left;
   cursor: pointer;
   user-select: none;
@@ -267,7 +271,9 @@ main:focus { outline: none; }
 }
 .wm-ball { color: #fff; text-shadow: .035em .035em 0 var(--ember), 0 0 .45em rgba(0, 230, 151, .3); }
 .wm-kour { color: var(--volt); text-shadow: .035em .035em 0 #075c3e, 0 0 .45em rgba(0, 230, 151, .35); }
-.tagline { margin: 16px 0 0; font: 500 clamp(17px, 2.4vw, 21px)/1.35 var(--body); color: var(--ink-2); text-wrap: balance; }
+.tagline { margin: 16px 0 0; font: 500 16px/1.35 var(--body); color: var(--ink-2); text-wrap: balance; }
+/* Medium blurs the dot of an i into its stem from 16.5px to 18px (see "Small bold text"), so it skips them */
+@media (min-width: 760px) { .tagline { font-size: clamp(18.5px, 2.4vw, 21px); } }
 
 .stat { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
 .stat .icon { width: 15px; height: 15px; }
@@ -289,7 +295,7 @@ main:focus { outline: none; }
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   color: var(--ink);
-  font: 600 16px/1.1 var(--body);
+  font: 500 16px/1.1 var(--body);
   text-decoration: none;
   cursor: pointer;
   transition: transform .15s ease, border-color .15s ease, background-color .15s ease;
@@ -444,7 +450,7 @@ main:focus { outline: none; }
 .panel-title { margin: 0; display: inline-flex; align-items: center; gap: 10px; font: 600 13px/1 var(--body); letter-spacing: .14em; text-transform: uppercase; color: var(--ink); }
 .panel-title .icon { color: var(--ink-2); }
 /* Find a player, by Courses: looks like a search box, and opens the real one */
-.find-btn { flex: 1 1 150px; max-width: 250px; margin-inline-start: auto; display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 6px 0 10px; border: 1px solid var(--line-hi); border-radius: 9px; background: rgba(0, 0, 0, .25); color: var(--ink-3); font: 500 14px/1 var(--body); text-align: left; cursor: pointer; transition: border-color .15s, color .15s; }
+.find-btn { flex: 1 1 150px; max-width: 250px; margin-inline-start: auto; display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 6px 0 10px; border: 1px solid var(--line-hi); border-radius: 9px; background: rgba(0, 0, 0, .25); color: var(--ink-3); font: 500 14.5px/1 var(--body); text-align: left; cursor: pointer; transition: border-color .15s, color .15s; }
 .find-btn > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .find-btn .icon { width: 15px; height: 15px; color: var(--volt); }
 .find-btn kbd { flex: none; min-width: 22px; padding: 0 6px; border: 1px solid var(--line-hi); border-bottom-width: 2px; border-radius: 6px; font: 600 12px/18px var(--mono); text-align: center; color: var(--ink-2); }
@@ -489,7 +495,7 @@ main:focus { outline: none; }
   border: 1px solid var(--line-hi);
   border-radius: 7px;
   background: rgba(255, 255, 255, .04);
-  font: 600 14px/22px var(--body);
+  font: 500 14.5px/22px var(--body);
   color: var(--ink);
 }
 .path {
@@ -526,7 +532,7 @@ main:focus { outline: none; }
 .num { font: 600 13px/1 var(--mono); color: var(--ink-3); text-align: right; font-variant-numeric: tabular-nums; }
 .flag { font: 400 20px/1 var(--emoji); text-align: center; }
 .course-info { min-width: 0; }
-.course-name { margin: 0; font: 600 16.5px/1.25 var(--body); color: var(--ink); }
+.course-name { margin: 0; font: 500 16px/1.25 var(--body); color: var(--ink); }
 .course-meta { margin: 2px 0 0; font: 400 12px/1.4 var(--mono); letter-spacing: -.01em; color: var(--ink-2); }
 .course-meta > span { white-space: nowrap; }
 .codes { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
@@ -636,7 +642,7 @@ main:focus { outline: none; }
 /* A rating beside a run's date: the player's over every course on a board, the course's in a player's panel */
 .run-pts { display: inline-flex; align-items: center; gap: 4px; color: var(--ink-2); }
 .run-pts .icon { width: 12px; height: 12px; color: var(--gold); }
-.run-dc { grid-area: dc; min-width: 0; display: flex; align-items: center; gap: 6px; margin-top: 3px; font: 600 14px/1.2 var(--body); color: #b9befc; }
+.run-dc { grid-area: dc; min-width: 0; display: flex; align-items: center; gap: 6px; margin-top: 3px; font: 500 14.5px/1.2 var(--body); color: #b9befc; }
 .run-dc > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .run-pfp { width: 16px; height: 16px; flex: none; border-radius: 50%; object-fit: cover; background: var(--line); }
 .run .stat { justify-content: flex-end; font: 600 14.5px/1 var(--mono); color: var(--ink-2); }
@@ -662,7 +668,7 @@ a.stat .play { width: 11px; height: 11px; color: var(--ink-3); transition: color
   border-radius: 7px;
   background: none;
   color: var(--ink-2);
-  font: 600 14px/1.2 var(--body);
+  font: 500 14.5px/1.2 var(--body);
   cursor: pointer;
   transition: color .15s, background-color .15s, box-shadow .15s;
 }
@@ -740,7 +746,7 @@ a.stat .play { width: 11px; height: 11px; color: var(--ink-3); transition: color
 .lb-sort.stack .lb-sort-label { width: auto; margin: 0; }
 /* "Sort by" on two lines, ending right by the buttons */
 .lb-sort-label { width: min-content; margin-inline-end: 4px; font: 500 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; text-align: end; word-break: keep-all; color: var(--ink-3); }
-.lb-sort button, .lb-pic { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 9px; border: 1px solid var(--line); border-radius: 7px; background: none; color: var(--ink-2); font: 600 14px/1 var(--body); cursor: pointer; transition: color .15s, border-color .15s, background-color .15s; }
+.lb-sort button, .lb-pic { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 9px; border: 1px solid var(--line); border-radius: 7px; background: none; color: var(--ink-2); font: 500 14.5px/1 var(--body); cursor: pointer; transition: color .15s, border-color .15s, background-color .15s; }
 .lb-sort button .icon, .lb-pic .icon { width: 13px; height: 13px; }
 .lb-pic .icon { color: var(--arc); }
 .lb-sort button[data-sort="time"] .icon { color: var(--volt); }
@@ -752,7 +758,7 @@ a.stat .play { width: 11px; height: 11px; color: var(--ink-3); transition: color
 /* Find a player on a board by their in-game or Discord name: first in the bar, taking the room the buttons leave */
 .lb-search { position: relative; flex: 1 1 170px; min-width: 0; display: flex; align-items: center; }
 .lb-search .icon { position: absolute; inset-inline-start: 9px; width: 13px; height: 13px; color: var(--volt); pointer-events: none; }
-.lb-search input { width: 100%; height: 26px; padding-inline: 28px 8px; border: 1px solid var(--line); border-radius: 7px; background: rgba(0, 0, 0, .25); color: var(--ink); font: 500 14px/1 var(--body); -webkit-appearance: none; appearance: none; transition: border-color .15s; }
+.lb-search input { width: 100%; height: 26px; padding-inline: 28px 8px; border: 1px solid var(--line); border-radius: 7px; background: rgba(0, 0, 0, .25); color: var(--ink); font: 500 14.5px/1 var(--body); -webkit-appearance: none; appearance: none; transition: border-color .15s; }
 .lb-search input::-webkit-search-decoration { -webkit-appearance: none; }
 /* The clear button keeps its room even while the box is empty, which cut off the end of the longer hints */
 .lb-search input:placeholder-shown::-webkit-search-cancel-button { display: none; }
@@ -881,7 +887,7 @@ button.run-name:focus-visible { text-decoration: underline; text-decoration-thic
 .pl-back .icon { width: 13px; height: 13px; transform: rotate(90deg); }
 .pl-all .pl-run-list { gap: 0; }
 .pl-all .pl-run { grid-template-areas: "course course course" "time miss tags" "meta meta meta"; row-gap: 5px; padding: 10px 18px; border-top: 1px solid var(--line); border-radius: 0; }
-.pl-run-course { grid-area: course; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 14px/1.3 var(--body); color: var(--ink); }
+.pl-run-course { grid-area: course; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 14.5px/1.3 var(--body); color: var(--ink); }
 .pl-run-course .tag-broken { vertical-align: 1px; }
 .pl-run-num { font: 600 12.5px/1 var(--mono); color: var(--ink-3); }
 .pl-courses { list-style: none; margin: 0; padding: 0; }
@@ -894,7 +900,7 @@ button.run-name:focus-visible { text-decoration: underline; text-decoration-thic
 .pl-course-btn .chev { grid-area: chev; }
 @media (hover: hover) { .pl-course-btn:hover { background: var(--glass-hi); } }
 .pl-course-btn:focus-visible { outline-offset: -3px; border-radius: 6px; }
-.pl-course-name { grid-area: name; min-width: 0; font: 600 15px/1.25 var(--body); color: var(--ink); }
+.pl-course-name { grid-area: name; min-width: 0; font: 500 15px/1.25 var(--body); color: var(--ink); }
 .pl-course-best { grid-area: best; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; font: 600 12.5px/1.25 var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); }
 .pl-place { font-weight: 500; color: var(--ink-2); }
 .pl-course-best .stat { gap: 4px; }
@@ -928,7 +934,7 @@ button.run-name:focus-visible { text-decoration: underline; text-decoration-thic
 .runs-mode .lb-tab[data-runs-mode="assisted"][aria-pressed="true"] { background: rgba(255, 128, 192, .12); box-shadow: inset 0 0 0 1px rgba(255, 128, 192, .4); }
 .runs-mode .lb-tab[data-runs-mode="regular"][aria-pressed="true"] { background: rgba(230, 151, 0, .12); box-shadow: inset 0 0 0 1px rgba(230, 151, 0, .4); }
 /* The form's Played in Assist Mode */
-.sub-check { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font: 600 14px/1.25 var(--body); color: var(--ink); cursor: pointer; }
+.sub-check { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font: 500 14.5px/1.25 var(--body); color: var(--ink); cursor: pointer; }
 .sub-check input { flex: none; width: 16px; height: 16px; margin: 0; accent-color: var(--assist); cursor: pointer; }
 /* Grayed out for a course without Assist Mode (see setSubCourse) */
 .sub-check.off { color: var(--ink-3); cursor: not-allowed; }
@@ -1261,7 +1267,7 @@ button.run-name:focus-visible { text-decoration: underline; text-decoration-thic
 /* Legacy runs to check, under the runs. Who claimed them: their Discord, like under a name on the boards, which opens
    their Discord profile */
 .rev-title-next { margin-top: 16px; }
-.rev-dc { justify-self: start; max-width: 100%; display: inline-flex; align-items: center; gap: 6px; font: 600 14px/1.2 var(--body); color: #b9befc; text-decoration: none; }
+.rev-dc { justify-self: start; max-width: 100%; display: inline-flex; align-items: center; gap: 6px; font: 500 14.5px/1.2 var(--body); color: #b9befc; text-decoration: none; }
 .rev-dc > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rev-dc .icon { flex: none; width: 12px; height: 12px; opacity: .7; }
 @media (hover: hover) { .rev-dc:hover > span { text-decoration: underline; text-underline-offset: 3px; } }
@@ -1304,7 +1310,7 @@ button.run-name:focus-visible { text-decoration: underline; text-decoration-thic
    runs were sent in (see runsRangePicker), which goes under the box when they don't fit side by side */
 .sub-runs-find { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
 .runs-range-wrap { position: relative; flex: none; margin-inline-start: auto; }
-.runs-range { display: flex; align-items: center; gap: 6px; height: 26px; padding: 0 6px 0 8px; border: 1px solid var(--line); border-radius: 7px; background: rgba(0, 0, 0, .25); color: var(--ink); font: 500 14px/1 var(--body); white-space: nowrap; cursor: pointer; transition: border-color .15s; }
+.runs-range { display: flex; align-items: center; gap: 6px; height: 26px; padding: 0 6px 0 8px; border: 1px solid var(--line); border-radius: 7px; background: rgba(0, 0, 0, .25); color: var(--ink); font: 500 14.5px/1 var(--body); white-space: nowrap; cursor: pointer; transition: border-color .15s; }
 @media (hover: hover) { .runs-range:hover { border-color: var(--line-hi); } }
 .runs-range[aria-expanded="true"] { border-color: var(--volt); }
 .runs-range:focus-visible { outline: 2px solid var(--volt); outline-offset: 1px; }
@@ -1316,7 +1322,7 @@ button.run-name:focus-visible { text-decoration: underline; text-decoration-thic
 .runs-range-name > [aria-hidden] { visibility: hidden; }
 .runs-range-menu { min-width: 100%; width: max-content; display: grid; gap: 2px; overflow-y: auto; overscroll-behavior: contain; }
 .runs-range-menu.up { top: auto; bottom: calc(100% + 8px); transform-origin: bottom right; }
-@media (pointer: coarse) { .runs-range { height: 32px; font-size: 14px; } }
+@media (pointer: coarse) { .runs-range { height: 32px; font-size: 14.5px; } }
 /* Under the runs: Show more, and on the right, while the list is longer than the screen, ↑ (to its top) and ↓ (to
    its end), in a row that keeps their room. Until that row is on screen, they ride along at the bottom of the screen
    (sticky, from an empty box under the row, with the buttons above it), and see placeJump for the rest. Sticking
@@ -1377,7 +1383,7 @@ button.run-name:focus-visible { text-decoration: underline; text-decoration-thic
    row is its own line, so a long one can't squeeze the others: Most runs' course ("1 🇬🇮 Watchpoint: Gibraltar · 1")
    goes on the next line, on the right, when it and the name don't fit on one. */
 .stats-rows { list-style: none; margin: 14px -8px 0; padding: 0; }
-.stats-row { width: 100%; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 16px; padding: 2px 8px; border: 0; border-radius: 6px; background: none; font: 500 14px/1.35 var(--body); color: var(--ink-2); text-align: left; cursor: pointer; transition: background-color .15s, color .15s; }
+.stats-row { width: 100%; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 16px; padding: 2px 8px; border: 0; border-radius: 6px; background: none; font: 500 14.5px/1.35 var(--body); color: var(--ink-2); text-align: left; cursor: pointer; transition: background-color .15s, color .15s; }
 .stats-row { text-decoration: none; }
 @media (hover: hover) { .stats-row:hover { background: var(--glass-hi); color: var(--ink); } }
 div.stats-row { cursor: default; }
@@ -1506,7 +1512,7 @@ button.rev-run { width: 100%; font: inherit; text-align: left; cursor: pointer; 
 /* How long after their old best a run came, on its own line under how much faster it was */
 .res-since { display: block; margin-top: 2px; }
 .res-foot { margin: 6px 0 0; padding-top: 10px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; border-top: 1px solid var(--line); font: 400 13px/1.4 var(--body); color: var(--ink-2); }
-.res-foot .btn { color: var(--ink); font-weight: 600; text-decoration: none; }
+.res-foot .btn { color: var(--ink); font-weight: 500; text-decoration: none; }
 .res-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-inline-start: auto; }
 .res-actions .btn .icon-me { width: 14px; height: 14px; margin-top: 0; color: #b9befc; }
 @media (max-width: 420px) {
@@ -1525,12 +1531,12 @@ button.rev-run { width: 100%; font: inherit; text-align: left; cursor: pointer; 
 .link-row { display: flex; align-items: center; gap: 14px; padding: 14px 18px; color: var(--ink); text-decoration: none; transition: background-color .15s; }
 .link-row + .link-row, .panel-body + .link-row { border-top: 1px solid var(--line); }
 /* Game / Website: an h3, so its default margins are cleared; padding keeps it centered between the rows */
-.src-group { margin: 0; padding: 18px 18px 4px; }
+.src-group { margin: 0; font-weight: 600; padding: 18px 18px 4px; }
 .link-row + .src-group { border-top: 1px solid var(--line); }
 @media (hover: hover) { .link-row:hover { background: var(--glass-hi); } }
 .lr-icon { width: 38px; height: 38px; flex: none; display: grid; place-items: center; border-radius: 10px; background: rgba(0, 230, 151, .12); color: var(--volt); }
 .lr-text { flex: 1; min-width: 0; }
-.lr-title { display: block; font: 600 16.5px/1.25 var(--body); }
+.lr-title { display: block; font: 500 16px/1.25 var(--body); }
 .lr-sub { display: block; margin-top: 3px; overflow-wrap: anywhere; font: 400 12.5px/1.4 var(--mono); color: var(--ink-2); }
 .lr-arrow { width: 18px; height: 18px; flex: none; color: var(--ink-3); transition: transform .15s, color .15s; }
 @media (hover: hover) { .link-row:hover .lr-arrow { color: var(--volt); transform: translate(2px, -2px); } }
@@ -1569,15 +1575,15 @@ button.rev-run { width: 100%; font: inherit; text-align: left; cursor: pointer; 
 .features { list-style: none; margin: 0; padding: 8px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 6px; }
 .feature { min-width: 0; display: flex; gap: 12px; padding: 12px 10px; }
 .f-icon { width: 38px; height: 38px; flex: none; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 10px; background: rgba(255, 255, 255, .035); color: var(--c, var(--ink)); }
-.f-title { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font: 600 16px/1.25 var(--body); color: var(--ink); }
+.f-title { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font: 500 16px/1.25 var(--body); color: var(--ink); }
 .f-text .tag { vertical-align: 1px; margin-right: 1px; }
 /* The beta features sit under one Beta tag */
-.f-group { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0 8px; padding: 14px 10px 2px; border-top: 1px solid var(--line); font: 500 14px/1.4 var(--body); color: var(--ink-2); }
+.f-group { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0 8px; padding: 14px 10px 2px; border-top: 1px solid var(--line); font: 500 14.5px/1.4 var(--body); color: var(--ink-2); }
 
 /* FAQ: one row per question, read live from the game's develop branch */
 .faq-intro { border-bottom: 1px solid var(--line); }
 .qa + .qa { border-top: 1px solid var(--line); }
-.qa summary { display: flex; align-items: center; gap: 12px; padding: 13px 18px; list-style: none; font: 600 15.5px/1.35 var(--body); color: var(--ink); cursor: pointer; transition: background-color .15s; }
+.qa summary { display: flex; align-items: center; gap: 12px; padding: 13px 18px; list-style: none; font: 500 15.5px/1.35 var(--body); color: var(--ink); cursor: pointer; transition: background-color .15s; }
 .qa summary::-webkit-details-marker { display: none; }
 @media (hover: hover) { .qa summary:hover { background: var(--glass-hi); } }
 .qa summary:focus-visible { outline-offset: -3px; border-radius: 6px; }
@@ -1585,10 +1591,10 @@ button.rev-run { width: 100%; font: inherit; text-align: left; cursor: pointer; 
 .qa summary .chev { width: 16px; height: 16px; flex: none; color: var(--ink-3); transition: transform .2s ease, color .2s ease; }
 .qa[open] summary .chev { transform: rotate(180deg); color: var(--volt); }
 .qa-a { margin: 0; max-width: 66ch; padding: 0 18px 15px; font: 400 15px/1.55 var(--body); color: var(--ink-2); }
-.qa-a .fg { font-weight: 600; }
-.qa-a a { color: var(--volt); font-weight: 600; text-underline-offset: 3px; }
+.qa-a .fg { font-weight: 500; }
+.qa-a a { color: var(--volt); font-weight: 500; text-underline-offset: 3px; }
 /* <b> marks the game's own labels (controls, HUD and lobby names) in the house orange */
-.qa-a b, .qa-q b { font-weight: 600; color: var(--ember); white-space: nowrap; }
+.qa-a b, .qa-q b { font-weight: 500; color: var(--ember); white-space: nowrap; }
 /* Controls (the keybind that opens the FAQ, the shield bounce's button) are keycaps: chips, one per key, with a
    thicker bottom edge */
 .faq-intro b { font-weight: 600; color: var(--ink-2); white-space: nowrap; }
@@ -1663,7 +1669,7 @@ button.rev-run { width: 100%; font: inherit; text-align: left; cursor: pointer; 
 
 /* Translations */
 .langs { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
-.langs button { padding: 5px 10px; border: 1px solid var(--line); border-radius: 8px; background: rgba(255, 255, 255, .025); color: var(--ink-2); font: 500 14px/1.2 var(--body); cursor: pointer; transition: border-color .15s, color .15s, background-color .15s; }
+.langs button { padding: 5px 10px; border: 1px solid var(--line); border-radius: 8px; background: rgba(255, 255, 255, .025); color: var(--ink-2); font: 500 14.5px/1.2 var(--body); cursor: pointer; transition: border-color .15s, color .15s, background-color .15s; }
 @media (hover: hover) { .langs button:hover { border-color: var(--line-hi); color: var(--ink); } }
 .langs button[aria-pressed="true"] { border-color: var(--volt); background: rgba(0, 230, 151, .1); color: var(--ink); }
 
