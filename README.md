@@ -219,7 +219,7 @@ DUCKLING · #3
 812 ⭐ Rating   4 ⚡ Top 10s   2 🏆 Podiums   1 👑 Records   12 🗺️ Courses run
 ```
 
-The first line is their Top % (Rated for the bottom 10%), the second their in-game name and place. Their rating, place, and Top % are the Global rating's (the unassisted and assisted ratings added up), the one the Global roles on our Discord server go by. Discord allows only 5 numbers per app, whole numbers only, which is why Top % is in the text: 0.1 isn't a whole number. The numbers and their names are `PROFILE_FIELDS` in `cloudflare/worker.js`. Server owners can also use them for linked roles (Server Settings → Linked Roles), like a role for anyone with at least one top 10.
+The first line is their Top % (Rated for the bottom 10%), the second their in-game name and place. Their rating, place, and Top % are the Global rating's (the unassisted and assisted ratings put together, with each assisted course rating at half), the one the Global roles on our Discord server go by. Discord allows only 5 numbers per app, whole numbers only, which is why Top % is in the text: 0.1 isn't a whole number. The numbers and their names are `PROFILE_FIELDS` in `cloudflare/worker.js`. Server owners can also use them for linked roles (Server Settings → Linked Roles), like a role for anyone with at least one top 10.
 
 Everyone's stats catch up with the boards every 30 minutes (the cron in `cloudflare/wrangler.toml`), and a player's own stats update as soon as their run goes on a board. Each update stays within Cloudflare's limit of 50 calls, so after a new record (which changes everyone's rating) it can take a few updates to reach everyone. **Take them off** in the same panel removes them. So does removing Ballkyrie under Authorized Apps in Discord's settings.
 

@@ -848,7 +848,7 @@ function runStats(game, before, run, n) {
   const key = playerKey(run);
   const after = structuredClone(before);
   listIn(after.runs, n).push(run);
-  // Their place in the Global rating too (the unassisted and assisted ratings added up, see combine()), for their
+  // Their place in the Global rating too (the unassisted and assisted ratings put together, see combine()), for their
   // (Global) role on Discord. The other kind's ratings don't change with this run, so they're worked out once.
   const other = rate(loadCourses({ ...game.files, [RUNS_FILE]: JSON.stringify(before) }, game.courses, { assisted: !isAssisted(run) }));
   const side = (runs) => {
@@ -1001,7 +1001,7 @@ function bestBefore({ n, run, before, mine }, stats) {
 function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pending }) {
   const s = stats || {};
   // A run's ratings are the ones of its kind: the unassisted ones, or an assisted run's assisted ones, named the way
-  // the Player ratings' tabs and the run's page name them (not Global, which is both added up)
+  // the Player ratings' tabs and the run's page name them (not Global, which is both put together)
   const scope = isAssisted(run) ? "Assisted" : "Unassisted";
   // Whether it's their best on the course: by its numbers, which read the boards the way the site does, or else by
   // where it placed
@@ -1777,8 +1777,8 @@ async function setLink(request, env, ctx) {
      ballkour.com · Top 0.1%      their Top % (Rated for the bottom 10%, Unrated before they have a rating)
      DUCKLING · #3                their in-game name and place in the Global rating
      812 ⭐ Rating  4 ⚡ Top 10s  2 🏆 Podiums  1 👑 Records  12 🗺️ Courses run
-   Their rating, place and Top % are the Global rating's (the unassisted and assisted ratings added up, see combine() in
-   ratings.js), the one the Global roles on our server go by.
+   Their rating, place and Top % are the Global rating's (the unassisted and assisted ratings put together, with each
+   assisted course rating at half, see combine() in ratings.js), the one the Global roles on our server go by.
    PROFILE_FIELDS are the numbers on the last line. Discord allows at most 5 per app, whole numbers only (so Top %,
    with its 0.1, goes in the text above), and shows each as "<number> <name>", so each name's emoji comes right
    after its number. Changing a name only needs a deploy: Discord gets the new names, and everyone's profile shows
@@ -1822,7 +1822,7 @@ const SEND_CALLS = 7;
 // type 2: a whole number, which linked roles check with "at least". Keys can't change without everyone's profile
 // losing that number until they're sent again.
 const PROFILE_FIELDS = [
-  { key: "rating", name: "⭐ Rating", description: "Their Global rating, unassisted plus assisted, out of 2,000" },
+  { key: "rating", name: "⭐ Rating", description: "Their Global rating: their unassisted runs, plus their assisted ones at half" },
   { key: "top10s", name: "⚡ Top 10s", description: "How many courses they're on the top 10 of" },
   { key: "podiums", name: "🏆 Podiums", description: "How many courses they're in the top 3 of" },
   { key: "records", name: "👑 Records", description: "How many courses they hold the record on" },
@@ -1874,7 +1874,7 @@ async function registerFields(env, calls) {
 function profilesFrom(data) {
   if (!data || !data.files || !Array.isArray(data.courses)) throw new Error("the game data has no course list yet");
   const courses = loadCourses(data.files, data.courses);
-  // The Global rating: the unassisted and assisted ratings added up
+  // The Global rating: the unassisted and assisted ratings put together
   const rated = new Map(combine([rate(courses), rate(loadCourses(data.files, data.courses, { assisted: true }))]).players.map((p) => [p.key, p]));
   const boards = new Map(); // player → { top10s, podiums, records, name }
   for (const c of courses) {

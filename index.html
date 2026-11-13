@@ -2202,8 +2202,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "rt.legacy.how": "Every course’s legacy board is worth up to 1,000 points: its record gets all of them, and the further behind it a run is, the fewer it gets. Your Legacy rating is your average over every legacy board, with 0 for any you’re not on. Those boards don’t change any more, and their times were only to the second.",
   "rt.legacy.tiers": "Top % is where you place among all {count} players on the legacy boards. On our Discord, it’s your role once your legacy runs are linked to you: everyone below Top 90% (Legacy) is Rated (Legacy). The 10 best players get Legacy Top 10 Rating too.",
   "rt.legacy.counted": "Legacy boards that count: {courses}.",
-  "rt.global.title": "Unassisted and assisted ratings added up",
-  "rt.global.how": "Your global rating is your unassisted rating plus your assisted rating, so it’s worth up to 2,000. Legacy ratings don’t count toward it, as their boards don’t change any more.",
+  "rt.global.title": "Unassisted and assisted ratings, assisted at half",
+  "rt.global.how": "To get your global rating, add up your unassisted course ratings and half of each assisted course rating, then divide by the number of courses that work. A course you haven’t run adds 0, and an assisted record adds half as much as an unassisted one. Legacy ratings don’t count toward it, as their boards don’t change anymore.",
   "rt.global.tiers": "Top % is where you place among all {count} rated players. On our Discord, it’s your role: everyone below Top 90% (Global) is Rated (Global), and anyone without a rating yet is Unrated (Global). The 10 best players get Top 10 Rating (Global) too.",
   "rt.meta": "All courses in one rating",
   "rt.none": "No ratings yet",
@@ -2218,7 +2218,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "rt.mathTitle": "The formulas",
   "rt.mathCourse": "Course rating = 1,000 × [ln(1 + (e − 1) × record ÷ your time)]²",
   "rt.mathRating": "Rating = (your course ratings added up) ÷ {n}",
-  "rt.mathGlobal": "Global rating = unassisted rating + assisted rating",
+  "rt.mathGlobal": "Global rating = (your unassisted course ratings added up + ½ × your assisted course ratings added up) ÷ {n}",
   "rt.mathNote": "ln is the natural log, and e is about 2.718. {n} is the number of courses that count, and a course you haven’t run adds 0. With a 4:00.00 record, a 5:00.00 run gets a course rating of {a}, and an 8:00.00 run gets {b}.",
   "sub.pick": "Pick a course",
   "sub.assisted": "Played in Assist Mode",
@@ -3827,18 +3827,24 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     });
     return list;
   }
-  /* The Global rating: each player's unassisted and assisted ratings (sets, as ratings() works them out) added up, so
-     it's worth up to 2,000 (parts: the two of them), ranked like the others. courses: the courses they've run either
-     way. The Legacy rating stays out of it, as its boards can't change any more. It's what the Global Discord roles go
-     by: the bot (tools/leaderboard-bot/ratings.mjs in the game repo) and the Worker (cloudflare/ratings.js) work it out
-     the same way, with combine(). */
+  /* The Global rating: each player's unassisted and assisted ratings (sets, as ratings() works them out) put together,
+     ranked like the others (parts: what each of the two adds to it). Each assisted course rating counts half as much as
+     an unassisted one (ASSISTED_WEIGHT), and both kinds are spread over the courses the unassisted rating counts, so an
+     assisted record on one of 11 courses adds 45 (half of 1,000, over 11), where an unassisted one adds 91. courses:
+     the courses they've run either way. The Legacy rating stays out of it, as its boards can't change any more. It's
+     what the Global Discord roles go by: the bot (tools/leaderboard-bot/ratings.mjs in the game repo) and the Worker
+     (cloudflare/ratings.js) work it out the same way, with combine(). */
+  const ASSISTED_WEIGHT = 0.5;
   function ratingsSum(sets) {
+    // The assisted rating is an average over the remakes alone: this turns it into its share of the Global rating
+    const scale = (ASSISTED_WEIGHT * sets[1].counted.length) / (sets[0].counted.length || 1);
+    const weights = [1, scale];
     const players = new Map();
     sets.forEach((set, i) => set.players.forEach((p) => {
       if (!players.has(p.key)) players.set(p.key, { key: p.key, name: p.name, discord: p.discord, date: p.date, rating: 0, parts: sets.map(() => 0), ran: new Set() });
       const g = players.get(p.key);
-      g.rating += p.rating;
-      g.parts[i] = p.rating;
+      g.rating += p.rating * weights[i];
+      g.parts[i] = p.rating * weights[i];
       Object.keys(p.points).forEach((n) => g.ran.add(n));
       // Named as on their newest run
       if (p.date > g.date) { g.date = p.date; g.name = p.name; }
@@ -3934,7 +3940,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   function ratingRow(p, r) {
     const total = r.counted.length;
     const ran = t("rt.courses", { n: p.courses, total });
-    // What it's made of: each course rating, or for the Global rating, the unassisted and assisted ratings
+    // What it's made of: each course rating, or for the Global rating, what the unassisted and assisted ratings add to it
     const breakdown = r.global ? [t("lb.tab.unassisted"), t("lb.tab.assisted")].map((name, i) => `${name}: ${points(p.parts[i])}`).join("\n")
       : r.counted.filter((c) => c.n in p.points).map((c) => `${c.n} · ${c.name}: ${points(p.points[c.n])}`).join("\n");
     const tier = p.tier ? `<span class="tag tag-tier${p.tier <= 5 ? " elite" : ""}">${esc(t("rt.tier", { pct: p.tier.toLocaleString(htmlLang()) }))}</span>` : "";
@@ -3947,7 +3953,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       dcHtml(p) +
       `</li>`;
   }
-  // The Player ratings' board: the Global rating first, the unassisted and assisted ratings added up (see ratingsSum),
+  // The Player ratings' board: the Global rating first, the unassisted and assisted ratings put together (see ratingsSum),
   // then the ratings on their own (Unassisted), the assisted ratings (see "Assisted boards"), and the Legacy rating, from
   // the legacy boards (see legacyOf)
   const RATINGS_TABS = ["global", "top", "assisted", "legacy"];
@@ -4000,8 +4006,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const eg = (time) => points(coursePoints({ time: "4:00.00" }, { time }));
     return `<div class="rt-math"><p class="rt-math-title">${esc(t("rt.mathTitle"))}</p>` +
       `<p class="rt-math-f">${esc(t("rt.mathCourse"))}</p>` +
-      `<p class="rt-math-f">${esc(t("rt.mathRating", { n }))}</p>` +
-      (r.global ? `<p class="rt-math-f">${esc(t("rt.mathGlobal"))}</p>` : "") +
+      `<p class="rt-math-f">${esc(t(r.global ? "rt.mathGlobal" : "rt.mathRating", { n }))}</p>` +
       `<p class="rt-math-note">${esc(t("rt.mathNote", { n, a: eg("5:00.00"), b: eg("8:00.00") }))}</p></div>`;
   }
   // runs.json as it is, for the runs sent from the website by their id: their pages, and the reviewers' All runs
