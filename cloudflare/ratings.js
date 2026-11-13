@@ -86,21 +86,26 @@ function ranked(list) {
   return list;
 }
 
-// The Global rating: rate()'s results for the unassisted and the assisted boards, added up per player (courses: the
-// courses they've run either way), for the Global Discord roles. The bot (combine() in
-// tools/leaderboard-bot/ratings.mjs) and the page (ratings(then, "global")) work it out the same way.
+// The Global rating: rate()'s results for the unassisted and the assisted boards, put together per player (courses:
+// the courses they've run either way), for the Global Discord roles. Each assisted course rating counts half as much
+// as an unassisted one (ASSISTED_WEIGHT), and both kinds are spread over the courses the unassisted rating counts: an
+// assisted record on one of 11 courses adds 45 (half of 1,000, over 11), where an unassisted one adds 91. The bot
+// (combine() in tools/leaderboard-bot/ratings.mjs) and the page (ratings(then, "global")) work it out the same way.
 // → { counted: [course numbers], players: [{ key, name, discord, rating, courses, rank, tier }] }
-export function combine(ratings) {
+export const ASSISTED_WEIGHT = 0.5;
+export function combine([unassisted, assisted]) {
+  // The assisted rating is an average over the remakes alone: this turns it into its share of the Global rating
+  const scale = (ASSISTED_WEIGHT * assisted.counted.length) / (unassisted.counted.length || 1);
   const players = new Map();
-  for (const p of ratings.flatMap((r) => r.players)) {
+  for (const [r, weight] of [[unassisted, 1], [assisted, scale]]) for (const p of r.players) {
     if (!players.has(p.key)) players.set(p.key, { key: p.key, name: p.name, discord: p.discord, date: p.date, rating: 0, ran: new Set() });
     const g = players.get(p.key);
-    g.rating += p.rating;
+    g.rating += p.rating * weight;
     for (const n of Object.keys(p.points)) g.ran.add(n);
     // Named as on their newest run
     if ((p.date || "") > g.date) { g.date = p.date; g.name = p.name; }
   }
-  const counted = [...new Set(ratings.flatMap((r) => r.counted))].sort((a, b) => a - b);
+  const counted = [...new Set([unassisted, assisted].flatMap((r) => r.counted))].sort((a, b) => a - b);
   return { counted, players: ranked([...players.values()].map(({ ran, ...p }) => ({ ...p, courses: ran.size }))) };
 }
 
