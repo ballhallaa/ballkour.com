@@ -7516,6 +7516,12 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     runsMode = b.dataset.runsMode;
     $$("[data-runs-mode]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
     redrawRuns(true);
+    // The sort bar too, since Assisted's says Ground time where the others say Mistakes
+    const box = $("#sub-runs");
+    const bar = $(".sub-runs-head .pl-sort", box);
+    if (!bar) return;
+    bar.outerHTML = runSortHtml(runsSort, runsRev, undefined, runsMode === "assisted");
+    fitSorts(box);
   });
   let runsReady = false;
   /* The menu beside its box: All time, or the days of Stats' buttons, up to today. They're UTC days, sent by when
