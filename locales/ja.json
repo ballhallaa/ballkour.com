@@ -245,6 +245,8 @@
   "res.unassistedStats": "アシストなしの成績",
   "res.assistedStats": "アシストの成績",
   "res.globalStats": "グローバルの成績",
+  "res.newBest": "自己ベスト更新",
+  "res.thisRun": "この記録",
   "res.coursesRun": "走ったコース",
   "res.count": "{n}/{total}",
   "res.of": "{total}人中#{rank}",

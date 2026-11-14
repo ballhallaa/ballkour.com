@@ -245,6 +245,8 @@
   "res.unassistedStats": "Stats sans assistance",
   "res.assistedStats": "Stats assistées",
   "res.globalStats": "Stats globales",
+  "res.newBest": "Nouveau record personnel",
+  "res.thisRun": "Cette partie",
   "res.coursesRun": "Parcours joués",
   "res.count": "{n} sur {total}",
   "res.of": "#{rank} sur {total}",

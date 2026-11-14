@@ -245,6 +245,8 @@
   "res.unassistedStats": "Statystyki bez wspomagania",
   "res.assistedStats": "Statystyki ze wspomaganiem",
   "res.globalStats": "Statystyki globalne",
+  "res.newBest": "Nowy rekord osobisty",
+  "res.thisRun": "To przejście",
   "res.coursesRun": "Przebyte trasy",
   "res.count": "{n} z {total}",
   "res.of": "#{rank} z {total}",

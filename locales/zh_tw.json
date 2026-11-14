@@ -245,6 +245,8 @@
   "res.unassistedStats": "無輔助數據",
   "res.assistedStats": "輔助數據",
   "res.globalStats": "全域數據",
+  "res.newBest": "新的個人最佳",
+  "res.thisRun": "這個成績",
   "res.coursesRun": "已跑關卡",
   "res.count": "{n}/{total}",
   "res.of": "第 {rank} / {total} 名",

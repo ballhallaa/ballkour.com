@@ -245,6 +245,8 @@
   "res.unassistedStats": "Статистика без помощи",
   "res.assistedStats": "Статистика с помощью",
   "res.globalStats": "Глобальная статистика",
+  "res.newBest": "Новый личный рекорд",
+  "res.thisRun": "Этот забег",
   "res.coursesRun": "Пройдено трасс",
   "res.count": "{n} из {total}",
   "res.of": "#{rank} из {total}",

@@ -245,6 +245,8 @@
   "res.unassistedStats": "어시스트 없는 기록",
   "res.assistedStats": "어시스트 기록",
   "res.globalStats": "글로벌 기록",
+  "res.newBest": "개인 최고 기록 경신",
+  "res.thisRun": "이 기록",
   "res.coursesRun": "달린 코스",
   "res.count": "{n}/{total}",
   "res.of": "{total}명 중 #{rank}",
