@@ -5444,29 +5444,39 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       const shareColor = rating !== undefined && rating.tier !== null && rating.tier <= 5 ? "#ffd54f" : "#33c6ff";
       const shareW = share ? ctx.measureText(share).width + 10 : 0;
       const newW = fresh ? ctx.measureText(up(t("lb.new"))).width + 10 : 0;
-      const nameMax = timeRight - tw - 5 - 17 - 10 - nameLeft - (shareW ? 7 + shareW : 0) - (newW ? 7 + newW : 0);
+      const tagsW = (shareW ? 7 + shareW : 0) + (newW ? 7 + newW : 0);
+      const nameRoom = timeRight - tw - 5 - 17 - 10 - nameLeft;
       const name = r ? caps(r.name) : "---";
+      const nameFont = (px) => picFont(ctx, `700 ${px}px Barlow, sans-serif`, px * 0.03);
+      // A name that won't fit beside its tags even at its smallest has the whole line, and its tags go under it, after
+      // the Discord name, like the bot's
+      nameFont(14);
+      const tagsDown = two && tagsW > 0 && ctx.measureText(name).width > nameRoom - tagsW;
+      const nameMax = nameRoom - (tagsDown ? 0 : tagsW);
       let size = 24;
-      picFont(ctx, `700 ${size}px Barlow, sans-serif`, size * 0.03);
-      while (ctx.measureText(name).width > nameMax && size > 14) { size -= 0.5; picFont(ctx, `700 ${size}px Barlow, sans-serif`, size * 0.03); }
+      nameFont(size);
+      while (ctx.measureText(name).width > nameMax && size > 14) nameFont((size -= 0.5));
       ctx.save(); ctx.beginPath(); ctx.rect(nameLeft, y, Math.max(0, nameMax), PIC.rowH); ctx.clip();
       const nw = Math.min(nameMax, picText(ctx, name, nameLeft, y1, r ? tier || "#ecf6f2" : "#76867f"));
       ctx.restore();
-      picFont(ctx, '700 10px "JetBrains Mono", monospace', 0.6);
-      let tx = nameLeft + nw + 7;
-      if (share) {
-        picBox(ctx, tx, y1 - 8, shareW, 16, 5);
-        ctx.fillStyle = `rgba(${rgb(shareColor)},.1)`; ctx.fill(); ctx.strokeStyle = `rgba(${rgb(shareColor)},.34)`; ctx.stroke();
-        picText(ctx, share, tx + 5, y1, shareColor);
-        tx += shareW + 7;
-      }
-      if (fresh) {
-        picBox(ctx, tx, y1 - 8, newW, 16, 5);
-        ctx.fillStyle = "rgba(0,230,151,.12)"; ctx.fill(); ctx.strokeStyle = "rgba(0,230,151,.4)"; ctx.stroke();
-        picText(ctx, up(t("lb.new")), tx + 5, y1, "#00e697");
-      }
+      // The tags from tx, at the middle of a line (cy)
+      const drawTags = (tx, cy) => {
+        picFont(ctx, '700 10px "JetBrains Mono", monospace', 0.6);
+        if (share) {
+          picBox(ctx, tx, cy - 8, shareW, 16, 5);
+          ctx.fillStyle = `rgba(${rgb(shareColor)},.1)`; ctx.fill(); ctx.strokeStyle = `rgba(${rgb(shareColor)},.34)`; ctx.stroke();
+          picText(ctx, share, tx + 5, cy, shareColor);
+          tx += shareW + 7;
+        }
+        if (fresh) {
+          picBox(ctx, tx, cy - 8, newW, 16, 5);
+          ctx.fillStyle = "rgba(0,230,151,.12)"; ctx.fill(); ctx.strokeStyle = "rgba(0,230,151,.4)"; ctx.stroke();
+          picText(ctx, up(t("lb.new")), tx + 5, cy, "#00e697");
+        }
+      };
+      if (!tagsDown) drawTags(nameLeft + nw + 7, y1);
       // Under them: the date, and the rating with what the run adds to it, at the right, then the Discord name and
-      // picture, cut off before them
+      // picture, cut off before them (and before the tags, when they're down here)
       picFont(ctx, '400 13.5px "JetBrains Mono", monospace');
       const dateW = date ? picText(ctx, date, right, y2, "#76867f", "right") + 14 : 0;
       let endW = dateW;
@@ -5475,18 +5485,20 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         picIcon(ctx, "star", right - dateW - numW - 5 - 15, y2, 15, "#ffd54f");
         endW += numW + 5 + 15 + 14;
       }
+      let dx = nameLeft;
       if (who) {
-        let dx = nameLeft;
         if (pfps[i]) {
           ctx.save(); ctx.beginPath(); ctx.arc(dx + 11, y2, 11, 0, Math.PI * 2); ctx.clip();
           ctx.drawImage(pfps[i], dx, y2 - 11, 22, 22); ctx.restore();
           dx += 29;
         }
         picFont(ctx, '600 16px Barlow, sans-serif');
-        ctx.save(); ctx.beginPath(); ctx.rect(dx, y2 - 12, Math.max(0, right - endW - dx), 24); ctx.clip();
-        picText(ctx, who.name, dx, y2, "#b9befc");
+        const room = Math.max(0, right - endW - dx - (tagsDown ? tagsW : 0));
+        ctx.save(); ctx.beginPath(); ctx.rect(dx, y2 - 12, room, 24); ctx.clip();
+        dx += Math.min(room, picText(ctx, who.name, dx, y2, "#b9befc")) + 7;
         ctx.restore();
       }
+      if (tagsDown) drawTags(dx, y2);
       ctx.restore();
     }
     // The foot: the course number, the board's link in the middle (the same as the address: an older board's has its
