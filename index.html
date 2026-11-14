@@ -861,7 +861,10 @@ button.run-name:focus-visible { text-decoration: underline; text-decoration-thic
 .pl-stat { min-width: 0; padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255, 255, 255, .025); }
 .pl-stat-label { display: block; font: 600 10.5px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
 .pl-stat-value { margin-top: 6px; display: flex; align-items: center; gap: 5px; min-height: 19px; font: 600 15px/1.2 var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink); }
-.pl-stat-value .icon { width: 14px; height: 14px; color: var(--gold); }
+/* Each icon in its usual color on the site, in every box (a player's, a run's page, and Stats): the rating's star and
+   the records' trophy gold, and the rest (time, runs, courses, people, views) green */
+.pl-stat-value .icon { width: 14px; height: 14px; color: var(--volt); }
+.pl-stat-value .icon:has(use[href="#i-star"], use[href="#i-trophy"]) { color: var(--gold); }
 .pl-stat-value .icon[aria-hidden] + * { min-width: 0; }
 /* Rating, Place and Top % open the Player ratings, and Runs every run: an arrow by the label, lit up on hover */
 .pl-stat-go { display: block; width: 100%; text-align: left; text-decoration: none; cursor: pointer; transition: border-color .15s, background-color .15s; }
@@ -1384,7 +1387,6 @@ a.tag-tier:focus-visible { outline-offset: 2px; }
 .stats-part { padding: 6px 18px 4px; }
 .stats-part:last-child { padding-bottom: 18px; }
 .stats-tiles { display: grid; grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr)); gap: 8px; }
-.stats-tiles .pl-stat-value .icon { color: var(--volt); }
 .stats-chart { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; margin-top: 14px; }
 .stats-bars { display: flex; align-items: stretch; gap: 3px; height: 64px; }
 .stats-bar { flex: 1; min-width: 0; display: flex; align-items: flex-end; padding: 0; border: 0; border-radius: 3px 3px 0 0; background: none; cursor: pointer; }
