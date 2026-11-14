@@ -3930,6 +3930,11 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     });
     return { counted, players: ranked(list), assisted, legacy };
   }
+  // Where a place puts a player among how many are rated: their actual Top %, which a player's panel and a run's result
+  // show (#1 of 16 is the Top 6.3%, where their tier, and role, is Top 10%). It's rounded up to a tenth, so it never
+  // reads better than it is. null without both.
+  const topShare = (rank, total) => (typeof rank === "number" && total > 0 ? Math.ceil((rank / total) * 1000 - 1e-9) / 10 : null);
+  const shareLabel = (v) => t("rt.tier", { pct: v.toLocaleString(htmlLang(), { maximumFractionDigits: 1 }) });
   // Rated players, best first (then whoever has run more courses, then by name), each with their place and tier.
   // Players with the same rating share the better place.
   function ranked(list) {
@@ -4057,7 +4062,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     // What it's made of: each course rating, or for the Global rating, what the unassisted and assisted ratings add to it
     const breakdown = r.global ? [t("lb.tab.unassisted"), t("lb.tab.assisted")].map((name, i) => `${name}: ${points(p.parts[i])}`).join("\n")
       : r.counted.filter((c) => c.n in p.points).map((c) => `${c.n} · ${c.name}: ${points(p.points[c.n])}`).join("\n");
-    const tier = p.tier ? `<span class="tag tag-tier${p.tier <= 5 ? " elite" : ""}">${esc(t("rt.tier", { pct: p.tier.toLocaleString(htmlLang()) }))}</span>` : "";
+    // Their actual Top % (see topShare), gold when their tier, and role, is the Top 5% or better
+    const tier = `<span class="tag tag-tier${p.tier !== null && p.tier <= 5 ? " elite" : ""}">${esc(shareLabel(topShare(p.rank, r.players.length)))}</span>`;
     const mark = !!boardMark && boardMark.n === RATINGS.n && boardMark.key === p.key && boardMark.tab === tabOfRatings(r);
     return `<li class="run${p.rank <= 3 ? " p" + p.rank : ""}${mark ? " mark" : ""}" data-k="${esc(p.key)}"${ratingCols(r)}>` +
       `<span class="run-rank">${p.rank}</span>` +
@@ -4322,7 +4328,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const mine = !!me && key === "d:" + me.id;
     const ranNone = !every.some((x) => x.best || x.runs.length);
     const stat = statTile;
-    const tierTag = (q) => (q ? `<span class="tag tag-tier${q.tier !== null && q.tier <= 5 ? " elite" : ""}">${esc(q.tier === null ? t("rt.rated") : t("rt.tier", { pct: q.tier.toLocaleString(htmlLang()) }))}</span>` : "—");
+    // Their actual Top % (see topShare), coloured as their tier's tag is
+    const tierTag = (q, total) => (q ? `<span class="tag tag-tier${q.tier !== null && q.tier <= 5 ? " elite" : ""}">${esc(shareLabel(topShare(q.rank, total)))}</span>` : "—");
     const dcLine = dc && named.name ? dcLink(discord, "pl-dc", 18) : "";
     const runsIn = (list) => list.reduce((sum, x) => sum + x.runs.length, 0);
     /* Which runs it shows (plMode), picked with the buttons under their name: the ones their Global rating is made of
@@ -4354,7 +4361,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       return `<div class="pl-stats">` +
         stat(t("pl.rating"), q ? `${icon("star")}${esc(points(q.rating))}` : "—", to) +
         stat(t("pl.place"), esc(q ? t("res.of", { rank: q.rank, total: rated.players.length }) : t("res.ofNone", { total: rated.players.length })), to) +
-        stat(t("pl.tier"), tierTag(q), to) +
+        stat(t("pl.tier"), tierTag(q, rated.players.length), to) +
         stat(t("pl.courses"), `${icon("map")}${q ? q.courses : 0}/${rated.counted.length}`) +
         stat(t("pl.runs"), `${icon("notes")}${esc(localNum(runsIn(shown)))}`, toRuns) +
       `</div>`;
@@ -4530,14 +4537,15 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   function profileCardHtml() {
     // In English, the way Discord shows it, with their Global rating (see profilesFrom in cloudflare/worker.js)
     const key = "d:" + me.id;
-    const p = ratings(null, "global").players.find((x) => x.key === key) || null;
+    const global = ratings(null, "global").players;
+    const p = global.find((x) => x.key === key) || null;
     const n = medalsOf(key);
     // As in PROFILE_FIELDS in cloudflare/worker.js
     const stats = [[p ? Math.round(p.rating) : 0, "⭐ Rating"], [n.top10s, "⚡ Top 10s"], [n.podiums, "🏆 Podiums"], [n.records, "👑 Records"], [p ? p.courses : 0, "🗺️ Courses run"]];
     return `<div class="dcp-card" lang="en">` +
       `<img class="dcp-card-icon" src="${esc(botPic())}" alt="" width="40" height="40">` +
       `<div class="dcp-card-body">` +
-        `<div class="dcp-card-name">ballkour.com · ${!p ? "Unrated" : p.tier === null ? "Rated" : `Top ${p.tier}%`}</div>` +
+        `<div class="dcp-card-name">ballkour.com · ${p ? `Top ${topShare(p.rank, global.length)}%` : "Unrated"}</div>` +
         `<div class="dcp-card-user">${esc(p ? `${p.name} · #${p.rank}` : n.name || "No runs yet")}</div>` +
         `<div class="dcp-card-by">Powered by Ballkyrie</div>` +
         `<div class="dcp-card-stats">${stats.map(([v, name]) => `<span>${v} ${name}</span>`).join("")}</div>` +
@@ -4849,9 +4857,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const total = r.counted.length;
     const dc = x.discord && PLAYERS.get(x.discord);
     const ran = p ? t("rt.courses", { n: p.courses, total }) : "";
-    const tier = p && p.tier ? t("rt.tier", { pct: p.tier.toLocaleString(htmlLang()) }) : "";
+    const tier = p ? shareLabel(topShare(p.rank, r.players.length)) : "";
     const unrated = t(x.view === "legacy" ? "pl.legacy" : "find.unrated");
-    // Read out as "BALLMYBLOVED, ball シ, #1 of 16, Rating 182, Top 10%, 2 of 11 courses run", with the rating's name
+    // Read out as "BALLMYBLOVED, ball シ, #1 of 16, Rating 182, Top 6.3%, 2 of 11 courses run", with the rating's name
     // first for any but Global ("Assisted, #1 of 3, …")
     const which = x.view !== "global" && t(PL_MODES[pfMode(x.view)]);
     const label = [x.name, dc && dc.name, ...(p ? [which, t("res.of", { rank: p.rank, total: r.players.length }), `${t("pl.rating")} ${points(p.rating)}`, tier, ran] : [unrated])]
@@ -4859,7 +4867,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     return `<li class="run${p && p.rank <= 3 ? " p" + p.rank : ""}${i === pfActive ? " active" : ""}" role="option" id="pf-opt-${i}" aria-selected="${i === pfActive}" aria-label="${esc(label)}"${cols}>` +
       `<span class="run-rank">${p ? p.rank : "–"}</span>` +
       `<span class="run-who"><span class="run-line"><span class="run-name">${esc(caps(x.name))}</span>` +
-        (tier ? `<span class="tag tag-tier${p.tier <= 5 ? " elite" : ""}">${esc(tier)}</span>` : "") + `</span></span>` +
+        (tier ? `<span class="tag tag-tier${p.tier !== null && p.tier <= 5 ? " elite" : ""}">${esc(tier)}</span>` : "") + `</span></span>` +
       (p ? `<span class="stat time">${icon("star")}<span class="v">${esc(points(p.rating))}</span></span>` +
           `<span class="stat miss">${icon("map")}<span>${p.courses}/${total}</span></span>`
         : `<span class="stat pf-unrated">${x.view === "legacy" ? `<span class="tag tag-legacy">${esc(unrated)}</span>` : esc(unrated)}</span>`) +
@@ -5797,7 +5805,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       ctx.restore();
     });
     // The panel's five boxes, in a row
-    const tier = d.p ? tierLabel(d.p.tier) : "";
+    const tier = d.p ? shareLabel(topShare(d.p.rank, d.total)) : "";
     const tiles = [
       [t("pl.rating"), d.p && { icon: "star", text: points(d.p.rating) }],
       [t("pl.place"), d.p && { text: t("res.of", { rank: d.p.rank, total: d.total }) }],
@@ -5935,7 +5943,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (!key) return;
     const d = picPlayer(key);
     const filename = `${slugOf(d.name) || slugOf(linkOf(key)) || "player"}-stats.png`;
-    const alt = `${d.name}: ` + (d.p ? `${t("pl.rating")} ${points(d.p.rating)}, ${t("res.of", { rank: d.p.rank, total: d.total })}, ${tierLabel(d.p.tier)}` : t("find.unrated")) +
+    const alt = `${d.name}: ` + (d.p ? `${t("pl.rating")} ${points(d.p.rating)}, ${t("res.of", { rank: d.p.rank, total: d.total })}, ${shareLabel(topShare(d.p.rank, d.total))}` : t("find.unrated")) +
       `, ${t("pl.courses")} ${d.p ? d.p.courses : 0}/${d.counted}, ${t("pl.runs")} ${localNum(d.runs)}. ` +
       d.rows.filter((x) => x.best).map(({ c, at, best, total, tagged }) => `${c.n}. ${c.name}${tagged ? ` (${t("lb.tab.assisted")})` : ""}: ${best.time}, ${missLabel(best)}, ${t("res.of", { rank: at + 1, total })}`).join("; ");
     pictureWindow(esc(t("pic.player", { player: d.name })), (code) => drawPlayerPicture(d, code), filename, alt);
@@ -5957,7 +5965,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const r = ratings(null, ratingsFor(tab));
     // The top 10 the board shows, sorted as it is (see ratingsOrder)
     const players = ratingsOrder(r.players).slice(0, 10);
-    return { tab, players, counted: r.counted.length, people: players.map((p) => (p.discord && PLAYERS.get(p.discord)) || null) };
+    return { tab, players, total: r.players.length, counted: r.counted.length, people: players.map((p) => (p.discord && PLAYERS.get(p.discord)) || null) };
   }
   // The ratings picture in a language (code), once its fonts and pictures have loaded
   async function drawRatingsPicture(d, code) {
@@ -6018,7 +6026,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       picIcon(ctx, "star", ratingRight - rw - 7 - 21, y1, 21, "#ffd54f");
       // The name, shrunk to fit, then their Top % (gold for the Top 5% and up, like the board's)
       const nameLeft = left + 34 + 12;
-      const tag = p ? up(tierLabel(p.tier)) : "";
+      const tag = p ? up(shareLabel(topShare(p.rank, d.total))) : "";
       const tagColor = p && p.tier !== null ? (p.tier <= 5 ? "#ffd54f" : "#33c6ff") : "#a7b6b0";
       picFont(ctx, '700 11px "JetBrains Mono", monospace', 1.1);
       const tagW = tag ? ctx.measureText(tag).width + 12 : 0;
@@ -6061,7 +6069,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const name = t(RATINGS_PIC[d.tab].name);
     const sortName = ratingsSort === "courses" ? (ratingsRev ? "-fewest-courses" : "-by-courses") : ratingsRev ? "-lowest-first" : "";
     const filename = `player-ratings-${slugOf(d.tab === "top" ? "unassisted" : d.tab)}${sortName}.png`;
-    const alt = `${t("rt.title")} · ${name}: ` + d.players.map((p) => `${p.rank}. ${p.name} ${points(p.rating)}, ${tierLabel(p.tier)}, ${t("pl.courses")} ${p.courses}/${d.counted}`).join("; ");
+    const alt = `${t("rt.title")} · ${name}: ` + d.players.map((p) => `${p.rank}. ${p.name} ${points(p.rating)}, ${shareLabel(topShare(p.rank, d.total))}, ${t("pl.courses")} ${p.courses}/${d.counted}`).join("; ");
     pictureWindow(esc(`${t("rt.title")} · ${name}`), (code) => drawRatingsPicture(d, code), filename, alt);
   }
   document.addEventListener("click", (e) => {
@@ -8392,6 +8400,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       rating: pair((p) => Math.round(p.rating)),
       rank: pair((p) => p.rank),
       of: after.total,
+      // How many were rated before the run, in its kind and in the Global rating, for their Top % then
+      ofBefore: before.total,
+      globalOfBefore: before.globalTotal,
       tier: pair((p) => p.tier),
       courses: a ? [b ? b.courses : 0, a.courses] : null,
       counted: after.counted,
@@ -8598,6 +8609,21 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     let mine = "", global = "";
     // That their role changes, under each Top % that changes it
     const roleNote = !held && !they && !again ? esc(t("res.roleNote")) : "";
+    /* A Top % row: where their place puts them among everyone rated (see topShare), after what it was before the run,
+       with how much it moved (a smaller share is up), or New when they weren't rated (from: null). from and to are
+       { rank, of, tier }. The Worker's numbers from before it kept the Global place have just the tier, their role,
+       which it shows instead. Their role on Discord goes by the tier, so a run that moves it says so under the row. */
+    const topRow = (from, to, where) => {
+      const a = from ? topShare(from.rank, from.of) : null, b = topShare(to.rank, to.of);
+      const label = (q, v) => (v === null ? tierLabel(q.tier) : shareLabel(v));
+      const moved = !!from && label(from, a) !== label(to, b);
+      const newRole = !from || from.tier !== to.tier;
+      const gap = a !== null && b !== null ? Math.round((a - b) * 10) / 10 : null;
+      const delta = !from ? deltaHtml(null)
+        : gap !== null ? deltaHtml(gap, (Math.abs(gap) / 100).toLocaleString(htmlLang(), { style: "percent", maximumFractionDigits: 1 }))
+        : newRole ? `<span class="res-delta up">${esc(t("res.newRole"))}</span>` : sameHtml;
+      return resRow(t("res.tier"), (moved ? was(esc(label(from, a))) : "") + esc(label(to, b)), delta, newRole ? roleNote : "", where);
+    };
     if (s.rating) {
       const [from, to] = s.rating;
       const rated = from !== null; // they had a rating before
@@ -8608,10 +8634,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       mine += resRow(t("res.rank"), (rated && rankFrom !== rankTo ? was(`#${rankFrom}`) : "") + esc(t("res.of", { rank: rankTo, total: s.of })),
         deltaHtml(rated ? rankFrom - rankTo : null, String(Math.abs(rated ? rankFrom - rankTo : 0))), "", ratingsTo);
       const [tierFrom, tierTo] = s.tier;
-      const newTier = !rated || tierFrom !== tierTo;
-      mine += resRow(t("res.tier"), (rated && newTier ? was(esc(tierLabel(tierFrom))) : "") + esc(tierLabel(tierTo)),
-        newTier ? `<span class="res-delta ${rated ? "up" : "new"}">${esc(t(rated ? "res.newRole" : "res.new"))}</span>` : sameHtml,
-        newTier ? roleNote : "", ratingsTo);
+      mine += topRow(rated && { rank: rankFrom, of: s.ofBefore ?? s.of, tier: tierFrom }, { rank: rankTo, of: s.of, tier: tierTo }, ratingsTo);
     }
     // Their rating, place, and Top % in the Global rating, which is a role of its own on Discord. The Worker's numbers
     // from before it kept that have none, and from before it kept the rating and place, just the Top %.
@@ -8629,10 +8652,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         global += resRow(t("res.rank"), (from !== null && from !== globalTo.rank ? was(`#${from}`) : "") + esc(t("res.of", { rank: globalTo.rank, total: s.globalOf })),
           deltaHtml(from === null ? null : from - globalTo.rank, String(Math.abs(from === null ? 0 : from - globalTo.rank))), "", globalTab);
       }
-      const newGlobal = !globalFrom || globalFrom.tier !== globalTo.tier;
-      global += resRow(t("res.tier"), (newGlobal && globalFrom ? was(esc(tierLabel(globalFrom.tier))) : "") + esc(tierLabel(globalTo.tier)),
-        newGlobal ? `<span class="res-delta ${globalFrom ? "up" : "new"}">${esc(t(globalFrom ? "res.newRole" : "res.new"))}</span>` : sameHtml,
-        newGlobal ? roleNote : "", globalTab);
+      global += topRow(globalFrom && { rank: globalFrom.rank, of: s.globalOfBefore ?? s.globalOf, tier: globalFrom.tier },
+        { rank: globalTo.rank, of: s.globalOf, tier: globalTo.tier }, globalTab);
     }
     // The rated courses they've run ("2 of 11")
     if (Array.isArray(s.courses)) {
