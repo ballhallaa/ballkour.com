@@ -404,8 +404,9 @@ async function buildPlayers(env, ctx, previous) {
    with https://ballkour.com/api/login/callback added as a redirect), SESSION_SECRET (any long random string) and
    the GitHub App that saves the runs (GITHUB_APP_ID and GITHUB_APP_PRIVATE_KEY, see above), or else a GITHUB_TOKEN
    that can write the game repo's contents. Without them, the form stays hidden.
-   RUNS_CHANNEL (wrangler.toml) is the run submissions channel, where Ballkyrie posts every run sent from the website
-   with a View run button to its page (see "Each run's page"). Without it (or DISCORD_BOT_TOKEN), nothing is posted.
+   RUNS_CHANNEL (wrangler.toml) is the unassisted runs channel, where Ballkyrie posts every unassisted run sent from the
+   website with a View run button to its page (see "Each run's page"), and ASSISTED_RUNS_CHANNEL is the same for runs
+   played in Assist Mode. Without the run's channel (or DISCORD_BOT_TOKEN), it isn't posted.
    SUBMIT_LIMIT (wrangler.toml) allows 5 sends a minute from one Discord account, and runs.json at most 20 a day. */
 const RUNS_FILE = "leaderboards/runs.json";
 const HISTORY_FILE = "leaderboards/history.json";
@@ -815,12 +816,12 @@ const courseFile = (files, n) => files && Object.keys(files).find((k) => k.start
    Every run sent from the website has a page, ballkour.com/runs/<id>, which the page itself draws from runs.json (see
    "A run's page" in index.html): the run, its video, and what it did to the boards, both when it was sent and on
    today's boards. Reviewers get Approve and Turn down there too.
-   Ballkyrie posts every run in the run submissions channel (RUNS_CHANNEL in wrangler.toml), with a View run button to
-   its page (see runPost). The post stays as it was sent, except that a top-10 run's, which waits for a check, turns
-   green or red once a moderator approves it or turns it down, says who did and when, and gets the numbers as they are
-   then, the same as the DM to its player (afterCheck). For that, the post's message on Discord is kept in PROFILES as
-   post:<id> until then. Ballkyrie needs to be able to see the
-   channel, send messages and embed links there.
+   Ballkyrie posts every run in the runs channel of its kind (RUNS_CHANNEL for unassisted runs and ASSISTED_RUNS_CHANNEL
+   for assisted ones, in wrangler.toml), with a View run button to its page (see runPost). The post stays as it was
+   sent, except that a top-10 run's, which waits for a check, turns green or red once a moderator approves it or turns
+   it down, says who did and when, and gets the numbers as they are then, the same as the DM to its player
+   (afterCheck). For that, the post's message on Discord (and its channel) is kept in PROFILES as post:<id> until then.
+   Ballkyrie needs to be able to see both channels, send messages and embed links there.
    What a run did when it was sent is worked out here as it's sent (runStats) and kept in PROFILES as run:<id>, so it
    doesn't change as other runs come in.
      GET /api/run?id=<id>   { stats } (null when there are none: PROFILES isn't set up, or it isn't saved yet) */
@@ -1201,12 +1202,14 @@ function runPost(info) {
   };
 }
 async function postRun(env, info) {
-  if (!env.RUNS_CHANNEL || !env.DISCORD_BOT_TOKEN) return;
+  // A run played in Assist Mode goes in the assisted runs channel, and the rest in the unassisted one
+  const channel = isAssisted(info.run) ? env.ASSISTED_RUNS_CHANNEL : env.RUNS_CHANNEL;
+  if (!channel || !env.DISCORD_BOT_TOKEN) return;
   const message = runPost(info);
-  const sent = await postIn(env, env.RUNS_CHANNEL, message, `run ${info.run.id}`);
+  const sent = await postIn(env, channel, message, `run ${info.run.id}`);
   // A top-10 run's post changes once a moderator checks it (checkedPost), so its message is kept until then
   if (info.pending && sent && sent.id && env.PROFILES) {
-    await env.PROFILES.put(postKey(info.run.id), JSON.stringify({ channel: env.RUNS_CHANNEL, id: sent.id, message }))
+    await env.PROFILES.put(postKey(info.run.id), JSON.stringify({ channel, id: sent.id, message }))
       .catch((e) => console.error(`run ${info.run.id}: couldn't keep its post for when it's checked: ${(e && e.message) || e}`));
   }
 }
