@@ -1206,9 +1206,9 @@ button.run-name:focus-visible { text-decoration: underline; text-decoration-thic
      mistakes, and the names keep their room */
   .run-date { flex-direction: column; align-items: flex-end; gap: 3px; }
   .run-dc, .run-date { align-self: start; }
-  /* The tier moves under the name when they don't fit side by side */
-  .rt-board .run-line { flex-wrap: wrap; gap: 3px 7px; }
-  .rt-board .run-line .run-name { flex: 0 1 auto; max-width: 100%; }
+  /* The Top % (and New) tags move under the name when they don't fit side by side */
+  .rt-board .run-line, .course-board .run-line { flex-wrap: wrap; gap: 3px 7px; }
+  .rt-board .run-line .run-name, .course-board .run-line .run-name { flex: 0 1 auto; max-width: 100%; }
   a.stat .play { display: none; }
 }
 .submit-actions { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -3093,6 +3093,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // board by time when it's sorted by mistakes, so the fastest three keep their gold, silver and bronze wherever they
   // are. mark: it's the run "See it on the board" opened the board for (tagged This run), or "plain": a player's best
   // that a run's result opened it for (see playerSpot), only marked
+  // A player's actual Top % in a rating (q: { share, tier }, see boardRatings) as a tag after their name, gold when
+  // their tier, and role, is the Top 5% or better, like the Player ratings'
+  const shareTag = (q) => `<span class="tag tag-tier${q.tier !== null && q.tier <= 5 ? " elite" : ""}">${esc(shareLabel(q.share))}</span>`;
   function runRow(r, i, fresh, legacy, ratingOf, podium, mark) {
     const place = podium === undefined ? i : podium;
     const isNew = !!fresh && fresh.has(r);
@@ -3104,7 +3107,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const time = `${icon("bolt")}<span class="v">${shown}</span>`;
     return `<li class="run${place >= 0 && place < 3 ? " p" + (place + 1) : ""}${isNew ? " fresh" : ""}${mark ? " mark" : ""}${isGround(r) ? " g" : ""}" data-k="${esc(r.name)}">` +
       `<span class="run-rank">${i + 1}</span>` +
-      `<span class="run-who"><span class="run-line">${nameButton(playerKey(r), r.name)}${isNew ? `<span class="tag tag-new">${esc(t("lb.new"))}</span>` : ""}` +
+      `<span class="run-who"><span class="run-line">${nameButton(playerKey(r), r.name)}${rating !== undefined ? shareTag(rating) : ""}${isNew ? `<span class="tag tag-new">${esc(t("lb.new"))}</span>` : ""}` +
         `${mark && mark !== "plain" ? `<span class="tag tag-this">${esc(t("lb.thisRun"))}</span>` : ""}</span></span>` +
       timeLink(r, time) + missHtml(r, true) +
       (r.date || rating !== undefined ? `<span class="run-date">` +
@@ -4001,7 +4004,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      → Map: player (see playerKey) → { rating, gain } */
   function boardRatings(c, then) {
     const r = ratings(then, ratingsOf(c));
-    const out = new Map(r.players.map((p) => [p.key, { rating: p.rating, gain: null }]));
+    // With their actual Top % in it (share, see topShare) and their tier, for the tag after their name
+    const out = new Map(r.players.map((p) => [p.key, { rating: p.rating, gain: null, share: topShare(p.rank, r.players.length), tier: p.tier }]));
     if (!r.counted.includes(c)) return out;
     const all = then ? standingsOn(c, then.day, then.runs) : (({ top, rest }) => top.concat(rest))(standingsOf(c));
     const theirs = new Map();
@@ -5389,16 +5393,17 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       const line2 = who ? 17.6 : 13.5;
       const blockTop = y + (PIC.rowH - (27.5 + (two ? 7 + line2 : 0))) / 2;
       const y1 = blockTop + 13.75, y2 = blockTop + 27.5 + 7 + line2 / 2;
-      // Mistakes, then the time, from the right
-      picFont(ctx, '700 20px "JetBrains Mono", monospace');
+      // Mistakes, then the time, from the right, a little smaller than on the Player ratings' picture so the name has
+      // room for its Top % tag
+      picFont(ctx, '700 16px "JetBrains Mono", monospace');
       if (r) {
         const mw = ctx.measureText(missText(r)).width;
         picText(ctx, missText(r), right, y1, "#a7b6b0", "right");
-        picIcon(ctx, isGround(r) ? "ground" : "skull", right - mw - 7 - 19, y1, 19, "#ff6a4f");
+        picIcon(ctx, isGround(r) ? "ground" : "skull", right - mw - 5 - 15, y1, 15, "#ff6a4f");
       }
-      picFont(ctx, '700 23px "JetBrains Mono", monospace');
+      picFont(ctx, '700 19px "JetBrains Mono", monospace');
       // An assisted board's ground times ("1:05.20") are wider than mistakes
-      const timeRight = right - (d.assisted ? 110 : 66) - 12;
+      const timeRight = right - (d.assisted ? 92 : 54) - 12;
       const time = r ? r.time : "-:--.--";
       const legacyTail = r && /\.--$/.test(time);
       let tw;
@@ -5407,25 +5412,35 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         const head = picText(ctx, time.slice(0, -3), timeRight - tail, y1, r ? "#ecf6f2" : "#76867f", "right");
         tw = tail + head;
       } else tw = picText(ctx, time, timeRight, y1, r ? "#ecf6f2" : "#76867f", "right");
-      picIcon(ctx, "bolt", timeRight - tw - 7 - 21, y1, 21, "#00e697");
-      // The name, shrunk to fit like the bot's, then the New tag
+      picIcon(ctx, "bolt", timeRight - tw - 5 - 17, y1, 17, "#00e697");
+      // The name, shrunk to fit like the bot's, then their Top % in the rating beside the date (see shareTag), gold for
+      // the Top 5% and up, and the New tag
       const nameLeft = left + 34 + 12;
-      picFont(ctx, '700 11px "JetBrains Mono", monospace', 1.1);
-      const nameMax = timeRight - tw - 7 - 21 - 12 - nameLeft - (fresh ? 9 + 12 + ctx.measureText(up(t("lb.new"))).width : 0);
+      picFont(ctx, '700 10px "JetBrains Mono", monospace', 0.6);
+      const share = rating !== undefined ? up(shareLabel(rating.share)) : "";
+      const shareColor = rating !== undefined && rating.tier !== null && rating.tier <= 5 ? "#ffd54f" : "#33c6ff";
+      const shareW = share ? ctx.measureText(share).width + 10 : 0;
+      const newW = fresh ? ctx.measureText(up(t("lb.new"))).width + 10 : 0;
+      const nameMax = timeRight - tw - 5 - 17 - 10 - nameLeft - (shareW ? 7 + shareW : 0) - (newW ? 7 + newW : 0);
       const name = r ? caps(r.name) : "---";
-      let size = 25;
+      let size = 24;
       picFont(ctx, `700 ${size}px Barlow, sans-serif`, size * 0.03);
-      while (ctx.measureText(name).width > nameMax && size > 16) { size -= 0.5; picFont(ctx, `700 ${size}px Barlow, sans-serif`, size * 0.03); }
+      while (ctx.measureText(name).width > nameMax && size > 14) { size -= 0.5; picFont(ctx, `700 ${size}px Barlow, sans-serif`, size * 0.03); }
       ctx.save(); ctx.beginPath(); ctx.rect(nameLeft, y, Math.max(0, nameMax), PIC.rowH); ctx.clip();
       const nw = Math.min(nameMax, picText(ctx, name, nameLeft, y1, r ? tier || "#ecf6f2" : "#76867f"));
       ctx.restore();
+      picFont(ctx, '700 10px "JetBrains Mono", monospace', 0.6);
+      let tx = nameLeft + nw + 7;
+      if (share) {
+        picBox(ctx, tx, y1 - 8, shareW, 16, 5);
+        ctx.fillStyle = `rgba(${rgb(shareColor)},.1)`; ctx.fill(); ctx.strokeStyle = `rgba(${rgb(shareColor)},.34)`; ctx.stroke();
+        picText(ctx, share, tx + 5, y1, shareColor);
+        tx += shareW + 7;
+      }
       if (fresh) {
-        picFont(ctx, '700 11px "JetBrains Mono", monospace', 1.1);
-        const tag = up(t("lb.new"));
-        const tagW = ctx.measureText(tag).width + 12, tx = nameLeft + nw + 9;
-        picBox(ctx, tx, y1 - 8.5, tagW, 17, 5);
+        picBox(ctx, tx, y1 - 8, newW, 16, 5);
         ctx.fillStyle = "rgba(0,230,151,.12)"; ctx.fill(); ctx.strokeStyle = "rgba(0,230,151,.4)"; ctx.stroke();
-        picText(ctx, tag, tx + 6, y1, "#00e697");
+        picText(ctx, up(t("lb.new")), tx + 5, y1, "#00e697");
       }
       // Under them: the date, and the rating with what the run adds to it, at the right, then the Discord name and
       // picture, cut off before them
