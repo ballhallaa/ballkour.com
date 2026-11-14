@@ -1118,6 +1118,7 @@ button.run-name:focus-visible { text-decoration: underline; text-decoration-thic
 .vid-comments { margin: 16px 16px 0; padding-top: 14px; border-top: 1px solid var(--line); }
 .vid-comments-title { margin: 0; display: flex; align-items: center; gap: 8px; font: 600 12px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink); }
 .vid-comments-title .rev-count { letter-spacing: 0; }
+.vid-comments-title:focus { outline: none; } /* View comments moves focus here, like the skip link does to main */
 .vid-note { margin: 10px 0 0; font: 400 14px/1.45 var(--body); color: var(--ink-2); }
 .vid-list { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 14px; }
 .vid-c-head { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
@@ -1129,6 +1130,7 @@ button.run-name:focus-visible { text-decoration: underline; text-decoration-thic
 .vid-c-meta > span { display: inline-flex; align-items: center; gap: 5px; }
 .vid-c-meta .icon { width: 12px; height: 12px; color: var(--coral); }
 .vid-comments .run-out { margin: 12px 0 0; justify-content: flex-start; }
+.run-comments { margin: 16px 18px 0; padding-top: 16px; } /* on a run's page, at the bottom, lined up with its stats */
 /* Find a player: a search box over everyone, each row like the Player ratings' (place, name, Top %, Discord, rating,
    courses run). Near the top of the screen like a command palette; the whole screen on phones. */
 .pf { width: min(580px, calc(100vw - 32px)); max-width: none; max-height: min(680px, calc(100dvh - 80px)); margin: max(40px, 9vh) auto auto; padding: 0; border: 1px solid var(--line-hi); border-radius: var(--r); background: #08100d; color: var(--ink); overflow: hidden; box-shadow: 0 30px 80px rgba(0, 0, 0, .6); }
@@ -1458,6 +1460,7 @@ button.rev-run { width: 100%; font: inherit; text-align: left; cursor: pointer; 
 .run-out a { display: inline-flex; align-items: center; gap: 5px; font: 500 13px/1 var(--mono); color: var(--ink-3); text-decoration: underline; text-underline-offset: 3px; }
 @media (hover: hover) { .run-out a:hover { color: var(--ink); } }
 .run-out .icon { width: 13px; height: 13px; }
+.run-out .run-to-comments { margin-right: auto; } /* View comments on the left, Open on YouTube on the right */
 .sub-review.run-check { margin: 16px 18px 0; }
 .run-check .rev-note:first-child { margin-top: 0; }
 .run-checked { margin: 16px 18px 0; font: 400 13px/1.4 var(--mono); color: var(--ink-3); }
@@ -2557,6 +2560,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "run.watch": "Watch the video",
   "run.noVideo": "No video. Only top-10 runs need one.",
   "vid.comments": "YouTube comments",
+  "vid.view": "View comments",
   "vid.loading": "Loading the comments…",
   "vid.none": "No comments yet.",
   "vid.off": "Comments are turned off on this video.",
@@ -9104,7 +9108,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (medal) return { site: "Medal", src: `https://medal.tv/games/${medal[1]}/clip/${medal[2]}` };
     return null;
   }
-  // A run's video on its page, or a line saying it has none (only top-10 runs need one: see videoRank)
+  /* A run's video on its page, or a line saying it has none (only top-10 runs need one: see videoRank). Under a YouTube
+     video, View comments goes down to its comments at the bottom of the page (see showComments). */
   function videoHtml(url) {
     if (!url) return `<p class="run-novideo">${esc(t("run.noVideo"))}</p>`;
     const e = embedOf(url);
@@ -9112,7 +9117,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     return `<div class="run-video"><div class="run-frame" data-src="${esc(e.src)}">` +
         `<button class="run-play" type="button" data-run-play><span class="run-play-btn">${icon("play")}</span>` +
         `<span class="run-play-label">${esc(t("run.play"))}</span></button></div>` +
-      `<p class="run-out"><a href="${esc(url)}" target="_blank" rel="noopener">${esc(t("run.open", { site: e.site }))}${icon("out")}</a></p></div>`;
+      `<p class="run-out">${e.yt ? `<a class="run-to-comments" href="#run-comments-title" data-run-comments>${esc(t("vid.view"))}</a>` : ""}` +
+        `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(t("run.open", { site: e.site }))}${icon("out")}</a></p></div>`;
   }
   // A video's player (src: from embedOf), with what it is for screen readers
   function videoFrame(src, title) {
@@ -9151,20 +9157,23 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         `<button class="pl-close" type="button" data-vid-close aria-label="${esc(t("pl.close"))}">${icon("x")}</button></div>` +
       `<div class="run-frame"></div>` +
       `<p class="run-out"><a href="${esc(a.href)}" target="_blank" rel="noopener">${esc(t("run.open", { site: e.site }))}${icon("out")}</a></p>` +
-      (e.yt ? `<section class="vid-comments" aria-labelledby="vid-comments-title" aria-busy="true">` +
-        `<h3 class="vid-comments-title" id="vid-comments-title">${esc(t("vid.comments"))}</h3><p class="vid-note">${esc(t("vid.loading"))}</p></section>` : "");
+      (e.yt ? commentsHtml("vid-comments-title") : "");
     $(".run-frame", vid).append(videoFrame(e.src, label));
     vid.showModal();
-    if (e.yt) showComments(e.yt, a.href);
+    if (e.yt) showComments($(".vid-comments", vid), e.yt, a.href);
     return true;
   }
-  /* The comments on a YouTube video (id), from the Worker (see "YouTube comments" in cloudflare/worker.js), so the
-     browser never asks YouTube for them: the first 20, the ones YouTube shows first, then a link to all of them there
-     (link: the video). They're left out when the Worker has none to give (it isn't set up, or the video is no run's),
-     and the window says so when they're turned off on the video, or when they can't be loaded. */
-  let vidJob = 0; // which window's comments are the latest, so an older answer that comes later is left alone
-  async function showComments(id, link) {
-    const job = ++vidJob;
+  /* The comments on a YouTube video, under it in the video window and on a run's page: their box while they load
+     (title: its heading's id, one for each place), which showComments fills in */
+  const commentsHtml = (title, cls = "") => `<section class="vid-comments${cls ? ` ${cls}` : ""}" aria-labelledby="${title}" aria-busy="true">` +
+    `<h3 class="vid-comments-title" id="${title}">${esc(t("vid.comments"))}</h3><p class="vid-note">${esc(t("vid.loading"))}</p></section>`;
+  /* The comments on a YouTube video (id) in their box (from commentsHtml), from the Worker (see "YouTube comments" in
+     cloudflare/worker.js), so the browser never asks YouTube for them: the first 20, the ones YouTube shows first, then
+     a link to all of them there (link: the video). They're left out when the Worker has none to give (it isn't set up,
+     or the video is no run's), and the box says so when they're turned off on the video, or when they can't be loaded.
+     An answer that comes after its box has gone (the window closed, or the page was drawn again) is left alone. */
+  async function showComments(box, id, link) {
+    if (!box) return;
     let got = null;
     let status = 0;
     try {
@@ -9172,14 +9181,18 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       status = res.status;
       if (res.ok) got = await res.json();
     } catch (err) { /* they couldn't be loaded */ }
-    const box = job === vidJob && vid.open ? $(".vid-comments", vid) : null;
-    if (!box) return;
-    if (status === 400 || status === 404 || status === 503) { box.remove(); return; }
+    if (!box.isConnected) return;
+    // Gone, with any link to them (View comments on a run's page)
+    if (status === 400 || status === 404 || status === 503) {
+      document.querySelectorAll(`a[href="#${box.getAttribute("aria-labelledby")}"]`).forEach((a) => a.remove());
+      box.remove();
+      return;
+    }
     const list = got && Array.isArray(got.comments) ? got.comments : null;
     const count = got && Number.isFinite(got.count) ? got.count : 0;
     const note = (key) => `<p class="vid-note">${esc(t(key))}</p>`;
     box.removeAttribute("aria-busy");
-    box.innerHTML = `<h3 class="vid-comments-title" id="vid-comments-title">${esc(t("vid.comments"))}` +
+    box.innerHTML = `<h3 class="vid-comments-title" id="${esc(box.getAttribute("aria-labelledby"))}">${esc(t("vid.comments"))}` +
         (list && !got.off && count ? `<span class="rev-count">${esc(localNum(count))}</span>` : "") + `</h3>` +
       (!list ? note("vid.fail") : got.off ? note("vid.off") : !list.length ? note("vid.none")
         : `<ol class="vid-list">${list.map(commentHtml).join("")}</ol>` +
@@ -9229,6 +9242,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (!x) { pl.innerHTML = statBackHtml() + runEmpty(`<p class="run-missing">${esc(t("run.missing"))}</p>`); return; }
     const c = course(x.n);
     const run = cleanRun(x.run);
+    const e = run.video ? embedOf(run.video) : null;
+    const yt = e && e.yt;
     pl.innerHTML = statBackHtml() + `<div class="pl-head"><div class="pl-who">` +
         `<p class="pl-eyebrow">${icon("play")}${boardLink(c, x.assisted)}</p>` +
         `<h2 class="pl-name is-name" id="pl-name"><button class="run-name" type="button" data-run-player="${esc(playerKey(run))}" title="${esc(t("lb.playerOpen", { player: run.name }))}">${esc(caps(run.name))}</button></h2>` +
@@ -9239,7 +9254,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       videoHtml(run.video) +
       `<div class="run-counts" id="run-counts"></div>` +
       `<div id="run-check"></div><div class="run-stats" id="run-stats" hidden></div>` +
-      `<div class="run-foot" id="run-foot"></div>`;
+      `<div class="run-foot" id="run-foot"></div>` +
+      (yt ? commentsHtml("run-comments-title", "run-comments") : "");
+    if (yt) showComments($(".vid-comments", pl), yt, run.video);
     renderRunTags();
     renderRunBoards();
     renderRunCheck();
@@ -9424,6 +9441,20 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       renderRunStats();
       const again = $(`[data-run-tab="${runTab}"]`, pl);
       if (again) again.focus();
+      return;
+    }
+    // View comments: down to them, just under the page's heading, which stays at the top
+    const to = e.target.closest("[data-run-comments]");
+    if (to) {
+      e.preventDefault();
+      const box = $(".run-comments", pl);
+      if (!box) return;
+      const head = $(".pl-head", pl);
+      const top = pl.scrollTop + box.getBoundingClientRect().top - pl.getBoundingClientRect().top - (head ? head.offsetHeight : 0);
+      pl.scrollTo({ top, behavior: reduced ? "auto" : "smooth" });
+      const title = $(".vid-comments-title", box);
+      title.tabIndex = -1;
+      title.focus({ preventScroll: true });
       return;
     }
     // Play: the player loads now, and only now

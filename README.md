@@ -256,11 +256,11 @@ The counts are kept in a Durable Object (`PageViews` in `cloudflare/worker.js`, 
 
 ### YouTube comments
 
-The window a run's time opens (see [Courses and leaderboards](#courses-and-leaderboards)) lists the comments on a YouTube video under it: the first 20, the ones YouTube shows first, with who wrote each one (linked to their channel), when, its likes, and how many replies it has, then a link to all of them on YouTube. Comments can be turned off on a video, and the window says so. Twitch, Streamable, and Medal videos don't get any.
+The window a run's time opens (see [Courses and leaderboards](#courses-and-leaderboards)) lists the comments on a YouTube video under it, and so does a run's own page (`/runs/<id>`, at the bottom), whether the run is on a board, waiting for a check, or turned down: the first 20, the ones YouTube shows first, with who wrote each one (linked to their channel), when, its likes, and how many replies it has, then a link to all of them on YouTube. Comments can be turned off on a video, and the site says so. Twitch, Streamable, and Medal videos don't get any.
 
 The Worker gets them from YouTube's Data API (`/api/comments?v=<video id>`, see "YouTube comments" in `cloudflare/worker.js`), so visitors' browsers never talk to YouTube for them. It only does that for the videos of runs on the site, and keeps each video's comments for 6 hours, so the API's free daily allowance (10,000 units, 2 for each video) is plenty. If YouTube can't be reached, the last copy is shown for up to a week. They're shown as YouTube has them, without anyone checking them first, as text only (no profile pictures, and links in them aren't clickable).
 
-It needs an API key, set once as the Worker's `YOUTUBE_KEY` secret. Without it, the window has no comments.
+It needs an API key, set once as the Worker's `YOUTUBE_KEY` secret. Without it, there are no comments.
 
 1. In the [Google Cloud console](https://console.cloud.google.com/), make a project (any name), then go to **APIs & Services → Library**, find **YouTube Data API v3**, and turn it on.
 2. Go to **APIs & Services → Credentials**, then **Create credentials → API key**. Edit the key: under **API restrictions**, pick **Restrict key** and tick only **YouTube Data API v3**. Leave **Application restrictions** at None, since the Worker calls YouTube from Cloudflare's servers, not from a website.

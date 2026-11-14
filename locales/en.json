@@ -478,6 +478,7 @@
   "run.watch": "Watch the video",
   "run.noVideo": "No video. Only top-10 runs need one.",
   "vid.comments": "YouTube comments",
+  "vid.view": "View comments",
   "vid.loading": "Loading the comments…",
   "vid.none": "No comments yet.",
   "vid.off": "Comments are turned off on this video.",
