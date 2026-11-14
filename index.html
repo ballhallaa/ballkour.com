@@ -8046,6 +8046,12 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   };
   subField("time").addEventListener("input", stopwatch(7));
   subField("ground").addEventListener("input", stopwatch(6));
+  // Mistakes are a whole number: anything typed or pasted that isn't a digit (a decimal point or comma, a minus, an e)
+  // doesn't go in. The up and down arrows still work.
+  subField("miss").addEventListener("beforeinput", (e) => {
+    const text = e.data ?? (e.dataTransfer ? e.dataTransfer.getData("text/plain") : "");
+    if (text && /\D/.test(text)) e.preventDefault();
+  });
 
   const FIELDS = ["course", "name", "time", "miss", "ground", "video"];
   function showStatus(kind, html, field) {
