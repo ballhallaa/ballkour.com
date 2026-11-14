@@ -5594,11 +5594,36 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const pairs = [];
     for (let i = 0; i < model.length; i += 2) pairs.push(model.slice(i, i + 2));
     const pairH = pairs.map((pr) => Math.max(...pr.map(secH)));
-    const top = pad + headH + 6 + lineH + 10;
-    const H = Math.round(top + pairH.reduce((a, b) => a + b, 0) + gap * Math.max(0, pairs.length - 1) + pad);
     const cv = document.createElement("canvas");
-    cv.width = W * 2; cv.height = H * 2;
     const ctx = cv.getContext("2d");
+    if ("lang" in ctx) ctx.lang = htmlLang();
+    // Whose run it is, measured first: the player, the course, Assisted, and the day, with its status at the right.
+    // When the course doesn't fit on that line, it goes on a line of its own under it (with Assisted), and only gives
+    // way (…) if it's too long even for that.
+    const { run, n, assisted, status } = meta;
+    const c = course(n);
+    const statusText = status ? t(status === "declined" ? "run.declined" : "run.pending") : "";
+    picFont(ctx, "600 13px Barlow, sans-serif");
+    const sw = statusText ? ctx.measureText(statusText).width + 18 : 0;
+    picFont(ctx, "700 14px Barlow, sans-serif");
+    const nameW = ctx.measureText(run.name).width;
+    const tag = assisted ? up(t("lb.tab.assisted")) : "";
+    const day = run.date ? formatDate(run.date) : "";
+    picFont(ctx, '600 10.5px "JetBrains Mono", monospace', 1.05);
+    const tagW = tag ? ctx.measureText(tag).width + 12 : 0;
+    picFont(ctx, "500 14px Barlow, sans-serif");
+    const dotW = 18 + ctx.measureText("·").width;
+    const dayW = day ? dotW + ctx.measureText(day).width : 0;
+    let place = c ? `${c.n} ${c.flag ? c.flag + " " : ""}${c.name}` : "";
+    picFont(ctx, `500 14px Barlow, ${EMOJI}`);
+    const lineW = W - 2 * (pad + 4), tagRoom = tag ? tagW + 9 : 0;
+    const two = !!place && ctx.measureText(place).width > lineW - (status ? sw + 12 : 0) - nameW - dotW - tagRoom - dayW;
+    const room = two ? lineW - tagRoom : lineW - (status ? sw + 12 : 0) - nameW - dotW - tagRoom - dayW;
+    while (place && ctx.measureText(place).width > room && place.length > 4) place = place.slice(0, -2).trimEnd() + "…";
+    const line2 = 25;
+    const top = pad + headH + 6 + lineH + (two ? line2 : 0) + 10;
+    const H = Math.round(top + pairH.reduce((a, b) => a + b, 0) + gap * Math.max(0, pairs.length - 1) + pad);
+    cv.width = W * 2; cv.height = H * 2;
     ctx.scale(2, 2);
     if ("lang" in ctx) ctx.lang = htmlLang();
     // The background: the banner's colours, a faint grid, and the card's edge
@@ -5650,46 +5675,35 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     picText(ctx, site, px + pw / 2, hcy, "#001a10", "center");
     picFit(ctx, up(t("hero.tagline")), px - nx - 16, (size) => `600 ${size}px Barlow, sans-serif`, 10.5, 8, 0.2);
     picText(ctx, up(t("hero.tagline")), nx, hcy + 16, "#a7b6b0");
-    // Whose run it is: the player, the course, Assisted, and the day, with its status at the right
-    const { run, n, assisted, status } = meta;
-    const c = course(n);
+    // Whose run it is (measured above)
     const rcy = pad + headH + 6 + lineH / 2;
-    let right = W - pad - 4;
     if (status) {
       const [fg, bg, edge] = status === "declined" ? ["#ff6a4f", "rgba(255,106,79,.12)", "rgba(255,106,79,.45)"] : ["#ffd54f", "rgba(255,213,79,.12)", "rgba(255,213,79,.45)"];
-      const text = t(status === "declined" ? "run.declined" : "run.pending");
+      const right = W - pad - 4;
       picFont(ctx, "600 13px Barlow, sans-serif");
-      const sw = ctx.measureText(text).width + 18;
       picBox(ctx, right - sw, rcy - 12, sw, 24, 6);
       ctx.fillStyle = bg; ctx.fill(); ctx.strokeStyle = edge; ctx.stroke();
-      picText(ctx, text, right - sw / 2, rcy, fg, "center");
-      right -= sw + 12;
+      picText(ctx, statusText, right - sw / 2, rcy, fg, "center");
     }
     let x = pad + 4;
     const dot = () => { picFont(ctx, "500 14px Barlow, sans-serif"); x += 9; x += picText(ctx, "·", x, rcy, "#76867f") + 9; };
+    // The course and Assisted, at the middle of a line (cy)
+    const where = (cy) => {
+      if (place) { picFont(ctx, `500 14px Barlow, ${EMOJI}`); x += picText(ctx, place, x, cy, "#a7b6b0"); }
+      if (tag) {
+        x += 9;
+        picBox(ctx, x, cy - 9.5, tagW, 19, 5);
+        ctx.fillStyle = "rgba(255,128,192,.12)"; ctx.fill(); ctx.strokeStyle = "rgba(255,128,192,.5)"; ctx.stroke();
+        picFont(ctx, '600 10.5px "JetBrains Mono", monospace', 1.05);
+        picText(ctx, tag, x + 6, cy, "#ff80c0");
+        x += tagW;
+      }
+    };
     picFont(ctx, "700 14px Barlow, sans-serif");
     x += picText(ctx, run.name, x, rcy, "#ecf6f2");
-    const tag = assisted ? up(t("lb.tab.assisted")) : "";
-    const day = run.date ? formatDate(run.date) : "";
-    picFont(ctx, '600 10.5px "JetBrains Mono", monospace', 1.05);
-    const tagW = tag ? ctx.measureText(tag).width + 12 : 0;
-    picFont(ctx, "500 14px Barlow, sans-serif");
-    const dayW = day ? ctx.measureText(day).width + 18 + ctx.measureText("·").width : 0;
-    // Only the course's name gives way (…) when the line is too long
-    let place = c ? `${c.n} ${c.flag ? c.flag + " " : ""}${c.name}` : "";
-    picFont(ctx, `500 14px Barlow, ${EMOJI}`);
-    const room = right - x - 18 - ctx.measureText("·").width - (tag ? tagW + 9 : 0) - dayW;
-    while (place && ctx.measureText(place).width > room && place.length > 4) place = place.slice(0, -2).trimEnd() + "…";
-    if (place) { dot(); picFont(ctx, `500 14px Barlow, ${EMOJI}`); x += picText(ctx, place, x, rcy, "#a7b6b0"); }
-    if (tag) {
-      x += 9;
-      picBox(ctx, x, rcy - 9.5, tagW, 19, 5);
-      ctx.fillStyle = "rgba(255,128,192,.12)"; ctx.fill(); ctx.strokeStyle = "rgba(255,128,192,.5)"; ctx.stroke();
-      picFont(ctx, '600 10.5px "JetBrains Mono", monospace', 1.05);
-      picText(ctx, tag, x + 6, rcy, "#ff80c0");
-      x += tagW;
-    }
+    if (!two) { if (place) dot(); where(rcy); }
     if (day) { dot(); picFont(ctx, "500 14px Barlow, sans-serif"); picText(ctx, day, x, rcy, "#a7b6b0"); }
+    if (two) { x = pad + 4; where(rcy + line2); }
     // The panels, two side by side
     let y = top;
     pairs.forEach((pr, pi) => {
