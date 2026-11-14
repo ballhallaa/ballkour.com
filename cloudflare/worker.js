@@ -935,7 +935,7 @@ const movedText = (from, to) => (from === to ? "Same" : `#${from} → #${to}`);
 // A player's name in an embed's title. Discord draws bold, italics, underline, strikethrough and spoilers there, but not
 // links, headings or quotes, so only the characters for those five are escaped (no stray backslashes before a dash).
 const titleSafe = (s) => String(s).replace(/([\\*_~|])/g, "\\$1");
-// A player's Top % (a tier from rate(), null past the last one), under "Unassisted Top %" in a run's post: "10%", or
+// A player's Top % (a tier from rate(), null past the last one), under "Top %" in a run's post: "10%", or
 // "Rated" for the bottom 10% (as their role on Discord), or "Unrated" when they have no rating
 const tierText = (tier, rated) => (typeof tier === "number" ? `${tier}%` : rated ? "Rated" : "Unrated");
 // What comes after /profile/ in a player's link: the name they picked, else their number, else (no number yet) their
@@ -1058,17 +1058,30 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pendin
     tiers && [roleOf(tiers[0], ratedBefore, isAssisted(run) ? "Assisted" : "Unassisted"), roleOf(tiers[1], true, isAssisted(run) ? "Assisted" : "Unassisted")],
     Array.isArray(s.global) && s.global[1] && [roleOf(s.global[0] && s.global[0].tier, !!s.global[0], "Global"), roleOf(s.global[1].tier, true, "Global")],
   ].filter((pair) => pair && pair[0] !== pair[1]).map((pair) => pair[1]);
-  // The same rows in the same order in every block, so they line up side by side
+  // The same rows in the same order in every block, so they line up side by side: the run itself, then Course stats
+  // (its course rating and place there) and the player's stats in the ratings of its kind ("Unassisted stats" or
+  // "Assisted stats": their rating, place, Top %, courses run, Top 10s, Podiums and Records), each under a bold
+  // heading that's left out when it has no rows
+  const group = (heading, rows) => {
+    const kept = rows.filter(Boolean);
+    return kept.length ? [`**${heading}**`, ...kept] : [];
+  };
   const about = (r, d, first) => [
     `Time: ${r.time}`,
     isGround(r) ? `Ground time: ${groundText(r.ground)}` : Number.isInteger(r.mistakes) && `Mistakes: ${r.mistakes}`,
-    num(d.points) && `Course rating: ${d.points}`,
-    num(d.place) && `Course rank: #${d.place}${s.players ? ` of ${s.players}` : ""}`,
-    num(d.rating) && `${scope} rating: ${d.rating}${first && gain ? ` (${changeText(gain)})` : ""}`,
-    num(d.rank) && `${scope} rank: ${first && climb ? `#${of(s.rank, 0)} → ` : ""}#${d.rank} of ${s.of}`,
-    d.tier && `${scope} Top %: ${first && rose ? `${was.tier} → ` : ""}${d.tier}`,
-    ...counts.map(([k, name]) => `${name}: ${countText(k, s[k][first ? 1 : 0])}${first && !old ? ` (${changeText(s[k][1] - s[k][0])})` : ""}`),
-    whenText(r) && `Date: ${whenText(r)}`,
+    ...group("Course stats", [
+      num(d.points) && `Rating: ${d.points}`,
+      num(d.place) && `Rank: #${d.place}${s.players ? ` of ${s.players}` : ""}`,
+    ]),
+    ...group(`${scope} stats`, [
+      num(d.rating) && `Rating: ${d.rating}${first && gain ? ` (${changeText(gain)})` : ""}`,
+      num(d.rank) && `Rank: ${first && climb ? `#${of(s.rank, 0)} → ` : ""}#${d.rank} of ${s.of}`,
+      d.tier && `Top %: ${first && rose ? `${was.tier} → ` : ""}${d.tier}`,
+      ...counts.map(([k, name]) => `${name}: ${countText(k, s[k][first ? 1 : 0])}${first && !old ? ` (${changeText(s[k][1] - s[k][0])})` : ""}`),
+    ]),
+    // Last, after a blank line so it isn't read as one of the stats: a long date can take two lines in a narrow column,
+    // which would push the rows under it out of line with the other blocks'
+    whenText(r) && `\nDate: ${whenText(r)}`,
   ].filter(Boolean).join("\n");
   const both = (a, b) => num(a) && num(b);
   const saved = old ? Math.round((toSeconds(old.time) - toSeconds(run.time)) * 100) / 100 : 0;
@@ -1086,14 +1099,17 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pendin
             saved ? `Time ${saved > 0 ? "saved" : "behind"}: ${gapText(saved)}` : "Time: Same",
             isGround(old) ? `Ground time: ${groundChange(run.ground - old.ground)}`
               : Number.isInteger(old.mistakes) && `Mistakes: ${changeText(run.mistakes - old.mistakes)}`,
-            both(now.points, was.points) && `Course rating: ${changeText(now.points - was.points)}`,
-            both(now.place, was.place) && `Course rank: ${movedText(was.place, now.place)}`,
-            both(now.rating, was.rating) && `${scope} rating: ${changeText(now.rating - was.rating)}`,
-            both(now.rank, was.rank) && `${scope} rank: ${movedText(was.rank, now.rank)}`,
-            // "Unassisted Top %: 50% → 25%" is a little wider than the column, so a change there may take two lines
-            tiers && `${scope} Top %: ${tierMoved ? `${was.tier} → ${now.tier}` : "Same"}`,
-            ...counts.map(([k, name]) => `${name}: ${changeText(s[k][1] - s[k][0])}`),
-            span && `${best && !down ? "Achieved" : "Sent"} after: ${span}`,
+            ...group("Course stats", [
+              both(now.points, was.points) && `Rating: ${changeText(now.points - was.points)}`,
+              both(now.place, was.place) && `Rank: ${movedText(was.place, now.place)}`,
+            ]),
+            ...group(`${scope} stats`, [
+              both(now.rating, was.rating) && `Rating: ${changeText(now.rating - was.rating)}`,
+              both(now.rank, was.rank) && `Rank: ${movedText(was.rank, now.rank)}`,
+              tiers && `Top %: ${tierMoved ? `${was.tier} → ${now.tier}` : "Same"}`,
+              ...counts.map(([k, name]) => `${name}: ${changeText(s[k][1] - s[k][0])}`),
+            ]),
+            span && `\n${best && !down ? "Achieved" : "Sent"} after: ${span}`,
           ].filter(Boolean).join("\n"),
           inline: true,
         },
