@@ -15,7 +15,9 @@
    Top 0.1% needs 1,000 players. Everyone past
    the last tier (the bottom 10%) is just Rated. */
 
-export const TIERS = [0.1, 1, 5, 10, 25, 50, 75, 90];
+// The tiers, best first: Top 0.1%, Top 1%, Top 5%, Top 10%, then every 10% from Top 20% to Top 90% (until November
+// 2026, it was Top 25%, Top 50%, Top 75%, and Top 90% after Top 10%), the same as the roles on Discord
+export const TIERS = [0.1, 1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90];
 
 const seconds = (t) => t.split(":").reduce((sum, part) => sum * 60 + Number(part), 0);
 // What breaks a tie on time: a run's mistakes, or for a run played in Assist Mode, which has none, its time on the
