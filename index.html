@@ -5493,10 +5493,12 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
           dx += 29;
         }
         picFont(ctx, '600 16px Barlow, sans-serif');
+        // Cut short with "…" where it runs out of room, like the bot's
         const room = Math.max(0, right - endW - dx - (tagsDown ? tagsW : 0));
-        ctx.save(); ctx.beginPath(); ctx.rect(dx, y2 - 12, room, 24); ctx.clip();
-        dx += Math.min(room, picText(ctx, who.name, dx, y2, "#b9befc")) + 7;
-        ctx.restore();
+        const chars = [...who.name];
+        let shown = who.name;
+        while (chars.length && ctx.measureText(shown).width > room) { chars.pop(); shown = chars.join("").trimEnd() + "…"; }
+        if (chars.length) dx += picText(ctx, shown, dx, y2, "#b9befc") + 7;
       }
       if (tagsDown) drawTags(dx, y2);
       ctx.restore();
