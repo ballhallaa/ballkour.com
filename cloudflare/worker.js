@@ -1035,7 +1035,7 @@ function bestBefore({ n, run, before, mine }, stats) {
    Under it: the course, who sent it, their in-game name and the video, then three blocks side by side. New personal
    best is the run: its time, mistakes (or ground time), course rating, the place it takes on the course, the player's
    rating, place and Top % in the player ratings with it, the courses they've run and their Top 10s, Podiums and Records when it changes
-   them, and its date. Under the blocks, New Discord role names the roles on our Discord it gives them, once it's on the board. Old personal best is the same for their best on the course
+   them, and its date. Under the blocks in the DM to the player, New Discord role names the roles on our Discord it gives them, once it's on the board. Old personal best is the same for their best on the course
    before it, with their place, rating, place and Top % in the ratings as they were. Comparison is what changed between
    the two, and how long after the old one it came. On their first run on a course there's just the run, with what it
    added to their rating, and where it moved them in the ratings, in the same rows. A run that isn't
@@ -1399,7 +1399,7 @@ const GAP = "\n\u200b";
 const NOT_BEST = "This isn't a new personal best, so their rating and rank don't change.";
 function runPost(info) {
   const { n, courseName, courseFlag, run, pending, site, checked } = info;
-  const { best, place, fields } = runBlocks(info);
+  const { best, place, roles, fields } = runBlocks(info);
   const what = !best ? "New submission" : place === 1 ? "New record submission" : place <= 3 ? "New podium submission" : place <= 10 ? "New top-10 submission" : "New personal best";
   // "New assisted record submission by NAME!": a run played in Assist Mode, for its course's assisted board
   const title = `${isAssisted(run) ? what.replace(/^New /, "New assisted ") : what} by ${titleSafe(run.name)}!`;
@@ -1418,7 +1418,8 @@ function runPost(info) {
         { name: "Player name", value: `${mdSafe(run.name)}${GAP}`, inline: true },
         // Only top-10 runs need a video, so the rest can come without one
         { name: "Video", value: `${run.video ? `[Watch](${run.video})` : "None"}${GAP}`, inline: true },
-        ...fields,
+        // Not New Discord role: only the DM to the player names the roles a run gives them
+        ...fields.filter((f) => !(roles.length && f.name === roleName(roles))),
       ],
       // The embed's footer: small grey text under everything else
       ...(checked ? checkedFooter(run, checked) : pending ? { footer: { text: "Waiting for a check from moderators" } } : {}),
@@ -1432,18 +1433,19 @@ function runPost(info) {
    blocks as a picture, the way the site shows a run's result, and swaps it in for the blocks: Discord's phone app
    puts side-by-side fields one under the other, which made the blocks hard to read there. With the picture, the post
    keeps its title, the course, who sent it, the player's name, and the video on one line, the dates (which Discord
-   writes in each reader's own time zone, so they stay text), New Discord role on a line of its own when it has one,
-   and its buttons. If the picture can't be made, the text
+   writes in each reader's own time zone, so they stay text), and its buttons. The DM also has New Discord role on a
+   line of its own when it has one (the post never has it). If the picture can't be made, the text
    stays. The workflow only swaps it in while the message is still as it was sent (the same colour and bottom line),
    so a post a moderator checked in the meantime gets the picture of its new numbers instead. */
 const PICTURE_WORKFLOW = "run-picture.yml";
 // The message with the picture in place of the blocks: message is runPost's or checkedRunMessage's, blocks runBlocks'
-function withPicture(message, blocks, { sentBy = "" } = {}) {
+function withPicture(message, blocks, { sentBy = "", roles: withRoles = false } = {}) {
   const e = message.embeds[0];
   const { run: when, old, oldName } = blocks.dates;
   const dates = [when && `Date: ${when}`, old && `${oldName}: ${old}`].filter(Boolean).join(" · ");
-  // The picture doesn't have the roles the run gives its player, so they go on a line of their own under the dates
-  const roles = blocks.roles.length ? `${roleName(blocks.roles)}: ${blocks.roles.join(", ")}` : "";
+  // The picture doesn't have the roles the run gives its player, so the DM has them on a line of their own under the
+  // dates (withRoles); the post leaves them out
+  const roles = withRoles && blocks.roles.length ? `${roleName(blocks.roles)}: ${blocks.roles.join(", ")}` : "";
   const { fields, ...rest } = e;
   return {
     embed: { ...rest, description: [e.description, sentBy, dates, roles].filter(Boolean).join("\n"), image: { url: "attachment://run.png" } },
@@ -1452,11 +1454,11 @@ function withPicture(message, blocks, { sentBy = "" } = {}) {
 }
 // Starts run-picture.yml for a message Ballkyrie sent (channel and id), with what to draw (blocks.picture()) and the
 // message to put it in. what says what it's about, for the log.
-async function startPicture(env, { channel, id, message, blocks, sentBy, what }) {
+async function startPicture(env, { channel, id, message, blocks, sentBy, roles, what }) {
   if (!appOn(env) || !channel || !id) return;
   const e = message.embeds[0];
   const post = JSON.stringify({
-    channel, id, ...withPicture(message, blocks, { sentBy }), picture: blocks.picture(),
+    channel, id, ...withPicture(message, blocks, { sentBy, roles }), picture: blocks.picture(),
     // What the message has to still be like for the picture to go in (see "Run pictures")
     expect: { color: e.color ?? null, footer: (e.footer && e.footer.text) || null },
   });
@@ -1595,7 +1597,7 @@ async function afterCheck(env, ctx, { run, n, approve, before, by, site }) {
     dm && (async () => {
       const message = checkedRunMessage(info);
       const sent = await tellPlayer(env, run.discord, message, `run ${run.id}`);
-      if (sent && stats) await startPicture(env, { ...sent, message, blocks: runBlocks(info), what: `run ${run.id}'s DM` });
+      if (sent && stats) await startPicture(env, { ...sent, message, blocks: runBlocks(info), roles: true, what: `run ${run.id}'s DM` });
     })(),
   ]);
 }
