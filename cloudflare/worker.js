@@ -1035,7 +1035,7 @@ function bestBefore({ n, run, before, mine }, stats) {
    Under it: the course, who sent it, their in-game name and the video, then three blocks side by side. New personal
    best is the run: its time, mistakes (or ground time), course rating, the place it takes on the course, the player's
    rating, place and Top % in the player ratings with it, the courses they've run and their Top 10s, Podiums and Records when it changes
-   them, and its date. Under the blocks, New role names the roles on our Discord it gives them, once it's on the board. Old personal best is the same for their best on the course
+   them, and its date. Under the blocks, New Discord role names the roles on our Discord it gives them, once it's on the board. Old personal best is the same for their best on the course
    before it, with their place, rating, place and Top % in the ratings as they were. Comparison is what changed between
    the two, and how long after the old one it came. On their first run on a course there's just the run, with what it
    added to their rating, and where it moved them in the ratings, in the same rows. A run that isn't
@@ -1346,6 +1346,7 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pendin
   return {
     best,
     place,
+    roles,
     picture,
     // When the run, and the old best beside it, were sent (Discord writes each in every reader's own time zone)
     dates: { run: whenText(run), old: old ? whenText(old) : "", oldName: best && !down ? "Old personal best" : "Personal best" },
@@ -1358,10 +1359,12 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pendin
         ])
         : [{ name: down ? "Turned-down run" : best ? "New personal best" : "This run", value: about(run, now, true), inline: true }]),
       // Under the blocks, across the whole post
-      ...(roles.length ? [{ name: roles.length > 1 ? "New roles" : "New role", value: roles.join("\n"), inline: false }] : []),
+      ...(roles.length ? [{ name: roleName(roles), value: roles.join("\n"), inline: false }] : []),
     ],
   };
 }
+// What the roles a run gives its player are under: "New Discord role", or "New Discord roles" for more than one
+const roleName = (roles) => (roles.length > 1 ? "New Discord roles" : "New Discord role");
 // The buttons under the run's post and the DM: View run, Board (the course's) and Profile (the player's panel, at their
 // own link)
 function runButtons({ n, run, site, links }) {
@@ -1429,7 +1432,8 @@ function runPost(info) {
    blocks as a picture, the way the site shows a run's result, and swaps it in for the blocks: Discord's phone app
    puts side-by-side fields one under the other, which made the blocks hard to read there. With the picture, the post
    keeps its title, the course, who sent it, the player's name, and the video on one line, the dates (which Discord
-   writes in each reader's own time zone, so they stay text), and its buttons. If the picture can't be made, the text
+   writes in each reader's own time zone, so they stay text), New Discord role on a line of its own when it has one,
+   and its buttons. If the picture can't be made, the text
    stays. The workflow only swaps it in while the message is still as it was sent (the same colour and bottom line),
    so a post a moderator checked in the meantime gets the picture of its new numbers instead. */
 const PICTURE_WORKFLOW = "run-picture.yml";
@@ -1438,9 +1442,11 @@ function withPicture(message, blocks, { sentBy = "" } = {}) {
   const e = message.embeds[0];
   const { run: when, old, oldName } = blocks.dates;
   const dates = [when && `Date: ${when}`, old && `${oldName}: ${old}`].filter(Boolean).join(" · ");
+  // The picture doesn't have the roles the run gives its player, so they go on a line of their own under the dates
+  const roles = blocks.roles.length ? `${roleName(blocks.roles)}: ${blocks.roles.join(", ")}` : "";
   const { fields, ...rest } = e;
   return {
-    embed: { ...rest, description: [e.description, sentBy, dates].filter(Boolean).join("\n"), image: { url: "attachment://run.png" } },
+    embed: { ...rest, description: [e.description, sentBy, dates, roles].filter(Boolean).join("\n"), image: { url: "attachment://run.png" } },
     components: message.components || [],
   };
 }
