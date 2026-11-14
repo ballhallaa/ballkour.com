@@ -881,7 +881,8 @@ function runStats(game, before, run, n) {
     }
     const at = board.findIndex((r) => playerKey(r) === key);
     const rated = rate(courses);
-    const all = combine([rated, other]);
+    // combine() takes the unassisted ratings first: for an assisted run, that's the other kind's
+    const all = combine(isAssisted(run) ? [other, rated] : [rated, other]);
     const g = all.players.find((x) => x.key === key) || null;
     return { board, at, best: at >= 0 ? board[at] : null, p: rated.players.find((x) => x.key === key) || null, g, gTotal: all.players.length, total: rated.players.length, counted: rated.counted.length, medals };
   };
