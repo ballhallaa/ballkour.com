@@ -841,7 +841,7 @@ function onScale(stats) {
 // with it (a run waiting for a check, as if it were on the board already). before is runs.json as it was just before.
 // The page works out the same numbers from today's boards (statsFrom() in index.html): keep the two in step.
 //   { place, was, players, best, bestMiss, old, record, points, rating, rank, of, tier, courses, counted,
-//     top10s, podiums, records, scale, alone }
+//     top10s, podiums, records, global, globalOf, scale, alone }
 // place and was are their place on the course with and before the run (was is null on their first run there),
 // players how many players are on the course's board with it (what was kept before there was players has none), best
 // and old their best time there with and before it, and bestMiss the mistakes on that best, or its ground time on an
@@ -849,9 +849,10 @@ function onScale(stats) {
 // (the course rating), rating, rank (their place in the ratings) and
 // tier are [before, with] (before null when they weren't rated yet, the pair null when the course isn't rated), of is
 // how many players are rated, courses [before, with] the rated courses they've run out of counted, and top10s,
-// podiums and records [before, with] over every course. global is their Top % in the Global rating [before, with],
-// each { tier } (before null when they weren't rated yet, global null when they aren't with it either; what was kept
-// before there was global has none). alone is the run by itself, for one that isn't its player's
+// podiums and records [before, with] over every course. global is their Top %, rating and place in the Global rating
+// [before, with], each { tier, rating, rank } (before null when they weren't rated yet, global null when they aren't
+// with it either; what was kept before there was global has none, and before it had rating and rank, just the tier),
+// and globalOf how many players are in it. alone is the run by itself, for one that isn't its player's
 // best (which changes none of the above): { place } among everyone else's bests, and the course rating its time gets
 // ({ points }, null when the course isn't rated). scale is what a course was worth when they were worked out (see
 // RATING_SCALE).
@@ -879,14 +880,16 @@ function runStats(game, before, run, n) {
     }
     const at = board.findIndex((r) => playerKey(r) === key);
     const rated = rate(courses);
-    const g = combine([rated, other]).players.find((x) => x.key === key) || null;
-    return { board, at, best: at >= 0 ? board[at] : null, p: rated.players.find((x) => x.key === key) || null, g, total: rated.players.length, counted: rated.counted.length, medals };
+    const all = combine([rated, other]);
+    const g = all.players.find((x) => x.key === key) || null;
+    return { board, at, best: at >= 0 ? board[at] : null, p: rated.players.find((x) => x.key === key) || null, g, gTotal: all.players.length, total: rated.players.length, counted: rated.counted.length, medals };
   };
   const b = side(before), a = side(after);
   const rated = !(game.courses.find((c) => c.n === n) || { broken: true }).broken;
   const record = a.board[0];
   const pair = (get) => (a.p && get(a.p) !== undefined ? [b.p && get(b.p) !== undefined ? get(b.p) : null, get(a.p)] : null);
   const round = (v) => (v === undefined ? undefined : Math.round(v));
+  const globalOf = (p) => ({ tier: p.tier, rating: Math.round(p.rating), rank: p.rank });
   return {
     place: a.at >= 0 ? a.at + 1 : null,
     was: b.at >= 0 ? b.at + 1 : null,
@@ -900,7 +903,8 @@ function runStats(game, before, run, n) {
     rank: pair((p) => p.rank),
     of: a.total,
     tier: pair((p) => p.tier),
-    global: a.g ? [b.g ? { tier: b.g.tier } : null, { tier: a.g.tier }] : null,
+    global: a.g ? [b.g ? globalOf(b.g) : null, globalOf(a.g)] : null,
+    globalOf: a.gTotal,
     courses: a.p ? [b.p ? b.p.courses : 0, a.p.courses] : null,
     counted: a.counted,
     top10s: [b.medals.top10s, a.medals.top10s],
@@ -1036,12 +1040,25 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pendin
     ? { points: of(s.points, 0), place: s.was, rating: of(s.rating, 0), rank: of(s.rank, 0), tier: tiers && tierText(tiers[0], ratedBefore) }
     : { points: of(s.points, 1), place: s.place };
   const tierMoved = !!tiers && (tiers[0] !== tiers[1] || !ratedBefore);
+  // Their Global rating, place and Top % (the unassisted and assisted ratings put together), with the run (gNow) and
+  // before it (gWas, null when they weren't in it yet), on their best only. What was kept before there were a rating
+  // and place has just the Top %.
+  const gl = best && Array.isArray(s.global) && s.global[1] ? s.global : null;
+  const gNow = gl ? gl[1] : null, gWas = gl ? gl[0] : null;
+  if (gl) {
+    Object.assign(now, { gRating: gNow.rating, gRank: gNow.rank, gTier: tierText(gNow.tier, true) });
+    Object.assign(was, { gRating: gWas && gWas.rating, gRank: gWas && gWas.rank, gTier: tierText(gWas && gWas.tier, !!gWas) });
+  }
+  const gMoved = !!gl && (!gWas || gWas.tier !== gNow.tier);
   // With no best from before (their first run on the course), there's no Comparison, so what the run changed goes in
   // the same rows, the way Comparison writes it: "137 (+91)", "#10 → #2 of 16" and "75% → 25%". The player
   // ratings are over every course, so a first run on one can still move a player who's run others.
   const gain = !old && num(now.rating) ? now.rating - (of(s.rating, 0) ?? 0) : 0;
   const climb = !old && num(now.rank) && num(of(s.rank, 0)) && of(s.rank, 0) !== now.rank;
   const rose = !old && ratedBefore && tierMoved;
+  const gGain = !old && gl && num(gNow.rating) ? gNow.rating - (gWas && num(gWas.rating) ? gWas.rating : 0) : 0;
+  const gClimb = !old && gl && num(gNow.rank) && gWas && num(gWas.rank) && gWas.rank !== gNow.rank;
+  const gRose = !old && !!gWas && gMoved;
   // The rated courses they've run ("3 of 11"), and their Top 10s, Podiums and Records over every course (the numbers
   // on their Discord profile), when the run changes them, as the site shows them after a run: with the run in its
   // block, before it in their old best's, and what changed in Comparison, or on their first run on the course, after
@@ -1060,8 +1077,8 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pendin
   ].filter((pair) => pair && pair[0] !== pair[1]).map((pair) => pair[1]);
   // The same rows in the same order in every block, so they line up side by side: the run itself, then Course stats
   // (its course rating and place there) and the player's stats in the ratings of its kind ("Unassisted stats" or
-  // "Assisted stats": their rating, place, Top %, courses run, Top 10s, Podiums and Records), each under a bold
-  // heading that's left out when it has no rows
+  // "Assisted stats": their rating, place, Top %, courses run, Top 10s, Podiums and Records), and Global stats (their
+  // rating, place and Top % in the Global rating), each under a bold heading that's left out when it has no rows
   const group = (heading, rows) => {
     const kept = rows.filter(Boolean);
     return kept.length ? [`**${heading}**`, ...kept] : [];
@@ -1078,6 +1095,11 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pendin
       num(d.rank) && `Rank: ${first && climb ? `#${of(s.rank, 0)} → ` : ""}#${d.rank} of ${s.of}`,
       d.tier && `Top %: ${first && rose ? `${was.tier} → ` : ""}${d.tier}`,
       ...counts.map(([k, name]) => `${name}: ${countText(k, s[k][first ? 1 : 0])}${first && !old ? ` (${changeText(s[k][1] - s[k][0])})` : ""}`),
+    ]),
+    ...group("Global stats", [
+      num(d.gRating) && `Rating: ${d.gRating}${first && gGain ? ` (${changeText(gGain)})` : ""}`,
+      num(d.gRank) && num(s.globalOf) && `Rank: ${first && gClimb ? `#${gWas.rank} → ` : ""}#${d.gRank} of ${s.globalOf}`,
+      d.gTier && `Top %: ${first && gRose ? `${was.gTier} → ` : ""}${d.gTier}`,
     ]),
     // Last, after a blank line so it isn't read as one of the stats: a long date can take two lines in a narrow column,
     // which would push the rows under it out of line with the other blocks'
@@ -1108,6 +1130,11 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pendin
               both(now.rank, was.rank) && `Rank: ${movedText(was.rank, now.rank)}`,
               tiers && `Top %: ${tierMoved ? `${was.tier} → ${now.tier}` : "Same"}`,
               ...counts.map(([k, name]) => `${name}: ${changeText(s[k][1] - s[k][0])}`),
+            ]),
+            ...group("Global stats", [
+              both(now.gRating, was.gRating) && `Rating: ${changeText(now.gRating - was.gRating)}`,
+              both(now.gRank, was.gRank) && `Rank: ${movedText(was.gRank, now.gRank)}`,
+              gl && `Top %: ${gMoved ? `${was.gTier} → ${now.gTier}` : "Same"}`,
             ]),
             span && `\n${best && !down ? "Achieved" : "Sent"} after: ${span}`,
           ].filter(Boolean).join("\n"),
