@@ -622,6 +622,11 @@ main:focus { outline: none; }
 .board-jump { position: sticky; bottom: 16px; z-index: 1; height: 0; margin-top: 46px; display: flex; justify-content: flex-end; align-items: flex-end; gap: 6px; padding-right: 10px; transition: opacity .15s, visibility .15s; }
 .course-board.jumps { padding-bottom: 10px; }
 .board-jump.away { opacity: 0; visibility: hidden; }
+/* Submit a run under a board (see submitHereHtml). While ↑ and ↓ are there, they rest in its row, on the right. */
+.board-act { display: flex; padding: 10px 12px; }
+.course-board.jumps .board-act { padding: 10px 100px 0 12px; }
+.board-act + .board-jump { margin-top: 0; }
+.board-act .icon { width: 16px; height: 16px; }
 .course-board .board-meta { padding: 10px 12px 2px; }
 .course-board .board { padding: 2px 0 6px; }
 .course-board .run { padding: 7px 12px; }
@@ -2956,7 +2961,16 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const panel = on === "legacy" ? legacyHtml(c, h.legacy) : on === "assisted" ? assistedHtml(c, v)
       : hasAssistMode(c) ? unassistedHtml(c, v) : topHtml(c, v);
     // A remake's regular board is its Unassisted tab, beside Assisted, like the Player ratings'
-    return tabsHtml(c, ids, on, t("lb.toggle", { course: `${c.n} ${c.name}` }), panel, hasAssistMode(c) ? { top: "lb.tab.unassisted" } : {});
+    return tabsHtml(c, ids, on, t("lb.toggle", { course: `${c.n} ${c.name}` }), panel, hasAssistMode(c) ? { top: "lb.tab.unassisted" } : {}) +
+      submitHereHtml(c, on);
+  }
+  // Under a board: Submit a run, which goes to the form with its course picked (and Assist Mode ticked on the assisted
+  // board, see setSubCourse's click listener). Not under a legacy board, which takes no more runs, or a broken course,
+  // which nobody can run right now. ↑ and ↓ rest beside it (see .board-jump).
+  function submitHereHtml(c, tab) {
+    if (tab === "legacy" || c.broken) return "";
+    return `<div class="board-act"><a class="btn btn-sm" href="/submit" data-route="submit" data-sub-course="${c.n}"${tab === "assisted" ? " data-sub-assisted" : ""}>` +
+      `${icon("upload")}<span>${esc(t("nav.submit"))}</span></a></div>`;
   }
   // A board's tabs (ids, each named "lb.tab.<id>" unless names says), with on picked, over the picked one's panel. One
   // named Unassisted is orange while it's picked (data-unassisted), like its chip.
@@ -7945,6 +7959,18 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   }
   subForm.addEventListener("focusin", pickOpenCourse);
   subField("course").addEventListener("pointerdown", pickOpenCourse);
+  // Submit a run under a board (see submitHereHtml) picks its course, with Assist Mode ticked from the assisted board
+  // and unticked from the others
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest("a[data-sub-course]");
+    if (!a) return;
+    setSubCourse(a.dataset.subCourse);
+    const box = subField("assisted");
+    if (box.disabled) return;
+    box.checked = "subAssisted" in a.dataset;
+    renderScoreField();
+    renderVideoNeed();
+  });
   subForm.addEventListener("input", (e) => e.target.removeAttribute("aria-invalid"));
   // Whether it needs a video follows the time, the mistakes, and Assist Mode (the course: see setSubCourse). The time
   // field's own listener, below, tidies it first.
