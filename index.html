@@ -84,6 +84,8 @@
   --arc: #33c6ff;
   --coral: #ff6a4f;
   --gold: #ffd54f;
+  /* Every calendar icon (the Date sorts and the month pickers): apart from the Picture button's blue */
+  --lilac: #b98cff;
   --silver: #d3dde2;
   --bronze: #e8a066;
   /* Assist Mode's pink, as in the game: its runs, boards, and ratings (see "Assisted boards") */
@@ -757,7 +759,7 @@ a.stat .play { width: 11px; height: 11px; color: var(--ink-3); transition: color
 .lb-sort button[data-sort="time"] .icon { color: var(--volt); }
 .lb-sort button[data-sort="miss"] .icon { color: var(--coral); }
 .lb-sort button[data-sort="rating"] .icon { color: var(--gold); }
-.lb-sort button[data-sort="date"] .icon { color: var(--arc); }
+.lb-sort button[data-sort="date"] .icon { color: var(--lilac); }
 @media (hover: hover) { .lb-sort button:hover, .lb-pic:hover { color: var(--ink); border-color: var(--line-hi); } }
 .lb-sort button[aria-pressed="true"] { color: var(--ink); background: rgba(0, 230, 151, .1); border-color: rgba(0, 230, 151, .35); }
 /* Find a player on a board by their in-game or Discord name: first in the bar, taking the room the buttons leave */
@@ -882,7 +884,7 @@ button.run-name:focus-visible { text-decoration: underline; text-decoration-thic
 .pl-sort [data-pl-sort="time"] .icon { color: var(--volt); }
 .pl-sort [data-pl-sort="miss"] .icon { color: var(--coral); }
 .pl-sort [data-pl-sort="rating"] .icon { color: var(--gold); }
-.pl-sort [data-pl-sort="date"] .icon { color: var(--arc); }
+.pl-sort [data-pl-sort="date"] .icon { color: var(--lilac); }
 /* The pressed sort's arrow: which way it goes (see sortArrow) */
 .lb-sort button .sort-dir { display: inline-grid; place-items: center; margin-inline-start: -2px; }
 .lb-sort button .sort-dir .icon { width: 11px; height: 11px; color: currentColor; transition: transform .15s; }
@@ -1327,6 +1329,7 @@ a.tag-tier:focus-visible { outline-offset: 2px; }
 .runs-range:focus-visible { outline: 2px solid var(--volt); outline-offset: 1px; }
 .runs-range .icon { width: 13px; height: 13px; flex: none; color: var(--ink-3); }
 .runs-range .chev { width: 14px; height: 14px; transition: transform .2s ease; }
+.runs-range .icon:not(.chev) { color: var(--lilac); }
 .runs-range[aria-expanded="true"] .chev { transform: rotate(180deg); }
 .runs-range-name { display: grid; text-align: start; }
 .runs-range-name > span { grid-area: 1 / 1; }
@@ -1369,7 +1372,7 @@ a.tag-tier:focus-visible { outline-offset: 2px; }
 /* The days menu (see statRangeShow), with the dates it covers beside it, or under it where they don't fit */
 .stats-range { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 12px 18px; border-bottom: 1px solid var(--line); }
 .stats-range-wrap { margin-inline-start: 0; }
-.stats-range-btn .icon:not(.chev) { width: 15px; height: 15px; flex: none; color: var(--volt); }
+.stats-range-btn .icon:not(.chev) { width: 15px; height: 15px; flex: none; color: var(--lilac); }
 /* Every option's words, hidden, under the one picked, so the button is as wide as the longest and doesn't change */
 .stats-range-name { display: grid; text-align: start; }
 .stats-range-name > span { grid-area: 1 / 1; }
