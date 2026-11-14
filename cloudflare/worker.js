@@ -965,6 +965,18 @@ const titleSafe = (s) => String(s).replace(/([\\*_~|])/g, "\\$1");
 // A player's Top % (a tier from rate(), null past the last one), under "Top %" in a run's post: "10%", or
 // "Rated" for the bottom 10% (as their role on Discord), or "Unrated" when they have no rating
 const tierText = (tier, rated) => (typeof tier === "number" ? `${tier}%` : rated ? "Rated" : "Unrated");
+// Where a place puts a player among how many are rated: their actual Top %, which the Top % rows of a run's post show
+// (#1 of 16 is 6.3%, where their role is Top 10%). It's rounded up to a tenth, so it never reads better than it is.
+// null without both.
+const topShare = (rank, total) => (typeof rank === "number" && total > 0 ? Math.ceil((rank / total) * 1000 - 1e-9) / 10 : null);
+// A player's Top % as a run's post writes it: "6.3%" (see topShare), or for numbers kept from before there were places,
+// their tier (tierText)
+const shareText = (rank, total, tier, rated) => {
+  const v = rated ? topShare(rank, total) : null;
+  return v === null ? tierText(tier, rated) : `${v}%`;
+};
+// The change between two Top %s, rounded to a tenth (topShare's are, but their difference can be 0.40000000000000036)
+const shareGap = (from, to) => Math.round((from - to) * 10) / 10;
 // What comes after /profile/ in a player's link: the name they picked, else their number, else (no number yet) their
 // Discord ID, the same as the page's linkOf(). links is links.json's players (linksIn).
 const linkOf = (links, id) => (links && links[id] ? links[id].link || String(links[id].n) : id);
@@ -1057,22 +1069,22 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pendin
   const ratedBefore = num(of(s.rating, 0));
   const tiers = best && Array.isArray(s.tier) && num(of(s.rating, 1)) ? s.tier : null;
   const now = best
-    ? { points: of(s.points, 1), place, rating: of(s.rating, 1), rank: of(s.rank, 1), tier: tiers && tierText(tiers[1], true) }
+    ? { points: of(s.points, 1), place, rating: of(s.rating, 1), rank: of(s.rank, 1), tier: tiers && shareText(of(s.rank, 1), s.of, tiers[1], true) }
     : { points: alone.points, place: alone.place || rank };
   const was = best
-    ? { points: of(s.points, 0), place: s.was, rating: of(s.rating, 0), rank: of(s.rank, 0), tier: tiers && tierText(tiers[0], ratedBefore) }
+    ? { points: of(s.points, 0), place: s.was, rating: of(s.rating, 0), rank: of(s.rank, 0), tier: tiers && shareText(of(s.rank, 0), s.ofBefore ?? s.of, tiers[0], ratedBefore) }
     : { points: of(s.points, 1), place: s.place };
-  const tierMoved = !!tiers && (tiers[0] !== tiers[1] || !ratedBefore);
+  const tierMoved = !!tiers && (was.tier !== now.tier || !ratedBefore);
   // Their Global rating, place and Top % (the unassisted and assisted ratings put together), with the run (gNow) and
   // before it (gWas, null when they weren't in it yet), on their best only. What was kept before there were a rating
   // and place has just the Top %.
   const gl = best && Array.isArray(s.global) && s.global[1] ? s.global : null;
   const gNow = gl ? gl[1] : null, gWas = gl ? gl[0] : null;
   if (gl) {
-    Object.assign(now, { gRating: gNow.rating, gRank: gNow.rank, gTier: tierText(gNow.tier, true) });
-    Object.assign(was, { gRating: gWas && gWas.rating, gRank: gWas && gWas.rank, gTier: tierText(gWas && gWas.tier, !!gWas) });
+    Object.assign(now, { gRating: gNow.rating, gRank: gNow.rank, gTier: shareText(gNow.rank, s.globalOf, gNow.tier, true) });
+    Object.assign(was, { gRating: gWas && gWas.rating, gRank: gWas && gWas.rank, gTier: shareText(gWas && gWas.rank, s.globalOfBefore ?? s.globalOf, gWas && gWas.tier, !!gWas) });
   }
-  const gMoved = !!gl && (!gWas || gWas.tier !== gNow.tier);
+  const gMoved = !!gl && (!gWas || was.gTier !== now.gTier);
   // With no best from before (their first run on the course), there's no Comparison, so each row of the run's block
   // says what the run did, the way the site's result does: before → after with the change, "182 → 227 (+45)",
   // "#10 → #2 of 16 (+8)" (a climb is up), "50% → 25% (+25%)" (so is a smaller Top %), and "#1 → #1 of 16 (+0)" when it
@@ -1089,11 +1101,13 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pendin
   // there were totals from before the run has just the place: "#2 → #1 of 16 (+1)".
   const ofText = (v, total) => `#${v}${total ? ` of ${total}` : ""}`;
   const rankDid = (fromV, fromOf, to, toOf) => (fromV === null ? `${ofText(to, toOf)} (New)` : `${ofText(fromV, fromOf)} → ${ofText(to, toOf)} (${signed(fromV - to)})`);
-  // A Top % (tier: a number, or null for Rated, see tierText), from before the run (rated: they had one)
-  const tierDid = (fromT, rated, toT) => {
-    if (!rated) return `${tierText(toT, true)} (New)`;
-    const both = typeof fromT === "number" && typeof toT === "number";
-    return `${tierText(fromT, true)} → ${tierText(toT, true)}${both ? ` (${signed(fromT - toT)}%)` : fromT === toT ? " (+0%)" : ""}`;
+  // A Top % before the run (from: { rank, of, tier }, rated: they had one) and with it (to), see shareText
+  const tierDid = (from, rated, to) => {
+    const toText = shareText(to.rank, to.of, to.tier, true);
+    if (!rated) return `${toText} (New)`;
+    const fromText = shareText(from.rank, from.of, from.tier, true);
+    const a = topShare(from.rank, from.of), b = topShare(to.rank, to.of);
+    return `${fromText} → ${toText}${a !== null && b !== null ? ` (${signed(shareGap(a, b))}%)` : fromText === toText ? " (+0%)" : ""}`;
   };
   // The rated courses they've run ("3 of 11"), and their Top 10s, Podiums and Records over every course (the numbers
   // on their Discord profile), when the run changes them, as the site shows them after a run: with the run in its
@@ -1131,13 +1145,13 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pendin
       [`${scope} stats`, [
         num(d.rating) && `Rating: ${first && lone ? ratingDid(ratedBefore ? of(s.rating, 0) : null, d.rating) : d.rating}`,
         num(d.rank) && `Rank: ${first && lone ? rankDid(ratedBefore ? known(of(s.rank, 0)) : null, s.ofBefore, d.rank, s.of) : ofText(d.rank, then ? s.ofBefore ?? s.of : s.of)}`,
-        d.tier && `Top %: ${first && lone ? tierDid(tiers[0], ratedBefore, tiers[1]) : d.tier}`,
+        d.tier && `Top %: ${first && lone ? tierDid({ rank: of(s.rank, 0), of: s.ofBefore ?? s.of, tier: tiers[0] }, ratedBefore, { rank: of(s.rank, 1), of: s.of, tier: tiers[1] }) : d.tier}`,
         ...counts.map(([k, name]) => `${name}: ${first && lone ? `${s[k][0]} → ` : ""}${countText(k, s[k][first ? 1 : 0])}${first && lone ? ` (${changeText(s[k][1] - s[k][0])})` : ""}`),
       ]],
       ["Global stats", [
         num(d.gRating) && `Rating: ${first && lone ? ratingDid(gWas && num(gWas.rating) ? gWas.rating : null, d.gRating) : d.gRating}`,
         num(d.gRank) && num(s.globalOf) && `Rank: ${first && lone ? rankDid(gWas && num(gWas.rank) ? gWas.rank : null, s.globalOfBefore, d.gRank, s.globalOf) : ofText(d.gRank, then ? s.globalOfBefore ?? s.globalOf : s.globalOf)}`,
-        d.gTier && `Top %: ${first && lone ? tierDid(gWas && gWas.tier, !!gWas, gNow.tier) : d.gTier}`,
+        d.gTier && `Top %: ${first && lone ? tierDid(gWas && { rank: gWas.rank, of: s.globalOfBefore ?? s.globalOf, tier: gWas.tier }, !!gWas, { rank: gNow.rank, of: s.globalOf, tier: gNow.tier }) : d.gTier}`,
       ]],
     ];
     return {
@@ -1225,6 +1239,22 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pendin
     // And where less is better (a time, mistakes): ▼ in mint
     const less = (diff, text) => (!diff ? same : chip(`${diff < 0 ? "▼" : "▲"} ${text}`, diff < 0 ? "up" : "down"));
     const tierLabel = (tier) => (typeof tier === "number" ? `Top ${tier}%` : "Rated");
+    // Their Top % (from: before the run, { rank, of, tier }, null when they weren't rated; to: with it): where their
+    // place puts them among everyone rated (see topShare), after what it was, with how much it moved (a smaller share
+    // is up). Numbers kept from before there were places have just the tier, their role, which it shows instead.
+    const topRow = (from, to) => {
+      const label = (q) => {
+        const v = topShare(q.rank, q.of);
+        return v === null ? tierLabel(q.tier) : `Top ${v}%`;
+      };
+      if (!from) return row("Top %", label(to), { chip: chip("New", "new") });
+      const a = topShare(from.rank, from.of), b = topShare(to.rank, to.of);
+      const moved = label(from) !== label(to);
+      return row("Top %", label(to), {
+        ...(moved ? { from: label(from) } : {}),
+        chip: a !== null && b !== null ? more(0, shareGap(a, b), (v) => `${Math.abs(v)}%`) : moved ? chip("New role", "up") : same,
+      });
+    };
     const row = (label, value, extra = {}) => ({ label, value: String(value), ...extra });
     const miss = (r) => (isGround(r) ? r.ground : Number.isInteger(r.mistakes) ? r.mistakes : null);
     const missShown = (v) => (isGround(run) ? groundText(v) : String(v));
@@ -1270,10 +1300,9 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pendin
       kindRows.push(row("Rating", rating[1], { ...(rated && rating[0] !== rating[1] ? { from: rating[0] } : {}), chip: more(rating[0], rating[1]) }));
       const rk = Array.isArray(s.rank) ? [rated ? s.rank[best ? 0 : 1] : null, s.rank[1]] : null;
       if (rk && num(rk[1])) kindRows.push(row("Rank", ofText(rk[1], s.of), { ...(rated && rk[0] !== rk[1] ? { from: `#${rk[0]}` } : {}), chip: more(rated ? -rk[0] : null, -rk[1]) }));
-      if (Array.isArray(s.tier)) {
-        const [tf, tt] = best ? s.tier : [s.tier[1], s.tier[1]];
-        const moved = !rated || tf !== tt;
-        kindRows.push(row("Top %", tierLabel(tt), { ...(rated && moved ? { from: tierLabel(tf) } : {}), chip: !rated ? chip("New", "new") : moved ? chip("New role", "up") : same }));
+      if (Array.isArray(s.tier) && rk) {
+        const tf = best ? s.tier[0] : s.tier[1];
+        kindRows.push(topRow(rated ? { rank: rk[0], of: best ? s.ofBefore ?? s.of : s.of, tier: tf } : null, { rank: rk[1], of: s.of, tier: s.tier[1] }));
       }
     }
     for (const [k, name] of [["courses", "Courses run"], ["top10s", "Top 10s"], ["podiums", "Podiums"], ["records", "Records"]]) {
@@ -1288,8 +1317,7 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pendin
       const globalRows = [];
       if (num(gt.rating)) globalRows.push(row("Rating", gt.rating, { ...(gf && num(gf.rating) && gf.rating !== gt.rating ? { from: gf.rating } : {}), chip: more(gf && num(gf.rating) ? gf.rating : null, gt.rating) }));
       if (num(gt.rank) && num(s.globalOf)) globalRows.push(row("Rank", ofText(gt.rank, s.globalOf), { ...(gf && num(gf.rank) && gf.rank !== gt.rank ? { from: `#${gf.rank}` } : {}), chip: more(gf && num(gf.rank) ? -gf.rank : null, -gt.rank) }));
-      const moved = !gf || gf.tier !== gt.tier;
-      globalRows.push(row("Top %", tierLabel(gt.tier), { ...(gf && moved ? { from: tierLabel(gf.tier) } : {}), chip: !gf ? chip("New", "new") : moved ? chip("New role", "up") : same }));
+      globalRows.push(topRow(gf && { rank: gf.rank, of: best ? s.globalOfBefore ?? s.globalOf : s.globalOf, tier: gf.tier }, { rank: gt.rank, of: s.globalOf, tier: gt.tier }));
       // Courses run, Top 10s, Podiums and Records over both kinds' boards (what was kept before there were these has none)
       for (const [k, name] of [["courses", "Courses run"], ["top10s", "Top 10s"], ["podiums", "Podiums"], ["records", "Records"]]) {
         const pairK = s.globalCounts && s.globalCounts[k];
@@ -2080,7 +2108,7 @@ async function setLink(request, env, ctx) {
 /* ---------- Stats on Discord profiles ----------
    Players can put their stats on their Discord profile, under Apps, like a linked game account. It's Discord's
    "role connection", which shows as:
-     ballkour.com · Top 0.1%      their Top % (Rated for the bottom 10%, Unrated before they have a rating)
+     ballkour.com · Top 6.3%      their actual Top % (see topShare: #1 of 16 here), Unrated before they have a rating
      DUCKLING · #3                their in-game name and place in the Global rating
      812 ⭐ Rating  4 ⚡ Top 10s  2 🏆 Podiums  1 👑 Records  12 🗺️ Courses run
    Their rating, place and Top % are the Global rating's (the unassisted and assisted ratings put together, with each
@@ -2181,7 +2209,8 @@ function profilesFrom(data) {
   if (!data || !data.files || !Array.isArray(data.courses)) throw new Error("the game data has no course list yet");
   const courses = loadCourses(data.files, data.courses);
   // The Global rating: the unassisted and assisted ratings put together
-  const rated = new Map(combine([rate(courses), rate(loadCourses(data.files, data.courses, { assisted: true }))]).players.map((p) => [p.key, p]));
+  const global = combine([rate(courses), rate(loadCourses(data.files, data.courses, { assisted: true }))]).players;
+  const rated = new Map(global.map((p) => [p.key, p]));
   const boards = new Map(); // player → { top10s, podiums, records, name }
   for (const c of courses) {
     const { top, rest } = standings(c);
@@ -2199,7 +2228,7 @@ function profilesFrom(data) {
     const p = rated.get("d:" + id);
     const b = boards.get("d:" + id) || { top10s: 0, podiums: 0, records: 0, name: "" };
     return JSON.stringify({
-      platform_name: `ballkour.com · ${!p ? "Unrated" : p.tier === null ? "Rated" : `Top ${p.tier}%`}`,
+      platform_name: `ballkour.com · ${p ? `Top ${topShare(p.rank, global.length)}%` : "Unrated"}`,
       platform_username: p ? `${p.name} · #${p.rank}` : b.name || "No runs yet",
       metadata: { rating: p ? Math.round(p.rating) : 0, top10s: b.top10s, podiums: b.podiums, records: b.records, courses: p ? p.courses : 0 },
     });
