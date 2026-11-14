@@ -2606,8 +2606,8 @@ function notFound(res, block) {
 }
 
 /* ---------- YouTube comments ----------
-   The window a run's time opens on the page (see "Watching a run's video" in index.html) lists the comments on a
-   YouTube video under it:
+   The window a run's time opens on the page (see "Watching a run's video" in index.html), and a run's own page, list
+   the comments on a YouTube video under it:
      GET /api/comments?v=<video id>   { comments: [{ name, channel, text, likes, replies, date }], count, off }
    The first 20, the ones YouTube shows first. count is how many the video has on YouTube (replies too), and off is
    true when its comments are turned off. They come from YouTube's Data API through here, so a visitor's browser never
@@ -2616,7 +2616,7 @@ function notFound(res, block) {
    (on a course's board, in runs.json, or on an old board) get theirs, so nobody can spend the API's daily allowance
    on other videos: it's 10,000 units, and each video takes 2.
    Secret: YOUTUBE_KEY, an API key from Google Cloud with the YouTube Data API v3 turned on (see the README). Without
-   it, the window has no comments. */
+   it, there are no comments. */
 const COMMENTS_TTL = 6 * 60 * 60;
 // A YouTube video's id from its link, or "": the same links as embedOf() in index.html (keep the two in step)
 function youtubeId(link) {
