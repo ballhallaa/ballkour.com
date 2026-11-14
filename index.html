@@ -1500,6 +1500,13 @@ button.rev-run { width: 100%; font: inherit; text-align: left; cursor: pointer; 
 /* A top 10 run waiting for a check: what it'll do once it's on the board. Its note under the title (.res-held) is also
    the one under a run that isn't its player's best. */
 .sub-status.res.held { border-color: rgba(255, 213, 79, .32); background: rgba(255, 213, 79, .06); }
+/* The run, to look over before it's sent (see showCheck): in the Send run button's place */
+.sub-form.checking .sub-foot { display: none; }
+.sub-status:focus { outline: none; }
+.res-check .res-row { grid-template-columns: minmax(0, 1fr) auto; }
+.res-check .res-row > span:empty { display: none; }
+.res-value .res-link { display: inline-block; max-width: min(46vw, 280px); overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; color: var(--volt); font-weight: 500; }
+.res-value .res-none { color: var(--ink-3); font-weight: 500; }
 .res-held { margin: 4px 0 0 26px; font: 400 13.5px/1.45 var(--body); color: var(--ink-2); }
 .res-rows { margin-top: 8px; }
 .res-row { display: grid; grid-template-columns: minmax(0, 1fr) auto 62px; align-items: center; gap: 3px 12px; padding: 8px 0; border-top: 1px solid var(--line); }
@@ -2255,6 +2262,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "sub.videoOptional": "Optional: this run won’t go in the top 10",
   "sub.as": "Signed in as {name}",
   "sub.sending": "Sending your run…",
+  "sub.check": "Is this right?",
+  "sub.checkSend": "Yes, send it",
+  "sub.checkEdit": "Change something",
+  "sub.noVideo": "None",
   "res.title": "Your run is up!",
   "res.record": "New record on {course}!",
   "res.first": "Your first run on this course",
@@ -6375,11 +6386,14 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   const subStatus = $("#sub-status");
   // The course they picked (its number, or "" for none yet), from a menu like the languages'
   let subCourse = "";
+  let checking = null; // the run being looked over before it's sent ({ run, assisted }, see showCheck)
   const subCoursePicker = makeMenu($("#sub-course-wrap"), subField("course"), $("#sub-course-menu"),
     () => (matchMedia("(max-width: 600px)").matches ? 1 : 2), (v) => setSubCourse(v));
   function setSubCourse(v) {
     const c = COURSES.find((x) => String(x.n) === String(v) && !x.broken);
+    const was = subCourse;
     subCourse = c ? String(c.n) : "";
+    if (subCourse !== was) dropCheck();
     subCoursePicker.select(subCourse);
     const cur = $("#sub-course-current");
     cur.classList.toggle("empty", !c);
@@ -7940,6 +7954,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   }
   function signOut(focusAfter) {
     fetch("/api/logout", { method: "POST" }).catch(() => {});
+    dropCheck();
     subStatus.textContent = "";
     signedIn(null);
     focusAfter();
@@ -7967,6 +7982,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     setSubCourse(a.dataset.subCourse);
     const box = subField("assisted");
     if (box.disabled) return;
+    if (box.checked !== ("subAssisted" in a.dataset)) dropCheck();
     box.checked = "subAssisted" in a.dataset;
     renderScoreField();
     renderVideoNeed();
@@ -8327,8 +8343,51 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     ["time", "miss", "ground", "video"].forEach((id) => { subField(id).value = ""; });
     renderVideoNeed();
   }
+  /* Before a run is sent, it shows as it'll go (the course, name, time, mistakes or ground time, and video) in the
+     Send run button's place, with Yes, send it and Change something, so a typo or the wrong course is caught first.
+     Changing anything in the form puts the button back. */
+  function showCheck(run, assisted) {
+    checking = { run, assisted };
+    const c = course(run.course);
+    const video = run.video
+      ? `<a class="res-link" href="${esc(run.video)}" target="_blank" rel="noopener" title="${esc(run.video)}">${esc(run.video.replace(/^https?:\/\/(www\.)?/, ""))}</a>`
+      : `<span class="res-none">${esc(t("sub.noVideo"))}</span>`;
+    subForm.classList.add("checking");
+    subStatus.className = "sub-status field-wide res res-check";
+    subStatus.innerHTML = `<p class="res-title">${icon("eye")}<span>${esc(t("sub.check"))}</span></p><div class="res-rows">` +
+      resRow({ html: `${c.n} ${flagName(c)}${assisted ? ` ${assistedTag()}` : ""}` }, "", "") +
+      resRow(t("sub.name"), esc(run.name), "") +
+      resRow(t("sub.time"), esc(run.time), "") +
+      (assisted ? resRow(t("sub.ground"), esc(groundText(run.ground)), "") : resRow(t("sub.miss"), esc(localNum(run.mistakes)), "")) +
+      resRow(t("sub.video"), video, "") + `</div>` +
+      `<p class="res-foot"><span></span><span class="res-actions">` +
+      `<button class="btn btn-sm" type="button" data-check-edit>${esc(t("sub.checkEdit"))}</button>` +
+      `<button class="btn btn-sm btn-primary" type="button" data-check-send>${icon("upload")}<span>${esc(t("sub.checkSend"))}</span></button></span></p>`;
+    // Focus goes to the summary, not Yes, send it, so a second Enter or click doesn't send it unseen
+    subStatus.tabIndex = -1;
+    subStatus.focus();
+  }
+  function dropCheck() {
+    if (!checking) return;
+    checking = null;
+    subForm.classList.remove("checking");
+    subStatus.textContent = "";
+    subStatus.className = "sub-status field-wide";
+  }
+  subForm.addEventListener("input", dropCheck);
+  subStatus.addEventListener("click", (e) => {
+    if (e.target.closest("[data-check-edit]")) {
+      dropCheck();
+      subField("course").focus();
+    } else if (e.target.closest("[data-check-send]") && checking) {
+      const { run, assisted } = checking;
+      dropCheck();
+      subField("send").focus();
+      sendRun(run, assisted);
+    }
+  });
   let sending = false;
-  subForm.addEventListener("submit", async (e) => {
+  subForm.addEventListener("submit", (e) => {
     e.preventDefault();
     if (sending || !me) return;
     // Played in Assist Mode: it goes on the course's assisted board (see "Assisted boards"), with its ground time
@@ -8349,8 +8408,11 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       : !assisted && run.mistakes === null ? "miss"
       // Only a top 10 run needs a video, but one that's there has to be a link
       : (subField("video").value.trim() ? !run.video : videoRank()) ? "video" : "";
-    if (bad) return showStatus("err", esc(t(errKey(bad))), bad);
-
+    if (bad) { dropCheck(); return showStatus("err", esc(t(errKey(bad))), bad); }
+    showCheck(run, assisted);
+  });
+  async function sendRun(run, assisted) {
+    if (sending || !me) return;
     const before = standing(run.course, me.id, assisted);
     sending = true;
     const send = subField("send");
@@ -8401,7 +8463,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       sending = false;
       send.disabled = false;
     }
-  });
+  }
 
   /* ---------- A run's page ----------
      Every run sent from the website has its own page, ballkour.com/runs/<id>, which the View run button on its post in
