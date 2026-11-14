@@ -1217,7 +1217,7 @@ button.run-name:focus-visible { text-decoration: underline; text-decoration-thic
 .field-wide { grid-column: 1 / -1; }
 .field-label { font: 600 11.5px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
 .field-hint { font: 400 12.5px/1.4 var(--body); color: var(--ink-3); }
-/* Whether the run needs a video (see renderVideoNeed): gold when it does, like a top 10 run waiting for a check */
+/* Whether the run needs a video (see renderVideoNeed): gold when it does, like a top-10 run waiting for a check */
 .sub-need.needed { color: var(--gold); }
 .sub-need + .field-hint { margin-top: -3px; }
 /* Every field but the Assist Mode checkbox (.sub-check), which keeps its own size */
@@ -1497,7 +1497,7 @@ button.rev-run { width: 100%; font: inherit; text-align: left; cursor: pointer; 
 .res-title { margin: 0; display: flex; gap: 9px; align-items: flex-start; font: 600 15.5px/1.4 var(--body); color: var(--ink); }
 .res-title .icon { width: 17px; height: 17px; margin-top: 2px; color: var(--volt); }
 .res-title.record .icon, .res-title.held .icon { color: var(--gold); }
-/* A top 10 run waiting for a check: what it'll do once it's on the board. Its note under the title (.res-held) is also
+/* A top-10 run waiting for a check: what it'll do once it's on the board. Its note under the title (.res-held) is also
    the one under a run that isn't its player's best. */
 .sub-status.res.held { border-color: rgba(255, 213, 79, .32); background: rgba(255, 213, 79, .06); }
 /* The run, to look over before it's sent (see showCheck): in the Send run button's place */
@@ -1872,7 +1872,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
           <span class="lr-icon"><svg class="icon" aria-hidden="true"><use href="#i-upload"/></svg></span>
           <span class="lr-text">
             <span class="lr-title" data-i18n="lb.submit.title">Submit your run</span>
-            <span class="lr-sub" id="sub-intro" data-i18n="lb.submit.web">Send it here and it goes straight on the board. Only top 10 runs need a video for proof.</span>
+            <span class="lr-sub" id="sub-intro" data-i18n="lb.submit.web">Send it here and it goes straight on the board. Only top-10 runs need a video for proof.</span>
           </span>
         </div>
         <div class="sub-signin" id="sub-signin" hidden>
@@ -1919,7 +1919,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
           <div class="field field-wide">
             <label class="field-label" for="sub-video" data-i18n="sub.video">Video link</label>
             <input id="sub-video" type="url" inputmode="url" placeholder="https://youtu.be/…" maxlength="300" autocomplete="off" spellcheck="false" aria-describedby="sub-video-need sub-video-hint">
-            <span class="field-hint sub-need" id="sub-video-need" data-i18n="sub.videoWhen">Only needed as proof for a top 10 run</span>
+            <span class="field-hint sub-need" id="sub-video-need" data-i18n="sub.videoWhen">Only needed as proof for a top-10 run</span>
             <span class="field-hint" id="sub-video-hint" data-i18n="sub.videoHint">YouTube, Medal, Twitch, or any link we can watch</span>
           </div>
           <div class="field field-wide">
@@ -1960,7 +1960,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         </li>
         <li class="feature">
           <span class="f-icon" style="--c: var(--gold)"><svg class="icon" aria-hidden="true"><use href="#i-trophy"/></svg></span>
-          <div><p class="f-title"><span data-i18n="f.lobby.title">Lobby leaderboard</span></p><p class="f-text" data-i18n="f.lobby.text">The top 10 times hang in the lobby and the finish screen shows the time to beat.</p></div>
+          <div><p class="f-title"><span data-i18n="f.lobby.title">Lobby leaderboard</span></p><p class="f-text" data-i18n="f.lobby.text">The top-10 times hang in the lobby and the finish screen shows the time to beat.</p></div>
         </li>
       </ul>
       <div class="f-group"><span class="tag tag-beta" data-i18n="tag.beta">Beta</span><span data-i18n="f.beta.tryList">Try these with a Beta code from the course list.</span></div>
@@ -2268,7 +2268,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "sub.assisted": "Played in Assist Mode",
   "sub.assistedHint": "It goes on the course’s assisted board, with ratings of its own",
   "sub.assistedNone": "This course doesn’t have Assist Mode",
-  "sub.videoNeeded": "Needed: this run would put you #{rank}, and a moderator checks top 10 runs first",
+  "sub.videoNeeded": "Needed: this run would put you #{rank}, and a moderator checks top-10 runs first",
   "sub.videoOptional": "Optional: this run won’t go in the top 10",
   "sub.as": "Signed in as {name}",
   "sub.sending": "Sending your run…",
@@ -2302,7 +2302,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "res.records": "Records",
   "res.held": "Your run would put you #{rank} on {course}!",
   "res.heldRecord": "Your run would be a new record on {course}!",
-  "res.heldNote": "Top 10 times are checked before they go up. Here’s what you get if a moderator approves your run:",
+  "res.heldNote": "Top-10 times are checked before they go up. Here’s what you get if a moderator approves your run:",
   "res.againNote": "Here’s what it does on today’s boards:",
   "res.slowerNote":"This isn’t a new personal best, so your rating and rank don’t change.",
   "rt.rated": "Rated",
@@ -2397,7 +2397,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "sub.sentAgain": "You already sent that run, and it’s on the board: you’re #{rank} on {course}.",
   "sub.againSlower": "You already sent that run. Your best on {course} is {time} (#{rank}).",
   "sub.againPending": "You already sent that run on {course}, and it’s waiting for a moderator to check it.",
-  "sub.held": "Your run would put you #{rank} on {course}! Top 10 times are checked before they go up, so it goes on the board if a moderator approves it.",
+  "sub.held": "Your run would put you #{rank} on {course}! Top-10 times are checked before they go up, so it goes on the board if a moderator approves it.",
   "rev.title": "Runs to check",
   "rev.none": "No runs to check right now.",
   "rev.would": "Would be #{rank}",
@@ -2524,7 +2524,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "run.play": "Play the video",
   "run.open": "Open on {site}",
   "run.watch": "Watch the video",
-  "run.noVideo": "No video. Only top 10 runs need one.",
+  "run.noVideo": "No video. Only top-10 runs need one.",
   "vid.comments": "YouTube comments",
   "vid.loading": "Loading the comments…",
   "vid.none": "No comments yet.",
@@ -2569,13 +2569,13 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "sub.err.net": "Your run couldn’t be sent. Check your connection and try again.",
   "dc.voice": "{channel} · {count} in voice",
   "dc.voiceMore": "+{count} more",
-  "dc.how": "Sign in with Discord in My profile to get your Top % role and turn on your profile stats. The role comes with your first submitted run, or once a moderator approves it if it’s a top 10 time.",
+  "dc.how": "Sign in with Discord in My profile to get your Top % role and turn on your profile stats. The role comes with your first submitted run, or once a moderator approves it if it’s a top-10 time.",
   "faq.all": "Show all {count} questions",
   "faq.fewer": "Show fewer questions",
   "faq.valid.q": "What counts as a valid run?",
   "faq.valid.a": "Your run is only <fgFF4646FF>disqualified</fg> if you skip a checkpoint you haven't cleared yet this run. Going back or restarting checkpoints, skipping ahead to cleared checkpoints, and <fg00BEFFFF>spectating</fg> are fine. Leaving an uncleared checkpoint in <fgCB87FFFF>Freemode</fg> counts as skipping it. <fgFF4646FF>Disqualified</fg> runs don't count toward the top-10 leaderboard, <b>Lobby Top 3</b>, or <b>Lobby Stats</b>.",
   "faq.leaderboard.q": "How do I get on the leaderboard?",
-  "faq.leaderboard.a": "Finish a valid run and submit it at ballkour.com. Only top 10 runs need a video for proof. <b>All-Time Top 3</b> shows the leaderboard's 3 fastest runs. <b>Lobby Top 3</b> lists the fastest valid runs finished in this lobby. In <fgFF80C0FF>Assist Mode</fg>, <fgFF80C0FF>Assisted Top 3</fg> replaces <b>All-Time Top 3</b>, and <b>Lobby Top 3</b> lists <fgFF80C0FF>assisted</fg> runs.",
+  "faq.leaderboard.a": "Finish a valid run and submit it at ballkour.com. Only top-10 runs need a video for proof. <b>All-Time Top 3</b> shows the leaderboard's 3 fastest runs. <b>Lobby Top 3</b> lists the fastest valid runs finished in this lobby. In <fgFF80C0FF>Assist Mode</fg>, <fgFF80C0FF>Assisted Top 3</fg> replaces <b>All-Time Top 3</b>, and <b>Lobby Top 3</b> lists <fgFF80C0FF>assisted</fg> runs.",
   "faq.timer.q": "When does my run's timer start?",
   "faq.timer.a": "When you leave the first checkpoint, not when you spawn.",
   "faq.mistake.q": "What counts as a mistake?",
@@ -6397,7 +6397,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      Players sign in with Discord, then the form under Submit a run posts to /api/submit on the Cloudflare Worker
      (cloudflare/worker.js). The run goes on the board straight away, saved under their Discord ID in runs.json, so
      nobody can send one as someone else. The Worker marks #submit with data-login="on" once it's set up. Until then,
-     a Discord ticket shows instead, and once it's on, the ticket goes away. Only a top 10 run needs a video (see
+     a Discord ticket shows instead, and once it's on, the ticket goes away. Only a top-10 run needs a video (see
      videoRank), and the video field says whether this one does as it's typed in. */
   const submitBox = $("#submit");
   const subForm = $("#sub-form");
@@ -6481,10 +6481,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       return u.protocol === "https:" && /\.[a-z]{2,}$/i.test(u.hostname) && v.length <= 300 && !/[\s"'<>`]/.test(v) ? u.href : "";
     } catch (e) { return ""; }
   }
-  /* Only a top 10 run needs a video. One that would put its player in a course's top 10 (their new best, with fewer
+  /* Only a top-10 run needs a video. One that would put its player in a course's top 10 (their new best, with fewer
      than 10 other players faster) waits for a moderator to check its video before it goes up, and every other run
      goes up straight away, with or without one. The Worker works it out the same way as the run's sent (placeOf() in
-     cloudflare/worker.js), and turns down a top 10 run without a video, so keep the two in step.
+     cloudflare/worker.js), and turns down a top-10 run without a video, so keep the two in step.
      → the place the run in the form would take (1 to 10) when it needs a video, 0 when it doesn't, or null until
      there's a course and a time to tell by. Mistakes (or the ground time) only break ties, so until they're typed in
      it goes by none. */
@@ -6876,7 +6876,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     }
   });
 
-  /* Reviewers (REVIEWER_ROLES in cloudflare/wrangler.toml) see the top 10 runs waiting for a check over the form,
+  /* Reviewers (REVIEWER_ROLES in cloudflare/wrangler.toml) see the top-10 runs waiting for a check over the form,
      Runs to check: each with what approving it would do (its place on the course, and its player's place and rating
      in the player ratings), View run (its page, with its video and the rest of that), Approve (onto the board), and
      Turn down. Approve and Turn down ask first, in the run's row or on its page (reviewAsk): Yes sends it, and Cancel
@@ -8095,7 +8095,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const global = g.players.find((p) => p.discord === id) || null;
     return { board, at, best: at >= 0 ? board[at] : null, player: r.players.find((p) => p.discord === id) || null, global, globalTotal: g.players.length, total: r.players.length, counted: r.counted.length, medals: medalsOf("d:" + id, assisted) };
   }
-  // Where they'd stand with a run that isn't on the board yet (a top 10 run waiting for a check): it goes in with
+  // Where they'd stand with a run that isn't on the board yet (a top-10 run waiting for a check): it goes in with
   // the other runs just long enough to work that out
   function standingWith(n, sent, id = me.id, assisted = false) {
     const run = cleanRun({ ...sent, name: caps(String(sent.name || "")), discord: id });
@@ -8401,7 +8401,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     return after.best && byTime(after.best, cleanRun(run)) < 0 ? "slower" : "pending";
   }
   // What the run did, right after it's sent: the course's place and time, its mistakes, their rating, place and
-  // Top %, and their Top 10s, Podiums and Records. held: it's a top 10 run waiting for a check, and after is where it
+  // Top %, and their Top 10s, Podiums and Records. held: it's a top-10 run waiting for a check, and after is where it
   // would put them. again: it was sent before, and this is where that one is now (see againStatus), and earlier is that
   // one (see earlierRun): what it does on today's boards, or would do once it's approved, like on its page's Today. A
   // run that isn't their best changes nothing, so it's that run on its own (see aloneOf), like on its page.
@@ -8447,7 +8447,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const r = subField("send").getBoundingClientRect();
     for (let i = 0; i < big; i++) setTimeout(() => launchBall(r.left + r.width / 2, r.top), i * 120);
   }
-  // What's wrong, for the field it names. A missing video is one a top 10 run needs (see videoRank); otherwise the
+  // What's wrong, for the field it names. A missing video is one a top-10 run needs (see videoRank); otherwise the
   // video that's there isn't a link.
   const errKey = (field) => (field === "video" && !subField("video").value.trim() ? "sub.err.videoTop10" : `sub.err.${field}`);
   // Once a run's sent, its time, mistakes or ground time, and video go, ready for the next one (the course and name
@@ -8519,7 +8519,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       : !run.time ? "time"
       : assisted && run.ground === null ? "ground"
       : !assisted && run.mistakes === null ? "miss"
-      // Only a top 10 run needs a video, but one that's there has to be a link
+      // Only a top-10 run needs a video, but one that's there has to be a link
       : (subField("video").value.trim() ? !run.video : videoRank()) ? "video" : "";
     if (bad) { dropCheck(); return showStatus("err", esc(t(errKey(bad))), bad); }
     showCheck(run, assisted);
@@ -8539,7 +8539,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       });
       const out = await res.json().catch(() => ({}));
       if (res.ok && out.ok && out.pending) {
-        // A top 10 run waits for a check before it goes on the board. It shows what it'll do once it's on, or if
+        // A top-10 run waits for a check before it goes on the board. It shows what it'll do once it's on, or if
         // that can't be worked out, just that it's waiting.
         clearRun();
         try { localStorage.setItem("ballkour-submit", JSON.stringify({ name: run.name })); } catch (err) { /* private mode */ }
@@ -8592,7 +8592,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      (see pastRuns).
      The video plays on the page for YouTube, Twitch, Streamable, and Medal links, but nothing loads from those sites until
      Play is pressed (the site never sends visitors to anyone else on its own). Other links get a button to the video,
-     and a run sent without one (only top 10 runs need one) says so. */
+     and a run sent without one (only top-10 runs need one) says so. */
   const RUN_GROUPS = ["pending", "runs", "declined", "removed"];
   // The page of a run whose link someone opened (/runs/<id>, or an old /submit?check=<id>)
   const startRun = (/^\/runs\/([\w-]{1,16})\/?$/i.exec(location.pathname) || [])[1] || (/^[\w-]{1,16}$/.test(checkParam) ? checkParam : "");
@@ -8767,7 +8767,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     if (medal) return { site: "Medal", src: `https://medal.tv/games/${medal[1]}/clip/${medal[2]}` };
     return null;
   }
-  // A run's video on its page, or a line saying it has none (only top 10 runs need one: see videoRank)
+  // A run's video on its page, or a line saying it has none (only top-10 runs need one: see videoRank)
   function videoHtml(url) {
     if (!url) return `<p class="run-novideo">${esc(t("run.noVideo"))}</p>`;
     const e = embedOf(url);

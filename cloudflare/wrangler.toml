@@ -16,7 +16,7 @@ binding = "ASSETS"
 not_found_handling = "404-page"
 run_worker_first = ["/*", "!/assets/*", "!/locales/*"]
 
-# Who can approve or turn down top 10 runs sent from the website, at ballkour.com/submit: everyone on the server with a
+# Who can approve or turn down top-10 runs sent from the website, at ballkour.com/submit: everyone on the server with a
 # role in REVIEWER_ROLES. Role IDs, separated by commas (in Discord: Developer Mode on, then Server Settings → Roles →
 # right-click a role → Copy Role ID). See worker.js.
 #
@@ -27,7 +27,7 @@ run_worker_first = ["/*", "!/assets/*", "!/locales/*"]
 # CLAIMS_CHANNEL is where Ballkyrie posts every claim to legacy runs (runs from before May 2026, see "Claiming legacy
 # runs" in worker.js) for moderators to check, with the same permissions there. The test copy leaves it out too.
 #
-# NOTIFY_PLAYERS = "on": Ballkyrie tells a player in a DM when a moderator checks their top 10 run or legacy claim (see
+# NOTIFY_PLAYERS = "on": Ballkyrie tells a player in a DM when a moderator checks their top-10 run or legacy claim (see
 # tellPlayer() in worker.js). The test copy leaves it out, so it never messages anyone.
 [vars]
 REVIEWER_ROLES = "1497735437979226194" # mod
@@ -46,7 +46,7 @@ simple = { limit = 5, period = 60 }
 # Stats on players' Discord profiles (see "Stats on Discord profiles" in worker.js): the Discord tokens of everyone who
 # turned them on, and what was last sent to their profile. Without it, the button for it doesn't show. It also keeps
 # what each run sent from the website did when it was sent (run:<id>, see "Each run's page"), which its page shows
-# beside today's numbers; without it, the page has just today's. And a top 10 run's post in the run submissions channel
+# beside today's numbers; without it, the page has just today's. And a top-10 run's post in the run submissions channel
 # (post:<id>), until a moderator checks the run and the post changes to say so; without it, the post stays yellow.
 # Made once with
 #   npx wrangler kv namespace create PROFILES

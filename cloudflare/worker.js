@@ -391,11 +391,11 @@ async function buildPlayers(env, ctx, previous) {
                          → { ok: true, run, saved, pending, rank } (saved is
                          false when that exact run was already in, sent before or on a board from before the form,
                          and then run has that one's id, or none for one from before; pending is true when it's a top
-                         10 run that waits for a check, see "Saving a run, and checking top 10 runs") or { error },
+                         10 run that waits for a check, see "Saving a run, and checking top-10 runs") or { error },
                          the error saying what to fix: login (not signed in), course, name, time, miss, ground, video (not a
-                         link, or none for a top 10 run, the only kind that needs one), rate (too many), off (not set
+                         link, or none for a top-10 run, the only kind that needs one), rate (too many), off (not set
                          up, or GitHub didn't take it) or bad
-   GET /api/pending and POST /api/review are for checking top 10 runs (see below), GET /api/run is a run's numbers
+   GET /api/pending and POST /api/review are for checking top-10 runs (see below), GET /api/run is a run's numbers
    from when it was sent (see "Each run's page"), GET /api/comments is the comments on a run's YouTube video (see
    "YouTube comments"), POST /api/claim and /api/claim/review are for claiming legacy runs (see "Claiming legacy
    runs"), and POST /api/link is for the name on a player's own link (see "Players' own links").
@@ -581,13 +581,13 @@ async function memberOf(env, id, maxAge) {
   return kept.member;
 }
 
-/* Saving a run, and checking top 10 runs
+/* Saving a run, and checking top-10 runs
    Every run sent from the website gets an id, for its page (ballkour.com/runs/<id>), and the time it was sent
    ("sentAt"). Ids are numbers in the order runs are saved, from 1 ("1", "2", …), counted by runs.json's "lastId" so
    none is ever used twice, even after a run is deleted by hand. (The first few runs, from before, have random ids.) A run that would put its player on a course's top 10 (their new best, faster than the #10's) isn't put
    on the board straight away: it waits in runs.json's "pending" until a reviewer checks its video, on its page or at
    ballkour.com/submit, then goes on the board (Approve, into "runs") or into "declined" (Turn down), either way with
-   who checked it and when ("checkedBy" and "checkedAt"). So a top 10 run needs a video, and one without is turned
+   who checked it and when ("checkedBy" and "checkedAt"). So a top-10 run needs a video, and one without is turned
    down ({ error: "video" }). Every other run goes on the board straight away, with or without one. Turned-down
    runs are kept so their page can still say what happened, and reviewers can look back over every run. Reviewers are
    everyone on the server with a role in REVIEWER_ROLES (wrangler.toml). Discord is asked right before every Approve or
@@ -816,7 +816,7 @@ const courseFile = (files, n) => files && Object.keys(files).find((k) => k.start
    "A run's page" in index.html): the run, its video, and what it did to the boards, both when it was sent and on
    today's boards. Reviewers get Approve and Turn down there too.
    Ballkyrie posts every run in the run submissions channel (RUNS_CHANNEL in wrangler.toml), with a View run button to
-   its page (see runPost). The post stays as it was sent, except that a top 10 run's, which waits for a check, turns
+   its page (see runPost). The post stays as it was sent, except that a top-10 run's, which waits for a check, turns
    green or red once a moderator approves it or turns it down, says who did and when, and gets the numbers as they are
    then, the same as the DM to its player (afterCheck). For that, the post's message on Discord is kept in PROFILES as
    post:<id> until then. Ballkyrie needs to be able to see the
@@ -994,7 +994,7 @@ function bestBefore({ n, run, before, mine }, stats) {
 /* The run's post in the run submissions channel. Its title says what the run is, and opens its page:
      New record submission by NAME!    their best on the course, and #1 there
      New podium submission by NAME!    their best, and #2 or #3
-     New top 10 submission by NAME!    their best, and #4 to #10
+     New top-10 submission by NAME!    their best, and #4 to #10
      New personal best by NAME!        their best, past the top 10 (or their first run there)
      New submission by NAME!           not their best
    Under it: the course, who sent it, their in-game name and the video, then three blocks side by side. New personal
@@ -1006,7 +1006,7 @@ function bestBefore({ n, run, before, mine }, stats) {
    added to their rating, and where it moved them in the ratings, in the same rows. A run that isn't
    their best is This run beside Personal best: its course rating and place are the ones it would get on its own, and
    neither has anything from the player ratings, which it doesn't count toward.
-   A top 10 run, which waits for a check, is in yellow, with its numbers as they'd be once approved, and says so at the
+   A top-10 run, which waits for a check, is in yellow, with its numbers as they'd be once approved, and says so at the
    bottom, until a moderator checks it (see checkedPost, which also has what changes then). Every other run is in green. Under it are View run (which
    the title opens too), Board (the course's) and Profile (the player's panel). The DM to the player once a moderator
    checks their run has the same blocks and buttons (checkedRunMessage).
@@ -1176,7 +1176,7 @@ const GREEN = 0x00e697, YELLOW = 0xffd54f, RED = 0xff6a4f;
 function runPost(info) {
   const { n, courseName, courseFlag, run, pending, site, checked } = info;
   const { best, place, fields } = runBlocks(info);
-  const what = !best ? "New submission" : place === 1 ? "New record submission" : place <= 3 ? "New podium submission" : place <= 10 ? "New top 10 submission" : "New personal best";
+  const what = !best ? "New submission" : place === 1 ? "New record submission" : place <= 3 ? "New podium submission" : place <= 10 ? "New top-10 submission" : "New personal best";
   // "New assisted record submission by NAME!": a run played in Assist Mode, for its course's assisted board
   const title = `${isAssisted(run) ? what.replace(/^New /, "New assisted ") : what} by ${titleSafe(run.name)}!`;
   return {
@@ -1190,7 +1190,7 @@ function runPost(info) {
       fields: [
         { name: "Sent by", value: `<@${run.discord}>`, inline: true },
         { name: "Player name", value: mdSafe(run.name), inline: true },
-        // Only top 10 runs need a video, so the rest can come without one
+        // Only top-10 runs need a video, so the rest can come without one
         { name: "Video", value: run.video ? `[Watch](${run.video})` : "None", inline: true },
         ...fields,
       ],
@@ -1204,13 +1204,13 @@ async function postRun(env, info) {
   if (!env.RUNS_CHANNEL || !env.DISCORD_BOT_TOKEN) return;
   const message = runPost(info);
   const sent = await postIn(env, env.RUNS_CHANNEL, message, `run ${info.run.id}`);
-  // A top 10 run's post changes once a moderator checks it (checkedPost), so its message is kept until then
+  // A top-10 run's post changes once a moderator checks it (checkedPost), so its message is kept until then
   if (info.pending && sent && sent.id && env.PROFILES) {
     await env.PROFILES.put(postKey(info.run.id), JSON.stringify({ channel: env.RUNS_CHANNEL, id: sent.id, message }))
       .catch((e) => console.error(`run ${info.run.id}: couldn't keep its post for when it's checked: ${(e && e.message) || e}`));
   }
 }
-// Once a moderator checks a top 10 run, its post is made again (runPost) with what it does to the boards then, the same
+// Once a moderator checks a top-10 run, its post is made again (runPost) with what it does to the boards then, the same
 // as the DM to its player (see afterCheck), in green (approved) or red (turned down, with its title struck through),
 // and says who checked it and when. Without those numbers (they couldn't be worked out), it keeps the ones from when
 // it was sent. A post that wasn't kept (from before posts were, or one PROFILES couldn't save) stays as it is.
@@ -1259,7 +1259,7 @@ async function postIn(env, channel, message, what) {
   if (!res.ok) { console.error(`${what}: Ballkyrie couldn't post in channel ${channel}, Discord said ${res.status} ${(await res.text()).slice(0, 200)}`); return null; }
   return res.json().catch(() => null);
 }
-/* Ballkyrie tells a player in a direct message when a moderator checks their top 10 run (approved, or turned down) or
+/* Ballkyrie tells a player in a direct message when a moderator checks their top-10 run (approved, or turned down) or
    their claim to legacy runs (linked, or turned down), with a button to the run's page or their stats. Someone who
    doesn't take DMs from server members, or isn't on the server, just doesn't get one (and `npx wrangler tail` says so).
    Only with NOTIFY_PLAYERS = "on" in wrangler.toml, so the test copy never messages anyone. */
@@ -1295,7 +1295,7 @@ function checkedRunMessage(info) {
     components: runButtons(info),
   };
 }
-// Once a moderator checks a top 10 run: what it does to the boards now (or would have, for one turned down), worked out
+// Once a moderator checks a top-10 run: what it does to the boards now (or would have, for one turned down), worked out
 // once for both its post (checkedPost) and the DM to its player (checkedRunMessage), so the two always match. before
 // is runs.json just before it went onto the board or into "declined", and by the moderator's name.
 async function afterCheck(env, ctx, { run, n, approve, before, by, site }) {
@@ -1373,7 +1373,7 @@ async function submit(request, env, ctx) {
   // mistakes (whole hundredths, under 100 minutes)
   const assisted = body.assisted === true;
   const mistakes = Number(body.mistakes), ground = Number(body.ground);
-  // Only a top 10 run needs a video (see below), but one that's there has to be a link
+  // Only a top-10 run needs a video (see below), but one that's there has to be a link
   const rawVideo = String(body.video ?? "").trim();
   const video = rawVideo ? cleanVideo(rawVideo) : "";
   if (!Number.isInteger(n) || n < 1 || n > 99) return answer(400, { error: "course" });
@@ -1415,7 +1415,7 @@ async function submit(request, env, ctx) {
     const today = ["runs", "pending", "declined"].flatMap((k) => Object.values(data[k]).flat()).filter((r) => r && r.discord === run.discord && r.date === run.date).length;
     if (today >= 20) return { error: "rate", status: 429 };
     const { rank, newBest } = placeOf(run, [...board, ...ofMode(list, run)], removed);
-    // A top 10 run waits for a moderator to check its video, so it can't be sent without one (the form says so first:
+    // A top-10 run waits for a moderator to check its video, so it can't be sent without one (the form says so first:
     // videoRank() in index.html)
     if (rank <= 10 && newBest && !run.video) return { error: "video", status: 400 };
     before = structuredClone(data);
