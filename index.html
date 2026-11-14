@@ -1188,6 +1188,12 @@ button.run-name:focus-visible { text-decoration: underline; text-decoration-thic
 .rt-board .stat.miss .icon { color: var(--ink-3); }
 .tag-tier { flex: none; height: 17px; padding: 0 5px; font-size: 9.5px; letter-spacing: .04em; color: var(--arc); background: rgba(51, 198, 255, .1); border: 1px solid rgba(51, 198, 255, .32); }
 .tag-tier.elite { color: var(--gold); background: rgba(255, 213, 79, .1); border-color: rgba(255, 213, 79, .34); }
+/* On a course's board, it opens the Player ratings: a little more to tap than the tag itself */
+a.tag-tier { position: relative; text-decoration: none; transition: border-color .15s, background-color .15s; }
+a.tag-tier::after { content: ""; position: absolute; inset: -6px -4px; }
+@media (hover: hover) { a.tag-tier:hover { background: rgba(51, 198, 255, .2); border-color: rgba(51, 198, 255, .6); } }
+@media (hover: hover) { a.tag-tier.elite:hover { background: rgba(255, 213, 79, .2); border-color: rgba(255, 213, 79, .6); } }
+a.tag-tier:focus-visible { outline-offset: 2px; }
 /* The formulas under the Player ratings */
 .rt-math { display: grid; gap: 4px; padding: 10px 12px 12px; border-top: 1px solid var(--line); font: 400 12.5px/1.45 var(--body); word-spacing: .12em; color: var(--ink-3); }
 .rt-math p { margin: 0; }
@@ -3093,9 +3099,12 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // board by time when it's sorted by mistakes, so the fastest three keep their gold, silver and bronze wherever they
   // are. mark: it's the run "See it on the board" opened the board for (tagged This run), or "plain": a player's best
   // that a run's result opened it for (see playerSpot), only marked
-  // A player's actual Top % in a rating (q: { share, tier }, see boardRatings) as a tag after their name, gold when
-  // their tier, and role, is the Top 5% or better, like the Player ratings'
-  const shareTag = (q) => `<span class="tag tag-tier${q.tier !== null && q.tier <= 5 ? " elite" : ""}">${esc(shareLabel(q.share))}</span>`;
+  // A player's actual Top % in a rating (q: { share, tier, tab }, see boardRatings) as a tag after their name, gold when
+  // their tier, and role, is the Top 5% or better, like the Player ratings'. It opens the Player ratings on that
+  // rating's tab with their row marked (see openBoard), like Top % in their panel.
+  const SEE_RATINGS = { top: "pl.seeUnassistedRatings", assisted: "pl.seeAssistedRatings", legacy: "pl.seeLegacyRatings" };
+  const shareTag = (q, key, name) => `<a class="tag tag-tier${q.tier !== null && q.tier <= 5 ? " elite" : ""}" href="/leaderboards/${ratingsPath(q.tab)}" ` +
+    `data-board="${RATINGS.n}" data-board-tab="${q.tab}" data-board-player="${esc(key)}" title="${esc(t(SEE_RATINGS[q.tab], { player: name }))}">${esc(shareLabel(q.share))}</a>`;
   function runRow(r, i, fresh, legacy, ratingOf, podium, mark) {
     const place = podium === undefined ? i : podium;
     const isNew = !!fresh && fresh.has(r);
@@ -3107,7 +3116,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const time = `${icon("bolt")}<span class="v">${shown}</span>`;
     return `<li class="run${place >= 0 && place < 3 ? " p" + (place + 1) : ""}${isNew ? " fresh" : ""}${mark ? " mark" : ""}${isGround(r) ? " g" : ""}" data-k="${esc(r.name)}">` +
       `<span class="run-rank">${i + 1}</span>` +
-      `<span class="run-who"><span class="run-line">${nameButton(playerKey(r), r.name)}${rating !== undefined ? shareTag(rating) : ""}${isNew ? `<span class="tag tag-new">${esc(t("lb.new"))}</span>` : ""}` +
+      `<span class="run-who"><span class="run-line">${nameButton(playerKey(r), r.name)}${rating !== undefined ? shareTag(rating, playerKey(r), r.name) : ""}${isNew ? `<span class="tag tag-new">${esc(t("lb.new"))}</span>` : ""}` +
         `${mark && mark !== "plain" ? `<span class="tag tag-this">${esc(t("lb.thisRun"))}</span>` : ""}</span></span>` +
       timeLink(r, time) + missHtml(r, true) +
       (r.date || rating !== undefined ? `<span class="run-date">` +
@@ -4006,8 +4015,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      → Map: player (see playerKey) → { rating, gain } */
   function boardRatings(c, then) {
     const r = ratings(then, ratingsOf(c));
-    // With their actual Top % in it (share, see topShare) and their tier, for the tag after their name
-    const out = new Map(r.players.map((p) => [p.key, { rating: p.rating, gain: null, share: topShare(p.rank, r.players.length), tier: p.tier }]));
+    // With their actual Top % in it (share, see topShare), their tier, and the Player ratings' tab it's on, for the tag
+    // after their name
+    const tab = tabOfRatings(r);
+    const out = new Map(r.players.map((p) => [p.key, { rating: p.rating, gain: null, share: topShare(p.rank, r.players.length), tier: p.tier, tab }]));
     if (!r.counted.includes(c)) return out;
     const all = then ? standingsOn(c, then.day, then.runs) : (({ top, rest }) => top.concat(rest))(standingsOf(c));
     const theirs = new Map();
