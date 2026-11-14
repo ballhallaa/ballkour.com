@@ -1307,7 +1307,6 @@ a.tag-tier:focus-visible { outline-offset: 2px; }
 .rev-meta { font: 400 12.5px/1.3 var(--mono); color: var(--ink-3); }
 .rev-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 3px; }
 .rev-actions .icon { width: 15px; height: 15px; }
-.rev-own { flex-basis: 100%; font: 400 14px/1.45 var(--body); color: var(--ink-2); }
 /* Approve and Turn down ask first, in the run's row: the question, then Yes and Cancel */
 .rev-ask { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; width: 100%; }
 .rev-q { flex-basis: 100%; font: 600 14.5px/1.35 var(--body); color: var(--ink); }
@@ -2450,7 +2449,6 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "rev.declined": "Turned down {name}’s {time}.",
   "rev.gone": "Someone already checked {name}’s {time}.",
   "rev.fail": "That didn’t go through. Try again in a moment.",
-  "rev.own": "This is your own run, so another moderator has to check it.",
   "runs.title": "Submitted runs",
   "runs.searchLabel": "Find a player’s submitted runs by in-game or Discord name",
   "runs.noMatch": "No submitted runs match “{query}”",
@@ -2535,7 +2533,6 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "claim.declinedNote": "Turned down {who}’s claim to the runs as {name}.",
   "claim.gone": "Someone already checked {who}’s claim to the runs as {name}.",
   "claim.takenRev": "The runs as {name} are already linked to someone else, so turn this claim down.",
-  "claim.own": "This is your own claim, so another moderator has to check it.",
   "link.title": "Your link:",
   "link.yours": "<b>Your link:</b> {link}",
   "link.pick": "Pick a name",
@@ -8057,8 +8054,6 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const btn = (act, ico, label, cls) => `<button class="btn btn-sm${cls ? ` ${cls}` : ""}" type="button" data-review="${esc(r.id)}" data-act="${act}">${icon(ico)}<span>${esc(label)}</span></button>`;
     const ask = reviewAsk && reviewAsk.id === r.id ? reviewAsk : null;
     const view = onItsPage ? "" : `<button class="btn btn-sm" type="button" data-run-open="${esc(r.id)}">${icon("play")}<span>${esc(t("rev.view"))}</span></button>`;
-    // Their own run: another moderator checks it (the Worker turns their Approve down too)
-    if (me && r.discord === me.id) return view + `<span class="rev-own">${esc(t("rev.own"))}</span>`;
     if (!ask) return view + btn("approve", "check", t("rev.approve"), "btn-primary") + btn("decline", "x", t("rev.decline"));
     const q = `rev-q-${esc(r.id)}${onItsPage ? "-page" : ""}`;
     return `<span class="rev-ask" role="group" aria-labelledby="${q}">` +
@@ -8127,7 +8122,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       // only goes there when it wasn't this reviewer's click that did it.
       if (runId === r.id) { renderRunTags(); renderRunCheck(out.ok ? "" : note); renderRunStats(); }
     } else {
-      const why = esc(t(out.error === "own" ? "rev.own" : "rev.fail"));
+      const why = esc(t("rev.fail"));
       renderReview(why);
       if (runId === r.id) renderRunCheck(why);
     }
@@ -8175,8 +8170,6 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // A claim's buttons: View runs, Link, and Turn down, or, while it's asking, the question with Yes and Cancel
   function claimActions(x, i) {
     const btn = (act, ico, label, cls) => `<button class="btn btn-sm${cls ? ` ${cls}` : ""}" type="button" data-claim-review="${esc(claimKey(x))}" data-act="${act}">${icon(ico)}<span>${esc(label)}</span></button>`;
-    // Their own claim: another moderator checks it
-    if (me && x.discord === me.id) return btn("view", "eye", t("claim.view")) + `<span class="rev-own">${esc(t("claim.own"))}</span>`;
     if (!claimAsk || claimAsk.key !== claimKey(x)) {
       return btn("view", "eye", t("claim.view")) + btn("approve", "link", t("claim.approve"), "btn-primary") + btn("decline", "x", t("rev.decline"));
     }
@@ -8218,7 +8211,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       reviewClaims = reviewClaims.filter((y) => y !== x);
       await reloadRuns();
       claimRevNote = esc(t(out.ok ? (approve ? "claim.approved" : "claim.declinedNote") : "claim.gone", vars));
-    } else claimRevNote = esc(t(out.error === "taken" ? "claim.takenRev" : out.error === "own" ? "claim.own" : "rev.fail", vars));
+    } else claimRevNote = esc(t(out.error === "taken" ? "claim.takenRev" : "rev.fail", vars));
     renderReview();
   }
   $("#sub-review").addEventListener("keydown", onReviewKey);
