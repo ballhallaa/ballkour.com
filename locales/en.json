@@ -240,6 +240,8 @@
   "res.unassistedStats": "Unassisted stats",
   "res.assistedStats": "Assisted stats",
   "res.globalStats": "Global stats",
+  "res.newBest": "New personal best",
+  "res.thisRun": "This run",
   "res.coursesRun": "Courses run",
   "res.count": "{n} of {total}",
   "res.of": "#{rank} of {total}",

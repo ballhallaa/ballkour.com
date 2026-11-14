@@ -245,6 +245,8 @@
   "res.unassistedStats": "สถิติแบบไม่ช่วยเหลือ",
   "res.assistedStats": "สถิติแบบช่วยเหลือ",
   "res.globalStats": "สถิติโกลบอล",
+  "res.newBest": "สถิติส่วนตัวใหม่",
+  "res.thisRun": "การวิ่งนี้",
   "res.coursesRun": "คอร์สที่วิ่งแล้ว",
   "res.count": "{n} จาก {total}",
   "res.of": "#{rank} จาก {total}",

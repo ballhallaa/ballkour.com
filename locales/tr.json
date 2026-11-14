@@ -245,6 +245,8 @@
   "res.unassistedStats": "Yardımsız istatistikler",
   "res.assistedStats": "Yardımlı istatistikler",
   "res.globalStats": "Global istatistikler",
+  "res.newBest": "Yeni kişisel rekor",
+  "res.thisRun": "Bu koşu",
   "res.coursesRun": "Koşulan parkurlar",
   "res.count": "{n}/{total}",
   "res.of": "#{rank} / {total}",

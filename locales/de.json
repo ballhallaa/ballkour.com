@@ -245,6 +245,8 @@
   "res.unassistedStats": "Stats ohne Assistenz",
   "res.assistedStats": "Assistierte Stats",
   "res.globalStats": "Globale Stats",
+  "res.newBest": "Neue persönliche Bestzeit",
+  "res.thisRun": "Dieser Lauf",
   "res.coursesRun": "Gelaufene Strecken",
   "res.count": "{n} von {total}",
   "res.of": "#{rank} von {total}",

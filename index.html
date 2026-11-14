@@ -1531,6 +1531,29 @@ a.res-row:hover .res-label, a.res-row:focus-visible .res-label { color: var(--in
 /* A heading over a group of rows, like the bold ones in a run's post on Discord: Course stats, and Unassisted stats or
    Assisted stats. Medium, not semibold, so the i in "Assisted" stays clear (see "Small bold text"). */
 .res-head { margin: 0; padding: 14px 0 6px; font: 500 15px/1.3 var(--body); color: var(--ink); }
+/* A run's result as panels, like its picture on Discord (see "Run pictures"): the banner's colours with a faint grid,
+   and each part on a dark panel, two side by side where the card is wide enough */
+.res-card { container-type: inline-size; margin-top: 10px; padding: 10px; border-radius: 12px; border: 1px solid var(--line);
+  background:
+    linear-gradient(rgba(196, 255, 232, .02) 1px, transparent 1px) 0 0 / 22px 22px,
+    linear-gradient(90deg, rgba(196, 255, 232, .02) 1px, transparent 1px) 0 0 / 22px 22px,
+    radial-gradient(120% 90% at 0% 0%, #0a3022, transparent 70%),
+    linear-gradient(100deg, #061c15 0%, #071511 45%, #161109 100%); }
+.res-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+/* Two side by side leaves each row less room, so the gaps are smaller and a chip only takes its own width */
+@container (min-width: 600px) {
+  .res-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .res-sec .res-row { grid-template-columns: minmax(0, 1fr) auto auto; column-gap: 8px; }
+  .res-sec .res-row > span:empty { display: none; }
+  .res-sec .res-label { letter-spacing: .05em; }
+  .res-sec .res-value { font-size: 13.5px; }
+  .res-sec .res-delta { padding: 3px 5px; font-size: 11.5px; }
+}
+.res-sec { padding: 0 12px 2px; border-radius: 10px; background: rgba(8, 14, 12, .8); border: 1px solid var(--line); }
+.held .res-sec { border-color: rgba(255, 213, 79, .3); }
+.res-sec > .res-head { padding-top: 11px; }
+.res-sec > .res-course { border-top: 0; padding-top: 12px; }
+.res-pic { margin: 10px 0 0; display: flex; justify-content: flex-end; }
 /* How long after their old best a run came, on its own line under how much faster it was */
 .res-since { display: block; margin-top: 2px; }
 .res-foot { margin: 6px 0 0; padding-top: 10px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; border-top: 1px solid var(--line); font: 400 13px/1.4 var(--body); color: var(--ink-2); }
@@ -2287,6 +2310,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "res.unassistedStats": "Unassisted stats",
   "res.assistedStats": "Assisted stats",
   "res.globalStats": "Global stats",
+  "res.newBest": "New personal best",
+  "res.thisRun": "This run",
   "res.coursesRun": "Courses run",
   "res.count": "{n} of {total}",
   "res.of": "#{rank} of {total}",
@@ -5506,6 +5531,220 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     pictureWindow(esc(t("pic.title", { n: c.n, course: "\u0000" })).replace("\u0000", flagName(c)), (code) => drawPicture(c, d, code), filename, alt);
   }
 
+  /* ---------- Run pictures ----------
+     Picture on a run's result (after it's sent, and on its page) draws it the way its post on Discord looks
+     (tools/leaderboard-bot/run-card.mjs in the game repo: keep the two alike), from the result itself, so the two say
+     the same: the logo, the wordmark, the tagline and ballkour.com at the top, whose run it is under them (with where
+     it stands with the moderators), then the result's panels, two side by side. In the page's language, or another
+     one picked in its window (the result is made again in that one: see resCard). */
+  // The panels of a result (card: its .res-card) as the picture draws them: [{ heading, rows: [{ label, value, from,
+  // chip: { text, tone }, note }] }]. Only the run's own panel keeps its notes (how long after the old best it came).
+  function resModel(card) {
+    return [...card.querySelectorAll(".res-sec")].map((el, i) => {
+      const head = el.querySelector(".res-head");
+      return {
+        heading: el.dataset.picHead || (head ? head.textContent.trim() : ""),
+        rows: [...el.querySelectorAll(".res-row:not(.res-course)")].map((row) => {
+          const value = row.querySelector(".res-value");
+          const wasEl = value && value.querySelector(".was");
+          const d = row.querySelector(".res-delta");
+          const note = i === 0 && row.querySelector(".res-note");
+          return {
+            label: row.querySelector(".res-label").textContent.trim(),
+            from: wasEl ? wasEl.textContent.replace(/\s*→\s*$/, "").trim() : "",
+            value: value ? [...value.childNodes].filter((nd) => nd !== wasEl).map((nd) => nd.textContent).join("").trim() : "",
+            chip: d ? { text: d.textContent.trim(), tone: ["up", "down", "new", "same"].find((x) => d.classList.contains(x)) || "same" } : null,
+            note: note ? note.textContent.trim() : "",
+          };
+        }),
+      };
+    });
+  }
+  const RUN_CHIPS = { up: ["#00e697", "rgba(0,230,151,.12)"], down: ["#ff6a4f", "rgba(255,106,79,.12)"], new: ["#33c6ff", "rgba(51,198,255,.12)"], same: ["#76867f", "rgba(255,255,255,.06)"] };
+  // The picture (model: resModel's, meta: resCard's), in the language that's set
+  function paintRunPicture(model, meta, logo) {
+    const W = 680, pad = 14, gap = 12, colW = (W - 2 * pad - gap) / 2, headH = 58, lineH = 30;
+    const rowH = (r) => 34 + (r.note ? 21 : 0);
+    const secH = (sc) => 37 + sc.rows.reduce((h, r) => h + rowH(r), 0) + 4;
+    const pairs = [];
+    for (let i = 0; i < model.length; i += 2) pairs.push(model.slice(i, i + 2));
+    const pairH = pairs.map((pr) => Math.max(...pr.map(secH)));
+    const top = pad + headH + 6 + lineH + 10;
+    const H = Math.round(top + pairH.reduce((a, b) => a + b, 0) + gap * Math.max(0, pairs.length - 1) + pad);
+    const cv = document.createElement("canvas");
+    cv.width = W * 2; cv.height = H * 2;
+    const ctx = cv.getContext("2d");
+    ctx.scale(2, 2);
+    if ("lang" in ctx) ctx.lang = htmlLang();
+    // The background: the banner's colours, a faint grid, and the card's edge
+    picBox(ctx, 0.5, 0.5, W - 1, H - 1, 14);
+    ctx.save();
+    ctx.clip();
+    const base = ctx.createLinearGradient(0, 0, W, W * Math.tan(10 * Math.PI / 180));
+    base.addColorStop(0, "#061c15"); base.addColorStop(0.45, "#071511"); base.addColorStop(1, "#161109");
+    ctx.fillStyle = base; ctx.fillRect(0, 0, W, H);
+    const corner = ctx.createRadialGradient(0, 0, 0, 0, 0, W * 0.85);
+    corner.addColorStop(0, "#0a3022"); corner.addColorStop(1, "rgba(10,48,34,0)");
+    ctx.fillStyle = corner; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = "rgba(196,255,232,.02)";
+    for (let x = 0; x < W; x += 22) ctx.fillRect(x, 0, 1, H);
+    for (let y = 0; y < H; y += 22) ctx.fillRect(0, y, W, 1);
+    ctx.restore();
+    ctx.strokeStyle = "rgba(196,255,232,.11)"; ctx.lineWidth = 1;
+    picBox(ctx, 0.5, 0.5, W - 1, H - 1, 14); ctx.stroke();
+    // The top: the logo in its rainbow glow, the wordmark, the tagline, and ballkour.com in its slanted tag
+    const lx = pad + 4, ly = pad + 2, ls = 54, hcy = ly + ls / 2;
+    if (logo) {
+      if (ctx.createConicGradient && "filter" in ctx) {
+        ctx.save();
+        const halo = ctx.createConicGradient(-Math.PI / 2, lx + ls / 2, hcy);
+        ["#ff4b3e", "#ff9a2e", "#ffd23f", "#00e697", "#33c6ff", "#5a6bff", "#a54bd8", "#ff4b3e"].forEach((c, i, all) => halo.addColorStop(i / (all.length - 1), c));
+        ctx.filter = "blur(8px)"; ctx.globalAlpha = 0.45; ctx.fillStyle = halo;
+        ctx.beginPath(); ctx.arc(lx + ls / 2, hcy, ls * 0.6, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
+      ctx.drawImage(logo, lx, ly, ls, ls);
+    }
+    const nx = (logo ? lx + ls + 14 : lx);
+    picFont(ctx, 'italic 900 32px "Exo 2", "Barlow Condensed", sans-serif');
+    const ballW = ctx.measureText("BALL").width;
+    const mark = (text, x, color, shadow, glow) => {
+      ctx.save();
+      picText(ctx, text, x + 1.1, hcy - 6 + 1.1, shadow);
+      ctx.shadowColor = glow; ctx.shadowBlur = 14;
+      picText(ctx, text, x, hcy - 6, color);
+      ctx.restore();
+    };
+    mark("BALL", nx, "#ffffff", "#ff9a2e", "rgba(0,230,151,.3)");
+    mark("KOUR", nx + ballW, "#00e697", "#075c3e", "rgba(0,230,151,.35)");
+    picFont(ctx, "700 15px Barlow, sans-serif");
+    const site = "» ballkour.com", pw = ctx.measureText(site).width + 26, ph = 29, px = W - pad - 10 - pw;
+    const skew = (dx) => { ctx.save(); ctx.translate(px + pw / 2 + dx, hcy + dx); ctx.transform(1, 0, -Math.tan(12 * Math.PI / 180), 1, 0, 0); };
+    skew(3); ctx.fillStyle = "#ff9a2e"; picBox(ctx, -pw / 2, -ph / 2, pw, ph, 2); ctx.fill(); ctx.restore();
+    skew(0); ctx.fillStyle = "#00e697"; picBox(ctx, -pw / 2, -ph / 2, pw, ph, 2); ctx.fill(); ctx.restore();
+    picText(ctx, site, px + pw / 2, hcy, "#001a10", "center");
+    picFit(ctx, up(t("hero.tagline")), px - nx - 16, (size) => `600 ${size}px Barlow, sans-serif`, 10.5, 8, 0.2);
+    picText(ctx, up(t("hero.tagline")), nx, hcy + 16, "#a7b6b0");
+    // Whose run it is: the player, the course, Assisted, and the day, with its status at the right
+    const { run, n, assisted, status } = meta;
+    const c = course(n);
+    const rcy = pad + headH + 6 + lineH / 2;
+    let right = W - pad - 4;
+    if (status) {
+      const [fg, bg, edge] = status === "declined" ? ["#ff6a4f", "rgba(255,106,79,.12)", "rgba(255,106,79,.45)"] : ["#ffd54f", "rgba(255,213,79,.12)", "rgba(255,213,79,.45)"];
+      const text = t(status === "declined" ? "run.declined" : "run.pending");
+      picFont(ctx, "600 13px Barlow, sans-serif");
+      const sw = ctx.measureText(text).width + 18;
+      picBox(ctx, right - sw, rcy - 12, sw, 24, 6);
+      ctx.fillStyle = bg; ctx.fill(); ctx.strokeStyle = edge; ctx.stroke();
+      picText(ctx, text, right - sw / 2, rcy, fg, "center");
+      right -= sw + 12;
+    }
+    let x = pad + 4;
+    const dot = () => { picFont(ctx, "500 14px Barlow, sans-serif"); x += 9; x += picText(ctx, "·", x, rcy, "#76867f") + 9; };
+    picFont(ctx, "700 14px Barlow, sans-serif");
+    x += picText(ctx, run.name, x, rcy, "#ecf6f2");
+    const tag = assisted ? up(t("lb.tab.assisted")) : "";
+    const day = run.date ? formatDate(run.date) : "";
+    picFont(ctx, '600 10.5px "JetBrains Mono", monospace', 1.05);
+    const tagW = tag ? ctx.measureText(tag).width + 12 : 0;
+    picFont(ctx, "500 14px Barlow, sans-serif");
+    const dayW = day ? ctx.measureText(day).width + 18 + ctx.measureText("·").width : 0;
+    // Only the course's name gives way (…) when the line is too long
+    let place = c ? `${c.n} ${c.flag ? c.flag + " " : ""}${c.name}` : "";
+    picFont(ctx, `500 14px Barlow, ${EMOJI}`);
+    const room = right - x - 18 - ctx.measureText("·").width - (tag ? tagW + 9 : 0) - dayW;
+    while (place && ctx.measureText(place).width > room && place.length > 4) place = place.slice(0, -2).trimEnd() + "…";
+    if (place) { dot(); picFont(ctx, `500 14px Barlow, ${EMOJI}`); x += picText(ctx, place, x, rcy, "#a7b6b0"); }
+    if (tag) {
+      x += 9;
+      picBox(ctx, x, rcy - 9.5, tagW, 19, 5);
+      ctx.fillStyle = "rgba(255,128,192,.12)"; ctx.fill(); ctx.strokeStyle = "rgba(255,128,192,.5)"; ctx.stroke();
+      picFont(ctx, '600 10.5px "JetBrains Mono", monospace', 1.05);
+      picText(ctx, tag, x + 6, rcy, "#ff80c0");
+      x += tagW;
+    }
+    if (day) { dot(); picFont(ctx, "500 14px Barlow, sans-serif"); picText(ctx, day, x, rcy, "#a7b6b0"); }
+    // The panels, two side by side
+    let y = top;
+    pairs.forEach((pr, pi) => {
+      pr.forEach((sc, ci) => {
+        const x0 = pad + ci * (colW + gap), h = pairH[pi];
+        picBox(ctx, x0 + 0.5, y + 0.5, colW - 1, h - 1, 11);
+        ctx.fillStyle = "rgba(8,14,12,.8)"; ctx.fill();
+        ctx.strokeStyle = status === "pending" ? "rgba(255,213,79,.3)" : status === "declined" ? "rgba(255,106,79,.35)" : "rgba(196,255,232,.11)";
+        ctx.stroke();
+        const ix = x0 + 14, iw = colW - 28;
+        picFit(ctx, sc.heading, iw, (size) => `500 ${size}px Barlow, sans-serif`, 15, 11);
+        picText(ctx, sc.heading, ix, y + 21, "#ecf6f2");
+        let ry = y + 37;
+        sc.rows.forEach((r) => {
+          ctx.fillStyle = "rgba(196,255,232,.11)"; ctx.fillRect(ix, ry, iw, 1);
+          const cy = ry + 17.5;
+          // Its chip at the right, then its value (after what it was) ending before the chip's column
+          let chipLeft = ix + iw - 62;
+          if (r.chip) {
+            picFont(ctx, '600 12px "JetBrains Mono", monospace');
+            const cw = ctx.measureText(r.chip.text).width + 12;
+            const [fg, bg] = RUN_CHIPS[r.chip.tone] || RUN_CHIPS.same;
+            chipLeft = Math.min(chipLeft, ix + iw - cw);
+            picBox(ctx, ix + iw - cw, cy - 9, cw, 18, 6); ctx.fillStyle = bg; ctx.fill();
+            picText(ctx, r.chip.text, ix + iw - cw + 6, cy, fg);
+          }
+          const vRight = chipLeft - 12;
+          picFont(ctx, '600 14.5px "JetBrains Mono", monospace');
+          const vw = picText(ctx, r.value, vRight, cy, "#ecf6f2", "right");
+          let fromW = 0;
+          if (r.from) {
+            picFont(ctx, '500 14.5px "JetBrains Mono", monospace');
+            const fromText = `${r.from} → `;
+            fromW = ctx.measureText(fromText).width;
+            picText(ctx, fromText, vRight - vw, cy, "#76867f", "right");
+          }
+          // The label, cut short (…) if it would run into the value
+          const labelRoom = vRight - vw - fromW - 12 - ix;
+          let label = up(r.label);
+          picFont(ctx, '600 11.5px "JetBrains Mono", monospace', 0.92);
+          while (label.length > 2 && ctx.measureText(label).width > labelRoom) label = label.slice(0, -2) + "…";
+          picText(ctx, label, ix, cy, "#a7b6b0");
+          if (r.note) {
+            picFont(ctx, "400 13px Barlow, sans-serif");
+            picText(ctx, r.note, ix, cy + 20, "#a7b6b0");
+          }
+          ry += rowH(r);
+        });
+      });
+      y += pairH[pi] + gap;
+    });
+    return cv;
+  }
+  // The picture of a result (entry: resCard's) in a language (code), once its fonts and the logo have loaded
+  async function drawRunPicture(entry, code) {
+    const box = document.createElement("div");
+    box.innerHTML = inLang(code, entry.again);
+    const model = resModel(box.querySelector(".res-card"));
+    const c = course(entry.meta.n);
+    await picFonts([
+      'italic 900 32px "Exo 2"', "700 15px Barlow", "700 14px Barlow", "600 10.5px Barlow", "600 13px Barlow", "500 14px Barlow", "500 15px Barlow", "400 13px Barlow",
+      '600 11.5px "JetBrains Mono"', '600 14.5px "JetBrains Mono"', '500 14.5px "JetBrains Mono"', '600 12px "JetBrains Mono"', '600 10.5px "JetBrains Mono"', `14px ${EMOJI}`,
+    ], c && c.flag ? c.flag : "", code);
+    const logo = await loadImg("/assets/logo.webp?v=5");
+    return inLang(code, () => paintRunPicture(model, entry.meta, logo));
+  }
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-res-pic]");
+    const card = b && b.closest(".res-card");
+    const entry = card && resPics.get(card.dataset.resPicId);
+    if (!entry) return;
+    const { run, n, assisted } = entry.meta;
+    const c = course(n);
+    const model = resModel(card);
+    const alt = `${run.name} · ${c ? `${c.n} ${c.name}` : ""}${assisted ? ` (${t("lb.tab.assisted")})` : ""} · ${run.time}: ` +
+      model.map((sc) => `${sc.heading}: ` + sc.rows.map((r) => `${r.label} ${r.from ? `${r.from} → ` : ""}${r.value}${r.chip && r.chip.tone !== "same" ? ` (${r.chip.text})` : ""}`).join(", ")).join(". ");
+    const filename = `${slugOf(run.name)}-${n}${c ? `-${slugOf(c.name)}` : ""}${assisted ? "-assisted" : ""}-${String(run.time).replace(/[^0-9]+/g, "-")}.png`;
+    pictureWindow(esc(t("pic.button")), (code) => drawRunPicture(entry, code), filename, alt);
+  });
+
   /* ---------- Player pictures ----------
      Picture in a player's panel (by Copy link) draws their stats the same way, to save, copy or share: their name and
      Discord, their Top 10s, Podiums and Records, the five boxes of the panel's Global section (Rating, Place, Top %,
@@ -8093,7 +8332,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     // And their Global rating (see ratingsSum), for their (Global) role on Discord
     const g = ratings(null, "global");
     const global = g.players.find((p) => p.discord === id) || null;
-    return { board, at, best: at >= 0 ? board[at] : null, player: r.players.find((p) => p.discord === id) || null, global, globalTotal: g.players.length, total: r.players.length, counted: r.counted.length, medals: medalsOf("d:" + id, assisted) };
+    // And their Top 10s, Podiums and Records on the other kind's boards, for their Global counts (both kinds' boards)
+    return { board, at, best: at >= 0 ? board[at] : null, player: r.players.find((p) => p.discord === id) || null, global, globalTotal: g.players.length,
+      globalCounted: g.counted.length, otherMedals: medalsOf("d:" + id, !assisted), total: r.players.length, counted: r.counted.length, medals: medalsOf("d:" + id, assisted) };
   }
   // Where they'd stand with a run that isn't on the board yet (a top-10 run waiting for a check): it goes in with
   // the other runs just long enough to work that out
@@ -8156,6 +8397,12 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       counted: after.counted,
       global: after.global ? [before.global ? globalOf(before.global) : null, globalOf(after.global)] : null,
       globalOf: after.globalTotal,
+      // Their courses run, Top 10s, Podiums and Records over both kinds' boards, as the Worker has them
+      globalCounts: after.global ? {
+        courses: [before.global ? before.global.courses : 0, after.global.courses],
+        ...Object.fromEntries(["top10s", "podiums", "records"].map((k) => [k, [before.medals[k] + before.otherMedals[k], after.medals[k] + after.otherMedals[k]]])),
+      } : null,
+      globalCounted: after.globalCounted,
       top10s: [before.medals.top10s, after.medals.top10s],
       podiums: [before.medals.podiums, after.medals.podiums],
       records: [before.medals.records, after.medals.records],
@@ -8193,7 +8440,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     attrs: `data-board="${n}"${assisted ? ' data-board-tab="assisted"' : ""} data-board-player="${esc(key)}"` };
   const toRatings = (tab, key) => key && { href: `/leaderboards/${ratingsPath(tab)}`,
     attrs: `data-board="${RATINGS.n}" data-board-tab="${tab}" data-board-player="${esc(key)}"` };
-  const toRuns = (key, assisted) => key && { href: playerPath(key, true), attrs: `data-res-runs="${esc(key)}" data-res-mode="${assisted ? "assisted" : ""}"` };
+  const toRuns = (key, mode) => key && { href: playerPath(key, true), attrs: `data-res-runs="${esc(key)}" data-res-mode="${mode === true ? "assisted" : mode || ""}"` };
   document.addEventListener("click", (e) => {
     const a = e.target.closest("a[data-res-runs]");
     if (!a || e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
@@ -8208,6 +8455,21 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // like a run's post on Discord: Course stats, and Unassisted stats or Assisted stats (the player's, in the ratings
   // of the run's kind)
   const courseHead = (html) => `<div class="res-row res-course"><span class="res-label">${html}</span></div>`;
+  /* The result as panels (see "Run pictures"): sec() is one, with its heading (head: a course head or a resHead) and
+     rows, and resCard() puts them in the card, two side by side where there's room, with Picture at the bottom.
+     again() makes the same card once more (in another language, through inLang), for its picture; meta says whose run
+     it is: { run, n, assisted, status } (status: "pending" or "declined", or none). picHead: the run's panel's heading
+     in the picture ("New personal best", "This run"), where the card has the course's name. */
+  const sec = (head, rows, picHead = "") => (rows ? `<section class="res-sec"${picHead ? ` data-pic-head="${esc(picHead)}"` : ""}>${head}${rows}</section>` : "");
+  const resPics = new Map();
+  let resPicN = 0;
+  function resCard(sections, again, meta) {
+    const id = String(++resPicN);
+    resPics.set(id, { again, meta });
+    if (resPics.size > 40) resPics.delete(resPics.keys().next().value);
+    return `<div class="res-rows res-card" data-res-pic-id="${id}"><div class="res-grid">${sections}</div>` +
+      `<p class="res-pic"><button class="btn btn-sm" type="button" data-res-pic>${icon("image")}<span>${esc(t("pic.button"))}</span></button></p></div>`;
+  }
   const resHead = (key) => `<p class="res-head">${esc(t(key))}</p>`;
   // Its mistakes, or its ground time on an assisted board
   const missRowLabel = (assisted) => t(assisted ? "lb.sort.ground" : "lb.sort.miss");
@@ -8217,30 +8479,32 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   const lessHtml = (diff, text) => (!diff ? sameHtml : `<span class="res-delta ${diff < 0 ? "up" : "down"}">${diff < 0 ? "▼" : "▲"} ${esc(text)}</span>`);
   /* A run's Time and Mistakes (or Ground time) rows, each with how it compares with another run of theirs (other:
      { time, miss }, either one missing when it isn't known): their old best, after it ("3:30.12 → 3:24.59", replaced
-     true), or their best, which it didn't beat. Without one, it's their first run there (New). note: under the time. */
-  function timeRowsHtml(run, other, { replaced = false, assisted = false, note = "" } = {}) {
+     true), or their best, which it didn't beat. Without one, it's their first run there (New). note: under the time.
+     to: where both rows open (the course's board, see toBoard). */
+  function timeRowsHtml(run, other, { replaced = false, assisted = false, note = "", to = null } = {}) {
     const miss = runMiss(run);
     const from = other ? other.time : null;
     const diff = from ? Math.round((toSeconds(run.time) - toSeconds(from)) * 100) / 100 : 0;
     const fromMiss = other && Number.isFinite(other.miss) ? other.miss : null;
     return resRow(t("lb.sort.time"), (replaced && from && from !== run.time ? was(esc(from)) : "") + esc(run.time),
-      other ? (from ? lessHtml(diff, gap(Math.abs(diff))) : "") : deltaHtml(null), note) +
+      other ? (from ? lessHtml(diff, gap(Math.abs(diff))) : "") : deltaHtml(null), note, to) +
       (Number.isFinite(miss) ? resRow(missRowLabel(assisted),
         (replaced && fromMiss !== null && fromMiss !== miss ? was(esc(missShown(fromMiss, assisted))) : "") + esc(missShown(miss, assisted)),
-        other ? (fromMiss !== null ? lessHtml(miss - fromMiss, missShown(Math.abs(miss - fromMiss), assisted)) : "") : deltaHtml(null)) : "");
+        other ? (fromMiss !== null ? lessHtml(miss - fromMiss, missShown(Math.abs(miss - fromMiss), assisted)) : "") : deltaHtml(null), "", to) : "");
   }
   /* A run that isn't its player's best, on its own (alone: see aloneOf, or the Worker's): the course (head), its time
      and mistakes (or ground time) against their best (best: { time, miss }), and under Course stats the course rating
      its time gets (none on a broken course) and the place it would take of players, which open the board. Then their
      own stats (s: see statsFrom, or the Worker's), which the run doesn't change, so each says ▲ 0. key: the player's
      (see toBoard). */
-  function aloneRowsHtml(head, run, alone, players, best, { n, s, key = "", assisted = false, they = false } = {}) {
+  function aloneRowsHtml(head, run, alone, players, best, opts = {}) {
+    const { n, s, key = "", assisted = false, they = false, status = "" } = opts;
     const to = toBoard(n, key, assisted);
-    return `<div class="res-rows">` + courseHead(head) + timeRowsHtml(run, best || {}, { assisted }) +
-      resHead("res.courseStats") +
-      (typeof alone.points === "number" ? resRow(t("res.rating"), esc(points(alone.points)), "", "", to) : "") +
-      resRow(t("res.rank"), esc(placeOf(alone.place, players)), "", "", to) +
-      (s ? mineRowsHtml(s, { key, assisted, they, again: true }) : "") + `</div>`;
+    return resCard(sec(courseHead(head), timeRowsHtml(run, best || {}, { assisted, to }), t("res.thisRun")) +
+      sec(resHead("res.courseStats"), (typeof alone.points === "number" ? resRow(t("res.rating"), esc(points(alone.points)), "", "", to) : "") +
+        resRow(t("res.rank"), esc(placeOf(alone.place, players)), "", "", to)) +
+      (s ? mineRowsHtml(s, { key, assisted, they, again: true }) : ""),
+    () => aloneRowsHtml(head, run, alone, players, best, opts), { run, n, assisted, status });
   }
   /* A player's best on a course before a run (s.old: its time, see statsFrom), with its mistakes and date, like the
      Worker's bestBefore for the run's post: their run with that time among the course's runs that count (see
@@ -8292,7 +8556,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // adds. Every row shows, with ▲ 0 for what it didn't change, and opens what it's about (see toBoard). they:
   // someone else's run, on its page ("their old best", not "your"). held: it's waiting for a check. again: it was sent
   // before, so nothing changes now (no note that their role is about to). key: the player's.
-  function statRowsHtml(n, run, s, { held = false, they = false, again = false, assisted = false, key = "" } = {}) {
+  function statRowsHtml(n, run, s, opts = {}) {
+    const { held = false, they = false, again = false, assisted = false, key = "", status = "" } = opts;
     const c = course(n);
     const old = oldBestOf(assisted ? assistedOf(c) : c, run, s);
     // A run sent just now that the Worker didn't answer with is from right now
@@ -8303,20 +8568,23 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     // (its mistakes only when it's still on the boards to look up), with how long after it the run came, or that it's
     // their first run there
     const note = !s.old ? esc(t(they ? "run.first" : "res.first")) : since;
-    let html = `<div class="res-rows">` + courseHead(boardLink(c, assisted, "")) +
-      timeRowsHtml(run, s.old ? { time: s.old, miss: old ? runMiss(old) : null } : null, { replaced: true, assisted, note });
-    // Course stats: the course rating (a course that's broken right now has none, and counts for no rating), and its
-    // place on the course, which open its board
+    // Every row opens what it's about: the time and mistakes, the course's board with their best there marked
     const board = toBoard(n, key, assisted);
-    html += resHead("res.courseStats");
+    let html = sec(courseHead(boardLink(c, assisted, "")),
+      timeRowsHtml(run, s.old ? { time: s.old, miss: old ? runMiss(old) : null } : null, { replaced: true, assisted, note, to: board }), t("res.newBest"));
+    // Course stats: the course rating (a course that's broken right now has none, and counts for no rating), and its
+    // place on the course, which open its board too
+    let courseRows = "";
     if (s.points) {
       const [from, to] = s.points;
-      html += resRow(t("res.rating"), (from !== null && from !== to ? was(esc(points(from))) : "") + esc(points(to)),
+      courseRows += resRow(t("res.rating"), (from !== null && from !== to ? was(esc(points(from))) : "") + esc(points(to)),
         deltaHtml(from === null ? null : to - from, points(Math.abs(to - (from || 0)))), "", board);
     }
-    html += resRow(t("res.rank"), (s.was && s.was !== s.place ? was(`#${s.was}`) : "") + esc(placeOf(s.place, s.players)),
+    courseRows += resRow(t("res.rank"), (s.was && s.was !== s.place ? was(`#${s.was}`) : "") + esc(placeOf(s.place, s.players)),
       deltaHtml(s.was ? s.was - s.place : null, String(Math.abs(s.was - s.place))), "", board);
-    return html + mineRowsHtml(s, { key, assisted, held, they, again }) + `</div>`;
+    html += sec(resHead("res.courseStats"), courseRows);
+    return resCard(html + mineRowsHtml(s, { key, assisted, held, they, again }), () => statRowsHtml(n, run, s, opts),
+      { run, n, assisted, status: status || (held ? "pending" : "") });
   }
   /* A player's stats in the ratings of a run's kind (s: see statsFrom, or the Worker's), under Unassisted stats or
      Assisted stats when there are any: their rating, place, and Top %, which open the Player ratings with their row
@@ -8326,7 +8594,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      key, held, they, and again: see statRowsHtml. */
   function mineRowsHtml(s, { key = "", assisted = false, held = false, they = false, again = false } = {}) {
     const ratingsTo = toRatings(assisted ? "assisted" : "top", key);
-    const runsTo = toRuns(key, assisted);
+    const runsTo = toRuns(key, assisted ? "assisted" : "");
     let mine = "", global = "";
     // That their role changes, under each Top % that changes it
     const roleNote = !held && !they && !again ? esc(t("res.roleNote")) : "";
@@ -8379,7 +8647,17 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       const [from, to] = s[k];
       mine += resRow(t(label), (to !== from ? `<span class="was">${from} →</span> ` : "") + to, deltaHtml(to - from, String(Math.abs(to - from))), "", runsTo);
     });
-    return (mine && resHead(assisted ? "res.assistedStats" : "res.unassistedStats") + mine) + (global && resHead("res.globalStats") + global);
+    // Their courses run, Top 10s, Podiums and Records over both kinds' boards, which open their Global runs (the
+    // Worker's numbers from before it kept these have none)
+    const globalRuns = toRuns(key, "global");
+    [["courses", "res.coursesRun"], ["top10s", "res.top10s"], ["podiums", "res.podiums"], ["records", "res.records"]].forEach(([k, label]) => {
+      const pair = globalTo && s.globalCounts && s.globalCounts[k];
+      if (!Array.isArray(pair) || typeof pair[1] !== "number") return;
+      const [from, to] = pair;
+      const shown = (v) => (k === "courses" && typeof s.globalCounted === "number" ? t("res.count", { n: v, total: s.globalCounted }) : localNum(v));
+      global += resRow(t(label), (from !== to ? was(esc(localNum(from))) : "") + esc(shown(to)), deltaHtml(to - from, String(Math.abs(to - from))), "", globalRuns);
+    });
+    return sec(resHead(assisted ? "res.assistedStats" : "res.unassistedStats"), mine) + sec(resHead("res.globalStats"), global);
   }
   // Whether a run that's just been sent (as the Worker answered with it) is its player's best on the course now
   // (after: see standing). A run with the same time but more mistakes isn't.
@@ -9012,7 +9290,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const record = s.record
       ? `<p class="res-title record">${icon("trophy")}<span>${withCourse(held ? "run.wouldRecord" : which === "then" ? "res.record" : "run.isRecord")}</span></p>`
       : "";
-    return record + statRowsHtml(x.n, run, s, { held, they: true, assisted: x.assisted, key: playerKey(run) });
+    return record + statRowsHtml(x.n, run, s, { held, they: true, assisted: x.assisted, key: playerKey(run), status: x.status === "declined" ? "declined" : "" });
   }
   // When sent, from the Worker. It's saved as the run is sent, so for a run that's just come in, it's asked for again
   // once in a few seconds if it isn't there yet. runAsking: the runs it's asking for the first time, whose stats wait.
