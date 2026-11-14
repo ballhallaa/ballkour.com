@@ -1035,7 +1035,7 @@ function bestBefore({ n, run, before, mine }, stats) {
    Under it: the course, who sent it, their in-game name and the video, then three blocks side by side. New personal
    best is the run: its time, mistakes (or ground time), course rating, the place it takes on the course, the player's
    rating, place and Top % in the player ratings with it, the courses they've run and their Top 10s, Podiums and Records when it changes
-   them, and its date. Under the blocks in the DM to the player, New Discord role names the roles on our Discord it gives them, once it's on the board. Old personal best is the same for their best on the course
+   them, and its date (in the post only beside an old best, since the post goes up as the run is sent). Under the blocks in the DM to the player, New Discord role names the roles on our Discord it gives them, once it's on the board. Old personal best is the same for their best on the course
    before it, with their place, rating, place and Top % in the ratings as they were. Comparison is what changed between
    the two, and how long after the old one it came. On their first run on a course there's just the run, with what it
    added to their rating, and where it moved them in the ratings, in the same rows. A run that isn't
@@ -1050,7 +1050,7 @@ function bestBefore({ n, run, before, mine }, stats) {
 // it (checkedRunMessage), with whether it's its player's best on the course and the place it takes there. A run that's
 // been turned down (checked.approve false) is Turned-down run, beside Personal best: the best it would have replaced,
 // which still is, with what the run would have done.
-function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pending, courseName, courseFlag }) {
+function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pending, courseName, courseFlag }, { post = false } = {}) {
   const s = stats || {};
   // A run's ratings are the ones of its kind: the unassisted ones, or an assisted run's assisted ones, named the way
   // the Player ratings' tabs and the run's page name them (not Global, which is both put together)
@@ -1091,6 +1091,9 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pendin
   // didn't move, or "(New)" when there was nothing before (their first rating, or the course's first rating for them).
   // The player ratings are over every course, so a first run on one can still move a player who's run others.
   const lone = best && !old;
+  // When the run was sent, which the post (post) leaves out when there's no old best beside it: the post goes up as
+  // the run's sent, so Discord's time on it says the same. The DM goes once it's checked, so it keeps it.
+  const runDate = !post || !!old;
   const known = (v) => (v === null || v === undefined ? null : v);
   const signed = (v) => `${v < 0 ? "−" : "+"}${Math.abs(v)}`;
   // A row's number before the run (fromV, null for nothing) and with it (to), each written by show, and the change (up:
@@ -1157,7 +1160,7 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pendin
     return {
       own: [`Time: ${r.time}`, isGround(r) ? `Ground time: ${groundText(r.ground)}` : Number.isInteger(r.mistakes) && `Mistakes: ${r.mistakes}`].filter(Boolean),
       sets: sets.map(([heading, rows]) => [heading, rows.filter(Boolean)]).filter(([, rows]) => rows.length),
-      date: whenText(r) && `Date: ${whenText(r)}`,
+      date: (!first || runDate) && whenText(r) && `Date: ${whenText(r)}`,
     };
   };
   // Them in one block, each set of stats under its bold heading, and the date last, after a blank line so it isn't read
@@ -1349,7 +1352,7 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pendin
     roles,
     picture,
     // When the run, and the old best beside it, were sent (Discord writes each in every reader's own time zone)
-    dates: { run: whenText(run), old: old ? whenText(old) : "", oldName: best && !down ? "Old personal best" : "Personal best" },
+    dates: { run: runDate ? whenText(run) : "", old: old ? whenText(old) : "", oldName: best && !down ? "Old personal best" : "Personal best" },
     fields: [
       ...(lone ? grid(down ? "Turned-down run" : "New personal best", parts(run, now, true))
         : old ? columns([
@@ -1399,7 +1402,7 @@ const GAP = "\n\u200b";
 const NOT_BEST = "This isn't a new personal best, so their rating and rank don't change.";
 function runPost(info) {
   const { n, courseName, courseFlag, run, pending, site, checked } = info;
-  const { best, place, roles, fields } = runBlocks(info);
+  const { best, place, roles, fields } = runBlocks(info, { post: true });
   const what = !best ? "New submission" : place === 1 ? "New record submission" : place <= 3 ? "New podium submission" : place <= 10 ? "New top-10 submission" : "New personal best";
   // "New assisted record submission by NAME!": a run played in Assist Mode, for its course's assisted board
   const title = `${isAssisted(run) ? what.replace(/^New /, "New assisted ") : what} by ${titleSafe(run.name)}!`;
@@ -1479,7 +1482,7 @@ async function postRun(env, info) {
   if (!channel || !env.DISCORD_BOT_TOKEN) return;
   const message = runPost(info);
   const sent = await postIn(env, channel, message, `run ${info.run.id}`);
-  if (sent && sent.id) await startPicture(env, { channel, id: sent.id, message, blocks: runBlocks(info), sentBy: sentByLine(info.run), what: `run ${info.run.id}` });
+  if (sent && sent.id) await startPicture(env, { channel, id: sent.id, message, blocks: runBlocks(info, { post: true }), sentBy: sentByLine(info.run), what: `run ${info.run.id}` });
   // A top-10 run's post changes once a moderator checks it (checkedPost), so its message is kept until then
   if (info.pending && sent && sent.id && env.PROFILES) {
     await env.PROFILES.put(postKey(info.run.id), JSON.stringify({ channel, id: sent.id, message }))
@@ -1523,7 +1526,7 @@ async function checkedPost(env, info) {
   }).catch((e) => ({ ok: false, status: String((e && e.message) || e), text: async () => "" }));
   if (!res.ok) { console.error(`run ${run.id}: Ballkyrie couldn't change its post, Discord said ${res.status} ${(await res.text()).slice(0, 200)}`); return; }
   await env.PROFILES.delete(postKey(run.id)).catch(() => {});
-  if (info.stats) await startPicture(env, { channel: kept.channel, id: kept.id, message, blocks: runBlocks(info), sentBy: sentByLine(run), what: `run ${run.id}` });
+  if (info.stats) await startPicture(env, { channel: kept.channel, id: kept.id, message, blocks: runBlocks(info, { post: true }), sentBy: sentByLine(run), what: `run ${run.id}` });
 }
 // Ballkyrie posts a message in a channel. what says what it's about, for the log if it can't. → the message Discord
 // made ({ id, … }), or null if it didn't
