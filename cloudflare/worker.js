@@ -842,7 +842,8 @@ function onScale(stats) {
 // with it (a run waiting for a check, as if it were on the board already). before is runs.json as it was just before.
 // The page works out the same numbers from today's boards (statsFrom() in index.html): keep the two in step.
 //   { place, was, players, best, bestMiss, old, record, points, rating, rank, of, tier, courses, counted,
-//     top10s, podiums, records, global, globalOf, playersBefore, ofBefore, globalOfBefore, scale, alone }
+//     top10s, podiums, records, global, globalOf, globalCounts, globalCounted, playersBefore, ofBefore, globalOfBefore,
+//     scale, alone }
 // place and was are their place on the course with and before the run (was is null on their first run there),
 // players how many players are on the course's board with it (what was kept before there was players has none), best
 // and old their best time there with and before it, and bestMiss the mistakes on that best, or its ground time on an
@@ -865,9 +866,8 @@ function runStats(game, before, run, n) {
   listIn(after.runs, n).push(run);
   // Their place in the Global rating too (the unassisted and assisted ratings put together, see combine()), for their
   // (Global) role on Discord. The other kind's ratings don't change with this run, so they're worked out once.
-  const other = rate(loadCourses({ ...game.files, [RUNS_FILE]: JSON.stringify(before) }, game.courses, { assisted: !isAssisted(run) }));
-  const side = (runs) => {
-    const courses = loadCourses({ ...game.files, [RUNS_FILE]: JSON.stringify(runs) }, game.courses, { assisted: isAssisted(run) });
+  // Their Top 10s, Podiums and Records over these courses' boards, and the board of course n (board)
+  const medalsIn = (courses) => {
     const medals = { top10s: 0, podiums: 0, records: 0 };
     let board = [];
     for (const c of courses) {
@@ -880,12 +880,21 @@ function runStats(game, before, run, n) {
       if (i < 3) medals.podiums++;
       if (i === 0) medals.records++;
     }
+    return { medals, board };
+  };
+  const otherCourses = loadCourses({ ...game.files, [RUNS_FILE]: JSON.stringify(before) }, game.courses, { assisted: !isAssisted(run) });
+  const other = rate(otherCourses);
+  // And on the other kind's boards, for their Global counts (both kinds' boards together)
+  const otherMedals = medalsIn(otherCourses).medals;
+  const side = (runs) => {
+    const courses = loadCourses({ ...game.files, [RUNS_FILE]: JSON.stringify(runs) }, game.courses, { assisted: isAssisted(run) });
+    const { medals, board } = medalsIn(courses);
     const at = board.findIndex((r) => playerKey(r) === key);
     const rated = rate(courses);
     // combine() takes the unassisted ratings first: for an assisted run, that's the other kind's
     const all = combine(isAssisted(run) ? [other, rated] : [rated, other]);
     const g = all.players.find((x) => x.key === key) || null;
-    return { board, at, best: at >= 0 ? board[at] : null, p: rated.players.find((x) => x.key === key) || null, g, gTotal: all.players.length, total: rated.players.length, counted: rated.counted.length, medals };
+    return { board, at, best: at >= 0 ? board[at] : null, p: rated.players.find((x) => x.key === key) || null, g, gTotal: all.players.length, gCounted: all.counted.length, total: rated.players.length, counted: rated.counted.length, medals };
   };
   const b = side(before), a = side(after);
   const rated = !(game.courses.find((c) => c.n === n) || { broken: true }).broken;
@@ -908,6 +917,13 @@ function runStats(game, before, run, n) {
     tier: pair((p) => p.tier),
     global: a.g ? [b.g ? globalOf(b.g) : null, globalOf(a.g)] : null,
     globalOf: a.gTotal,
+    // Their courses run, Top 10s, Podiums and Records over both kinds' boards [before, with], and how many courses
+    // count toward the Global rating
+    globalCounts: a.g ? {
+      courses: [b.g ? b.g.courses : 0, a.g.courses],
+      ...Object.fromEntries(["top10s", "podiums", "records"].map((k) => [k, [b.medals[k] + otherMedals[k], a.medals[k] + otherMedals[k]]])),
+    } : null,
+    globalCounted: a.gCounted,
     // How many were in each before the run: on the course's board, rated in the run's kind, and in the Global rating
     playersBefore: b.board.length,
     ofBefore: b.total,
@@ -1022,7 +1038,7 @@ function bestBefore({ n, run, before, mine }, stats) {
 // it (checkedRunMessage), with whether it's its player's best on the course and the place it takes there. A run that's
 // been turned down (checked.approve false) is Turned-down run, beside Personal best: the best it would have replaced,
 // which still is, with what the run would have done.
-function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pending }) {
+function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pending, courseName, courseFlag }) {
   const s = stats || {};
   // A run's ratings are the ones of its kind: the unassisted ones, or an assisted run's assisted ones, named the way
   // the Player ratings' tabs and the run's page name them (not Global, which is both put together)
@@ -1156,40 +1172,163 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pendin
   const both = (a, b) => num(a) && num(b);
   const saved = old ? Math.round((toSeconds(old.time) - toSeconds(run.time)) * 100) / 100 : 0;
   const span = old ? spanText(old, run) : "";
+  // Comparison, in the same pieces as parts(): what changed from their old best to the run
+  const compare = () => ({
+    own: [
+      saved ? `Time ${saved > 0 ? "saved" : "behind"}: ${gapText(saved)}` : "Time: Same",
+      isGround(old) ? `Ground time: ${groundChange(run.ground - old.ground)}`
+        : Number.isInteger(old.mistakes) && `Mistakes: ${changeText(run.mistakes - old.mistakes)}`,
+    ].filter(Boolean),
+    sets: [
+      ["Course stats", [
+        both(now.points, was.points) && `Rating: ${changeText(now.points - was.points)}`,
+        both(now.place, was.place) && `Rank: ${movedText(was.place, now.place)}`,
+      ]],
+      [`${scope} stats`, [
+        both(now.rating, was.rating) && `Rating: ${changeText(now.rating - was.rating)}`,
+        both(now.rank, was.rank) && `Rank: ${movedText(was.rank, now.rank)}`,
+        tiers && `Top %: ${tierMoved ? `${was.tier} → ${now.tier}` : "Same"}`,
+        ...counts.map(([k, name]) => `${name}: ${changeText(s[k][1] - s[k][0])}`),
+      ]],
+      ["Global stats", [
+        both(now.gRating, was.gRating) && `Rating: ${changeText(now.gRating - was.gRating)}`,
+        both(now.gRank, was.gRank) && `Rank: ${movedText(was.gRank, now.gRank)}`,
+        gl && `Top %: ${gMoved ? `${was.gTier} → ${now.gTier}` : "Same"}`,
+      ]],
+    ].map(([heading, rows]) => [heading, rows.filter(Boolean)]).filter(([, rows]) => rows.length),
+    date: span && `${best && !down ? "Achieved" : "Sent"} after: ${span}`,
+  });
+  /* With an old best, three columns (cols: [{ name, p }], p from parts() or compare()): the run, the old best, and
+     Comparison. Each part (the run's own rows, each set of stats under its heading, and the dates) is a row of three
+     fields, so each starts level across the columns however much the one above it wraps (a date often takes two
+     lines). A column without a part has an empty field there. */
+  const columns = (cols) => {
+    const cell = (name, rows) => (rows && rows.length ? { name, value: rows.join("\n"), inline: true } : blank);
+    const headings = [...new Set(cols.flatMap(({ p }) => p.sets.map(([heading]) => heading)))];
+    return [
+      ...cols.map(({ name, p }) => cell(name, p.own)),
+      ...headings.flatMap((heading) => cols.map(({ p }) => cell(heading, (p.sets.find(([h]) => h === heading) || [])[1]))),
+      ...(cols.some(({ p }) => p.date) ? cols.map(({ p }) => cell("\u200b", p.date && [p.date])) : []),
+    ];
+  };
+  /* The blocks as a picture (see "Run pictures"), laid out like the site's result after a run (statRowsHtml in
+     index.html): sections, each a heading and rows. A row is a label, its value (after what it was before the run,
+     from, for a new best), a chip with what changed: { text, tone }, tone "up" (mint), "down" (coral), "new"
+     (blue) or "same" (grey ▲ 0), and maybe a note under it. A run that isn't their best is on its own, with how it compares with their best,
+     and their stats, which it doesn't change. */
+  const picture = () => {
+    const chip = (text, tone) => ({ text, tone });
+    const same = chip("▲ 0", "same");
+    // What a number did, where more is better: ▲ in mint, ▼ in coral, ▲ 0, or New when there was nothing before
+    const more = (fromV, to, text = (v) => String(Math.abs(v))) => (fromV === null || fromV === undefined ? chip("New", "new")
+      : to === fromV ? same : chip(`${to > fromV ? "▲" : "▼"} ${text(to - fromV)}`, to > fromV ? "up" : "down"));
+    // And where less is better (a time, mistakes): ▼ in mint
+    const less = (diff, text) => (!diff ? same : chip(`${diff < 0 ? "▼" : "▲"} ${text}`, diff < 0 ? "up" : "down"));
+    const tierLabel = (tier) => (typeof tier === "number" ? `Top ${tier}%` : "Rated");
+    const row = (label, value, extra = {}) => ({ label, value: String(value), ...extra });
+    const miss = (r) => (isGround(r) ? r.ground : Number.isInteger(r.mistakes) ? r.mistakes : null);
+    const missShown = (v) => (isGround(run) ? groundText(v) : String(v));
+    const missLabel = isGround(run) ? "Ground time" : "Mistakes";
+    const sections = [];
+    // The run: its time and mistakes (or ground time), after their old best's, or against their best for a run that
+    // isn't it, and how long after the old best it came
+    const other = old || null;
+    const diff = other ? Math.round((toSeconds(run.time) - toSeconds(other.time)) * 100) / 100 : 0;
+    const runRows = [row("Time", run.time, {
+      ...(best && other && other.time !== run.time ? { from: other.time } : {}),
+      chip: other ? less(diff, gapText(Math.abs(diff))) : chip("New", "new"),
+    })];
+    const m = miss(run), om = other ? miss(other) : null;
+    if (m !== null) {
+      runRows.push(row(missLabel, missShown(m), {
+        ...(best && om !== null && om !== m ? { from: missShown(om) } : {}),
+        chip: !other ? chip("New", "new") : om === null ? null : less(m - om, missShown(Math.abs(m - om))),
+      }));
+    }
+    // How long after their old best (or their best) it came, under its time, as on the site
+    if (span) runRows[0].note = best && !down ? `Achieved ${span} after the old best` : `Sent ${span} after their best`;
+    sections.push({ heading: down ? "Turned-down run" : best ? "New personal best" : "This run", rows: runRows });
+    // Course stats: its course rating and place, after their old best's (for a run that isn't their best, the ones it
+    // would get on its own)
+    const courseRows = [];
+    if (best) {
+      const fromPts = of(s.points, 0);
+      if (num(now.points)) courseRows.push(row("Rating", now.points, { ...(num(fromPts) && fromPts !== now.points ? { from: fromPts } : {}), chip: more(num(fromPts) ? fromPts : null, now.points) }));
+      if (num(place)) courseRows.push(row("Rank", ofText(place, s.players), { ...(num(s.was) && s.was !== place ? { from: `#${s.was}` } : {}), chip: more(num(s.was) ? -s.was : null, -place) }));
+    } else {
+      if (num(now.points)) courseRows.push(row("Rating", now.points));
+      if (num(now.place)) courseRows.push(row("Rank", ofText(now.place, s.players)));
+    }
+    if (courseRows.length) sections.push({ heading: "Course stats", rows: courseRows });
+    // Their stats in the ratings of its kind, then the Global rating's: what the run did to them (nothing, for a run
+    // that isn't their best)
+    const pairOf = (pair) => (Array.isArray(pair) && num(pair[1]) ? [best && num(pair[0]) ? pair[0] : best ? null : pair[1], pair[1]] : null);
+    const kindRows = [];
+    const rating = pairOf(s.rating);
+    if (rating) {
+      const rated = rating[0] !== null;
+      kindRows.push(row("Rating", rating[1], { ...(rated && rating[0] !== rating[1] ? { from: rating[0] } : {}), chip: more(rating[0], rating[1]) }));
+      const rk = Array.isArray(s.rank) ? [rated ? s.rank[best ? 0 : 1] : null, s.rank[1]] : null;
+      if (rk && num(rk[1])) kindRows.push(row("Rank", ofText(rk[1], s.of), { ...(rated && rk[0] !== rk[1] ? { from: `#${rk[0]}` } : {}), chip: more(rated ? -rk[0] : null, -rk[1]) }));
+      if (Array.isArray(s.tier)) {
+        const [tf, tt] = best ? s.tier : [s.tier[1], s.tier[1]];
+        const moved = !rated || tf !== tt;
+        kindRows.push(row("Top %", tierLabel(tt), { ...(rated && moved ? { from: tierLabel(tf) } : {}), chip: !rated ? chip("New", "new") : moved ? chip("New role", "up") : same }));
+      }
+    }
+    for (const [k, name] of [["courses", "Courses run"], ["top10s", "Top 10s"], ["podiums", "Podiums"], ["records", "Records"]]) {
+      if (!Array.isArray(s[k]) || !num(s[k][1])) continue;
+      const [cf, ct] = best ? s[k] : [s[k][1], s[k][1]];
+      kindRows.push(row(name, countText(k, ct), { ...(num(cf) && cf !== ct ? { from: cf } : {}), chip: more(num(cf) ? cf : 0, ct) }));
+    }
+    if (kindRows.length) sections.push({ heading: `${scope} stats`, rows: kindRows });
+    const g = Array.isArray(s.global) && s.global[1] ? (best ? s.global : [s.global[1], s.global[1]]) : null;
+    if (g) {
+      const [gf, gt] = g;
+      const globalRows = [];
+      if (num(gt.rating)) globalRows.push(row("Rating", gt.rating, { ...(gf && num(gf.rating) && gf.rating !== gt.rating ? { from: gf.rating } : {}), chip: more(gf && num(gf.rating) ? gf.rating : null, gt.rating) }));
+      if (num(gt.rank) && num(s.globalOf)) globalRows.push(row("Rank", ofText(gt.rank, s.globalOf), { ...(gf && num(gf.rank) && gf.rank !== gt.rank ? { from: `#${gf.rank}` } : {}), chip: more(gf && num(gf.rank) ? -gf.rank : null, -gt.rank) }));
+      const moved = !gf || gf.tier !== gt.tier;
+      globalRows.push(row("Top %", tierLabel(gt.tier), { ...(gf && moved ? { from: tierLabel(gf.tier) } : {}), chip: !gf ? chip("New", "new") : moved ? chip("New role", "up") : same }));
+      // Courses run, Top 10s, Podiums and Records over both kinds' boards (what was kept before there were these has none)
+      for (const [k, name] of [["courses", "Courses run"], ["top10s", "Top 10s"], ["podiums", "Podiums"], ["records", "Records"]]) {
+        const pairK = s.globalCounts && s.globalCounts[k];
+        if (!Array.isArray(pairK) || !num(pairK[1])) continue;
+        const [cf, ct] = best ? pairK : [pairK[1], pairK[1]];
+        const shown = (v) => (k === "courses" && num(s.globalCounted) ? `${v} of ${s.globalCounted}` : String(v));
+        globalRows.push(row(name, shown(ct), { ...(num(cf) && cf !== ct ? { from: cf } : {}), chip: more(num(cf) ? cf : 0, ct) }));
+      }
+      sections.push({ heading: "Global stats", rows: globalRows });
+    }
+    // Whose run it is, where, and when, so the picture says so on its own too (the site's Picture button saves it):
+    // the day it was sent, in UTC (a picture can't show each reader's own time zone), and where it stands with the
+    // moderators, for a top-10 run (status: { text, tone }, tone "held", "approved" or "down")
+    const day = /^\d{4}-\d{2}-\d{2}/.test(run.sentAt || run.date || "")
+      ? new Date(`${(run.sentAt || run.date).slice(0, 10)}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }) : "";
+    const status = checked ? (checked.approve ? { text: "Approved", tone: "approved" } : { text: "Turned down", tone: "down" })
+      : pending ? { text: "Waiting for a check", tone: "held" } : null;
+    return {
+      sections,
+      run: { name: run.name, course: courseText(n, courseName, courseFlag, (x) => x), assisted: isAssisted(run), date: day },
+      status,
+      held: !!pending && !checked,
+      tone: checked ? (checked.approve ? "approved" : "down") : pending ? "held" : "up",
+    };
+  };
   return {
     best,
     place,
+    picture,
+    // When the run, and the old best beside it, were sent (Discord writes each in every reader's own time zone)
+    dates: { run: whenText(run), old: old ? whenText(old) : "", oldName: best && !down ? "Old personal best" : "Personal best" },
     fields: [
       ...(lone ? grid(down ? "Turned-down run" : "New personal best", parts(run, now, true))
+        : old ? columns([
+          { name: down ? "Turned-down run" : best ? "New personal best" : "This run", p: parts(run, now, true) },
+          { name: best && !down ? "Old personal best" : "Personal best", p: parts(old, was) },
+          { name: "Comparison", p: compare() },
+        ])
         : [{ name: down ? "Turned-down run" : best ? "New personal best" : "This run", value: about(run, now, true), inline: true }]),
-      ...(old ? [
-        { name: best && !down ? "Old personal best" : "Personal best", value: about(old, was), inline: true },
-        {
-          name: "Comparison",
-          value: [
-            saved ? `Time ${saved > 0 ? "saved" : "behind"}: ${gapText(saved)}` : "Time: Same",
-            isGround(old) ? `Ground time: ${groundChange(run.ground - old.ground)}`
-              : Number.isInteger(old.mistakes) && `Mistakes: ${changeText(run.mistakes - old.mistakes)}`,
-            ...group("Course stats", [
-              both(now.points, was.points) && `Rating: ${changeText(now.points - was.points)}`,
-              both(now.place, was.place) && `Rank: ${movedText(was.place, now.place)}`,
-            ]),
-            ...group(`${scope} stats`, [
-              both(now.rating, was.rating) && `Rating: ${changeText(now.rating - was.rating)}`,
-              both(now.rank, was.rank) && `Rank: ${movedText(was.rank, now.rank)}`,
-              tiers && `Top %: ${tierMoved ? `${was.tier} → ${now.tier}` : "Same"}`,
-              ...counts.map(([k, name]) => `${name}: ${changeText(s[k][1] - s[k][0])}`),
-            ]),
-            ...group("Global stats", [
-              both(now.gRating, was.gRating) && `Rating: ${changeText(now.gRating - was.gRating)}`,
-              both(now.gRank, was.gRank) && `Rank: ${movedText(was.gRank, now.gRank)}`,
-              gl && `Top %: ${gMoved ? `${was.gTier} → ${now.gTier}` : "Same"}`,
-            ]),
-            span && `\n${best && !down ? "Achieved" : "Sent"} after: ${span}`,
-          ].filter(Boolean).join("\n"),
-          inline: true,
-        },
-      ] : []),
       // Under the blocks, across the whole post
       ...(roles.length ? [{ name: roles.length > 1 ? "New roles" : "New role", value: roles.join("\n"), inline: false }] : []),
     ],
@@ -1222,6 +1361,11 @@ function checkedFooter(run, { approve, by }) {
 const courseText = (n, name, flag, safe) => (name ? `${n} ${flag ? `${flag} ` : ""}${safe(name)}` : `Course ${n}`);
 // The colours: green for a run on the board, yellow while it waits for a check, red once it's turned down
 const GREEN = 0x00e697, YELLOW = 0xffd54f, RED = 0xff6a4f;
+// An empty line at the end of a field (see runPost)
+const GAP = "\n\u200b";
+// Under a run that isn't its player's best, like the site's "This isn't a new personal best, so your rating and rank
+// don't change"
+const NOT_BEST = "This isn't a new personal best, so their rating and rank don't change.";
 function runPost(info) {
   const { n, courseName, courseFlag, run, pending, site, checked } = info;
   const { best, place, fields } = runBlocks(info);
@@ -1234,13 +1378,15 @@ function runPost(info) {
       // Struck through once it's turned down, so it's plain that it isn't one
       title: checked && !checked.approve ? `~~${title}~~` : title,
       url: `${site}/runs/${run.id}`,
-      description: `**${courseText(n, courseName, courseFlag, mdSafe)}**${isAssisted(run) ? " · Assisted" : ""}`,
+      description: `**${courseText(n, courseName, courseFlag, mdSafe)}**${isAssisted(run) ? " · Assisted" : ""}${best ? "" : `\n${NOT_BEST}`}`,
       color: checked ? (checked.approve ? GREEN : RED) : pending ? YELLOW : GREEN,
       fields: [
-        { name: "Sent by", value: `<@${run.discord}>`, inline: true },
-        { name: "Player name", value: mdSafe(run.name), inline: true },
+        // Each ends with an empty line, so there's a gap between who sent it and the blocks under it. Discord drops a
+        // line with nothing on it, so it holds a zero-width space.
+        { name: "Sent by", value: `<@${run.discord}>${GAP}`, inline: true },
+        { name: "Player name", value: `${mdSafe(run.name)}${GAP}`, inline: true },
         // Only top-10 runs need a video, so the rest can come without one
-        { name: "Video", value: run.video ? `[Watch](${run.video})` : "None", inline: true },
+        { name: "Video", value: `${run.video ? `[Watch](${run.video})` : "None"}${GAP}`, inline: true },
         ...fields,
       ],
       // The embed's footer: small grey text under everything else
@@ -1249,12 +1395,55 @@ function runPost(info) {
     components: runButtons(info),
   };
 }
+/* ---------- Run pictures ----------
+   A run's post, and the DM to its player once it's checked, go out as text first (runPost, checkedRunMessage). Then
+   the game repo's run-picture.yml (started through the GitHub App, which needs Actions: Read and write) draws the
+   blocks as a picture, the way the site shows a run's result, and swaps it in for the blocks: Discord's phone app
+   puts side-by-side fields one under the other, which made the blocks hard to read there. With the picture, the post
+   keeps its title, the course, who sent it, the player's name, and the video on one line, the dates (which Discord
+   writes in each reader's own time zone, so they stay text), and its buttons. If the picture can't be made, the text
+   stays. The workflow only swaps it in while the message is still as it was sent (the same colour and bottom line),
+   so a post a moderator checked in the meantime gets the picture of its new numbers instead. */
+const PICTURE_WORKFLOW = "run-picture.yml";
+// The message with the picture in place of the blocks: message is runPost's or checkedRunMessage's, blocks runBlocks'
+function withPicture(message, blocks, { sentBy = "" } = {}) {
+  const e = message.embeds[0];
+  const { run: when, old, oldName } = blocks.dates;
+  const dates = [when && `Date: ${when}`, old && `${oldName}: ${old}`].filter(Boolean).join(" · ");
+  const { fields, ...rest } = e;
+  return {
+    embed: { ...rest, description: [e.description, sentBy, dates].filter(Boolean).join("\n"), image: { url: "attachment://run.png" } },
+    components: message.components || [],
+  };
+}
+// Starts run-picture.yml for a message Ballkyrie sent (channel and id), with what to draw (blocks.picture()) and the
+// message to put it in. what says what it's about, for the log.
+async function startPicture(env, { channel, id, message, blocks, sentBy, what }) {
+  if (!appOn(env) || !channel || !id) return;
+  const e = message.embeds[0];
+  const post = JSON.stringify({
+    channel, id, ...withPicture(message, blocks, { sentBy }), picture: blocks.picture(),
+    // What the message has to still be like for the picture to go in (see "Run pictures")
+    expect: { color: e.color ?? null, footer: (e.footer && e.footer.text) || null },
+  });
+  if (post.length > 60000) { console.error(`${what}: the picture's details are too long to send to GitHub (${post.length})`); return; }
+  const r = await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/${PICTURE_WORKFLOW}/dispatches`, {
+    method: "POST",
+    headers: { "User-Agent": "ballkour.com", Accept: "application/vnd.github+json", Authorization: `Bearer ${await appToken(env)}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ ref: "main", inputs: { post } }),
+    signal: AbortSignal.timeout(10000),
+  }).catch((e) => ({ status: String((e && e.message) || e), text: async () => "" }));
+  if (r.status !== 204) console.error(`${what}: couldn't start the picture, GitHub said ${r.status} ${(await r.text()).slice(0, 200)}`);
+}
+// Who sent a run, their in-game name, and its video, on one line under the course in a post with a picture
+const sentByLine = (run) => `Sent by <@${run.discord}> · ${mdSafe(run.name)} · ${run.video ? `[Watch](${run.video})` : "No video"}`;
 async function postRun(env, info) {
   // A run played in Assist Mode goes in the assisted runs channel, and the rest in the unassisted one
   const channel = isAssisted(info.run) ? env.ASSISTED_RUNS_CHANNEL : env.RUNS_CHANNEL;
   if (!channel || !env.DISCORD_BOT_TOKEN) return;
   const message = runPost(info);
   const sent = await postIn(env, channel, message, `run ${info.run.id}`);
+  if (sent && sent.id) await startPicture(env, { channel, id: sent.id, message, blocks: runBlocks(info), sentBy: sentByLine(info.run), what: `run ${info.run.id}` });
   // A top-10 run's post changes once a moderator checks it (checkedPost), so its message is kept until then
   if (info.pending && sent && sent.id && env.PROFILES) {
     await env.PROFILES.put(postKey(info.run.id), JSON.stringify({ channel, id: sent.id, message }))
@@ -1284,7 +1473,8 @@ async function checkedPost(env, info) {
         color: down ? RED : GREEN,
         fields: (e.fields || []).map((f) => (!down ? f
           : renamed[f.name] ? { ...f, name: renamed[f.name] }
-          : f.name === "Comparison" ? { ...f, value: f.value.replace("Achieved after:", "Sent after:") } : f)),
+          // How long after the old best it came: in Comparison's field in posts from before the columns were rows
+          : f.value.includes("Achieved after:") ? { ...f, value: f.value.replace("Achieved after:", "Sent after:") } : f)),
         ...checkedFooter(run, checked),
       }],
     };
@@ -1297,6 +1487,7 @@ async function checkedPost(env, info) {
   }).catch((e) => ({ ok: false, status: String((e && e.message) || e), text: async () => "" }));
   if (!res.ok) { console.error(`run ${run.id}: Ballkyrie couldn't change its post, Discord said ${res.status} ${(await res.text()).slice(0, 200)}`); return; }
   await env.PROFILES.delete(postKey(run.id)).catch(() => {});
+  if (info.stats) await startPicture(env, { channel: kept.channel, id: kept.id, message, blocks: runBlocks(info), sentBy: sentByLine(run), what: `run ${run.id}` });
 }
 // Ballkyrie posts a message in a channel. what says what it's about, for the log if it can't. → the message Discord
 // made ({ id, … }), or null if it didn't
@@ -1322,8 +1513,9 @@ async function tellPlayer(env, id, message, what) {
     body: JSON.stringify({ recipient_id: id }),
     signal: AbortSignal.timeout(5000),
   }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-  if (!dm || !dm.id) { console.error(`${what}: Ballkyrie couldn't open a DM with ${id}`); return; }
-  await postIn(env, dm.id, message, what);
+  if (!dm || !dm.id) { console.error(`${what}: Ballkyrie couldn't open a DM with ${id}`); return null; }
+  const sent = await postIn(env, dm.id, message, what);
+  return sent && sent.id ? { channel: dm.id, id: sent.id } : null;
 }
 // What it says to a player about their run a moderator checked: the same blocks as its post (runBlocks), worked out
 // as it's checked (see afterCheck), then who checked it and when, as on the post, and the post's buttons. Without
@@ -1366,7 +1558,11 @@ async function afterCheck(env, ctx, { run, n, approve, before, by, site }) {
   const info = { n, courseName: names[n], courseFlag: flags[n], run, before, mine, links: linksIn(files), rank, newBest, stats, site, checked: { approve, by } };
   await Promise.all([
     post && checkedPost(env, info),
-    dm && tellPlayer(env, run.discord, checkedRunMessage(info), `run ${run.id}`),
+    dm && (async () => {
+      const message = checkedRunMessage(info);
+      const sent = await tellPlayer(env, run.discord, message, `run ${run.id}`);
+      if (sent && stats) await startPicture(env, { ...sent, message, blocks: runBlocks(info), what: `run ${run.id}'s DM` });
+    })(),
   ]);
 }
 // And about a claim to legacy runs
