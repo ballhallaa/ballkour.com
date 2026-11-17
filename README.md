@@ -278,8 +278,8 @@ Course numbers, flags, and codes live in the `COURSES` list in the script at the
 
 Leaderboards load live from the game repo's `develop` branch (through the Worker), so they update without a deploy:
 
-- **Remakes (1–3):** `leaderboards/<n>-<slug>.opy`
-- **Classic courses (4–15):** `leaderboards/<n>-<slug>.json` (the slugs are in `CLASSIC_FILES`)
+- **Remakes (1–5):** `leaderboards/<n>-<slug>.opy`
+- **Classic courses (6–15):** `leaderboards/<n>-<slug>.json` (the slugs are in `CLASSIC_FILES`)
 
 The runs written into `COURSES` are only a fallback for when GitHub can't be reached.
 

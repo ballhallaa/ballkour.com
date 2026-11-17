@@ -2704,8 +2704,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       runs: [{ name: "BALLMYBLOVED", time: "7:14.76", miss: 16, date: "Jun 5, 2026", video: "https://youtu.be/hNSpNvWyNcI" }] },
     { n: 3, legacyCode: "3700E", flag: "🇧🇷", name: "Paraíso", by: "Spiz", remaker: "ballhallaa", latest: "NT5G3K", latestBroken: true, beta: "MXJ0W",
       file: "leaderboards/3-paraíso.opy", runs: [] },
-    { n: 4, legacyCode: "9AVPN", flag: "🇩🇪", name: "Eichenwalde", by: "Spiz", code: "9AVPN", broken: true, beta: "S7QD6", runs: [] },
-    { n: 5, legacyCode: "KSG9E9", flag: "🎯", name: "Practice Range", by: "Spiz", code: "KSG9E9", beta: "7RR2Z", runs: [] },
+    { n: 4, legacyCode: "9AVPN", flag: "🇩🇪", name: "Eichenwalde", by: "Spiz", remaker: "ballhallaa", latest: "9AVPN", latestBroken: true, beta: "S7QD6",
+      file: "leaderboards/4-eichenwalde.opy", runs: [] },
+    { n: 5, legacyCode: "KSG9E9", flag: "🎯", name: "Practice Range", by: "Spiz", remaker: "ballhallaa", latest: "KSG9E9", beta: "7RR2Z",
+      file: "leaderboards/5-practice-range.opy", runs: [] },
     { n: 6, flag: "🇲🇽", name: "Dorado", by: "Fasteroid", code: "N8ZFR", runs: [] },
     { n: 7, flag: "🇬🇷", name: "Ilios", by: "Fasteroid", code: "4BA40", runs: [] },
     { n: 8, flag: "🇧🇷", name: "Paraíso", by: "Senimar", ordered: true, code: "5P58Q", broken: true, runs: [] },
@@ -2731,6 +2733,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   const remakes = COURSES.filter((c) => c.remaker);
   // Only the remakes have Assist Mode: it's part of their Workshop script (the game repo's src/engine)
   const hasAssistMode = (c) => !!c.remaker;
+  // Which courses count for the ratings: every one but a broken one. A remake whose latest code is broken (latestBroken)
+  // still counts, as its Beta code works: its latest code is only struck through.
+  const isRated = (c) => !c.broken;
   const classics = COURSES.filter((c) => !c.remaker);
   /* ---------- Assisted boards ----------
      Runs played in the game's Assist Mode ("mode": "assisted" in runs.json) go on assisted boards of their own: a tab
@@ -3740,8 +3745,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // Each classic course's board is a list of runs in leaderboards/<n>-<slug>.json on the game repo's develop branch:
   // [{ "name", "discord", "time", "mistakes", "date", "video" }]
   const CLASSIC_FILES = {
-    4: "4-eichenwalde", 5: "5-practice-range", 6: "6-dorado", 7: "7-ilios", 8: "8-paraíso", 9: "9-temple-of-anubis",
-    10: "10-horizon-lunar-colony", 11: "11-blizzard-world", 12: "12-circuit-royal", 13: "13-neon-junction",
+    6: "6-dorado", 7: "7-ilios", 8: "8-paraíso", 9: "9-temple-of-anubis", 10: "10-horizon-lunar-colony", 11: "11-blizzard-world", 12: "12-circuit-royal", 13: "13-neon-junction",
     14: "14-kings-row", 15: "15-eichenwalde"
   };
   const toSeconds = (t) => t.replace(".--", "").split(":").reduce((sum, part) => sum * 60 + Number(part), 0);
@@ -3864,7 +3868,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
 
      Player ratings: every course is worth up to 1,000 points, 1000 × ln(1 + (e − 1) × record ÷ time)², so the record
      gets all of them (lucio.surf's curve for a player who has run every map). A rating is the average over every course
-     that isn't broken, with 0 for the ones a player hasn't run (and for courses nobody has run yet), so a new or
+     that isn't broken (see isRated: a remake with a broken latest code still counts), with 0 for the ones a player hasn't run (and for courses nobody has run yet), so a new or
      faster run never lowers it, and the first run on a course changes nobody else's rating. Their tier is the share of rated players at their place or ahead of it (#4
      of 40 is 10%, so in the Top 10%, and so is #1 of 16, at 6.25%: the Top 0.1% needs 1,000 players), and the bottom 10% are just Rated. Each board (and its picture) shows its players' ratings beside their dates:
      today's on the newest board, and on an older one, the ones they had at the end of its day (see standingsOn).
@@ -3926,7 +3930,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const counted = [];
     const players = new Map();
     (legacy ? legacyCourses() : assisted ? ACOURSES : COURSES).forEach((c) => {
-      if (c.broken || c.latestBroken) return;
+      if (!isRated(c)) return;
       counted.push(c);
       const { top, rest } = then ? { top: standingsOn(c, then.day, c === then.c ? then.runs : null), rest: [] } : standingsOf(c);
       const all = top.concat(rest);
@@ -4307,7 +4311,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       const all = top.concat(rest);
       const at = all.findIndex((x) => playerKey(x) === key);
       const best = at >= 0 ? all[at] : null;
-      const record = c.broken || c.latestBroken ? null : all[0];
+      const record = isRated(c) ? all[0] : null;
       const theirs = runsOf(key, c, best);
       const pts = record && best ? pointsWithout(all, at, theirs.runs) : null;
       return { c, at, best, total: all.length, record, gain: pts ? Math.round(pts[1]) - Math.round(pts[0]) : null, ...theirs };
@@ -7365,7 +7369,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       s.runs.push(x);
     });
     // A course rating's share of the Global rating: over the rated courses, and half as much on an assisted board
-    const rated = COURSES.filter((c) => !c.broken && !c.latestBroken).length || 1;
+    const rated = COURSES.filter(isRated).length || 1;
     const firstRun = new Map(); // player → the day of their first run, it, its course, and whether it's assisted
     COURSES.concat(ACOURSES).forEach((c) => {
       const assisted = !!c.assisted;
@@ -7379,7 +7383,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         if (!byDay.has(d)) byDay.set(d, []);
         byDay.get(d).push(r);
       });
-      if (!c.broken && !c.latestBroken) {
+      if (isRated(c)) {
         const best = new Map(); // player → their best run by the end of the day
         [...byDay.keys()].sort().forEach((d) => {
           const was = new Map(best);
@@ -7978,7 +7982,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       // An assisted run's is against its course's assisted record (see "Assisted boards")
       const c = x.assisted ? assistedOf(course(x.n)) : course(x.n);
       const k = `${x.assisted ? "a" : ""}${x.n}`;
-      if (x.status === "declined" || x.status === "removed" || c.broken || c.latestBroken) return -1;
+      if (x.status === "declined" || x.status === "removed" || !isRated(c)) return -1;
       if (!(k in records)) records[k] = standingsOf(c).top[0] || null;
       const record = records[k];
       return record ? Math.min(1000, coursePoints(record, cleanRun(x.run))) : x.status === "pending" ? 1000 : -1;
