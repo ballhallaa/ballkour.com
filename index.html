@@ -2182,7 +2182,6 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "unit.mistakes": "{count} mistakes",
   "unit.ground": "{time} on the ground",
   "course.by": "Courses by {creator}",
-  "course.remaker": "Remastered by {remaker}",
   "course.number": "Course {n}",
   "course.easiest": "easiest",
   "course.hardest": "hardest",
@@ -2245,8 +2244,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "pic.assistedTop": "Assisted Top 10",
   "pic.unassistedTop": "Unassisted Top 10",
   "pic.beforeMay": "Before 2026-04-29",
-  "pic.creator": "Creator",
-  "pic.remaker": "Remastered by",
+  "pic.creator": "Course by",
   "pic.noVideos": "Videos weren’t required",
   "pic.beFirst": "Be the first to set a time",
   "pic.asOf": "As of {date}",
@@ -3354,14 +3352,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const codes = c.remaker
       ? codeButton(c, "latest", c.latest, c.latestBroken) + codeButton(c, "beta", c.beta, false)
       : codeButton(c, "code", c.code, c.broken) + (c.beta ? codeButton(c, "beta", c.beta, false) : "");
-    // Each "Label: name" part stays on one line; if the row is too narrow, it breaks at the bullet
-    const meta = c.remaker
-      ? `<p class="course-meta">${esc(t("course.remaker", { remaker: c.remaker }))}</p>`
-      : "";
     return `<li class="course${c.remaker || c.beta ? " two" : ""}" id="course-${c.n}">` +
       `<span class="num"><span class="sr-only">${esc(t("course.number", { n: c.n }))}</span><span aria-hidden="true">${c.n}</span></span>` +
       `<span class="flag" aria-hidden="true">${c.flag}</span>` +
-      `<div class="course-info"><p class="course-name">${esc(c.name)}</p>${meta}${recordButton(c)}</div>` +
+      `<div class="course-info"><p class="course-name">${esc(c.name)}</p>${recordButton(c)}</div>` +
       `<div class="codes">${codes}</div>` +
       `<div class="course-board" id="board-${c.n}"${openCourse === c.n ? "" : " hidden"}>${openCourse === c.n ? boardHtml(c) : ""}</div></li>`;
   }
@@ -5378,7 +5372,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     // Top 10 or Unassisted Top 10)
     line(d.legacy ? [up(t(sorted ? "lb.tab.legacy" : "pic.legacyTop")), sorted, up(t("pic.beforeMay"))]
       : [sorted || up(t("lb.tab.top")), d.board ? up(t("lb.boardOf", { n: d.board, total: d.boards })) : "", d.date], textTop + 48.6 + 12 + 7.5);
-    line([field(t("code.code"), d.legacy ? c.legacyCode : c.remaker ? c.latest : c.code), field(t("pic.creator"), c.by), d.legacy ? null : field(t("pic.remaker"), c.remaker)], textTop + 48.6 + 12 + 15 + 9 + 7.5);
+    line([field(t("code.code"), d.legacy ? c.legacyCode : c.remaker ? c.latest : c.code), field(t("pic.creator"), c.by)], textTop + 48.6 + 12 + 15 + 9 + 7.5);
     // The runs, in two columns of five
     const colW = (W - 2 * PIC.pad - PIC.colGap) / 2;
     const TIER = ["#ffd54f", "#d3dde2", "#e8a066"];
