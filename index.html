@@ -2702,11 +2702,11 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     { n: 2, legacyCode: "6B9Z09", flag: "🇺🇸", name: "Blizzard World (Winter)", by: "Spiz", remaker: "ballhallaa", latest: "GMWRF", beta: "8Y14F",
       file: "leaderboards/2-blizzard-world.opy",
       runs: [{ name: "BALLMYBLOVED", time: "7:14.76", miss: 16, date: "Jun 5, 2026", video: "https://youtu.be/hNSpNvWyNcI" }] },
-    { n: 3, legacyCode: "3700E", flag: "🇧🇷", name: "Paraíso", by: "Spiz", remaker: "ballhallaa", latest: "NT5G3K", latestBroken: true, beta: "MXJ0W",
+    { n: 3, legacyCode: "3700E", flag: "🇧🇷", name: "Paraíso", by: "Spiz", remaker: "ballhallaa", beta: "MXJ0W",
       file: "leaderboards/3-paraíso.opy", runs: [] },
-    { n: 4, legacyCode: "9AVPN", flag: "🇩🇪", name: "Eichenwalde", by: "Spiz", remaker: "ballhallaa", latest: "9AVPN", latestBroken: true, beta: "S7QD6",
+    { n: 4, legacyCode: "9AVPN", flag: "🇩🇪", name: "Eichenwalde", by: "Spiz", remaker: "ballhallaa", beta: "S7QD6",
       file: "leaderboards/4-eichenwalde.opy", runs: [] },
-    { n: 5, legacyCode: "KSG9E9", flag: "🎯", name: "Practice Range", by: "Spiz", remaker: "ballhallaa", latest: "KSG9E9", beta: "7RR2Z",
+    { n: 5, legacyCode: "KSG9E9", flag: "🎯", name: "Practice Range", by: "Spiz", remaker: "ballhallaa", beta: "7RR2Z",
       file: "leaderboards/5-practice-range.opy", runs: [] },
     { n: 6, flag: "🇲🇽", name: "Dorado", by: "Fasteroid", code: "N8ZFR", runs: [] },
     { n: 7, flag: "🇬🇷", name: "Ilios", by: "Fasteroid", code: "4BA40", runs: [] },
@@ -2734,8 +2734,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // Only the remakes have Assist Mode: it's part of their Workshop script (the game repo's src/engine)
   const hasAssistMode = (c) => !!c.remaker;
   // Which courses count for the ratings: every one but a broken one. A remake whose latest code is broken (latestBroken)
-  // still counts, as its Beta code works: its latest code is only struck through.
+  // still counts, as its Beta code works: its latest code is only left out (see latestCode).
   const isRated = (c) => !c.broken;
+  // A remake's latest code, where it has one that works (Paraíso, Eichenwalde, and Practice Range have only a Beta code)
+  const latestCode = (c) => (c.latest && !c.latestBroken ? c.latest : "");
   const classics = COURSES.filter((c) => !c.remaker);
   /* ---------- Assisted boards ----------
      Runs played in the game's Assist Mode ("mode": "assisted" in runs.json) go on assisted boards of their own: a tab
@@ -3353,11 +3355,13 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const msg = esc(t(names.length === 1 ? "lb.congrats.one" : "lb.congrats.other", { names: "\u0000" })).replace("\u0000", list);
     return `<p class="lb-congrats">${icon("party")}<span>${msg}</span></p>`;
   }
+  // A remake with no working latest code (see latestCode) shows only its Beta code
   function courseRow(c) {
+    const two = c.remaker ? !!latestCode(c) : !!c.beta;
     const codes = c.remaker
-      ? codeButton(c, "latest", c.latest, c.latestBroken) + codeButton(c, "beta", c.beta, false)
+      ? (latestCode(c) ? codeButton(c, "latest", c.latest, false) : "") + codeButton(c, "beta", c.beta, false)
       : codeButton(c, "code", c.code, c.broken) + (c.beta ? codeButton(c, "beta", c.beta, false) : "");
-    return `<li class="course${c.remaker || c.beta ? " two" : ""}" id="course-${c.n}">` +
+    return `<li class="course${two ? " two" : ""}" id="course-${c.n}">` +
       `<span class="num"><span class="sr-only">${esc(t("course.number", { n: c.n }))}</span><span aria-hidden="true">${c.n}</span></span>` +
       `<span class="flag" aria-hidden="true">${c.flag}</span>` +
       `<div class="course-info"><p class="course-name">${esc(c.name)}</p>${recordButton(c)}</div>` +
@@ -5376,7 +5380,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     // Top 10 or Unassisted Top 10)
     line(d.legacy ? [up(t(sorted ? "lb.tab.legacy" : "pic.legacyTop")), sorted, up(t("pic.beforeMay"))]
       : [sorted || up(t("lb.tab.top")), d.board ? up(t("lb.boardOf", { n: d.board, total: d.boards })) : "", d.date], textTop + 48.6 + 12 + 7.5);
-    line([field(t("code.code"), d.legacy ? c.legacyCode : c.remaker ? c.latest : c.code), field(t("pic.creator"), c.by)], textTop + 48.6 + 12 + 15 + 9 + 7.5);
+    line([field(t("code.code"), d.legacy ? c.legacyCode : c.remaker ? latestCode(c) || c.beta : c.code), field(t("pic.creator"), c.by)], textTop + 48.6 + 12 + 15 + 9 + 7.5);
     // The runs, in two columns of five
     const colW = (W - 2 * PIC.pad - PIC.colGap) / 2;
     const TIER = ["#ffd54f", "#d3dde2", "#e8a066"];
