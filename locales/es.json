@@ -476,6 +476,7 @@
   "run.watch": "Ver el video",
   "run.noVideo": "Sin video. Solo las carreras del top 10 lo necesitan.",
   "vid.comments": "Comentarios de YouTube",
+  "vid.view": "Ver comentarios",
   "vid.loading": "Cargando los comentarios…",
   "vid.none": "Aún no hay comentarios.",
   "vid.off": "Los comentarios están desactivados en este video.",
