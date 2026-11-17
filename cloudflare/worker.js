@@ -897,7 +897,8 @@ function runStats(game, before, run, n) {
     return { board, at, best: at >= 0 ? board[at] : null, p: rated.players.find((x) => x.key === key) || null, g, gTotal: all.players.length, gCounted: all.counted.length, total: rated.players.length, counted: rated.counted.length, medals };
   };
   const b = side(before), a = side(after);
-  const rated = !(game.courses.find((c) => c.n === n) || { broken: true }).broken;
+  // Whether its course counts for the ratings: a remake's does even when its latest code is broken (see loadCourses)
+  const rated = (({ broken, remake }) => !broken || remake)(game.courses.find((c) => c.n === n) || { broken: true });
   const record = a.board[0];
   const pair = (get) => (a.p && get(a.p) !== undefined ? [b.p && get(b.p) !== undefined ? get(b.p) : null, get(a.p)] : null);
   const round = (v) => (v === undefined ? undefined : Math.round(v));

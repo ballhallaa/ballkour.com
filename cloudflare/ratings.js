@@ -10,7 +10,7 @@
    runs slower than today's #10.
 
    Every course is worth up to 1,000 points: 1000 × ln(1 + (e − 1) × record ÷ time)². A rating is the average over
-   every course that isn't broken, with 0 for the ones a player hasn't run. A player's tier is the share of rated
+   every course that isn't broken (a remake whose latest code is broken still counts, as its Beta code works), with 0 for the ones a player hasn't run. A player's tier is the share of rated
    players at their place or ahead of it: #4 of 40 (10%) is in the Top 10%, and so is #1 of 16 (6.25%), since the
    Top 0.1% needs 1,000 players. Everyone past
    the last tier (the bottom 10%) is just Rated. */
@@ -175,7 +175,7 @@ export function loadCourses(files, courses, { assisted = false } = {}) {
   const posted = assisted ? "assisted" : "boards";
   return courses.filter((c) => !assisted || c.remake).map((c) => ({
     n: c.n,
-    broken: !!c.broken,
+    broken: !!c.broken && !c.remake, // for rate(): a remake's broken is only its latest code
     file: assisted ? [] : fileRuns(c.file, files[c.file]),
     more: runs[c.n] || [],
     removed: removed[c.n] || [],
