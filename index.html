@@ -538,7 +538,7 @@ main:focus { outline: none; }
 .course-meta { margin: 2px 0 0; font: 400 12px/1.4 var(--mono); letter-spacing: -.01em; color: var(--ink-2); }
 .course-meta > span { white-space: nowrap; }
 .codes { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
-/* Below the full column width, the remakes' two codes move under the name so the credit line keeps its room */
+/* Below the full column width, a row's two codes (a remake's, or a classic's and its Beta) move under the name */
 @media (max-width: 699px) {
   .course.two { grid-template-columns: 22px 26px minmax(0, 1fr); }
   .course.two .codes { grid-column: 3; justify-content: flex-start; }
@@ -2684,7 +2684,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   /* ---------- Courses (one list drives the codes, the numbers and the leaderboards) ----------
      Runs: { name, discord, time, miss, date, video }. The remakes (file set) re-read their leaderboards/<n>-<slug>.opy
      from GitHub's develop branch on ballkour.com; the runs below are the fallback. legacyCode is the code of the original
-     course its legacy board (before 2026-04-29) was set on, for that board's picture. */
+     course its legacy board (before 2026-04-29) was set on, for that board's picture. A classic course with a beta
+     shows its Beta code beside its code, like a remake's. */
   const COURSES = [
     { n: 1, legacyCode: "W1RWY", flag: "🇬🇮", name: "Watchpoint: Gibraltar", by: "Spiz", remaker: "ballhallaa", latest: "59W28", beta: "9GTJH",
       file: "leaderboards/1-watchpoint-gibraltar.opy",
@@ -2705,8 +2706,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       runs: [{ name: "BALLMYBLOVED", time: "7:14.76", miss: 16, date: "Jun 5, 2026", video: "https://youtu.be/hNSpNvWyNcI" }] },
     { n: 3, legacyCode: "3700E", flag: "🇧🇷", name: "Paraíso", by: "Spiz", remaker: "ballhallaa", latest: "NT5G3K", latestBroken: true, beta: "MXJ0W",
       file: "leaderboards/3-paraíso.opy", runs: [] },
-    { n: 4, legacyCode: "9AVPN", flag: "🇩🇪", name: "Eichenwalde", by: "Spiz", code: "9AVPN", broken: true, runs: [] },
-    { n: 5, legacyCode: "KSG9E9", flag: "🎯", name: "Practice Range", by: "Spiz", code: "KSG9E9", runs: [] },
+    { n: 4, legacyCode: "9AVPN", flag: "🇩🇪", name: "Eichenwalde", by: "Spiz", code: "9AVPN", broken: true, beta: "S7QD6", runs: [] },
+    { n: 5, legacyCode: "KSG9E9", flag: "🎯", name: "Practice Range", by: "Spiz", code: "KSG9E9", beta: "7RR2Z", runs: [] },
     { n: 6, flag: "🇲🇽", name: "Dorado", by: "Fasteroid", code: "N8ZFR", runs: [] },
     { n: 7, flag: "🇬🇷", name: "Ilios", by: "Fasteroid", code: "4BA40", runs: [] },
     { n: 8, flag: "🇧🇷", name: "Paraíso", by: "Senimar", ordered: true, code: "5P58Q", broken: true, runs: [] },
@@ -3352,12 +3353,12 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   function courseRow(c) {
     const codes = c.remaker
       ? codeButton(c, "latest", c.latest, c.latestBroken) + codeButton(c, "beta", c.beta, false)
-      : codeButton(c, "code", c.code, c.broken);
+      : codeButton(c, "code", c.code, c.broken) + (c.beta ? codeButton(c, "beta", c.beta, false) : "");
     // Each "Label: name" part stays on one line; if the row is too narrow, it breaks at the bullet
     const meta = c.remaker
       ? `<p class="course-meta">${esc(t("course.remaker", { remaker: c.remaker }))}</p>`
       : "";
-    return `<li class="course${c.remaker ? " two" : ""}" id="course-${c.n}">` +
+    return `<li class="course${c.remaker || c.beta ? " two" : ""}" id="course-${c.n}">` +
       `<span class="num"><span class="sr-only">${esc(t("course.number", { n: c.n }))}</span><span aria-hidden="true">${c.n}</span></span>` +
       `<span class="flag" aria-hidden="true">${c.flag}</span>` +
       `<div class="course-info"><p class="course-name">${esc(c.name)}</p>${meta}${recordButton(c)}</div>` +
