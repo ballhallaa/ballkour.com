@@ -3353,11 +3353,13 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const msg = esc(t(names.length === 1 ? "lb.congrats.one" : "lb.congrats.other", { names: "\u0000" })).replace("\u0000", list);
     return `<p class="lb-congrats">${icon("party")}<span>${msg}</span></p>`;
   }
+  // A remake whose latest code is broken shows only its Beta code, which still works
   function courseRow(c) {
+    const two = c.remaker ? !c.latestBroken : !!c.beta;
     const codes = c.remaker
-      ? codeButton(c, "latest", c.latest, c.latestBroken) + codeButton(c, "beta", c.beta, false)
+      ? (c.latestBroken ? "" : codeButton(c, "latest", c.latest, false)) + codeButton(c, "beta", c.beta, false)
       : codeButton(c, "code", c.code, c.broken) + (c.beta ? codeButton(c, "beta", c.beta, false) : "");
-    return `<li class="course${c.remaker || c.beta ? " two" : ""}" id="course-${c.n}">` +
+    return `<li class="course${two ? " two" : ""}" id="course-${c.n}">` +
       `<span class="num"><span class="sr-only">${esc(t("course.number", { n: c.n }))}</span><span aria-hidden="true">${c.n}</span></span>` +
       `<span class="flag" aria-hidden="true">${c.flag}</span>` +
       `<div class="course-info"><p class="course-name">${esc(c.name)}</p>${recordButton(c)}</div>` +
