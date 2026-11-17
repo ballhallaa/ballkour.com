@@ -426,7 +426,7 @@
   "stats.busiest": "Più run",
   "stats.since": "Vengono contate dal {date}.",
   "stats.recordedSince": "Le run vengono registrate dal {date}.",
-  "stats.runsNote": "I giorni vanno da mezzanotte a mezzanotte UTC. Il punteggio guadagnato somma di quanto ogni run ha alzato il punteggio del suo giocatore: il numero tra parentesi accanto alla run nelle classifiche. Le due variazioni indicano di quanto i totali sono saliti o scesi nei giorni scelti, quindi contano anche quello che perdono gli altri giocatori quando qualcuno batte un record.",
+  "stats.runsNote": "I giorni vanno da mezzanotte a mezzanotte UTC. Il punteggio guadagnato somma di quanto ogni run ha alzato il punteggio globale del suo giocatore. Le due variazioni indicano di quanto i totali sono saliti o scesi nei giorni scelti, quindi contano anche quello che perdono gli altri giocatori quando qualcuno batte un record.",
   "runs.ratingGain": "Punteggio di {player} su tutti i percorsi: {rating}, di cui {change} da questa run",
   "rev.ratingGain": "Punteggio di {player} su tutti i percorsi se viene approvata: {rating}, di cui {change} da questa run",
   "rev.declinedBy": "Rifiutata da {name}",

@@ -426,7 +426,7 @@
   "stats.busiest": "Meiste Läufe",
   "stats.since": "Sie werden seit dem {date} gezählt.",
   "stats.recordedSince": "Läufe werden seit dem {date} aufgezeichnet.",
-  "stats.runsNote": "Ein Tag geht von Mitternacht bis Mitternacht UTC. Die gewonnene Wertung zählt zusammen, wie viel jeder Lauf die Wertung seines Spielers erhöht hat: die Zahl in Klammern neben ihm auf den Listen. Die beiden Änderungen zeigen, wie weit die Gesamtwerte in den gewählten Tagen gestiegen oder gesunken sind, und zählen deshalb auch, was andere Spieler verlieren, wenn jemand einen Rekord bricht.",
+  "stats.runsNote": "Ein Tag geht von Mitternacht bis Mitternacht UTC. Die gewonnene Wertung zählt zusammen, wie viel jeder Lauf die globale Wertung seines Spielers erhöht hat. Die beiden Änderungen zeigen, wie weit die Gesamtwerte in den gewählten Tagen gestiegen oder gesunken sind, und zählen deshalb auch, was andere Spieler verlieren, wenn jemand einen Rekord bricht.",
   "runs.ratingGain": "Wertung von {player} über alle Strecken: {rating}, davon {change} durch diesen Lauf",
   "rev.ratingGain": "Wertung von {player} über alle Strecken, wenn er angenommen wird: {rating}, davon {change} durch diesen Lauf",
   "rev.declinedBy": "Abgelehnt von {name}",

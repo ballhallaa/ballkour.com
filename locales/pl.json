@@ -426,7 +426,7 @@
   "stats.busiest": "Najwięcej przejść",
   "stats.since": "Są liczone od {date}.",
   "stats.recordedSince": "Przejścia są zapisywane od {date}.",
-  "stats.runsNote": "Dzień trwa od północy do północy UTC. Zdobyty ranking sumuje, o ile każde przejście podniosło ranking swojego gracza: to liczba w nawiasie obok niego na tablicach. Obie zmiany pokazują, o ile sumy wzrosły lub spadły w wybranych dniach, więc liczą też to, co tracą inni gracze, gdy ktoś pobije rekord.",
+  "stats.runsNote": "Dzień trwa od północy do północy UTC. Zdobyty ranking sumuje, o ile każde przejście podniosło ranking globalny swojego gracza. Obie zmiany pokazują, o ile sumy wzrosły lub spadły w wybranych dniach, więc liczą też to, co tracą inni gracze, gdy ktoś pobije rekord.",
   "runs.ratingGain": "Ranking gracza {player} ze wszystkich tras: {rating}, w tym {change} z tego przejścia",
   "rev.ratingGain": "Ranking gracza {player} ze wszystkich tras po zatwierdzeniu: {rating}, w tym {change} z tego przejścia",
   "rev.declinedBy": "Odrzucone przez {name}",

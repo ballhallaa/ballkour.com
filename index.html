@@ -2511,7 +2511,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "stats.busiest": "Most runs",
   "stats.since": "They’re counted from {date} on.",
   "stats.recordedSince": "Runs started getting recorded on {date}.",
-  "stats.runsNote": "Days go from midnight to midnight UTC. Rating gained adds up how much each run raised its player’s rating: the number in parentheses beside it on the boards. The two changes are how much the totals went up or down over the days picked, so they also count what other players lose when someone beats a record.",
+  "stats.runsNote": "Days go from midnight to midnight UTC. Rating gained adds up how much each run raised its player’s Global rating. The two changes are how much the totals went up or down over the days picked, so they also count what other players lose when someone beats a record.",
   "runs.ratingGain": "{player}’s rating over every course: {rating}, with {change} from this run",
   "rev.ratingGain": "{player}’s rating over every course if it’s approved: {rating}, with {change} from this run",
   "rev.declinedBy": "Turned down by {name}",
@@ -7311,18 +7311,21 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   /* The runs' numbers for each day, worked out once every file is in, and again when runs.json changes:
      - sent: the runs sent from the website that day (by when they were sent), and the ones from before it by their
        date (see sentRuns)
-     - gained: what that day's runs added to their players' ratings. On each rated course, each player who got faster
-       that day gains their new course rating, less what their old best had against the record without their new run,
-       over the number of rated courses: the way boardRatings works out the gain beside a run.
-     - top10s, podiums, records: the new times on each course's boards that day (see freshAt), by their place
-     - players: the players whose first run was that day
+     - gained: what that day's runs added to their players' Global ratings. On each rated board, each player who got
+       faster that day gains their new course rating, less what their old best had against the record without their
+       new run, over the number of rated courses (see ratingsSum): the way boardRatings works out the gain beside a run,
+       with an assisted board's counting half (ASSISTED_WEIGHT)
+     - top10s, podiums, records: the new times on each course's boards that day (see freshAt), by their place, its
+       assisted board's too (see "Assisted boards")
+     - players: the players whose first run was that day, on either board
      - courses: how many runs were sent that day on each course
      and what makes them up, for the lists (see "What a number in Stats is made of"): runs (the runs sent, as sentRuns
-     has them), gains ({ r, n, g }: each run that added to its player's rating, and how much), fresh ({ r, n, place,
-     record }: the new times on the boards) and newcomers ({ key, r, n }: each new player's first run)
-     → { per: Map(day → those), first: the first day with any, entryOf(n, r): a board's run as sentRuns has it (so its
-     page), or null }, or null until the files are in
-     Rated players and the two totals are as the Player ratings were at the end of the day picked (see standingAt), and
+     has them), gains ({ r, n, assisted, g }: each run that added to its player's rating, and how much), fresh ({ r, n,
+     assisted, place, record }: the new times on the boards) and newcomers ({ key, r, n, assisted }: each new player's
+     first run). assisted: it's on its course's assisted board.
+     → { per: Map(day → those), first: the first day with any, entryOf(n, r, assisted): a board's run as sentRuns has
+     it (so its page), or null }, or null until the files are in
+     Rated players and the two totals are as the Global rating was at the end of the day picked (see standingAt), and
      the two changes are how far the totals moved from the end of the day before the days picked. Unlike gained, they
      count everyone, so they also take off what other players lose when a record gets faster. */
   let runStats = null;
@@ -7342,14 +7345,16 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     };
     const all = sentRuns();
     // Each run as sentRuns has it, by course, player, time, and mistakes, or by video, for the boards' runs to find
-    // their pages. The newest wins, unless it was turned down and an older one wasn't.
+    // their pages (an assisted one's key starting with "a"). The newest wins, unless it was turned down and an older
+    // one wasn't.
     const index = new Map();
     const put = (k, x) => { const had = index.get(k); if (!had || (had.group === "declined" && x.group !== "declined")) index.set(k, x); };
     all.forEach((x) => {
       const r = cleanRun(x.run);
       if (!r) return;
-      put(`${x.n}|${playerKey(r)}|${r.time}|${r.miss}`, x);
-      if (r.video) put(`${x.n}|${r.video}`, x);
+      const a = x.assisted ? "a" : "";
+      put(`${a}${x.n}|${playerKey(r)}|${r.time}|${r.miss}`, x);
+      if (r.video) put(`${a}${x.n}|${r.video}`, x);
     });
     all.forEach((x) => {
       const d = sentDay(x);
@@ -7359,19 +7364,22 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       s.courses.set(x.n, (s.courses.get(x.n) || 0) + 1);
       s.runs.push(x);
     });
-    const rated = COURSES.filter((c) => !c.broken && !c.latestBroken);
-    const firstRun = new Map(); // player → the day of their first run, it, and its course
-    COURSES.forEach((c) => {
+    // A course rating's share of the Global rating: over the rated courses, and half as much on an assisted board
+    const rated = COURSES.filter((c) => !c.broken && !c.latestBroken).length || 1;
+    const firstRun = new Map(); // player → the day of their first run, it, its course, and whether it's assisted
+    COURSES.concat(ACOURSES).forEach((c) => {
+      const assisted = !!c.assisted;
+      const share = (assisted ? ASSISTED_WEIGHT : 1) / rated;
       const byDay = new Map();
       countedRuns(c).forEach((r) => {
         const d = formatDate(r.date);
         if (!DAY.test(d)) return;
         const k = playerKey(r);
-        if (!firstRun.has(k) || d < firstRun.get(k).d) firstRun.set(k, { d, r, n: c.n });
+        if (!firstRun.has(k) || d < firstRun.get(k).d) firstRun.set(k, { d, r, n: c.n, assisted });
         if (!byDay.has(d)) byDay.set(d, []);
         byDay.get(d).push(r);
       });
-      if (rated.includes(c)) {
+      if (!c.broken && !c.latestBroken) {
         const best = new Map(); // player → their best run by the end of the day
         [...byDay.keys()].sort().forEach((d) => {
           const was = new Map(best);
@@ -7391,9 +7399,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
             const without = k === first ? [next, old].filter(Boolean).sort(byTime)[0] : record;
             const g = coursePoints(record, run) - (old ? coursePoints(without, old) : 0);
             gained += g;
-            if (g) at(d).gains.push({ r: run, n: c.n, g: g / rated.length });
+            if (g) at(d).gains.push({ r: run, n: c.n, assisted, g: g * share });
           });
-          if (gained) at(d).gained += gained / rated.length;
+          if (gained) at(d).gained += gained * share;
         });
       }
       const live = standingsOf(c).top;
@@ -7408,29 +7416,37 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
           if (place < 3) s.podiums++;
           const record = place === 0 && isRecord(list, i);
           if (record) s.records++;
-          s.fresh.push({ r, n: c.n, place, record });
+          s.fresh.push({ r, n: c.n, assisted, place, record });
         });
       });
     });
-    firstRun.forEach(({ d, r, n }, key) => {
+    firstRun.forEach(({ d, r, n, assisted }, key) => {
       const s = at(d);
       s.players++;
-      s.newcomers.push({ key, r, n });
+      s.newcomers.push({ key, r, n, assisted });
     });
-    const entryOf = (n, r) => index.get(`${n}|${playerKey(r)}|${r.time}|${r.miss}`) || (r.video && index.get(`${n}|${r.video}`)) || null;
+    const entryOf = (n, r, assisted) => {
+      const a = assisted ? "a" : "";
+      return index.get(`${a}${n}|${playerKey(r)}|${r.time}|${r.miss}`) || (r.video && index.get(`${a}${n}|${r.video}`)) || null;
+    };
     runStats = { per, first: [...per.keys()].sort()[0] || "", entryOf };
     return runStats;
   }
-  // The Player ratings at the end of a day, as they were then: how many players were rated, everyone's ratings added up
-  // (global), and every course rating everyone had added up (course: their points on each rated course), and the
-  // players themselves (see ratings), for the lists
+  // The Global rating at the end of a day, as it was then: how many players were rated, everyone's ratings added up
+  // (global), and every course rating everyone had added up (course: their points on each rated board, assisted ones
+  // too), and the players themselves (see ratingsSum, each with their course ratings added up as course), for the lists
   function standingAt(day, today) {
     if (!standingOn.has(day)) {
-      const { players } = today ? ratings() : ratings({ day });
+      const then = today ? null : { day };
+      const sets = [ratings(then), ratings(then, true)];
+      const course = new Map();
+      sets.forEach((set) => set.players.forEach((p) => course.set(p.key, (course.get(p.key) || 0) + Object.values(p.points).reduce((a, x) => a + x, 0))));
+      const { players } = ratingsSum(sets);
+      players.forEach((p) => { p.course = course.get(p.key) || 0; });
       standingOn.set(day, {
         rated: players.length,
         global: players.reduce((a, p) => a + p.rating, 0),
-        course: players.reduce((a, p) => a + Object.values(p.points).reduce((b, x) => b + x, 0), 0),
+        course: players.reduce((a, p) => a + p.course, 0),
         players,
       });
     }
@@ -7711,8 +7727,8 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       const list = each("runs").filter(that).sort((a, b) => when(b).localeCompare(when(a)));
       return { when: range, value: statNum(list.length), rows: list.map((x) => runItemHtml(x)) };
     };
-    // A board's run with its page, or as itself when it has none
-    const item = (r, n) => rs.entryOf(n, r) || { run: { name: r.name, discord: r.discord, time: r.time, ...(isGround(r) ? { ground: r.ground } : { mistakes: r.miss }), date: r.date || "", id: "" }, n, group: "past", status: "" };
+    // A board's run with its page, or as itself when it has none (assisted: it's on an assisted board)
+    const item = (r, n, assisted) => rs.entryOf(n, r, assisted) || { run: { name: r.name, discord: r.discord, time: r.time, ...(isGround(r) ? { ground: r.ground } : { mistakes: r.miss }), date: r.date || "", id: "" }, n, group: "past", status: "", assisted: !!assisted };
     if (kind === "sent") return sent(() => true);
     if (kind === "busiest") {
       // The course with the most runs sent (the lower number when two have as many), as under Runs
@@ -7723,20 +7739,20 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     }
     if (kind === "gained") {
       const list = each("gains").filter((x) => Math.round(x.g) !== 0).sort((a, b) => b.g - a.g);
-      return { when: range, value: statChange(each("gains").reduce((a, x) => a + x.g, 0)), rows: list.map((x) => runItemHtml(item(x.r, x.n), starHtml(signed(x.g)))) };
+      return { when: range, value: statChange(each("gains").reduce((a, x) => a + x.g, 0)), rows: list.map((x) => runItemHtml(item(x.r, x.n, x.assisted), starHtml(signed(x.g)))) };
     }
     if (kind === "top10s" || kind === "podiums" || kind === "records") {
       const list = each("fresh").filter((x) => kind === "top10s" || (kind === "podiums" ? x.place < 3 : x.record))
         .sort((a, b) => formatDate(b.r.date).localeCompare(formatDate(a.r.date)) || a.place - b.place);
-      return { when: range, value: statNum(list.length), rows: list.map((x) => runItemHtml(item(x.r, x.n),
+      return { when: range, value: statNum(list.length), rows: list.map((x) => runItemHtml(item(x.r, x.n, x.assisted),
         `<span class="stat place">${x.record ? icon("trophy") : ""}#${x.place + 1}</span>`)) };
     }
     if (kind === "players") {
       const list = each("newcomers").sort((a, b) => formatDate(b.r.date).localeCompare(formatDate(a.r.date)));
-      return { when: range, value: statNum(list.length), rows: list.map((x) => runItemHtml(item(x.r, x.n))) };
+      return { when: range, value: statNum(list.length), rows: list.map((x) => runItemHtml(item(x.r, x.n, x.assisted))) };
     }
     const now = standingAt(day, today).players;
-    const coursePts = (p) => Object.values(p.points).reduce((a, x) => a + x, 0);
+    const coursePts = (p) => p.course; // see standingAt
     if (kind === "rated" || kind === "global") {
       return { when: today ? t("visits.today") : day, value: statNum(kind === "rated" ? now.length : now.reduce((a, p) => a + p.rating, 0)),
         rows: now.map((p) => playerItemHtml(p, starHtml(points(p.rating)))) };
