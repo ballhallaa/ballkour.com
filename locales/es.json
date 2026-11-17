@@ -426,7 +426,7 @@
   "stats.busiest": "Más carreras",
   "stats.since": "Se cuentan desde el {date}.",
   "stats.recordedSince": "Las carreras se registran desde el {date}.",
-  "stats.runsNote": "Los días van de medianoche a medianoche UTC. La puntuación ganada suma cuánto subió cada carrera la puntuación de su jugador: el número entre paréntesis junto a ella en las clasificaciones. Los dos cambios son cuánto subieron o bajaron los totales en los días elegidos, así que también cuentan lo que pierden otros jugadores cuando alguien bate un récord.",
+  "stats.runsNote": "Los días van de medianoche a medianoche UTC. La puntuación ganada suma cuánto subió cada carrera la puntuación global de su jugador: el número entre paréntesis junto a ella en las clasificaciones. Junto a una carrera asistida, ese número es de la puntuación asistida, así que aquí cuenta menos. Los dos cambios son cuánto subieron o bajaron los totales en los días elegidos, así que también cuentan lo que pierden otros jugadores cuando alguien bate un récord.",
   "runs.ratingGain": "Puntuación de {player} en todos los recorridos: {rating}, con {change} de esta carrera",
   "rev.ratingGain": "Puntuación de {player} en todos los recorridos si se aprueba: {rating}, con {change} de esta carrera",
   "rev.declinedBy": "Rechazada por {name}",
