@@ -426,7 +426,7 @@
   "stats.busiest": "Le plus de parties",
   "stats.since": "Elles sont comptées depuis le {date}.",
   "stats.recordedSince": "Les parties sont enregistrées depuis le {date}.",
-  "stats.runsNote": "Les jours vont de minuit à minuit UTC. Le score gagné additionne de combien chaque partie a fait monter le score global de son joueur : le nombre entre parenthèses à côté d’elle dans les classements. À côté d’une partie assistée, ce nombre est celui du score assisté, donc elle compte moins ici. Les deux variations indiquent de combien les totaux ont monté ou baissé sur les jours choisis, donc elles comptent aussi ce que perdent les autres joueurs quand quelqu’un bat un record.",
+  "stats.runsNote": "Les jours vont de minuit à minuit UTC. Le score gagné additionne de combien chaque partie a fait monter le score global de son joueur. Les deux variations indiquent de combien les totaux ont monté ou baissé sur les jours choisis, donc elles comptent aussi ce que perdent les autres joueurs quand quelqu’un bat un record.",
   "runs.ratingGain": "Score de {player} sur tous les parcours : {rating}, dont {change} grâce à cette partie",
   "rev.ratingGain": "Score de {player} sur tous les parcours si elle est approuvée : {rating}, dont {change} grâce à cette partie",
   "rev.declinedBy": "Refusée par {name}",

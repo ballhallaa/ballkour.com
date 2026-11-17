@@ -426,7 +426,7 @@
   "stats.busiest": "成績最多",
   "stats.since": "從 {date} 開始統計。",
   "stats.recordedSince": "成績從 {date} 開始記錄。",
-  "stats.runsNote": "每天按 UTC 從午夜到下一個午夜計算。獲得的積分是每個成績讓其玩家全域積分提高了多少的總和，也就是排行榜上該成績旁邊括號裡的數字。輔助成績旁邊的數字屬於輔助積分，所以在這裡算得更少。兩項變化是總和在所選日期內上升或下降了多少，因此也計入了有人打破紀錄時其他玩家失去的積分。",
+  "stats.runsNote": "每天按 UTC 從午夜到下一個午夜計算。獲得的積分是每個成績讓其玩家全域積分提高了多少的總和。兩項變化是總和在所選日期內上升或下降了多少，因此也計入了有人打破紀錄時其他玩家失去的積分。",
   "runs.ratingGain": "{player} 在所有關卡的積分：{rating}，其中 {change} 來自這個成績",
   "rev.ratingGain": "通過後 {player} 在所有關卡的積分：{rating}，其中 {change} 來自這個成績",
   "rev.declinedBy": "由 {name} 拒絕",
