@@ -2430,7 +2430,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "signin.notNow": "Not now",
   "rt.coursePoints": "{points} course rating points",
   "rt.coursePointsGain": "{points} course rating points, with {change} from this run",
-  "lb.rating": "Rating over every course: {points}",
+  "lb.rating.unassisted": "Unassisted rating: {points}",
+  "lb.rating.assisted": "Assisted rating: {points}",
+  "lb.rating.legacy": "Legacy rating: {points}",
   "lb.ratingNote": "Ratings: each player’s rating over every course",
   "lb.ratingThen": "Ratings: each player’s rating over every course, as it was on {date}",
   "sub.sentSlower": "Your run is sent, but your best on {course} is still {time} (#{rank}).",
@@ -2516,7 +2518,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   "stats.since": "They’re counted from {date} on.",
   "stats.recordedSince": "Runs started getting recorded on {date}.",
   "stats.runsNote": "Days go from midnight to midnight UTC. Rating gained adds up how much each run raised its player’s Global rating. The two changes are how much the totals went up or down over the days picked, so they also count what other players lose when someone beats a record.",
-  "runs.ratingGain": "{player}’s rating over every course: {rating}, with {change} from this run",
+  "runs.ratingGain.unassisted": "{player}’s Unassisted rating: {rating}, with {change} from this run",
+  "runs.ratingGain.assisted": "{player}’s Assisted rating: {rating}, with {change} from this run",
+  "runs.ratingGain.legacy": "{player}’s Legacy rating: {rating}, with {change} from this run",
   "rev.ratingGain": "{player}’s rating over every course if it’s approved: {rating}, with {change} from this run",
   "rev.declinedBy": "Turned down by {name}",
   "claim.title": "Is this you?",
@@ -3122,12 +3126,20 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   const SEE_RATINGS = { top: "pl.seeUnassistedRatings", assisted: "pl.seeAssistedRatings", legacy: "pl.seeLegacyRatings" };
   const shareTag = (q, key, name) => `<a class="tag tag-tier${q.tier !== null && q.tier <= 5 ? " elite" : ""}" href="/leaderboards/${ratingsPath(q.tab)}" ` +
     `data-board="${RATINGS.n}" data-board-tab="${q.tab}" data-board-player="${esc(key)}" title="${esc(t(SEE_RATINGS[q.tab], { player: name }))}">${esc(shareLabel(q.share))}</a>`;
+  // The star's hover text names the rating it is (the board's own kind, by its Player ratings' tab), so it isn't taken
+  // for the Global rating Stats and the Player ratings open on
+  const RATING_TITLES = {
+    top: ["lb.rating.unassisted", "runs.ratingGain.unassisted"],
+    assisted: ["lb.rating.assisted", "runs.ratingGain.assisted"],
+    legacy: ["lb.rating.legacy", "runs.ratingGain.legacy"],
+  };
   function runRow(r, i, fresh, legacy, ratingOf, podium, mark) {
     const place = podium === undefined ? i : podium;
     const isNew = !!fresh && fresh.has(r);
     const rating = ratingOf ? ratingOf.get(playerKey(r)) : undefined;
-    const ratingTitle = !rating ? "" : rating.gain === null ? t("lb.rating", { points: points(rating.rating) })
-      : t("runs.ratingGain", { rating: points(rating.rating), change: signed(rating.gain), player: r.name });
+    const [plain, withGain] = rating ? RATING_TITLES[rating.tab] : [];
+    const ratingTitle = !rating ? "" : rating.gain === null ? t(plain, { points: points(rating.rating) })
+      : t(withGain, { rating: points(rating.rating), change: signed(rating.gain), player: r.name });
     const split = legacy ? /^(.*?)(\.--)?$/.exec(r.time) : null;
     const shown = split ? esc(split[1]) + (split[2] ? `<span class="na">.--</span>` : "") : esc(r.time);
     const time = `${icon("bolt")}<span class="v">${shown}</span>`;
