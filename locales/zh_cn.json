@@ -476,6 +476,7 @@
   "run.watch": "观看视频",
   "run.noVideo": "没有视频。只有前 10 名的成绩需要视频。",
   "vid.comments": "YouTube 评论",
+  "vid.view": "查看评论",
   "vid.loading": "正在加载评论…",
   "vid.none": "还没有评论。",
   "vid.off": "这个视频已关闭评论。",
