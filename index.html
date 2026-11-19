@@ -2716,8 +2716,6 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       file: "leaderboards/4-eichenwalde.opy", runs: [] },
     { n: 5, legacyCode: "KSG9E9", flag: "🎯", name: "Practice Range", by: "Spiz", remaker: "ballhallaa", beta: "7RR2Z",
       file: "leaderboards/5-practice-range.opy", runs: [] },
-    { n: 6, flag: "🇲🇽", name: "Dorado", by: "Fasteroid", code: "N8ZFR", runs: [] },
-    { n: 7, flag: "🇬🇷", name: "Ilios", by: "Fasteroid", code: "4BA40", runs: [] },
     { n: 8, flag: "🇧🇷", name: "Paraíso", by: "Senimar", ordered: true, code: "5P58Q", broken: true, runs: [] },
     { n: 9, flag: "🇪🇬", name: "Temple of Anubis", by: "Senimar", ordered: true, code: "18ZZK", runs: [] },
     { n: 10, flag: "🌙", name: "Horizon Lunar Colony", by: "Senimar", ordered: true, code: "JEFA9", runs: [] },
@@ -2732,9 +2730,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // The Player ratings row works like a course's, with its board at /leaderboards/ratings
   const RATINGS = { n: "ratings" };
   const rowOf = (key) => (String(key) === RATINGS.n ? RATINGS : course(Number(key)));
-  // Board links: ballkour.com/leaderboards/6 opens Dorado's top 10. Only the number counts, so older links with the
-  // course's name after it (/leaderboards/6-dorado) still work. The leaderboard bot links each post the same way.
-  // /leaderboards/6/3 opens its third board in the history, counted from the oldest, so the number stays the same
+  // Board links: ballkour.com/leaderboards/9 opens Temple of Anubis's top 10. Only the number counts, so older links with the
+  // course's name after it (/leaderboards/9-temple-of-anubis) still work. The leaderboard bot links each post the same way.
+  // /leaderboards/9/3 opens its third board in the history, counted from the oldest, so the number stays the same
   // as new boards come in (see subPath() and startAt).
   const boardHash = (c) => String(c.n);
   const courseOfHash = (hash) => { const m = /^#?(\d+)(?:-|$)/.exec(hash); return m ? course(Number(m[1])) || null : null; };
@@ -3765,7 +3763,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // Each classic course's board is a list of runs in leaderboards/<n>-<slug>.json on the game repo's develop branch:
   // [{ "name", "discord", "time", "mistakes", "date", "video" }]
   const CLASSIC_FILES = {
-    6: "6-dorado", 7: "7-ilios", 8: "8-paraíso", 9: "9-temple-of-anubis", 10: "10-horizon-lunar-colony", 11: "11-blizzard-world", 12: "12-circuit-royal", 13: "13-neon-junction",
+    8: "8-paraíso", 9: "9-temple-of-anubis", 10: "10-horizon-lunar-colony", 11: "11-blizzard-world", 12: "12-circuit-royal", 13: "13-neon-junction",
     14: "14-kings-row", 15: "15-eichenwalde"
   };
   const toSeconds = (t) => t.replace(".--", "").split(":").reduce((sum, part) => sum * 60 + Number(part), 0);
@@ -3866,7 +3864,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         };
         refreshCourse(c);
       });
-      // A legacy link to a course that has no legacy board (/leaderboards/6/legacy) shows the Top 10 and its link
+      // A legacy link to a course that has no legacy board (/leaderboards/9/legacy) shows the Top 10 and its link
       COURSES.forEach((c) => {
         if (viewOf(c).tab !== "legacy" || (HISTORY[c.n] && HISTORY[c.n].legacy.length)) return;
         viewOf(c).tab = "top";
@@ -9696,14 +9694,14 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const r = m && m[1].toLowerCase();
     return r && r !== "discord" && ROUTES[r] ? r : null;
   };
-  // The board or answer a link names: /leaderboards/6 (/leaderboards/6/legacy for its Legacy tab, /leaderboards/6/3
-  // for its third board), /faq/pausing, or the older /leaderboards/6-dorado, /faq/pause, #6-dorado and #pause
+  // The board or answer a link names: /leaderboards/9 (/leaderboards/9/legacy for its Legacy tab, /leaderboards/9/3
+  // for its third board), /faq/pausing, or the older /leaderboards/9-temple-of-anubis, /faq/pause, #9-temple-of-anubis and #pause
   const subOf = (path, hash) => { const m = /^\/(?:leaderboards\/([\w-]+)(?:\/(?:legacy|assisted|unassisted|global|\d+))?|faq\/([\w-]+))\/?$/i.exec(path); return m ? (m[1] || m[2]).toLowerCase() : /^#[\w-]+$/.test(hash) ? hash.slice(1) : null; };
-  const BOARD_LINK = /^\/leaderboards\/[\w-]+\/(\d+)\/?$/i; // a link to one of a course's boards, like /leaderboards/6/3
+  const BOARD_LINK = /^\/leaderboards\/[\w-]+\/(\d+)\/?$/i; // a link to one of a course's boards, like /leaderboards/9/3
   // Old hash links still work too, including #leaderboard from the workshop.codes README
   const hashRoute = (hash) => { const h = hash.slice(1).toLowerCase(); return h === "leaderboard" ? "leaderboards" : Object.keys(ROUTES).find((r) => ROUTES[r] === h) || null; };
   const startRoute = routeOf(location.pathname) || hashRoute(location.hash);
-  // ballkour.com/leaderboards/6 and /faq/pausing open that board or answer
+  // ballkour.com/leaderboards/9 and /faq/pausing open that board or answer
   const startSub = subOf(location.pathname, location.hash);
   const startBoard = startRoute === "leaderboards" && startSub ? (startSub === RATINGS.n ? RATINGS : courseOfHash(startSub)) : null;
   if (startBoard && /^\/leaderboards\/[\w-]+\/legacy\/?$/i.test(location.pathname)) viewOf(startBoard).tab = "legacy";
@@ -9713,10 +9711,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   if (startBoard === RATINGS && /^\/leaderboards\/[\w-]+\/unassisted\/?$/i.test(location.pathname)) viewOf(startBoard).tab = "top";
   const startFaq = startRoute === "faq" && startSub ? faqOfLink(startSub) : null;
   if (startRoute === "leaderboards") openCourse = startBoard ? startBoard.n : 1;
-  // A link to one of a course's boards (/leaderboards/6/3) opens on that board, counted from its oldest, once the
+  // A link to one of a course's boards (/leaderboards/9/3) opens on that board, counted from its oldest, once the
   // history is in. Until every board's files have loaded, the newest board can still change, so only then does a
   // link to the newest board (or past it, or to a course without a history) show the newest board, and its link
-  // become /leaderboards/6, like the link to any newest board.
+  // become /leaderboards/9, like the link to any newest board.
   const startAt = startBoard && BOARD_LINK.exec(location.pathname);
   if (startAt) {
     if (startBoard !== RATINGS) viewOf(startBoard).at = Number(startAt[1]) - 1;
@@ -9810,7 +9808,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       queueSpy();
     }
   }
-  // While a board or an answer is open, the address links to it: /leaderboards/6, /leaderboards/3/legacy,
+  // While a board or an answer is open, the address links to it: /leaderboards/9, /leaderboards/3/legacy,
   // /leaderboards/3/12 (an older board, while the history is scrubbed back to it), /leaderboards/ratings, /faq/pausing.
   // Stats' links to the day picked: /stats/2026-11-05, /stats/2026-11-05/week, …
   function subPath(route) {

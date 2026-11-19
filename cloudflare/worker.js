@@ -45,7 +45,7 @@
    and the PROFILES KV namespace (wrangler.toml), for the stats on players' Discord profiles and each run's numbers from
    when it was sent.
 
-   Board, answer and run links (/leaderboards/6, /leaderboards/3/legacy, /leaderboards/3/12,
+   Board, answer and run links (/leaderboards/9, /leaderboards/3/legacy, /leaderboards/3/12,
    /leaderboards/ratings/unassisted, /faq/pausing, /runs/<id>) get the home page, like /leaderboards and /faq do; the
    page opens the board, answer or run itself.
 
@@ -2855,7 +2855,7 @@ function previewOf(pathname, data, players) {
 }
 
 /* ---------- Pages ---------- */
-// The sections (/submit, /faq, …) and the links into them (/leaderboards/6, /leaderboards/3/legacy, /leaderboards/3/12
+// The sections (/submit, /faq, …) and the links into them (/leaderboards/9, /leaderboards/3/legacy, /leaderboards/3/12
 // for one of its older boards, /faq/pausing), and every run sent from the website (/runs, the list under the form)
 // and each one's page (/runs/<id>), /my-stats (My profile), Stats for a day picked in its history (/stats/2026-11-05,
 // /stats/2026-11-05/week, /stats/day, /stats/3-months), and each player's panel (/players/<number or name>, see "Players' own links",
@@ -2867,7 +2867,7 @@ async function page(request, env, ctx) {
   const headers = new Headers(request.headers);
   headers.delete("If-None-Match");
   headers.delete("If-Modified-Since");
-  // /leaderboards/6 and /faq/pausing are the home page
+  // /leaderboards/9 and /faq/pausing are the home page
   const url = new URL(request.url);
   const asked = url.pathname;
   if (isPage(url.pathname)) url.pathname = "/";

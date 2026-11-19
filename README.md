@@ -21,7 +21,7 @@ Keep everything out of `/discord`, `/gameplay`, `/code`, `/releases`, `/courses`
 
 Links can go deeper, and the address shows them while a board or answer is open:
 
-- **A course's board:** `ballkour.com/leaderboards/6`, and `ballkour.com/leaderboards/3/legacy` for a course's Legacy tab. The leaderboard bot links its posts this way, and older links with the course's name after the number (`/leaderboards/6-dorado`) still work. Scrubbing back through a course's history puts that board's number in the address, counted from the oldest board (`ballkour.com/leaderboards/3/12`), so an older board's link stays the same as new boards come in. The newest board is just `/leaderboards/3`, and a number past the newest opens the newest. The Worker serves the page at these addresses.
+- **A course's board:** `ballkour.com/leaderboards/9`, and `ballkour.com/leaderboards/3/legacy` for a course's Legacy tab. The leaderboard bot links its posts this way, and older links with the course's name after the number (`/leaderboards/9-temple-of-anubis`) still work. Scrubbing back through a course's history puts that board's number in the address, counted from the oldest board (`ballkour.com/leaderboards/3/12`), so an older board's link stays the same as new boards come in. The newest board is just `/leaderboards/3`, and a number past the newest opens the newest. The Worker serves the page at these addresses.
 - **The player ratings:** `ballkour.com/leaderboards/ratings`, which opens on the Global rating, with `/unassisted`, `/assisted`, and `/legacy` after it for the other tabs. The older `/leaderboards/ratings/global` still opens Global.
 - **An FAQ answer:** `ballkour.com/faq/pausing`. The link names are in `FAQ_LINKS`, and older links that used the translation keys (`/faq/pause`) still work.
 - **A run sent from the website:** `ballkour.com/runs/<id>`. Ballkyrie's post for it in the run submissions channel links here (see [Runs sent from the website](#runs-sent-from-the-website)), and `ballkour.com/runs` goes to the list of every one. The Worker serves the page at these addresses.
@@ -29,7 +29,7 @@ Links can go deeper, and the address shows them while a board or answer is open:
 - **The site's stats:** `ballkour.com/stats` goes to **Stats** at the bottom of the page, and `ballkour.com/stats/2026-11-05` to a day in its history, with `/day` or `/week` after it for just that day or the 7 days up to it (`/stats/week` for the last 7 days). The address follows what's picked while Stats is on screen (see [Stats](#stats)). The Worker serves the page at the longer ones.
 - **A player's stats:** `ballkour.com/profile/<number>` opens that player's panel, or `/profile/<name>` once they've picked a name for their link (see [Players' own links](#players-own-links)). A name from the legacy boards with no Discord ID has `/profile/<in-game name>`. `/profile/<…>/runs` opens it on **Runs**. These were `/players/<…>` until November 2026, and those links still work (the address then shows the `/profile/` one). The address shows it while their panel is open (your own too, from My profile or your name on a board), and **Copy link** beside Close copies it, so anyone can share their stats. The Worker serves the page here too.
 
-The older `#6-dorado` and `#pause` forms still work too.
+The older `#9-temple-of-anubis` and `#pause` forms still work too.
 
 A link to a run, a board, or a player shows its own preview when it's pasted on Discord (or anywhere else that reads a page's `og:` tags), instead of the site's: the run's player, time, course, and where it is now ("COLDSKIN · 4:05.81 on 1 🇬🇮 Watchpoint: Gibraltar", "#2 of 15 on the board · 2 mistakes · 2026-08-26"), a board's top 3, or a player's place, rating, and Top %. The Worker works them out as it serves the page (`previewOf()` in `cloudflare/worker.js`), in English like Ballkyrie's posts.
 - **A language:** `ballkour.com/?lang=ja` opens the page in Japanese; it works with any of the links above. Picking a language, with the language button at the top right (by Reduce motion), puts it in the address.
@@ -44,7 +44,7 @@ The pause button at the top right turns Reduce motion on or off. It's lit up gre
 python3 tools/serve.py
 ```
 
-then open http://localhost:8000. It serves this folder at the site's own addresses (`/leaderboards/6`, `/faq/pausing`, `/runs/<id>`, …) with the live leaderboards from ballkour.com, so you see your changes with real data. Signing in and sending runs only work on the real site (or the test copy below), so the Submit section shows the Discord ticket and **My profile** is hidden.
+then open http://localhost:8000. It serves this folder at the site's own addresses (`/leaderboards/9`, `/faq/pausing`, `/runs/<id>`, …) with the live leaderboards from ballkour.com, so you see your changes with real data. Signing in and sending runs only work on the real site (or the test copy below), so the Submit section shows the Discord ticket and **My profile** is hidden.
 
 ## Deploying
 
