@@ -8650,7 +8650,10 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     `${esc(`${c.n} `)}${flagName(c)}</a>${assisted ? ` ${assistedTag()}` : ""}`;
   // 6.81 → "6.81s", 62.15 → "1:02.15"
   const gap = (sec) => (sec < 60 ? `${sec.toFixed(2)}s` : `${Math.floor(sec / 60)}:${(sec % 60).toFixed(2).padStart(5, "0")}`);
-  const tierLabel = (tier) => (tier === null ? t("rt.rated") : t("rt.tier", { pct: tier.toLocaleString(htmlLang()) }));
+  // A Top % in a run's result: just the number ("12.5%", as the language writes it), since the row says Top % already
+  // (with Top in it too, the picture had no room left for its label), or Rated past the last tier
+  const pctLabel = (v) => (v / 100).toLocaleString(htmlLang(), { style: "percent", maximumFractionDigits: 1 });
+  const tierLabel = (tier) => (tier === null ? t("rt.rated") : pctLabel(tier));
   // Whether a run (cleanRun) is its player's best in s (what it did: statsFrom, or the Worker's): the same time and
   // mistakes. What the Worker kept before it had bestMiss only has the time.
   const isTheirBest = (s, run) => s.best === run.time && (typeof s.bestMiss !== "number" || s.bestMiss === run.miss);
@@ -8840,12 +8843,12 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
        which it shows instead. Their role on Discord goes by the tier, so a run that moves it says so under the row. */
     const topRow = (from, to, where) => {
       const a = from ? topShare(from.rank, from.of) : null, b = topShare(to.rank, to.of);
-      const label = (q, v) => (v === null ? tierLabel(q.tier) : shareLabel(v));
+      const label = (q, v) => (v === null ? tierLabel(q.tier) : pctLabel(v));
       const moved = !!from && label(from, a) !== label(to, b);
       const newRole = !from || from.tier !== to.tier;
       const gap = a !== null && b !== null ? Math.round((a - b) * 10) / 10 : null;
       const delta = !from ? deltaHtml(null)
-        : gap !== null ? deltaHtml(gap, (Math.abs(gap) / 100).toLocaleString(htmlLang(), { style: "percent", maximumFractionDigits: 1 }))
+        : gap !== null ? deltaHtml(gap, pctLabel(Math.abs(gap)))
         : newRole ? `<span class="res-delta up">${esc(t("res.newRole"))}</span>` : sameHtml;
       return resRow(t("res.tier"), (moved ? was(esc(label(from, a))) : "") + esc(label(to, b)), delta, newRole ? roleNote : "", where);
     };
