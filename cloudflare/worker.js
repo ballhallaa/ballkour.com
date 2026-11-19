@@ -1242,15 +1242,13 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pendin
       : to === fromV ? same : chip(`${to > fromV ? "▲" : "▼"} ${text(to - fromV)}`, to > fromV ? "up" : "down"));
     // And where less is better (a time, mistakes): ▼ in mint
     const less = (diff, text) => (!diff ? same : chip(`${diff < 0 ? "▼" : "▲"} ${text}`, diff < 0 ? "up" : "down"));
-    const tierLabel = (tier) => (typeof tier === "number" ? `Top ${tier}%` : "Rated");
     // Their Top % (from: before the run, { rank, of, tier }, null when they weren't rated; to: with it): where their
     // place puts them among everyone rated (see topShare), after what it was, with how much it moved (a smaller share
-    // is up). Numbers kept from before there were places have just the tier, their role, which it shows instead.
+    // is up). Numbers kept from before there were places have just the tier, their role, which it shows instead. Just
+    // the number ("25% → 12.5%", as shareText writes it), since the row says Top % already: with Top in it too, the
+    // label had no room left and showed as "TOP…".
     const topRow = (from, to) => {
-      const label = (q) => {
-        const v = topShare(q.rank, q.of);
-        return v === null ? tierLabel(q.tier) : `Top ${v}%`;
-      };
+      const label = (q) => shareText(q.rank, q.of, q.tier, true);
       if (!from) return row("Top %", label(to), { chip: chip("New", "new") });
       const a = topShare(from.rank, from.of), b = topShare(to.rank, to.of);
       const moved = label(from) !== label(to);
