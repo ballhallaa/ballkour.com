@@ -4,7 +4,7 @@
     python3 tools/serve.py            # then open http://localhost:8000 (only this computer can)
     python3 tools/serve.py 8080       # another port
 
-It serves your copy of the site at the same addresses as ballkour.com (/leaderboards/6, /faq/pausing, /runs/<id>,
+It serves your copy of the site at the same addresses as ballkour.com (/leaderboards/9, /faq/pausing, /runs/<id>,
 /stats/2026-11-05, /my-stats, /players/<number or name>, …) and gets /data/*.json (the boards, Discord names, member
 count), /api/run (a run's numbers from when it was sent), /api/comments (a run's YouTube comments), and /api/visits
 (the page views in Stats) from ballkour.com, so you see your changes with real data.
