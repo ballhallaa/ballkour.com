@@ -193,12 +193,17 @@ async function buildGame(env, previous) {
   let paths = previous ? Object.keys(previous.files) : [];
   let names = (previous && previous.names) || {};
   let flags = (previous && previous.flags) || {};
+  // Each course's code for its run pictures: a remake's Beta code (the only one the remakes list for now), or the
+  // course's code ({ kind: "Beta" or "Code", code })
+  let codes = (previous && previous.codes) || {};
   let list = (previous && previous.courses) || null;
   try {
     const courses = JSON.parse(await get("tools/leaderboard-bot/courses.json")).courses;
     paths = [...DATA_FILES, "src/engine/faq.opy", ...courses.map((c) => c.file)];
     names = Object.fromEntries(courses.map((c) => [c.n, c.name]));
     flags = Object.fromEntries(courses.filter((c) => c.flag).map((c) => [c.n, c.flag]));
+    codes = Object.fromEntries(courses.filter((c) => c.code || c.beta)
+      .map((c) => [c.n, c.beta && (c.remaker || !c.code) ? { kind: "Beta", code: c.beta } : { kind: "Code", code: c.code }]));
     list = courses.map(({ n, file, broken, remaker }) => ({ n, file, broken: !!broken, remake: !!remaker }));
   } catch (e) {
     if (!paths.length) throw e;
@@ -238,7 +243,7 @@ async function buildGame(env, previous) {
     releasesOf(REPO, previous ? previous.releases : null),
     releasesOf(SITE_REPO, previous ? previous.siteReleases ?? null : null),
   ]);
-  return JSON.stringify({ files, names, flags, ...(list ? { courses: list } : {}), releases, siteReleases });
+  return JSON.stringify({ files, names, flags, codes, ...(list ? { courses: list } : {}), releases, siteReleases });
 }
 const game = (env, ctx) => cached("game", 60, ctx, (prev) => buildGame(env, prev));
 
@@ -807,9 +812,9 @@ async function showSaved(runsText, user, historyText = null) {
 // The cached game data's course files, names and list (fetched if there's none yet)
 async function gameInfo(env, ctx) {
   try {
-    const { files = null, names = {}, flags = {}, courses = [] } = JSON.parse((await stored("game")) ?? (await game(env, ctx)));
-    return { files, names, flags, courses };
-  } catch (e) { return { files: null, names: {}, flags: {}, courses: [] }; }
+    const { files = null, names = {}, flags = {}, codes = {}, courses = [] } = JSON.parse((await stored("game")) ?? (await game(env, ctx)));
+    return { files, names, flags, codes, courses };
+  } catch (e) { return { files: null, names: {}, flags: {}, codes: {}, courses: [] }; }
 }
 const courseFile = (files, n) => files && Object.keys(files).find((k) => k.startsWith(`leaderboards/${n}-`) && /\.(opy|json)$/.test(k));
 /* ---------- Each run's page ----------
@@ -1051,7 +1056,7 @@ function bestBefore({ n, run, before, mine }, stats) {
 // it (checkedRunMessage), with whether it's its player's best on the course and the place it takes there. A run that's
 // been turned down (checked.approve false) is Turned-down run, beside Personal best: the best it would have replaced,
 // which still is, with what the run would have done.
-function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pending, courseName, courseFlag }, { post = false } = {}) {
+function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pending, courseName, courseFlag, courseCode }, { post = false } = {}) {
   const s = stats || {};
   // A run's ratings are the ones of its kind: the unassisted ones, or an assisted run's assisted ones, named the way
   // the Player ratings' tabs and the run's page name them (not Global, which is both put together)
@@ -1330,8 +1335,8 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pendin
       }
       sections.push({ heading: "Global stats", rows: globalRows });
     }
-    // Whose run it is, where, and when, so the picture says so on its own too (the site's Picture button saves it):
-    // the day it was sent, in UTC (a picture can't show each reader's own time zone), and where it stands with the
+    // Whose run it is, where (with the course's code, { kind, code }, see game()), and when, so the picture says so on
+    // its own too (the site's Picture button saves it): the day it was sent, in UTC (a picture can't show each reader's own time zone), and where it stands with the
     // moderators, for a top-10 run (status: { text, tone }, tone "held", "approved" or "down")
     const day = /^\d{4}-\d{2}-\d{2}/.test(run.sentAt || run.date || "")
       ? new Date(`${(run.sentAt || run.date).slice(0, 10)}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }) : "";
@@ -1339,7 +1344,7 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pendin
       : pending ? { text: "Waiting for a check", tone: "held" } : null;
     return {
       sections,
-      run: { name: run.name, course: courseText(n, courseName, courseFlag, (x) => x), assisted: isAssisted(run), date: day },
+      run: { name: run.name, course: courseText(n, courseName, courseFlag, (x) => x), ...(courseCode ? { code: courseCode } : {}), assisted: isAssisted(run), date: day },
       status,
       held: !!pending && !checked,
       tone: checked ? (checked.approve ? "approved" : "down") : pending ? "held" : "up",
@@ -1583,7 +1588,7 @@ async function afterCheck(env, ctx, { run, n, approve, before, by, site }) {
   const dm = env.NOTIFY_PLAYERS === "on" && !!env.DISCORD_BOT_TOKEN;
   const post = !!env.PROFILES && !!env.DISCORD_BOT_TOKEN;
   if (!dm && !post) return;
-  const { files, names, flags } = await gameInfo(env, ctx);
+  const { files, names, flags, codes } = await gameInfo(env, ctx);
   const file = courseFile(files, n);
   // An assisted run's board has none of the course file's runs, or of its old boards (see ofMode)
   const board = isAssisted(run) ? [] : fileRuns(file, file && files[file]);
@@ -1593,7 +1598,7 @@ async function afterCheck(env, ctx, { run, n, approve, before, by, site }) {
     console.error(`run ${run.id}: couldn't work out what it does now: ${(e && e.message) || e}`);
     return null;
   });
-  const info = { n, courseName: names[n], courseFlag: flags[n], run, before, mine, links: linksIn(files), rank, newBest, stats, site, checked: { approve, by } };
+  const info = { n, courseName: names[n], courseFlag: flags[n], courseCode: codes[n], run, before, mine, links: linksIn(files), rank, newBest, stats, site, checked: { approve, by } };
   await Promise.all([
     post && checkedPost(env, info),
     dm && (async () => {
@@ -1670,7 +1675,7 @@ async function submit(request, env, ctx) {
 
   // The course has to have a board. Without the game data (GitHub down, and no copy kept here), there's no telling which
   // courses there are, so nothing is saved: the form says to open a ticket instead.
-  const { files, names, flags, courses } = await gameInfo(env, ctx);
+  const { files, names, flags, codes, courses } = await gameInfo(env, ctx);
   if (!files) return answer(503, { error: "off" });
   const file = courseFile(files, n);
   if (!file) return answer(400, { error: "course" });
@@ -1717,7 +1722,7 @@ async function submit(request, env, ctx) {
   });
   if (saved.error) return answer(saved.status, { error: saved.error });
   await showSaved(saved.text, user).catch((e) => console.error(`submit: couldn't update the cached copy: ${(e && e.message) || e}`));
-  if (saved.text) ctx.waitUntil(afterSend(env, ctx, { n, courseName: names[n], courseFlag: flags[n], run, before, mine, links: linksIn(files), pending: saved.pending, rank: saved.rank, newBest: saved.newBest, site: url.origin }));
+  if (saved.text) ctx.waitUntil(afterSend(env, ctx, { n, courseName: names[n], courseFlag: flags[n], courseCode: codes[n], run, before, mine, links: linksIn(files), pending: saved.pending, rank: saved.rank, newBest: saved.newBest, site: url.origin }));
   if (saved.text && !saved.pending) ctx.waitUntil(profileAfterRun(env, ctx, user.id));
   // Sent twice: the run that's already in, with its id (undefined ones are left out of the answer)
   const shown = saved.text ? run : { ...run, id: saved.id, sentAt: undefined };
