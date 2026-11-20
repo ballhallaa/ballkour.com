@@ -87,7 +87,7 @@
   "foot.copyEmail": "이메일 주소 복사",
   "foot.writeEmail": "이메일 쓰기",
   "steps.goto": "오버워치에서 <b>플레이 → 더 보기 → 사용자 지정 게임 → 생성</b>으로 이동하세요.",
-  "steps.import": "<b>설정 → 코드 불러오기</b>(<b>요약</b> 아래)로 가서 아래 코드 중 하나를 붙여넣으세요(예: <code>59W28</code>).",
+  "steps.import": "<b>설정 → 코드 불러오기</b>(<b>요약</b> 아래)로 가서 아래 코드 중 하나를 붙여넣으세요(예: <code>9GTJH</code>).",
   "faq.intro": "{beta} 코드의 게임 내 FAQ와 같은 내용입니다. 매치 중 <b><kbd>궁극기</kbd> + <kbd>근접 공격</kbd></b>으로 열 수 있습니다.",
   "foot.disclaimer": "Ballkour는 팬이 만든 {overwatch} 워크숍 모드입니다. {blizzard}와 제휴하지 않았습니다.",
   "motion.label": "동작 줄이기",

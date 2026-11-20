@@ -87,7 +87,7 @@
   "foot.copyEmail": "メールアドレスをコピー",
   "foot.writeEmail": "メールを書く",
   "steps.goto": "Overwatchで<b>プレイ → その他 → カスタム・ゲーム → 作成</b>に進みます。",
-  "steps.import": "<b>設定 → コードをインポート</b>（<b>サマリー</b>内）に移動し、下のコードのいずれか（例：<code>59W28</code>）を貼り付けます。",
+  "steps.import": "<b>設定 → コードをインポート</b>（<b>サマリー</b>内）に移動し、下のコードのいずれか（例：<code>9GTJH</code>）を貼り付けます。",
   "faq.intro": "{beta}コードのゲーム内FAQと同じ内容です。マッチ中に<b><kbd>アルティメット</kbd> + <kbd>近接攻撃</kbd></b>で開けます。",
   "foot.disclaimer": "Ballkourはファンメイドの{overwatch}ワークショップモードです。{blizzard}とは提携していません。",
   "motion.label": "動きを減らす",
