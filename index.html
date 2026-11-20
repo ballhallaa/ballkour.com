@@ -5658,28 +5658,30 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     const cv = document.createElement("canvas");
     const ctx = cv.getContext("2d");
     if ("lang" in ctx) ctx.lang = htmlLang();
-    // Whose run it is, measured first: the player, the course, Assisted, and the day, with its status at the right.
-    // When the course doesn't fit on that line, it goes on a line of its own under it (with Assisted), and only gives
-    // way (…) if it's too long even for that.
+    // Whose run it is, measured first, on two lines: the player and the day, with its status at the right, then the
+    // course, Assisted, and the course's code under them. The course only gives way (…) if it's too long even for that.
     const { run, n, assisted, status } = meta;
     const c = course(n);
     const statusText = status ? t(status === "declined" ? "run.declined" : "run.pending") : "";
     picFont(ctx, "600 13px Barlow, sans-serif");
     const sw = statusText ? ctx.measureText(statusText).width + 18 : 0;
-    picFont(ctx, "700 14px Barlow, sans-serif");
-    const nameW = ctx.measureText(run.name).width;
     const tag = assisted ? up(t("lb.tab.assisted")) : "";
     const day = run.date ? formatDate(run.date) : "";
     picFont(ctx, '600 10.5px "JetBrains Mono", monospace', 1.05);
     const tagW = tag ? ctx.measureText(tag).width + 12 : 0;
-    picFont(ctx, "500 14px Barlow, sans-serif");
-    const dotW = 18 + ctx.measureText("·").width;
-    const dayW = day ? dotW + ctx.measureText(day).width : 0;
+    // The course's code, like its button in the course list: a remake's Beta code (the only one the remakes list for
+    // now), or the course's code (like the Worker's codes for the picture on Discord)
+    const code = !c ? null : c.remaker ? (c.beta ? ["beta", c.beta] : latestCode(c) ? ["code", c.latest] : null) : c.code ? ["code", c.code] : null;
+    const codeKind = code ? up(t("code." + code[0])) : "";
+    picFont(ctx, '600 10px "JetBrains Mono", monospace', 1);
+    const codeKindW = code ? ctx.measureText(codeKind).width : 0;
+    picFont(ctx, '600 12.5px "JetBrains Mono", monospace', 0.75);
+    const codeW = code ? 7 + codeKindW + 6 + ctx.measureText(code[1]).width + 7 : 0;
     let place = c ? `${c.n} ${c.flag ? c.flag + " " : ""}${c.name}` : "";
     picFont(ctx, `500 14px Barlow, ${EMOJI}`);
-    const lineW = W - 2 * (pad + 4), tagRoom = tag ? tagW + 9 : 0;
-    const two = !!place && ctx.measureText(place).width > lineW - (status ? sw + 12 : 0) - nameW - dotW - tagRoom - dayW;
-    const room = two ? lineW - tagRoom : lineW - (status ? sw + 12 : 0) - nameW - dotW - tagRoom - dayW;
+    const lineW = W - 2 * (pad + 4), tagRoom = (tag ? tagW + 9 : 0) + (code ? codeW + 9 : 0);
+    const two = !!place || !!tag || !!code;
+    const room = lineW - tagRoom;
     while (place && ctx.measureText(place).width > room && place.length > 4) place = place.slice(0, -2).trimEnd() + "…";
     const line2 = 25;
     const top = pad + headH + 6 + lineH + (two ? line2 : 0) + 10;
@@ -5748,7 +5750,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     }
     let x = pad + 4;
     const dot = () => { picFont(ctx, "500 14px Barlow, sans-serif"); x += 9; x += picText(ctx, "·", x, rcy, "#76867f") + 9; };
-    // The course and Assisted, at the middle of a line (cy)
+    // The course, Assisted, and the course's code, at the middle of a line (cy)
     const where = (cy) => {
       if (place) { picFont(ctx, `500 14px Barlow, ${EMOJI}`); x += picText(ctx, place, x, cy, "#a7b6b0"); }
       if (tag) {
@@ -5758,6 +5760,16 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         picFont(ctx, '600 10.5px "JetBrains Mono", monospace', 1.05);
         picText(ctx, tag, x + 6, cy, "#ff80c0");
         x += tagW;
+      }
+      if (code) {
+        x += 9;
+        picBox(ctx, x, cy - 9.5, codeW, 19, 5);
+        ctx.fillStyle = "rgba(255,255,255,.03)"; ctx.fill(); ctx.strokeStyle = "rgba(196,255,232,.24)"; ctx.stroke();
+        picFont(ctx, '600 10px "JetBrains Mono", monospace', 1);
+        picText(ctx, codeKind, x + 7, cy, code[0] === "beta" ? "#ff9a2e" : "#76867f");
+        picFont(ctx, '600 12.5px "JetBrains Mono", monospace', 0.75);
+        picText(ctx, code[1], x + 7 + codeKindW + 6, cy, "#ecf6f2");
+        x += codeW;
       }
     };
     picFont(ctx, "700 14px Barlow, sans-serif");
