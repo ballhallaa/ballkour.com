@@ -5403,7 +5403,9 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
     // Top 10 or Unassisted Top 10)
     line(d.legacy ? [up(t(sorted ? "lb.tab.legacy" : "pic.legacyTop")), sorted, up(t("pic.beforeMay"))]
       : [sorted || up(t("lb.tab.top")), d.board ? up(t("lb.boardOf", { n: d.board, total: d.boards })) : "", d.date], textTop + 48.6 + 12 + 7.5);
-    line([field(t("code.code"), d.legacy ? c.legacyCode : c.remaker ? latestCode(c) || c.beta : c.code), field(t("pic.creator"), c.by)], textTop + 48.6 + 12 + 15 + 9 + 7.5);
+    // The course's code, named Beta where it's a remake's Beta code (like the leaderboard bot's pictures on Discord)
+    const [codeKind, code] = d.legacy ? ["code", c.legacyCode] : c.remaker && !latestCode(c) ? ["beta", c.beta] : ["code", c.remaker ? latestCode(c) : c.code];
+    line([field(t("code." + codeKind), code), field(t("pic.creator"), c.by)], textTop + 48.6 + 12 + 15 + 9 + 7.5);
     // The runs, in two columns of five
     const colW = (W - 2 * PIC.pad - PIC.colGap) / 2;
     const TIER = ["#ffd54f", "#d3dde2", "#e8a066"];
