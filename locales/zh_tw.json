@@ -87,7 +87,7 @@
   "foot.copyEmail": "複製電子郵件地址",
   "foot.writeEmail": "寫電子郵件",
   "steps.goto": "在鬥陣特攻中前往<b>開始遊戲 → 更多 → 自訂對戰 → 建立</b>。",
-  "steps.import": "前往<b>設定 → 匯入代碼</b>（在<b>摘要</b>下），然後貼上下方任一代碼（例如 <code>59W28</code>）。",
+  "steps.import": "前往<b>設定 → 匯入代碼</b>（在<b>摘要</b>下），然後貼上下方任一代碼（例如 <code>9GTJH</code>）。",
   "faq.intro": "與{beta}代碼中遊戲內常見問題相同的解答，比賽中按 <b><kbd>絕招</kbd> + <kbd>快速近戰</kbd></b> 開啟。",
   "foot.disclaimer": "Ballkour 是粉絲製作的{overwatch}工作坊模式，與 {blizzard} 無關。",
   "motion.label": "減少動態效果",

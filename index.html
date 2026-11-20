@@ -1896,7 +1896,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
       </div>
       <ol class="steps">
         <li><span data-i18n-html="steps.goto">In Overwatch, go to <b>Play → More → Custom Games → Create</b>.</span></li>
-        <li><span data-i18n-html="steps.import">Go to <b>Settings → Import Code</b> (under <b>Summary</b>) and paste a code below (e.g. <code>59W28</code>).</span></li>
+        <li><span data-i18n-html="steps.import">Go to <b>Settings → Import Code</b> (under <b>Summary</b>) and paste a code below (e.g. <code>9GTJH</code>).</span></li>
         <li><span><span data-i18n="steps.start">Start the match.</span><span class="step-aside" data-i18n="steps.luck">Good luck!</span></span></li>
       </ol>
 
@@ -2693,7 +2693,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
      course its legacy board (before 2026-04-29) was set on, for that board's picture. A classic course with a beta
      shows its Beta code beside its code, like a remake's. */
   const COURSES = [
-    { n: 1, legacyCode: "W1RWY", flag: "🇬🇮", name: "Watchpoint: Gibraltar", by: "Spiz", remaker: "ballhallaa", latest: "59W28", beta: "9GTJH",
+    { n: 1, legacyCode: "W1RWY", flag: "🇬🇮", name: "Watchpoint: Gibraltar", by: "Spiz", remaker: "ballhallaa", beta: "9GTJH",
       file: "leaderboards/1-watchpoint-gibraltar.opy",
       runs: [
         { name: "BALLMYBLOVED", time: "3:54.23", miss: 5, date: "Jun 2, 2026", video: "https://youtu.be/Rkz9kWNEiHM" },
@@ -2707,7 +2707,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
         { name: "KINGO", time: "6:26.18", miss: 37, date: "Jun 10, 2026", video: "https://youtu.be/OaXIV4kSh_k" },
         { name: "VANESSA", time: "6:59.56", miss: 58, date: "Sep 30, 2026", video: "https://medal.tv/games/overwatch/clips/nDcPQeGIujXfUqe5G" }
       ] },
-    { n: 2, legacyCode: "6B9Z09", flag: "🇺🇸", name: "Blizzard World (Winter)", by: "Spiz", remaker: "ballhallaa", latest: "GMWRF", beta: "8Y14F",
+    { n: 2, legacyCode: "6B9Z09", flag: "🇺🇸", name: "Blizzard World (Winter)", by: "Spiz", remaker: "ballhallaa", beta: "8Y14F",
       file: "leaderboards/2-blizzard-world.opy",
       runs: [{ name: "BALLMYBLOVED", time: "7:14.76", miss: 16, date: "Jun 5, 2026", video: "https://youtu.be/hNSpNvWyNcI" }] },
     { n: 3, legacyCode: "3700E", flag: "🇧🇷", name: "Paraíso", by: "Spiz", remaker: "ballhallaa", beta: "MXJ0W",
@@ -2742,7 +2742,7 @@ html[data-motion="reduce"] .badge img, html[data-motion="reduce"] .badge::before
   // Which courses count for the ratings: every one but a broken one. A remake whose latest code is broken (latestBroken)
   // still counts, as its Beta code works: its latest code is only left out (see latestCode).
   const isRated = (c) => !c.broken;
-  // A remake's latest code, where it has one that works (Paraíso, Eichenwalde, and Practice Range have only a Beta code)
+  // A remake's latest code, where it has one that works (none has one for now: every remake has only its Beta code)
   const latestCode = (c) => (c.latest && !c.latestBroken ? c.latest : "");
   const classics = COURSES.filter((c) => !c.remaker);
   /* ---------- Assisted boards ----------
