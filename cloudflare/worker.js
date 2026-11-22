@@ -1041,7 +1041,7 @@ function bestBefore({ n, run, before, mine }, stats) {
    Under it: the course, who sent it, their in-game name and the video, then three blocks side by side. New personal
    best is the run: its time, mistakes (or ground time), course rating, the place it takes on the course, the player's
    rating, place and Top % in the player ratings with it, the courses they've run and their Top 10s, Podiums and Records when it changes
-   them, and its date (in the post only beside an old best, since the post goes up as the run is sent). Under the blocks in the DM to the player, New Discord role names the roles on our Discord it gives them, once it's on the board. Old personal best is the same for their best on the course
+   them, and its date (only in the DM: the post goes up as the run is sent, so Discord's time on it says the same). Under the blocks in the DM to the player, New Discord role names the roles on our Discord it gives them, once it's on the board. Old personal best is the same for their best on the course
    before it, with their place, rating, place and Top % in the ratings as they were. Comparison is what changed between
    the two, and how long after the old one it came. On their first run on a course there's just the run, with what it
    added to their rating, and where it moved them in the ratings, in the same rows. A run that isn't
@@ -1097,9 +1097,10 @@ function runBlocks({ n, run, rank, newBest, stats, before, mine, checked, pendin
   // didn't move, or "(New)" when there was nothing before (their first rating, or the course's first rating for them).
   // The player ratings are over every course, so a first run on one can still move a player who's run others.
   const lone = best && !old;
-  // When the run was sent, which the post (post) leaves out when there's no old best beside it: the post goes up as
-  // the run's sent, so Discord's time on it says the same. The DM goes once it's checked, so it keeps it.
-  const runDate = !post || !!old;
+  // When the run was sent, which the post (post) leaves out: the post goes up as the run's sent, so Discord's time on
+  // it says the same, and an old best's date is still there to compare with. The DM goes once it's checked, so it
+  // keeps it.
+  const runDate = !post;
   const known = (v) => (v === null || v === undefined ? null : v);
   const signed = (v) => `${v < 0 ? "−" : "+"}${Math.abs(v)}`;
   // A row's number before the run (fromV, null for nothing) and with it (to), each written by show, and the change (up:
