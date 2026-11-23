@@ -6,12 +6,12 @@
    /data/game.json     The game repo's leaderboard files and in-game FAQ (develop branch), its runs and leaderboard
                        history (leaderboard-data branch), plus the latest releases of the game and of this website:
                          { files: { "<path>": "<text>" | null }, releases: [...], siteReleases: [...] }.
-                       Refreshed at most once a minute.
+                       Refreshed by the cron every 5 or 10 minutes (see "Refreshing the data").
    /data/widget.json   The Discord server's member count (from its invite), plus the widget's voice channels and
-                       who's in them. Refreshed at most once a minute.
+                       who's in them. Refreshed by the cron every 5 minutes.
    /data/players.json  Players' Discord names and pictures for the leaderboards (also at /players.json):
                          { "<discord id>": { "name": "server nickname, display name or username", "avatar": "https://cdn.discordapp.com/…" } }
-                       Looked up with Ballkyrie's token, only for players on a board. Refreshed at most once an hour.
+                       Looked up with Ballkyrie's token, only for players on a board, each about once an hour.
    /api/…              Signing in with Discord, and runs sent from the form under Submit a run, which go on the boards
                        straight away. See "Signing in with Discord, and runs sent from the website" below. Players'
                        stats on their Discord profiles too: see "Stats on Discord profiles". And players claiming their
@@ -32,7 +32,7 @@
 
    Each page also gets the latest copy of all three in <head> as <script type="application/json"> blocks, and its
    "• N members" pills already filled in, so nothing pops in after the page loads. If GitHub or Discord can't be
-   reached, the last copy that worked is served for up to a week.
+   reached, the last copy that worked is served.
 
    Secrets (set once from this folder; each asks you to paste the value):
      npx wrangler secret put DISCORD_BOT_TOKEN   Ballkyrie's bot token, for the player names
@@ -123,6 +123,93 @@ async function soon(name, ttl, ctx, build, wait) {
   return old ? old.text() : null;
 }
 
+/* ---------- Refreshing the data ----------
+   The game data, the widget and the player names are fetched from GitHub and Discord by the every-minute cron
+   (REFRESH_CRON), not by visitors' requests. Fetching and putting them together on a request took it past the free
+   plan's 10 ms of CPU time (error 1102, a 503), and each Cloudflare location did it again every minute, since what
+   caches.default keeps stays in its own location. Each minute's run does at most one job (REFRESHES), so a run stays
+   well inside the 10 ms too, and keeps what it made in PROFILES as data:<name>, but only when it changed (KV allows
+   1,000 writes a day). A request reads that copy (fromKv), and each location keeps it for a minute (cached()'s ttl,
+   an hour for the names), so PROFILES is read about once a minute there.
+   How old each can get, plus up to a minute for KV to reach every location and the minute each location keeps it:
+     the widget (member count, voice channels)                    5 minutes
+     the runs, the boards posted and the links (DATA_FILES)       5 minutes, but a change made here (a run sent from the
+                                                                  website, a check, a claim, a link) shows straight away:
+                                                                  see showSaved
+     the course list, the courses' files and the FAQ (develop)    10 minutes
+     the releases of the game and of this website                 10 minutes
+     a player's Discord name and picture                          looked up about once an hour, as before
+   If GitHub or Discord can't be reached, the last copy that worked stays, and when Discord answers 429 with a wait
+   longer than a minute, Ballkyrie leaves it alone that long (DISCORD_WAIT). Without PROFILES (the test copy), or
+   before the cron has filled it in, a request builds them itself, the way it did before. */
+const REFRESH_CRON = "* * * * *"; // the same as the fourth cron in wrangler.toml
+const dataKey = (name) => `data:${name}`;
+// Each minute's job is the one with minute % every === at (no minute has two). The game data is in three parts, each
+// with its own minute, so no run fetches all 20-odd files and parses both release lists (about 480 KB of JSON) at once.
+// The parts are 2 or more minutes apart, so each run starts from the last one's copy (KV takes up to a minute to reach
+// every location).
+const REFRESHES = [
+  { name: "widget", every: 5, at: 0, discord: true, build: (env, ctx, prev) => buildWidget(env, prev) },
+  { name: "game", every: 5, at: 1, build: (env, ctx, prev) => buildGame(env, prev, "data") },
+  { name: "players", every: 15, at: 2, discord: true, build: (env, ctx, prev) => buildPlayers(env, ctx, prev) },
+  { name: "game", every: 10, at: 3, build: (env, ctx, prev) => buildGame(env, prev, "courses") },
+  { name: "game", every: 10, at: 8, build: (env, ctx, prev) => buildGame(env, prev, "releases") },
+];
+// What a request gets: the copy the cron keeps in PROFILES, or else (no PROFILES, or nothing there yet) build()
+async function fromKv(env, name, build) {
+  const kept = env.PROFILES ? await env.PROFILES.get(dataKey(name)).catch(() => null) : null;
+  return kept ?? build();
+}
+const gameSource = (env) => (prev) => fromKv(env, "game", () => buildGame(env, prev));
+const widgetSource = (env) => (prev) => fromKv(env, "widget", () => buildWidget(env, prev));
+const playersSource = (env, ctx) => (prev) => fromKv(env, "players", () => buildPlayers(env, ctx, prev));
+// A changed copy, made here (see showSaved): this location's cache gets it now, and PROFILES too, so the other
+// locations have it within a minute or two and the cron builds on it
+async function saveCopy(env, name, ttl, body) {
+  await Promise.all([putCached(name, ttl, body), env.PROFILES ? env.PROFILES.put(dataKey(name), body) : null]);
+}
+// The copy to change a file in: PROFILES', which every location goes by, or else this location's
+async function latestCopy(env, name) {
+  return (env.PROFILES ? await env.PROFILES.get(dataKey(name)).catch(() => null) : null) ?? (await stored(name));
+}
+// When Discord said it can be asked again (ms since 1970), from a 429's Retry-After during this run (see heed). Kept
+// in PROFILES as DISCORD_WAIT when that's over a minute away, and the jobs that ask Discord skip their turns until then.
+let discordWait = 0;
+const DISCORD_WAIT = dataKey("discord-wait");
+const heed = (r) => {
+  if (r && r.status === 429) discordWait = Math.max(discordWait, Date.now() + (Number(r.headers.get("Retry-After")) || 60) * 1000);
+  return r;
+};
+async function refresh(env, ctx, when) {
+  if (!env.PROFILES) return;
+  const minute = new Date(when).getUTCMinutes();
+  const job = REFRESHES.find((j) => minute % j.every === j.at);
+  if (!job) return;
+  if (job.discord) {
+    const until = Number(await env.PROFILES.get(DISCORD_WAIT)) || 0;
+    if (Date.now() < until) {
+      console.log(`${job.name}: Discord asked to wait until ${new Date(until).toISOString()}, so the last copy stays`);
+      return;
+    }
+    discordWait = 0;
+  }
+  const before = await env.PROFILES.get(dataKey(job.name));
+  try {
+    const built = await job.build(env, ctx, before ? JSON.parse(before) : null);
+    const body = typeof built === "string" ? built : built.body;
+    if (body !== before) {
+      await env.PROFILES.put(dataKey(job.name), body);
+      console.log(`${job.name}: saved a new copy (minute ${minute})`);
+    }
+  } finally {
+    const wait = Math.ceil((discordWait - Date.now()) / 1000);
+    if (job.discord && wait > 60) {
+      console.error(`${job.name}: Discord said to wait ${wait} s (429), so Ballkyrie leaves it alone until then`);
+      await env.PROFILES.put(DISCORD_WAIT, String(discordWait), { expirationTtl: wait + 60 });
+    }
+  }
+}
+
 const json = (body, maxAge) => new Response(body, {
   headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": `public, max-age=${maxAge}` },
 });
@@ -167,7 +254,11 @@ async function appToken(env) {
   return (await made.json()).token;
 }
 
-async function buildGame(env, previous) {
+// part: fetch only "courses" (the course list, the courses' files and the FAQ, from develop), "data" (DATA_FILES) or
+// "releases", and keep the rest from previous (the cron does one part a run, see REFRESHES). With no previous yet, the
+// courses and DATA_FILES are fetched too, so the copy is whole. With no part, everything is fetched.
+async function buildGame(env, previous, part = null) {
+  const want = (p) => !part || p === part || (!previous && p !== "releases");
   const headers = githubHeaders(env);
   let appAuth = null; // one GitHub App token for the whole refresh
   const get = async (path) => {
@@ -197,21 +288,29 @@ async function buildGame(env, previous) {
   // course's code ({ kind: "Beta" or "Code", code })
   let codes = (previous && previous.codes) || {};
   let list = (previous && previous.courses) || null;
-  try {
-    const courses = JSON.parse(await get("tools/leaderboard-bot/courses.json")).courses;
-    paths = [...DATA_FILES, "src/engine/faq.opy", ...courses.map((c) => c.file)];
-    names = Object.fromEntries(courses.map((c) => [c.n, c.name]));
-    flags = Object.fromEntries(courses.filter((c) => c.flag).map((c) => [c.n, c.flag]));
-    codes = Object.fromEntries(courses.filter((c) => c.code || c.beta)
-      .map((c) => [c.n, c.beta && (c.remaker || !c.code) ? { kind: "Beta", code: c.beta } : { kind: "Code", code: c.code }]));
-    list = courses.map(({ n, file, broken, remaker }) => ({ n, file, broken: !!broken, remake: !!remaker }));
-  } catch (e) {
-    if (!paths.length) throw e;
+  if (want("courses")) {
+    try {
+      const courses = JSON.parse(await get("tools/leaderboard-bot/courses.json")).courses;
+      paths = [...DATA_FILES, "src/engine/faq.opy", ...courses.map((c) => c.file)];
+      names = Object.fromEntries(courses.map((c) => [c.n, c.name]));
+      flags = Object.fromEntries(courses.filter((c) => c.flag).map((c) => [c.n, c.flag]));
+      codes = Object.fromEntries(courses.filter((c) => c.code || c.beta)
+        .map((c) => [c.n, c.beta && (c.remaker || !c.code) ? { kind: "Beta", code: c.beta } : { kind: "Code", code: c.code }]));
+      list = courses.map(({ n, file, broken, remaker }) => ({ n, file, broken: !!broken, remake: !!remaker }));
+    } catch (e) {
+      if (!paths.length) throw e;
+    }
   }
-  const got = await Promise.allSettled(paths.map(get));
+  // The files of the parts asked for are fetched; the others stay as they were
+  const fetched = paths.filter((p) => want(DATA_FILES.includes(p) ? "data" : "courses"));
+  const got = await Promise.allSettled(fetched.map(get));
   const failed = got.find((g) => g.status === "rejected");
+  if (failed) console.error(`game data: ${got.filter((g) => g.status === "rejected").length} of ${fetched.length} files couldn't be fetched, so they keep their last copy. First: ${failed.reason.message}`);
   const files = {};
-  paths.forEach((p, i) => { files[p] = got[i].status === "fulfilled" ? got[i].value : (previous && previous.files[p]) ?? null; });
+  paths.forEach((p) => {
+    const i = fetched.indexOf(p);
+    files[p] = i >= 0 && got[i].status === "fulfilled" ? got[i].value : (previous && previous.files[p]) ?? null;
+  });
   if (Object.values(files).every((v) => v === null)) throw new Error(`GitHub can't be reached: ${failed ? failed.reason.message : "no files"}`);
 
   // Only what the page uses from each release; if GitHub doesn't answer, the previous list is kept
@@ -239,13 +338,13 @@ async function buildGame(env, previous) {
       return kept;
     }
   };
-  const [releases, siteReleases] = await Promise.all([
-    releasesOf(REPO, previous ? previous.releases : null),
-    releasesOf(SITE_REPO, previous ? previous.siteReleases ?? null : null),
-  ]);
+  const kept = [previous ? previous.releases : null, previous ? previous.siteReleases ?? null : null];
+  const [releases, siteReleases] = want("releases")
+    ? await Promise.all([releasesOf(REPO, kept[0]), releasesOf(SITE_REPO, kept[1])])
+    : kept;
   return JSON.stringify({ files, names, flags, codes, ...(list ? { courses: list } : {}), releases, siteReleases });
 }
-const game = (env, ctx) => cached("game", 60, ctx, (prev) => buildGame(env, prev));
+const game = (env, ctx) => cached("game", 60, ctx, gameSource(env));
 
 /* ---------- Discord widget ---------- */
 // The member count comes from the server itself, asked with Ballkyrie's token (Discord often turns down the public
@@ -257,7 +356,7 @@ async function memberCountOf(env) {
     const r = await fetch(`${DISCORD_API}/guilds/${GUILD_ID}?with_counts=true`, {
       headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
       signal: AbortSignal.timeout(1500),
-    }).catch(() => null);
+    }).then(heed).catch(() => null);
     const d = r && r.ok ? await r.json().catch(() => null) : null;
     if (d && typeof d.approximate_member_count === "number") return d.approximate_member_count;
     console.error(`member count: Discord said ${r ? r.status : "nothing"} with the bot token; trying the invite`);
@@ -265,7 +364,7 @@ async function memberCountOf(env) {
   const r = await fetch(`${DISCORD_API}/invites/${INVITE}?with_counts=true`, {
     headers: { "User-Agent": "DiscordBot (https://ballkour.com, 1.0)" },
     signal: AbortSignal.timeout(1500),
-  });
+  }).then(heed);
   if (!r.ok) throw new Error(`invite: ${r.status}`);
   const d = await r.json();
   if (typeof d.approximate_member_count !== "number") throw new Error("invite: no member count");
@@ -274,18 +373,21 @@ async function memberCountOf(env) {
 async function buildWidget(env, previous) {
   const [widget, count] = await Promise.allSettled([
     fetch(`https://discord.com/api/guilds/${GUILD_ID}/widget.json`, { signal: AbortSignal.timeout(1500) })
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`widget: ${r.status}`)))),
+      .then((r) => (heed(r).ok ? r.json() : Promise.reject(new Error(`widget: ${r.status}`)))),
     memberCountOf(env),
   ]);
   const d = widget.status === "fulfilled" ? widget.value : null;
   if (count.status === "rejected") console.error(`member count: ${count.reason.message}`);
   const memberCount = count.status === "fulfilled" ? count.value : previous && previous.member_count;
   if (typeof memberCount !== "number" && widget.status === "rejected") throw widget.reason;
-  // Only what the page uses: the member count, the channel names, and which channel each member is in
+  // Only what the page uses: the member count, the channel names, and which channel each member is in. The page only
+  // counts the members in each channel, so they're in channel order, and the same people in the same channels make the
+  // same copy (which the cron then doesn't save again).
   return JSON.stringify({
     ...(typeof memberCount === "number" ? { member_count: memberCount } : {}),
     channels: d ? (d.channels || []).map(({ id, name, position }) => ({ id, name, position })) : (previous && previous.channels) || [],
-    members: d ? (d.members || []).filter((m) => m.channel_id).map((m) => ({ channel_id: m.channel_id })) : (previous && previous.members) || [],
+    members: d ? (d.members || []).filter((m) => m.channel_id).map((m) => ({ channel_id: m.channel_id })).sort((a, b) => (a.channel_id < b.channel_id ? -1 : a.channel_id > b.channel_id ? 1 : 0))
+      : (previous && previous.members) || [],
   });
 }
 
@@ -305,7 +407,7 @@ async function discord(token, route, calls = null) {
       if (calls.left <= 0) throw new NoCallsLeft("no calls left");
       calls.left--;
     }
-    const r = await fetch(DISCORD_API + route, { headers: { Authorization: `Bot ${token}` }, signal: AbortSignal.timeout(5000) });
+    const r = heed(await fetch(DISCORD_API + route, { headers: { Authorization: `Bot ${token}` }, signal: AbortSignal.timeout(5000) }));
     if (r.ok) return r.json();
     if (r.status === 401) throw new BadToken("Discord turned down DISCORD_BOT_TOKEN (401): set it again to Ballkyrie's current token");
     if (r.status === 403 || r.status === 404) return null;
@@ -329,10 +431,10 @@ async function lookUp(token, id, calls) {
     : `https://cdn.discordapp.com/embed/avatars/${Number((BigInt(id) >> 22n) % 6n)}.png`;
   return { name: (member && member.nick) || user.global_name || user.username, avatar };
 }
-// How many calls to Discord one refresh of the names can make. A page load starts the refresh, and Cloudflare's free
-// plan lets it make 50 calls in all, a few of them its own (see "Cloudflare's limits" below), so with more players than
-// that, one refresh can't look everyone up. Each refresh takes whoever has gone longest without a look (players with no
-// name yet first), until it's out of calls, and the rest go in the next one, a few minutes later.
+// How many calls to Discord one refresh of the names can make. The cron refreshes them (see "Refreshing the data"), and
+// Cloudflare's free plan lets a run make 50 calls in all, a few of them its own (see "Cloudflare's limits" below), so
+// with more players than that, one refresh can't look everyone up. Each refresh takes whoever has gone longest without a
+// look (players with no name yet first), until it's out of calls, and the rest go in the next one, 15 minutes later.
 const NAME_CALLS = 24;
 // How long a name and picture last before they're looked up again (a little under the hour the list is kept for)
 const NAME_AGE = 55 * 60 * 1000;
@@ -340,8 +442,9 @@ async function buildPlayers(env, ctx, previous) {
   if (!env.DISCORD_BOT_TOKEN) throw new Error("no DISCORD_BOT_TOKEN secret");
   // Every Discord ID on any board: `# discord: ID` in the .opy files and "discord": "ID" in the .json files, plus the
   // reviewers who checked runs in runs.json ("checkedBy": "ID"), for the reviewers' list of every run. They come from
-  // whatever game data is cached, so refreshing the names doesn't fetch the game data from GitHub again too.
-  const { files } = JSON.parse((await stored("game")) ?? (await game(env, ctx)));
+  // the cron's copy of the game data, or whatever's cached here, so refreshing the names doesn't fetch the game data
+  // from GitHub again too.
+  const { files } = JSON.parse(await fromKv(env, "game", async () => (await stored("game")) ?? (await game(env, ctx))));
   const ids = new Set();
   for (const text of Object.values(files)) if (text) for (const m of text.matchAll(/(?:discord|checkedBy)"?\s*:\s*"?(\d{17,20})\b/gi)) ids.add(m[1]);
   // Ballkyrie too (a bot's user ID is its app's ID), for its name and picture where the sign-in panel mentions it
@@ -786,27 +889,28 @@ async function editData(env, path, load, dump, edit) {
 const editRuns = (env, edit) => editData(env, RUNS_FILE, loadRuns, dumpRuns, edit);
 // The site shows a saved run straight away: the cached game data gets the new runs.json (and history.json, when that
 // changed too: see "Claiming legacy runs"), and the player's Discord name and picture go in until the next lookup has
-// them. That copy is only kept for a few minutes, so adding someone never puts off the lookup for everyone else.
-// (Copies from GitHub have the change too: both files are read through GitHub's API, which doesn't serve old copies
-// the way raw files can.)
+// them. That copy is only kept here for a few minutes, so adding someone never puts off the lookup for everyone else
+// (in PROFILES they have no "at" yet, so the next lookup takes them first). Both go in PROFILES too (saveCopy), so
+// every location shows them within a minute or two, not only this one. (The cron's copies have the change too: both
+// files are read through GitHub's API, which doesn't serve old copies the way raw files can.)
 async function putCached(name, ttl, body) {
   await Promise.all([
     caches.default.put(cacheKey(name), new Response(body, { headers: { "Cache-Control": `public, max-age=${ttl}` } })),
     caches.default.put(cacheKey(name, true), new Response(body, { headers: { "Cache-Control": `public, max-age=${STALE_FOR}` } })),
   ]);
 }
-async function showSaved(runsText, user, historyText = null) {
-  const gameCopy = await stored("game");
-  if (gameCopy && (runsText || historyText)) {
+async function showSaved(env, runsText, user, historyText = null) {
+  const gameCopy = (runsText || historyText) && (await latestCopy(env, "game"));
+  if (gameCopy) {
     const d = JSON.parse(gameCopy);
     if (runsText) d.files[RUNS_FILE] = runsText;
     if (historyText) d.files[HISTORY_FILE] = historyText;
-    await putCached("game", 60, JSON.stringify(d));
+    await saveCopy(env, "game", 60, JSON.stringify(d));
   }
-  const playersCopy = user && (await stored("players"));
+  const playersCopy = user && (await latestCopy(env, "players"));
   if (playersCopy) {
     const d = JSON.parse(playersCopy);
-    if (!(d[user.id] && d[user.id].name)) { d[user.id] = { name: user.name, avatar: user.avatar }; await putCached("players", 5 * 60, JSON.stringify(d)); }
+    if (!(d[user.id] && d[user.id].name)) { d[user.id] = { name: user.name, avatar: user.avatar }; await saveCopy(env, "players", 5 * 60, JSON.stringify(d)); }
   }
 }
 // The cached game data's course files, names and list (fetched if there's none yet)
@@ -1722,7 +1826,7 @@ async function submit(request, env, ctx) {
     return { message: `chore(leaderboard): add ${run.name}'s ${assisted ? "assisted " : ""}${run.time} on course ${n} from ballkour.com`, pending: false, rank, newBest };
   });
   if (saved.error) return answer(saved.status, { error: saved.error });
-  await showSaved(saved.text, user).catch((e) => console.error(`submit: couldn't update the cached copy: ${(e && e.message) || e}`));
+  await showSaved(env, saved.text, user).catch((e) => console.error(`submit: couldn't update the cached copy: ${(e && e.message) || e}`));
   if (saved.text) ctx.waitUntil(afterSend(env, ctx, { n, courseName: names[n], courseFlag: flags[n], courseCode: codes[n], run, before, mine, links: linksIn(files), pending: saved.pending, rank: saved.rank, newBest: saved.newBest, site: url.origin }));
   if (saved.text && !saved.pending) ctx.waitUntil(profileAfterRun(env, ctx, user.id));
   // Sent twice: the run that's already in, with its id (undefined ones are left out of the answer)
@@ -1768,7 +1872,7 @@ async function review(request, env, ctx) {
     return { message: `chore(leaderboard): ${approve ? "add" : "turn down"} ${run.name}'s ${run.time} on course ${n}, checked by ${user.name}` };
   });
   if (done.error) return answer(done.status, { error: done.error });
-  await showSaved(done.text, null).catch(() => {});
+  await showSaved(env, done.text, null).catch(() => {});
   if (approve && run.discord) ctx.waitUntil(profileAfterRun(env, ctx, run.discord));
   // Its post changes to say so, and its player gets a DM
   ctx.waitUntil(afterCheck(env, ctx, { run, n, approve, before, by: user.name, site: new URL(request.url).origin })
@@ -1875,7 +1979,7 @@ async function claim(request, env, ctx) {
     return { message: `chore(leaderboard): ${user.name} says the legacy runs as ${name} are theirs, waiting for a check`, claim: fresh };
   });
   if (saved.error) return answer(saved.status, { error: saved.error });
-  await showSaved(saved.text, user).catch((e) => console.error(`claim: couldn't update the cached copy: ${(e && e.message) || e}`));
+  await showSaved(env, saved.text, user).catch((e) => console.error(`claim: couldn't update the cached copy: ${(e && e.message) || e}`));
   if (saved.text) ctx.waitUntil(postClaim(env, { claim: fresh, runs: open, files, names, flags, site: url.origin }));
   return answer(200, { ok: true, claim: saved.claim });
 }
@@ -1920,7 +2024,7 @@ async function reviewClaim(request, env, ctx) {
     checked = list[at] = { ...list[at], status: approve ? "approved" : "declined", checkedBy: user.id, checkedAt: stamp() };
     return { message: `chore(leaderboard): ${approve ? "approve" : "turn down"} the claim to the legacy runs as ${name}, checked by ${user.name}` };
   });
-  await showSaved(done.text, null, linked && linked.text).catch((e) => console.error(`claim to ${name}: couldn't update the cached copy: ${(e && e.message) || e}`));
+  await showSaved(env, done.text, null, linked && linked.text).catch((e) => console.error(`claim to ${name}: couldn't update the cached copy: ${(e && e.message) || e}`));
   if (done.error) return answer(done.status, { error: done.error });
   ctx.waitUntil(tellPlayer(env, id, checkedClaimMessage({ claim: checked, approve, site: new URL(request.url).origin }), `claim to ${name}`));
   return answer(200, { ok: true, claim: checked });
@@ -2052,15 +2156,15 @@ async function numberPlayers(env, ctx) {
     return { message: `chore(links): number ${fresh.length === 1 ? "a new player" : `${fresh.length} new players`}` };
   });
   if (saved.error) throw new Error("couldn't save links.json");
-  if (saved.text) await showFile(LINKS_FILE, saved.text);
+  if (saved.text) await showFile(env, LINKS_FILE, saved.text);
 }
 // The site shows a saved file straight away, like a run (see showSaved)
-async function showFile(path, body) {
-  const copy = await stored("game");
+async function showFile(env, path, body) {
+  const copy = await latestCopy(env, "game");
   if (!copy) return;
   const d = JSON.parse(copy);
   d.files[path] = body;
-  await putCached("game", 60, JSON.stringify(d));
+  await saveCopy(env, "game", 60, JSON.stringify(d));
 }
 async function setLink(request, env, ctx) {
   if (request.method !== "POST") return answer(405, { error: "bad" });
@@ -2111,7 +2215,7 @@ async function setLink(request, env, ctx) {
     };
   });
   if (saved.error) return answer(saved.status, { error: saved.error });
-  if (saved.text) await showFile(LINKS_FILE, saved.text).catch((e) => console.error(`link: couldn't update the cached copy: ${(e && e.message) || e}`));
+  if (saved.text) await showFile(env, LINKS_FILE, saved.text).catch((e) => console.error(`link: couldn't update the cached copy: ${(e && e.message) || e}`));
   const entry = saved.entry || {};
   return answer(200, { ok: true, n: Number.isInteger(entry.n) ? entry.n : null, link: entry.link || "" });
 }
@@ -2875,17 +2979,17 @@ async function page(request, env, ctx) {
   const url = new URL(request.url);
   const asked = url.pathname;
   if (isPage(url.pathname)) url.pathname = "/";
-  // Cloudflare's free plan allows 50 fetches per request. Refreshing the game data takes about 20 and the player names
+  // Each comes from the cron's copy in PROFILES (see "Refreshing the data"). Without one, the page builds it, and
+  // Cloudflare's free plan allows 50 fetches per request: refreshing the game data takes about 20 and the player names
   // one or two per player, so a page load only refreshes the names when the game data is fresh. Past the limit, the
   // releases (fetched last) can't be refreshed and every page keeps getting the last list.
   const freshGame = await caches.default.match(cacheKey("game"));
   const [res, widget, gameData, players, lang] = await Promise.all([
     file(new Request(url, { method: "GET", headers, redirect: "manual" }), env),
-    // The online count is worth a short wait (Discord answers in well under the 1.5 s limit), so it's never stale
-    cached("widget", 60, ctx, (prev) => buildWidget(env, prev)).catch(() => null),
-    freshGame ? freshGame.text() : soon("game", 60, ctx, (prev) => buildGame(env, prev), 2500),
+    cached("widget", 60, ctx, widgetSource(env)).catch(() => null),
+    freshGame ? freshGame.text() : soon("game", 60, ctx, gameSource(env), 2500),
     !env.DISCORD_BOT_TOKEN ? null
-      : freshGame ? peek("players", 60 * 60, ctx, (prev) => buildPlayers(env, ctx, prev))
+      : freshGame ? peek("players", 60 * 60, ctx, playersSource(env, ctx))
       : stored("players"),
     langBlock(env, url, langOf(request, url)),
   ]);
@@ -2975,10 +3079,10 @@ async function handle(request, env, ctx) {
   if (short) return short;
   try {
     if (path === "/data/game.json") return json(await game(env, ctx), 60);
-    if (path === "/data/widget.json") return json(await cached("widget", 60, ctx, (prev) => buildWidget(env, prev)), 60);
+    if (path === "/data/widget.json") return json(await cached("widget", 60, ctx, widgetSource(env)), 60);
     if (path === "/data/players.json" || path === "/players.json") {
       if (!env.DISCORD_BOT_TOKEN) return unavailable("The DISCORD_BOT_TOKEN secret isn't set");
-      return json(await cached("players", 60 * 60, ctx, (prev) => buildPlayers(env, ctx, prev)), 300);
+      return json(await cached("players", 60 * 60, ctx, playersSource(env, ctx)), 300);
     }
   } catch (e) {
     if (path.startsWith("/data/") || path === "/players.json") return unavailable(String((e && e.message) || e));
@@ -2996,10 +3100,15 @@ export default {
       return secure(await file(request, env));
     }
   },
-  // The crons in wrangler.toml. On the hour and half past: the stats on players' Discord profiles catch up with the
+  // The crons in wrangler.toml. Every minute: one part of the site's data is fetched from GitHub or Discord (see
+  // "Refreshing the data"). On the hour and half past: the stats on players' Discord profiles catch up with the
   // boards. At :15 and :45: new players get their numbers (see "Players' own links"). Apart, so each has Cloudflare's
   // limit on calls to itself. At 00:00 UTC: the leaderboard bot's daily run (see startDailyBot).
   async scheduled(controller, env, ctx) {
+    if (controller.cron === REFRESH_CRON) {
+      await refresh(env, ctx, controller.scheduledTime).catch((e) => console.error(`refresh: ${(e && e.message) || e}`));
+      return;
+    }
     if (controller.cron === NUMBERS_CRON) {
       await numberPlayers(env, ctx).catch((e) => console.error(`numbers: ${(e && e.message) || e}`));
       return;
